@@ -1,0 +1,106 @@
+/*
+    This file is part of AutoQuad.
+
+    AutoQuad is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AutoQuad is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright © 2011, 2012  Bill Nesbitt
+*/
+
+#ifndef _nav_h
+#define _nav_h
+
+#include <CoOS.h>
+#include "pid.h"
+
+#define NAV_MIN_GPS_ACC		3.0f
+#define NAV_MAX_FIX_AGE		((int)1e6f)	// 1 second
+
+#define NAV_EQUATORIAL_RADIUS	(6378.137f * 1000.0f)			    // meters
+#define NAV_FLATTENING		(1.0f / 298.257223563f)			    // WGS-84
+#define NAV_E_2			(NAV_FLATTENING * (2.0f - NAV_FLATTENING))
+
+#define NAV_STATUS_MANUAL	0x00	    // full manual control
+#define NAV_STATUS_ALTHOLD	0x01	    // altitude hold only
+#define NAV_STATUS_POSHOLD	0x02	    // altitude & position hold
+#define NAV_STATUS_DVH		0x03	    // dynamic velocity hold cut through
+#define NAV_STATUS_MISSION	0x04	    // autonomous mission
+
+#define NAV_LEG_HOME		0x01
+#define NAV_LEG_TAKEOFF		0x02
+#define NAV_LEG_GOTO		0x03
+#define NAV_LEG_ORBIT		0x04
+#define NAV_LEG_LAND		0x05
+
+#define NAV_MAX_MISSION_LEGS	25
+
+typedef struct {
+    unsigned char type;
+    double targetLat;
+    double targetLon;
+    float targetAlt;
+    float targetRadius;
+    unsigned long loiterTime;
+    float maxSpeed;
+    double poiLat;
+    double poiLon;
+    float poiHeading;
+} navMission_t;
+
+typedef struct {
+    unsigned char mode;			// navigation mode
+    unsigned char navCapibal;
+    float holdAlt;			// altitude to hold
+    float holdHeading;			// heading to hold
+    float holdCourse;			// course to hold position
+    float holdDistance;			// distance to hold position (straight line)
+    float holdMaxSpeed;			// maximum N/D speed allowed to achieve position
+    float holdSpeedN;			// required speed (North/South)
+    float holdSpeedE;			// required speed (East/West)
+    float holdTiltN;			// required tilt (North/South)
+    float holdTiltE;			// required tilt (East/West)
+    float holdSpeedAlt;			// required speed (Up/Down)
+    float targetHoldSpeedAlt;
+
+    pidStruct_t *speedNPID;		// PID to control N/S speed - output tilt in degrees
+    pidStruct_t *speedEPID;		// PID to control E/W speed - output tilt in degrees
+    pidStruct_t *distanceNPID;		// PID to control N/S distance - output speed in m/s
+    pidStruct_t *distanceEPID;		// PID to control E/W distance - output speed in m/s
+    pidStruct_t *altSpeedPID;		// PID to control U/D speed - output speed in m/s
+    pidStruct_t *altPosPID;		// PID to control U/D distance - output error in meters
+
+    navMission_t missionLegs[NAV_MAX_MISSION_LEGS];
+    navMission_t homeLegs[2];
+    unsigned char missionLeg;
+    unsigned long loiterCompleteTime;
+
+    unsigned long lastUpdate;
+} navStruct_t;
+
+extern navStruct_t navData;
+
+extern void navInit(void);
+extern void navAccelUpdate(void);
+extern void navGpsUpdate(void);
+extern void navUpdateAlt(float altitude);
+extern float navGetVel(char direction);
+extern float navGetPos(char direction);
+extern unsigned int navGetWaypointCount(void);
+extern unsigned char navClearWaypoints(void);
+extern navMission_t *navGetWaypoint(int seqId);
+extern navMission_t *navGetHomeWaypoint(void);
+extern void navSetHomeCurrent(void);
+extern void navLoadLeg(unsigned char leg);
+extern void navNavigate(void);
+extern void navResetHoldAlt(float delta);
+
+#endif
