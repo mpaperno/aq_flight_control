@@ -22,8 +22,11 @@
 #include "aq.h"
 #include <CoOS.h>
 
+#define AQINIT_STACK_SIZE   268
+#define AQINIT_PRIORITY	    12
+
 extern void aqInit(void *pdata);
 
-extern OS_STK   aqInitStack[TASK_STACK_SIZE * 2];
+extern OS_STK   *aqInitStack;
 
 #endif

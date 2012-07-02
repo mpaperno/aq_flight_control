@@ -22,10 +22,15 @@
 #include <CoOS.h>
 #include "digital.h"
 
+#define SUPERVISOR_STACK_SIZE	    64
+#define SUPERVISOR_PRIORITY	    34
+
 #define SUPERVISOR_RATE		    10		    // Hz
 #define SUPERVISOR_DISARM_TIME	    (1e6*2)	    // 2 seconds
 #define SUPERVISOR_RADIO_LOSS1	    ((int)1e6)	    // 1 second
 #define SUPERVISOR_RADIO_LOSS2	    ((int)15e6)	    // 15 seconds
+
+#define SUPERVISOR_SOC_TABLE_SIZE   100
 
 enum supervisorStates {
     STATE_INITIALIZING	= 0x00,
@@ -44,6 +49,11 @@ typedef struct {
     digitalPin *readyLed;
     digitalPin *debugLed;
 
+    float socTable[SUPERVISOR_SOC_TABLE_SIZE+1];
+    float soc;
+    float flightTime;		    // seconds
+    float flightSecondsAvg;	    // avg flight time seconds for every percentage of SOC
+    float flightTimeRemaining;	    // seconds
     uint32_t armTime;
     uint32_t lastGoodRadioMicros;
     float vInLPF;
@@ -61,5 +71,7 @@ extern void supervisorThrottleUp(uint8_t throttle);
 extern void supervisorSendDataStart(void);
 extern void supervisorSendDataStop(void);
 extern void supervisorConfigRead(void);
+extern void supervisorArm(void);
+extern void supervisorDisarm(void);
 
 #endif

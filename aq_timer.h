@@ -30,11 +30,20 @@
 typedef void timerCallback_t(int);
 
 typedef struct {
+    timerCallback_t *alarm1Callback, *alarm2Callback, *alarm3Callback;
+    int alarm1Parameter, alarm2Parameter, alarm3Parameter;
+
     uint32_t timerStart;
 } timerStruct_t;
 
 extern void timerInit(void);
 extern void timerStart(void);
 extern uint32_t timerStop(void);
+extern void timerCancelAlarm1(void);
+extern void timerCancelAlarm2(void);
+extern void timerCancelAlarm3(void);
+extern void timerSetAlarm1(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAlarm2(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAlarm3(int32_t us, timerCallback_t *callback, int parameter);
 
 #endif

@@ -23,6 +23,9 @@
 #include "util.h"
 #include <CoOS.h>
 
+#define CONTROL_STACK_SIZE	80
+#define CONTROL_PRIORITY	5
+
 typedef struct {
     OS_TID controlTask;
 

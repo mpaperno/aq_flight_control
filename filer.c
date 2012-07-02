@@ -28,7 +28,7 @@
 
 filerStruct_t filerData;
 
-OS_STK filerTaskStack[TASK_STACK_SIZE];
+OS_STK *filerTaskStack;
 
 int32_t filerProcessWrite(filerFileStruct_t *f) {
     uint32_t res;
@@ -140,17 +140,19 @@ int32_t filerProcessStream(filerFileStruct_t *f) {
 }
 
 int32_t filerProcessClose(filerFileStruct_t *f) {
-    uint32_t res;
+    uint32_t res = 0;;
 
     if (f->open) {
 	res = f_close(&f->fp);
 	f->open = 0;
-	if (res != FR_OK) {
-	    return -1;
-	}
     }
 
-    return 0;
+    f->allocated = 0;
+
+    if (res != FR_OK)
+	return -1;
+    else
+	return 0;
 }
 
 void filerProcessRequest(filerFileStruct_t *f) {
@@ -178,7 +180,6 @@ void filerDebug(char *s, int r) {
 
 // open filesystem, format if necessary, update session file
 int32_t filerInitFS(void) {
-    FIL sess;
     uint32_t res;
     UINT bytes;
 
@@ -195,35 +196,37 @@ int32_t filerInitFS(void) {
 	filerData.session = 0;
     }
 
-    res = f_open(&sess, FILER_SESS_FNAME, FA_OPEN_EXISTING | FA_READ);
+    res = f_open(&filerData.sess, FILER_SESS_FNAME, FA_OPEN_EXISTING | FA_READ);
     if (res == FR_OK) {
-	f_read(&sess, filerData.buf, sizeof(filerData.buf), &bytes);
+	f_read(&filerData.sess, filerData.buf, sizeof(filerData.buf), &bytes);
 	if (bytes > 1) {
 	    if (sscanf(filerData.buf, "%d\n", &filerData.session) < 1)
 		filerData.session = 0;
-	    else if (filerData.session > 256)
-		filerData.session = 0;
 	}
-	f_close(&sess);
+	f_close(&filerData.sess);
     }
 
-    filerData.session++;
+    if (++filerData.session > 999)
+	filerData.session = 0;
 
-    res = f_open(&sess, FILER_SESS_FNAME, FA_CREATE_ALWAYS | FA_WRITE);
+    res = f_open(&filerData.sess, FILER_SESS_FNAME, FA_CREATE_ALWAYS | FA_WRITE);
     if (res != FR_OK) {
 	filerDebug("cannot create config file", res);
 	return -1;
     }
     sprintf(filerData.buf, "%d\n", filerData.session);
-    res = f_write(&sess, filerData.buf, strlen(filerData.buf), &bytes);
-    if (res != FR_OK)
+    res = f_write(&filerData.sess, filerData.buf, strlen(filerData.buf), &bytes);
+
+    f_close(&filerData.sess);
+
+    if (res != FR_OK) {
 	return -1;
-    else
-	f_close(&sess);
+    }
+    else {
+	filerDebug("created new session", filerData.session);
 
-    filerDebug("created new session", filerData.session);
-
-    return 0;
+	return 0;
+    }
 }
 
 void filerTaskCode(void *p) {
@@ -232,7 +235,7 @@ void filerTaskCode(void *p) {
     uint32_t res;
     int i;
 
-    AQ_NOTICE("Filer task started...\n");
+    AQ_NOTICE("Filer task started\n");
 
     filerRestart:
 
@@ -294,9 +297,12 @@ void filerTaskCode(void *p) {
 }
 
 void filerInit(void) {
-    filerData.filerFlag = CoCreateFlag(0, 0);   // manual reset
+    memset((void *)&filerData, 0, sizeof(filerData));
 
-    filerData.filerTask = CoCreateTask(filerTaskCode, (void *)0, 62, &filerTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    filerData.filerFlag = CoCreateFlag(0, 0);   // manual reset
+    filerTaskStack = aqStackInit(FILER_STACK_SIZE);
+
+    filerData.filerTask = CoCreateTask(filerTaskCode, (void *)0, FILER_PRIORITY, &filerTaskStack[FILER_STACK_SIZE-1], FILER_STACK_SIZE);
 }
 
 // returns file handle or -1 upon failure
@@ -351,11 +357,13 @@ int32_t filerSync(int8_t handle) {
     if (!f->allocated)
 	    return -1;
 
-    f->function = FILER_FUNC_SYNC;
+    if (f->open) {
+	f->function = FILER_FUNC_SYNC;
 
-    CoSetFlag(filerData.filerFlag);
-    CoClearFlag(f->completeFlag);
-    CoWaitForSingleFlag(f->completeFlag, 0);
+	CoSetFlag(filerData.filerFlag);
+	CoClearFlag(f->completeFlag);
+	CoWaitForSingleFlag(f->completeFlag, 0);
+    }
 
     return f->status;
 }
@@ -367,11 +375,13 @@ int32_t filerClose(int8_t handle) {
     if (!f->allocated)
 	    return -1;
 
-    f->function = FILER_FUNC_CLOSE;
+    if (f->open) {
+	f->function = FILER_FUNC_CLOSE;
 
-    CoSetFlag(filerData.filerFlag);
-    CoClearFlag(f->completeFlag);
-    CoWaitForSingleFlag(f->completeFlag, 0);
+	CoSetFlag(filerData.filerFlag);
+	CoClearFlag(f->completeFlag);
+	CoWaitForSingleFlag(f->completeFlag, 0);
+    }
 
     return f->status;
 }

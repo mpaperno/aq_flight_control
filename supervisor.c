@@ -27,15 +27,68 @@
 #include "adc.h"
 #include "aq_timer.h"
 #include "util.h"
+#include <stdlib.h>
+#include <string.h>
 
-supervisorStruct_t supervisorData;
+supervisorStruct_t supervisorData __attribute__((section(".ccm")));
 
-OS_STK supervisorTaskStack[TASK_STACK_SIZE];
+OS_STK *supervisorTaskStack;
+
+float supervisorSOCTableLookup(float vBat) {
+    float soc;
+    int i;
+
+    i = 0;
+    while (i < SUPERVISOR_SOC_TABLE_SIZE+1 && supervisorData.socTable[i] < vBat)
+	i++;
+
+    soc = (float)i * (100.0f / SUPERVISOR_SOC_TABLE_SIZE);
+
+    if (i > 0 && supervisorData.socTable[i] > vBat) {
+	float a, b;
+
+	a = supervisorData.socTable[i];
+	b = supervisorData.socTable[i-1];
+
+	soc -= (a - vBat) / (a - b) * (100.0f / SUPERVISOR_SOC_TABLE_SIZE);
+    }
+
+    return soc;
+}
+
+void supervisorCreateSOCTable(void) {
+    int i;
+
+    for (i = 0; i < SUPERVISOR_SOC_TABLE_SIZE+1; i++) {
+	float x = (float)i * (100.0f / SUPERVISOR_SOC_TABLE_SIZE) * 0.01f;
+
+	supervisorData.socTable[i] = p[SPVR_BAT_CRV1] + p[SPVR_BAT_CRV2]*x + p[SPVR_BAT_CRV3]*x*x + p[SPVR_BAT_CRV4]*x*x*x + p[SPVR_BAT_CRV5]*x*x*x*x + p[SPVR_BAT_CRV6]*x*x*x*x*x;
+    }
+}
+
+void supervisorArm(void) {
+    supervisorData.state = STATE_ARMED;
+    AQ_NOTICE("Supervisor: armed\n");
+}
+
+void supervisorDisarm(void) {
+    supervisorData.state = STATE_DISARMED;
+    AQ_NOTICE("Supervisor: disarmed\n");
+}
 
 void supervisorTaskCode(void *unused) {
     uint32_t count = 0;
 
-    AQ_NOTICE("Supervisor task started...\n");
+    AQ_NOTICE("Supervisor task started\n");
+
+    // wait for ADC vIn data
+    while (adcData.batCellCount == 0)
+	yield(100);
+
+    supervisorCreateSOCTable();
+
+    supervisorData.vInLPF = adcData.vIn;
+    supervisorData.soc = 100.0f;
 
     while (1) {
 	yield(1000/SUPERVISOR_RATE);
@@ -55,10 +108,9 @@ void supervisorTaskCode(void *unused) {
 		    supervisorData.armTime = timerMicros();
 		}
 		else if ((timerMicros() - supervisorData.armTime) > SUPERVISOR_DISARM_TIME) {
-		    supervisorData.state = STATE_ARMED;
+		    supervisorArm();
 		    supervisorData.armTime = 0;
 		    digitalHi(supervisorData.readyLed);
-		    AQ_NOTICE("Supervisor: armed\n");
 		}
 	    }
 	    else {
@@ -72,9 +124,8 @@ void supervisorTaskCode(void *unused) {
 		    supervisorData.armTime = timerMicros();
 		}
 		else if ((timerMicros() - supervisorData.armTime) > SUPERVISOR_DISARM_TIME) {
-		    supervisorData.state = STATE_DISARMED;
+		    supervisorDisarm();
 		    supervisorData.armTime = 0;
-		    AQ_NOTICE("Supervisor: disarmed\n");
 		}
 	    }
 	    else {
@@ -96,15 +147,12 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.state |= STATE_RADIO_LOSS1;
 		AQ_NOTICE("Supervisor: radio loss stage 1 detected\n");
 
-		// switch to manual mode (need to reload again alt hold position and fix the copter guarantee in the space)
-		navData.mode = NAV_STATUS_MANUAL;
-
 		// hold position
 		RADIO_FLAPS = 0;    // position hold
 		RADIO_PITCH = 0;    // center sticks
 		RADIO_ROLL = 0;
 		RADIO_RUDD = 0;
-//		RADIO_THROT = 700;  // center throttle
+		RADIO_THROT = 700;  // center throttle
 	    }
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
 		supervisorData.state |= STATE_RADIO_LOSS2;
@@ -116,10 +164,28 @@ void supervisorTaskCode(void *unused) {
 	    }
 	}
 
-	// low battery
 	// smooth vIn readings
-	supervisorData.vInLPF += (adcData.vIn - supervisorData.vInLPF) * 0.01;
+	supervisorData.vInLPF += (adcData.vIn - supervisorData.vInLPF) * 0.05f;
 
+	// determine battery state of charge
+	supervisorData.soc = supervisorSOCTableLookup(supervisorData.vInLPF);
+
+	if (supervisorData.state & STATE_FLYING) {
+	    // count flight time in seconds
+	    supervisorData.flightTime += (1.0f / SUPERVISOR_RATE);
+
+	    // calculate remaining flight time
+	    if (supervisorData.soc < 99.0f) {
+		supervisorData.flightSecondsAvg += (supervisorData.flightTime / (100.0f - supervisorData.soc) - supervisorData.flightSecondsAvg) * 0.001f;
+		supervisorData.flightTimeRemaining = supervisorData.flightSecondsAvg * supervisorData.soc;
+	    }
+	    else {
+		supervisorData.flightSecondsAvg = supervisorData.flightTime;
+		supervisorData.flightTimeRemaining = 999.9f * 60.0f;		// unknown
+	    }
+	}
+
+	// low battery
 	if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*adcData.batCellCount)) {
 	    supervisorData.state |= STATE_LOW_BATTERY1;
 	    AQ_NOTICE("Supervisor: low battery stage 1 detected\n");
@@ -168,6 +234,8 @@ void supervisorConfigRead(void) {
 }
 
 void supervisorInit(void) {
+    memset((void *)&supervisorData, 0, sizeof(supervisorData));
+
     supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN);
     digitalLo(supervisorData.readyLed);
 
@@ -175,7 +243,7 @@ void supervisorInit(void) {
     digitalLo(supervisorData.debugLed);
 
     supervisorData.state = STATE_INITIALIZING;
-    supervisorData.vInLPF = 21.0f;
+    supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE);
 
-    supervisorData.supervisorTask = CoCreateTask(supervisorTaskCode, (void *)0, 34, &supervisorTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    supervisorData.supervisorTask = CoCreateTask(supervisorTaskCode, (void *)0, SUPERVISOR_PRIORITY, &supervisorTaskStack[SUPERVISOR_STACK_SIZE-1], SUPERVISOR_STACK_SIZE);
 }

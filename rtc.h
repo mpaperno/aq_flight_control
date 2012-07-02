@@ -26,6 +26,8 @@ typedef struct {
     volatile int captureNumber;
 } rtcStruct_t;
 
+extern rtcStruct_t rtcData;
+
 extern void rtcInit(void);
 extern unsigned long rtcGetDateTime(void);
 extern void rtcSetDataTime(int year, int month, int day, int hour, int minute, int second);

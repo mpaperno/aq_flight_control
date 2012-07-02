@@ -18,8 +18,9 @@
 
 #include "imu.h"
 #include "arm_math.h"
+#include <string.h>
 
-imuStruct_t imuData;
+imuStruct_t imuData __attribute__((section(".ccm")));
 
 // wait for lack of movement
 void imuQuasiStatic(int n) {
@@ -53,6 +54,8 @@ void imuQuasiStatic(int n) {
 }
 
 void imuInit(void) {
+    memset((void *)&imuData, 0, sizeof(imuData));
+
     imuData.dRateFlag = CoCreateFlag(1, 0);
     imuData.sensorFlag = CoCreateFlag(1, 0);
 

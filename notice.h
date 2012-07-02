@@ -22,12 +22,16 @@
 #include "aq_mavlink.h"
 #include <CoOS.h>
 
-#define NOTICE_QUEUE_DEPTH  20
+#define NOTICE_STACK_SIZE	64
+#define NOTICE_PRIORITY		50
+
+#define NOTICE_QUEUE_DEPTH	20
 
 typedef struct {
     OS_TID noticeTask;
     OS_EventID notices;
     void *noticeQueue[NOTICE_QUEUE_DEPTH];
+    int8_t initialized;
 } noticeStruct_t;
 
 extern noticeStruct_t noticeData;

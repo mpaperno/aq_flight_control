@@ -20,23 +20,27 @@
 #include "downlink.h"
 #include "notice.h"
 #include "aq_mavlink.h"
+#include "util.h"
 #include <CoOS.h>
 #include <string.h>
 
-noticeStruct_t noticeData;
+noticeStruct_t noticeData __attribute__((section(".ccm")));
 
-OS_STK noticeTaskStack[TASK_STACK_SIZE];
+OS_STK *noticeTaskStack;
 
 void noticeSend(const char *s) {
     // post message and leave
-    CoPostQueueMail(noticeData.notices, (void *)s);
+    if (noticeData.initialized)
+	CoPostQueueMail(noticeData.notices, (void *)s);
 }
 
 void noticeTaskCode(void *unused) {
     StatusType result;
     char *c;
 
-    AQ_NOTICE("Notice task started...\n");
+    AQ_NOTICE("Notice task started\n");
+
+    memset((void *)&noticeData, 0, sizeof(noticeData));
 
     while (1) {
 	c = (char *)CoPendQueueMail(noticeData.notices, 0, &result);
@@ -49,7 +53,11 @@ void noticeTaskCode(void *unused) {
 	downlinkResetChecksum();
 	do {
 	    downlinkSendChar(*c);
-	} while (*c++);
+	} while (*(c++));
+
+	// terminate with NL & NULL
+//	downlinkSendChar('\n');
+//	downlinkSendChar(0);
 
 	downlinkSendChecksum();
 
@@ -60,7 +68,10 @@ void noticeTaskCode(void *unused) {
 
 void noticeInit(void) {
     noticeData.notices = CoCreateQueue(noticeData.noticeQueue, NOTICE_QUEUE_DEPTH, EVENT_SORT_TYPE_FIFO);
+    noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE);
 
     // start notice thread with high priority so that it can process startup notices - will drop priority later
-    noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[NOTICE_STACK_SIZE-1], NOTICE_STACK_SIZE);
+
+    noticeData.initialized = 1;
 }

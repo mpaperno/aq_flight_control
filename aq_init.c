@@ -47,7 +47,7 @@
 #include "sdio.h"
 #include <CoOS.h>
 
-OS_STK aqInitStack[TASK_STACK_SIZE*2];
+OS_STK *aqInitStack;
 
 void aqInit(void *pdata) {
     rtcInit();	    // have to do this first as it requires our microsecond timer to calibrate
@@ -61,6 +61,7 @@ void aqInit(void *pdata) {
 #else
     downlinkInit();
     noticeInit();
+    telemetryInit();
 #endif
     gimbalInit();
     motorsInit();
@@ -80,14 +81,11 @@ void aqInit(void *pdata) {
 
     supervisorInitComplete();
 
-    AQ_NOTICE("Initialization complete, READY.");
+    AQ_NOTICE("Initialization complete, READY.\n");
 
-#ifdef USE_MAVLINK
-    // startup complete, reduce send task
-    CoSetPriority(mavlinkData.sendTask, 50);
-#else
+#ifndef USE_MAVLINK
     // startup complete, reduce notice task priority
-    CoSetPriority(noticeData.noticeTask, 50);
+    CoSetPriority(noticeData.noticeTask, NOTICE_PRIORITY);
 #endif
 
 // start telemetry

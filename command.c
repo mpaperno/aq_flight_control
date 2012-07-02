@@ -33,9 +33,9 @@
 #include <CoOS.h>
 #include <string.h>
 
-commandStruct_t commandData;
+commandStruct_t commandData __attribute__((section(".ccm")));
 
-OS_STK commandTaskStack[TASK_STACK_SIZE];
+OS_STK *commandTaskStack;
 
 void commandChecksum(unsigned char c) {
     commandData.checkA += c;
@@ -338,7 +338,7 @@ void commandCharIn(unsigned char ch) {
 void commandTaskCode(void *unused) {
     serialPort_t *s = downlinkData.serialPort;
 
-    AQ_NOTICE("Command task started...\n");
+    AQ_NOTICE("Command task started\n");
 
     while (1) {
 	// wait for data
@@ -351,9 +351,13 @@ void commandTaskCode(void *unused) {
 }
 
 void commandInit(void) {
-    AQ_NOTICE("Command interface init... ");
+    AQ_NOTICE("Command interface init\n");
 
-    commandData.commandTask = CoCreateTask(commandTaskCode, (void *)0, 45, &commandTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    memset((void *)&commandData, 0, sizeof(commandData));
+
+    commandTaskStack = aqStackInit(COMMAND_STACK_SIZE);
+
+    commandData.commandTask = CoCreateTask(commandTaskCode, (void *)0, COMMAND_PRIORITY, &commandTaskStack[COMMAND_STACK_SIZE-1], COMMAND_STACK_SIZE);
 
     commandData.state = COMMAND_WAIT_SYNC1;
 }

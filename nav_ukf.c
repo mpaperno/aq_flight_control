@@ -297,6 +297,10 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt) {
     out[16] = in[16] - (in[2] + out[2]) * 0.5f * dt + noise[9];
 }
 
+void navUkfRateUpdate(float *u, float *x, float *noise, float *y) {
+    y[0] = -x[9+(int)u[0]] + noise[0];
+}
+
 void navUkfAccUpdate(float *u, float *x, float *noise, float *y) {
     navUkfRotateVectorByRevQuat(y, navUkfData.v0a, &x[12]);
     y[0] += noise[0];
@@ -365,6 +369,18 @@ void navUkfInertialUpdate(void) {
     navUkfData.navHistIndex = (navUkfData.navHistIndex + 1) % UKF_HIST;
 }
 
+void navUkfZeroRate(float rate, int axis) {
+    float noise[1];        // measurement variance
+    float y[1];            // measurment(s)
+    float u[1];		   // user data
+
+    noise[0] = 0.00001f;
+    y[0] = rate;
+    u[0] = (float)axis;
+
+    srcdkfMeasurementUpdate(navUkfData.kf, u, y, 1, 1, noise, navUkfRateUpdate);
+}
+
 void simDoPresUpdate(float pres) {
     float noise[1];        // measurement variance
     float y[1];            // measurment(s)
@@ -413,6 +429,8 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     float norm;
 
     noise[0] = p[UKF_MAG_N];
+//    if (!(supervisorData.state & STATE_FLYING))
+//	noise[0] *= 0.001f;
     if (!(supervisorData.state & STATE_FLYING))
 	noise[0] *= 0.001f;
 
@@ -434,7 +452,7 @@ void navUkfGpsPosUpate(uint32_t gpsMicros, double lat, double lon, float alt, fl
     float posDelta[3];
     int histIndex;
 
-    if (/*(supervisorData.state & STATE_FLYING) &&*/ hAcc < 20.0f && gpsData.tDOP != 0.0f) {
+    if (hAcc < 4.0f && gpsData.tDOP != 0.0f) {
 	if (navUkfData.holdLat == 0.0) {
 	    navUkfData.holdLat = lat;
 	    navUkfData.holdLon = lon;
@@ -519,7 +537,7 @@ void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, f
     float velDelta[3];
     int histIndex;
 
-    if (/*(supervisorData.state & STATE_FLYING) &&*/ sAcc < 2.0f && gpsData.tDOP != 0.0f) {
+    if (sAcc < 2.0f && gpsData.tDOP != 0.0f) {
 	y[0] = velN;
 	y[1] = velE;
 	y[2] = velD;
@@ -646,6 +664,11 @@ void navUkfInitState(void) {
 	while (lastUpdate == IMU_LASTUPD)
 	    ;
 
+	vX[j] = IMU_RATEX;
+	vY[j] = IMU_RATEY;
+	vZ[j] = IMU_RATEZ;
+	j = (j + 1) % UKF_GYO_AVG_NUM;
+
 	mag[0] = IMU_MAGX;
 	mag[1] = IMU_MAGY;
 	mag[2] = IMU_MAGZ;
@@ -653,11 +676,6 @@ void navUkfInitState(void) {
 	acc[0] = IMU_ACCX;
 	acc[1] = IMU_ACCY;
 	acc[2] = IMU_ACCZ;
-
-	vX[j] = IMU_RATEX;
-	vY[j] = IMU_RATEY;
-	vZ[j] = IMU_RATEZ;
-	j = (j + 1) % UKF_GYO_AVG_NUM;
 
 	navUkfNormalizeVec3(acc, acc);
 	navUkfNormalizeVec3(mag, mag);
@@ -700,6 +718,8 @@ void navUkfInit(void) {
     float Q[SIM_S];		// state variance
     float V[SIM_V];		// process variance
     float mag[3];
+
+    memset((void *)&navUkfData, 0, sizeof(navUkfData));
 
     navUkfData.v0a[0] = 0.0f;
     navUkfData.v0a[1] = 0.0f;

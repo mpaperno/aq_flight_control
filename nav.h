@@ -23,47 +23,55 @@
 #include "pid.h"
 
 #define NAV_MIN_GPS_ACC		3.0f
-#define NAV_MAX_FIX_AGE		((int)1e6f)	// 1 second
+#define NAV_MAX_FIX_AGE		((int)1e6f)				    // 1 second
+
+#define NAV_LANDING_VEL		0.33f					    // default landing/takeoff vertical velocity
+#define NAV_LANDING_DECEL	(-1.5f * GRAVITY)			    // deceleration needed to indicate a landing (1.5g)
 
 #define NAV_EQUATORIAL_RADIUS	(6378.137f * 1000.0f)			    // meters
 #define NAV_FLATTENING		(1.0f / 298.257223563f)			    // WGS-84
 #define NAV_E_2			(NAV_FLATTENING * (2.0f - NAV_FLATTENING))
 
-#define NAV_STATUS_MANUAL	0x00	    // full manual control
-#define NAV_STATUS_ALTHOLD	0x01	    // altitude hold only
-#define NAV_STATUS_POSHOLD	0x02	    // altitude & position hold
-#define NAV_STATUS_DVH		0x03	    // dynamic velocity hold cut through
-#define NAV_STATUS_MISSION	0x04	    // autonomous mission
+#define NAV_STATUS_MANUAL	0x00					    // full manual control
+#define NAV_STATUS_ALTHOLD	0x01					    // altitude hold only
+#define NAV_STATUS_POSHOLD	0x02					    // altitude & position hold
+#define NAV_STATUS_DVH		0x03					    // dynamic velocity hold cut through
+#define NAV_STATUS_MISSION	0x04					    // autonomous mission
 
-#define NAV_LEG_HOME		0x01
-#define NAV_LEG_TAKEOFF		0x02
-#define NAV_LEG_GOTO		0x03
-#define NAV_LEG_ORBIT		0x04
-#define NAV_LEG_LAND		0x05
+enum navLegTypes {
+    NAV_LEG_HOME = 1,
+    NAV_LEG_TAKEOFF,
+    NAV_LEG_GOTO,
+    NAV_LEG_ORBIT,
+    NAV_LEG_LAND,
+    NAV_NUM_LEG_TYPES
+};
 
 #define NAV_MAX_MISSION_LEGS	25
 
 typedef struct {
-    unsigned char type;
     double targetLat;
     double targetLon;
-    float targetAlt;
-    float targetRadius;
-    unsigned long loiterTime;
-    float maxSpeed;
-    double poiLat;
-    double poiLon;
-    float poiHeading;
+    float targetAlt;			// either relative or absolute - if absolute, GPS altitude is used
+    float targetRadius;			// achievement threshold for GOTO or orbit radius for ORBIT
+    uint32_t loiterTime;		// us
+    float maxHorizSpeed;		// m/s
+    float maxVertSpeed;			// m/s
+    float poiHeading;			// POI heading (>= 0 is absolute, < 0 is relative to target bearing)
+    float poiAltitude;			// altitude of POI - used for camera tilting
+    uint8_t relativeAlt;		// 0 == absolute, 1 == relative
+    uint8_t type;
 } navMission_t;
 
 typedef struct {
-    unsigned char mode;			// navigation mode
-    unsigned char navCapibal;
+    float poiAngle;			// pitch angle for gimbal to center POI
     float holdAlt;			// altitude to hold
+    float targetHeading;		// navigation heading target (>= 0 is absolute, < 0 is relative to target bearing)
     float holdHeading;			// heading to hold
     float holdCourse;			// course to hold position
     float holdDistance;			// distance to hold position (straight line)
-    float holdMaxSpeed;			// maximum N/D speed allowed to achieve position
+    float holdMaxHorizSpeed;		// maximum N/E speed allowed to achieve position
+    float holdMaxVertSpeed;		// maximum UP/DOWN speed allowed to achieve altitude
     float holdSpeedN;			// required speed (North/South)
     float holdSpeedE;			// required speed (East/West)
     float holdTiltN;			// required tilt (North/South)
@@ -79,11 +87,14 @@ typedef struct {
     pidStruct_t *altPosPID;		// PID to control U/D distance - output error in meters
 
     navMission_t missionLegs[NAV_MAX_MISSION_LEGS];
-    navMission_t homeLegs[2];
-    unsigned char missionLeg;
-    unsigned long loiterCompleteTime;
+    navMission_t homeLeg;
+    uint32_t loiterCompleteTime;
 
-    unsigned long lastUpdate;
+    uint32_t lastUpdate;
+
+    uint8_t mode;			// navigation mode
+    uint8_t navCapable;
+    uint8_t missionLeg;
 } navStruct_t;
 
 extern navStruct_t navData;

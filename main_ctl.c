@@ -22,6 +22,7 @@
 #include "rcc.h"
 #include "serial.h"
 #include "motors.h"
+#include "util.h"
 #include <CoOS.h>
 
 volatile unsigned long counter;
@@ -35,7 +36,10 @@ int main(void) {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
     CoInitOS();
-    CoCreateTask(aqInit, (void *)0, 12, &aqInitStack[TASK_STACK_SIZE*2-1], TASK_STACK_SIZE*2);
+
+    aqInitStack = aqStackInit(AQINIT_STACK_SIZE);
+
+    CoCreateTask(aqInit, (void *)0, AQINIT_PRIORITY, &aqInitStack[AQINIT_STACK_SIZE-1], AQINIT_STACK_SIZE);
     CoStartOS();
 
     return 0;
@@ -52,7 +56,11 @@ void CoIdleTask(void* pdata) {
     *DWT_CONTROL = *DWT_CONTROL | 1; // enable the counter
 
     while (1) {
+#ifdef UTIL_STACK_CHECK
+	utilStackCheck();
+#else
 	AQ_256_NOPS;
+#endif
 	counter++;
 
 	cycles = *DWT_CYCCNT;

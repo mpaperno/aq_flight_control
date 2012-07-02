@@ -31,9 +31,9 @@
 #include <CoOS.h>
 #include <string.h>
 
-gpsStruct_t gpsData;
+gpsStruct_t gpsData __attribute__((section(".ccm")));
 
-OS_STK gpsTaskStack[TASK_STACK_SIZE];
+OS_STK *gpsTaskStack;
 
 #ifdef GPS_LOG_BUF
 char gpsLog[GPS_LOG_BUF];
@@ -69,7 +69,7 @@ void gpsTaskCode(void *p) {
 #endif
     unsigned int ret = 0;
 
-    AQ_NOTICE("GPS task task started...\n");
+    AQ_NOTICE("GPS task task started\n");
 
     ubloxInit();
 
@@ -120,7 +120,9 @@ void gpsInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
 
-    AQ_NOTICE("GPS init... ");
+    AQ_NOTICE("GPS init\n");
+
+    memset((void *)&gpsData, 0, sizeof(gpsData));
 
     gpsData.baudCycle[0] = p[GPS_BAUD_RATE];
     gpsData.baudCycle[1] = 9600;
@@ -140,8 +142,9 @@ void gpsInit(void) {
     // manual reset flags
     gpsData.gpsVelFlag = CoCreateFlag(0, 0);
     gpsData.gpsPosFlag = CoCreateFlag(0, 0);
+    gpsTaskStack = aqStackInit(GPS_STACK_SIZE);
 
-    gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 
     // External Interrupt line PE1 for timepulse
     GPIO_StructInit(&GPIO_InitStructure);
@@ -180,7 +183,7 @@ void gpsPassthrough(serialPort_t *s1, serialPort_t *s2) {
 
     gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN);
 
-    AQ_NOTICE("Starting GPS passthrough mode.\n");
+    AQ_NOTICE("Starting GPS passthrough mode\n");
 
     // don't allow any preemption
     CoSetPriority(gpsData.gpsTask, 1);

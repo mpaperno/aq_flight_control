@@ -23,10 +23,9 @@
 #include "aq_mavlink.h"
 #include "imu.h"
 #include "util.h"
+#include <string.h>
 
-futabaStruct_t futabaData;
-
-OS_STK futabaTaskStack[TASK_STACK_SIZE];
+futabaStruct_t futabaData __attribute__((section(".ccm")));
 
 int futabaDecode(void) {
     if (futabaData.u.rawBuf[22] & 0b0100) {
@@ -85,6 +84,8 @@ int futabaCharIn(unsigned char c) {
 
 void futabaInit(void) {
     USART_InitTypeDef USART_InitStructure;
+
+    memset((void *)&futabaData, 0, sizeof(futabaData));
 
     radioData.serialPort = serialOpen(FUTABA_UART, FUTABA_BAUD, USART_HardwareFlowControl_None, FUTABA_RXBUF_SIZE, 0);
 

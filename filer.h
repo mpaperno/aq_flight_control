@@ -22,8 +22,11 @@
 #include "ff.h"
 #include <CoOS.h>
 
+#define FILER_PRIORITY		62
+#define FILER_STACK_SIZE	154
+
 #define FILER_SESS_FNAME	"session.txt"
-#define FILER_MAX_FILES		5
+#define FILER_MAX_FILES		4
 #define FILER_STREAM_SYNC	1000		// ~ 5s
 
 #define FILER_FUNC_NONE		0x00
@@ -55,6 +58,7 @@ typedef struct {
     filerFileStruct_t files[FILER_MAX_FILES];
     FATFS fs;
     DIR dir;
+    FIL sess;
     char buf[64];
     uint32_t session;
     uint32_t loops;

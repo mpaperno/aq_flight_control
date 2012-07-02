@@ -22,8 +22,9 @@
 #include "aq_timer.h"
 #include "notice.h"
 #include <stdio.h>
+#include <string.h>
 
-rtcStruct_t rtcData;
+rtcStruct_t rtcData __attribute__((section(".ccm")));
 
 // Sakamoto's algorithm (modified)
 // return Day of Week, 1 == Monday, 7 == Sunday
@@ -91,6 +92,8 @@ void rtcInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     TIM_ICInitTypeDef  TIM_ICInitStructure;
     unsigned long periodValue;
+
+    memset((void *)&rtcData, 0, sizeof(rtcData));
 
     // Enable the PWR clock
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR, ENABLE);
@@ -196,7 +199,8 @@ void rtcInit(void) {
     RTC_InitStructure.RTC_SynchPrediv = rtcData.syncPrediv;
     RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
     RTC_Init(&RTC_InitStructure);
-    rtcSetDataTime(2011, 06, 18, 16, 50, 24);
+
+    rtcSetDataTime(2012, 01, 01, 00, 00, 00);
 }
 
 void RTC_WKUP_IRQHandler(void) {
@@ -211,12 +215,12 @@ void RTC_WKUP_IRQHandler(void) {
 }
 
 // only used for calibration at startup
-void TIM5_IRQHandler(void) {
-    if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET) {
-	// Get the Input Capture value
-	rtcData.captureLSI[rtcData.captureNumber++] = TIM_GetCapture4(TIM5);
-
-	// Clear CC4 Interrupt pending bit
-	TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
-    }
-}
+//void TIM5_IRQHandler(void) {
+//    if (TIM_GetITStatus(TIM5, TIM_IT_CC4) != RESET) {
+//	// Get the Input Capture value
+//	rtcData.captureLSI[rtcData.captureNumber++] = TIM_GetCapture4(TIM5);
+//
+//	// Clear CC4 Interrupt pending bit
+//	TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
+//    }
+//}

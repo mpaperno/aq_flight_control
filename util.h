@@ -20,10 +20,12 @@
 #define _util_h
 
 #include "aq.h"
+#include "CoOS.h"
 #include <stdlib.h>
 
-#define UTIL_DATA_SRAM_START	0x10000000
-#define UTIL_DATA_SRAM_END	0x10010000
+#define	UTIL_STACK_CHECK	16		// uncomment to allow system to self check for stack overflows
+
+#define UTIL_CCM_HEAP_SIZE	(0x2000)	//  32KB
 
 #define UTIL_ISR_DISABLE	__asm volatile ( "CPSID   F\n")
 #define UTIL_ISR_ENABLE		__asm volatile ( "CPSIE   F\n")
@@ -43,6 +45,7 @@ extern float constrainFloat(float i, float lo, float hi);
 extern void dumpFloat(unsigned char n, float *floats);
 extern void dumpInt(unsigned char n, int *ints);
 extern void info(void);
+extern OS_STK *aqStackInit(uint16_t size);
 extern void *aqCalloc(size_t count, size_t size);
 extern void *aqDataCalloc(uint16_t count, uint16_t size);
 extern void utilFilterInit(utilFilter_t *f, float dt, float tau, float setpoint);
@@ -52,5 +55,8 @@ extern float utilFilter3(utilFilter_t *f, float signal);
 extern void utilFilterReset(utilFilter_t *f, float setpoint);
 extern void utilFilterReset3(utilFilter_t *f, float setpoint);
 extern int ftoa(char *buf, float f, unsigned int digits);
+#ifdef UTIL_STACK_CHECK
+extern void utilStackCheck(void);
+#endif
 
 #endif

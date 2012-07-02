@@ -30,18 +30,13 @@
 //#define HAS_VN100
 //#define USE_VN100
 
-// Which pressure sensor to use: 1 == sensor #1, 2 == sensor #2, 3 == both
-#define PRESSURE_SENSOR		1
-
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 
-//#define USE_BACKSTEP_CONTROLLER	2	// 1 == Euler angles, 2 == quat
+//#define USE_L1_ATTITUDE
 
 #include "stm32f4xx.h"
 
 #include "board_6_1.h"
-
-#define TASK_STACK_SIZE		256
 
 #ifndef M_PI
 #define M_PI			3.14159265f

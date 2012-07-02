@@ -94,6 +94,7 @@ extern void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float 
 extern void navUkfSetGlobalPositionTarget(double lat, double lon);
 extern void UKFPressureAdjust(float altitude);
 extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll);
+extern void navUkfZeroRate(float zRate, int axis);
 extern void navUkfFinish(void);
 
 #endif

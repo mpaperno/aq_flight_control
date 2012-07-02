@@ -108,6 +108,28 @@ typedef struct {
     unsigned char valid;    // Validity Flags
 } __attribute__((packed)) ubloxStructTIMEUTC_t;
 
+typedef struct {
+    unsigned char state;
+    unsigned char count;
+    unsigned char class;
+    unsigned char id;
+    unsigned char length;
+    union {
+	ubloxStructPOSLLH_t posllh;
+	ubloxStructVALNED_t valned;
+	ubloxStructDOP_t dop;
+	ubloxStructTP_t tp;
+	ubloxStructTIMEUTC_t timeutc;
+	char other[UBLOX_MAX_PAYLOAD];
+    } payload;
+
+    unsigned char ubloxRxCK_A;
+    unsigned char ubloxRxCK_B;
+
+    unsigned char ubloxTxCK_A;
+    unsigned char ubloxTxCK_B;
+} ubloxStruct_t;
+
 extern unsigned char ubloxCharIn(unsigned char c);
 extern void ubloxInit();
 extern void ubloxSendSetup(void);

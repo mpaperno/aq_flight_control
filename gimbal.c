@@ -24,27 +24,33 @@
 #include "util.h"
 #include "config.h"
 #include "aq_timer.h"
+#include "nav.h"
+#include <string.h>
 
-gimbalStruct_t gimbalData;
+gimbalStruct_t gimbalData __attribute__((section(".ccm")));
 
 void gimbalInit(void) {
-#ifdef GIMBAL_PORT_PITCH
-    gimbalData.pitch = pwmInit(GIMBAL_PORT_PITCH, 5000, PWM_OUTPUT, p[GMBL_NTRL_PITCH]);
-#endif
-#ifdef GIMBAL_PORT_ROLL
-    gimbalData.roll = pwmInit(GIMBAL_PORT_ROLL, 5000, PWM_OUTPUT, p[GMBL_NTRL_ROLL]);
-#endif
+    memset((void *)&gimbalData, 0, sizeof(gimbalData));
+
+    if (p[GMBL_PITCH_PORT] >= 1.0f)
+	gimbalData.pitch = pwmInit((uint8_t)(p[GMBL_PITCH_PORT] - 1.0f), 5000, PWM_OUTPUT, p[GMBL_NTRL_PITCH], -1);
+
+    if (p[GMBL_ROLL_PORT] >= 1.0f)
+	gimbalData.roll = pwmInit((uint8_t)(p[GMBL_ROLL_PORT] - 1.0f), 5000, PWM_OUTPUT, p[GMBL_NTRL_ROLL], -1);
 }
 
 void gimbalUpdate(void) {
     uint16_t pwm;
+    float tilt;
 
     if (gimbalData.pitch) {
-	if (RADIO_AUX3 != gimbalData.radioPitch) {
-	    gimbalData.radioPitch -= (gimbalData.radioPitch - RADIO_AUX3) * p[GMBL_SLEW_RATE];
-	}
+	tilt = RADIO_AUX3 + navData.poiAngle * (2000 - 1000);
 
-	pwm = constrainInt(-AQ_PITCH * (2000 - 1000) * p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH] + gimbalData.radioPitch, p[GMBL_PWM_MIN], p[GMBL_PWM_MAX]);
+	// smooth
+	if (tilt != gimbalData.tilt)
+	    gimbalData.tilt -= (gimbalData.tilt - tilt) * p[GMBL_SLEW_RATE];
+
+	pwm = constrainInt((-AQ_PITCH * (2000 - 1000)  + gimbalData.tilt )* p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH], p[GMBL_PWM_MIN], p[GMBL_PWM_MAX]);
 	if (timerMicros() > 20000000)
 	    *gimbalData.pitch->ccr = pwm;
     }

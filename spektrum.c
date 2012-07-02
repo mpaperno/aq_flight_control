@@ -28,9 +28,7 @@
 #include <string.h>
 #include <CoOS.h>
 
-spektrumStruct_t spektrumData;
-
-OS_STK spektrumTaskStack[TASK_STACK_SIZE];
+spektrumStruct_t spektrumData __attribute__((section(".ccm")));
 
 void spektrumDecode(void) {
     int addr, val;
@@ -101,6 +99,8 @@ unsigned char spektrumCharIn(int c) {
 }
 
 void spektrumInit(void) {
+    memset((void *)&spektrumData, 0, sizeof(spektrumData));
+
     radioData.serialPort = serialOpen(SPEKTRUM_UART, SPEKTRUM_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
 }
 

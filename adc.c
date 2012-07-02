@@ -31,9 +31,13 @@
 #include <math.h>
 #include <CoOS.h>
 
-adcStruct_t adcData;
+adcStruct_t adcData __attribute__((section(".ccm")));
+struct {
+    uint16_t adc123Raw1[ADC_CHANNELS*3];
+    uint16_t adc123Raw2[ADC_CHANNELS*3];
+} adcDMAData;
 
-OS_STK adcTaskStack[TASK_STACK_SIZE];
+OS_STK *adcTaskStack;
 
 float adcIDGVoltsToTemp(float volts) {
     return (25.0f + (volts - ADC_IDG_TEMP_OFFSET) * ADC_IDG_TEMP_SLOPE);
@@ -76,7 +80,7 @@ void adcTaskCode(void *unused) {
     unsigned long loops;
     register int i;
 
-    AQ_NOTICE("ADC task started...\n");
+    AQ_NOTICE("ADC task started\n");
 
     magSign = ADC_MAG_SIGN;
     sumMagX = sumMagY = sumMagZ = 0.0f;
@@ -224,6 +228,12 @@ void adcTaskCode(void *unused) {
             // MPXH6101A
             adcData.pressure1 = (adcData.pressure1  + (((ADC_REF_VOLTAGE - adcData.voltages[ADC_VOLTS_PRES1]) * (5.0f / ADC_REF_VOLTAGE)) + 0.54705f) / 0.05295f * 1000.0f) * 0.5f;
 #endif
+	    if (p[IMU_PRESS_SENSE] == 0.0f)
+		adcData.pressure = adcData.pressure1;
+	    else if (p[IMU_PRESS_SENSE] == 1.0f)
+		adcData.pressure = adcData.pressure2;
+	    else if (p[IMU_PRESS_SENSE] == 2.0f)
+		adcData.pressure = (adcData.pressure1 + adcData.pressure2) * 0.5f;
 
 	    // MAGS: bias
 	    x = +((adcData.voltages[ADC_VOLTS_MAGX] - adcData.magBridgeBiasX) * (magSign ? -1 : 1) + p[IMU_MAG_BIAS_X] + p[IMU_MAG_BIAS1_X]*dTemp + p[IMU_MAG_BIAS2_X]*dTemp2 + p[IMU_MAG_BIAS3_X]*dTemp3);
@@ -231,7 +241,7 @@ void adcTaskCode(void *unused) {
 	    z = -((adcData.voltages[ADC_VOLTS_MAGZ] - adcData.magBridgeBiasZ) * (magSign ? -1 : 1) + p[IMU_MAG_BIAS_Z] + p[IMU_MAG_BIAS1_Z]*dTemp + p[IMU_MAG_BIAS2_Z]*dTemp2 + p[IMU_MAG_BIAS3_Z]*dTemp3);
 
 	    // store the mag sign used for this iteration
-	    adcData.magSign = (magSign ? -1.0f : 1.0f);
+	    adcData.magSign = (magSign ? -1 : 1);
 
 	    // scale
 	    x /= (p[IMU_MAG_SCAL_X] + p[IMU_MAG_SCAL1_X]*dTemp + p[IMU_MAG_SCAL2_X]*dTemp2 + p[IMU_MAG_SCAL3_X]*dTemp3);
@@ -325,7 +335,9 @@ void adcInit(void) {
     ADC_InitTypeDef ADC_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    AQ_NOTICE("ADC init... ");
+    AQ_NOTICE("ADC init\n");
+
+    memset((void *)&adcData, 0, sizeof(adcData));
 
     // calculate IMU rotation
     adcCalcRot();
@@ -372,7 +384,7 @@ void adcInit(void) {
     // DMA2 Stream 0, Channel 0 configuration (ADC1)
     DMA_DeInit(DMA2_Stream0);
     DMA_InitStructure.DMA_Channel = DMA_Channel_0;
-    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)adcData.adc123Raw1;
+    DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)adcDMAData.adc123Raw1;
     DMA_InitStructure.DMA_PeripheralBaseAddr = ((uint32_t)0x40012308);
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
     DMA_InitStructure.DMA_BufferSize = ADC_CHANNELS * 3 * 2;
@@ -510,8 +522,9 @@ void adcInit(void) {
     ADC_Cmd(ADC3, ENABLE);
 
     adcData.adcFlag = CoCreateFlag(1, 0);
+    adcTaskStack = aqStackInit(ADC_STACK_SIZE);
 
-    adcData.adcTask = CoCreateTask(adcTaskCode, (void *)0, 10, &adcTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    adcData.adcTask = CoCreateTask(adcTaskCode, (void *)0, ADC_PRIORITY, &adcTaskStack[ADC_STACK_SIZE-1], ADC_STACK_SIZE);
 
     // Start ADC1 Software Conversion
     ADC_SoftwareStartConv(ADC1);
@@ -529,19 +542,19 @@ void adcInit(void) {
     // determine LiPo battery cell count
     if (adcData.vIn < 8.5) {
 	adcData.batCellCount = 2.0f;
-	AQ_NOTICE("Battery cells: 2");
+	AQ_NOTICE("Battery cells: 2\n");
     }
     else if (adcData.vIn < 12.8f) {
 	adcData.batCellCount = 3.0f;
-	AQ_NOTICE("Battery cells: 3");
+	AQ_NOTICE("Battery cells: 3\n");
     }
     else if (adcData.vIn < 17.0f) {
 	adcData.batCellCount = 4.0f;
-	AQ_NOTICE("Battery cells: 4");
+	AQ_NOTICE("Battery cells: 4\n");
     }
     else if (adcData.vIn < 21.3f) {
 	adcData.batCellCount = 5.0f;
-	AQ_NOTICE("Battery cells: 5");
+	AQ_NOTICE("Battery cells: 5\n");
     }
 }
 
@@ -557,7 +570,7 @@ void DMA2_Stream0_IRQHandler(void) {
     DMA2->LIFCR = (uint32_t)(DMA_IT_TEIF0 | DMA_IT_DMEIF0 | DMA_IT_FEIF0 | DMA_IT_TCIF0 | DMA_IT_HTIF0);
 
     // second half?
-    w = ((flag & DMA_IT_TCIF0) == RESET) ? adcData.adc123Raw1 : adcData.adc123Raw2;
+    w = ((flag & DMA_IT_TCIF0) == RESET) ? adcDMAData.adc123Raw1 : adcDMAData.adc123Raw2;
 
     // accumulate totals
     s = adcData.interrupt123Sums;

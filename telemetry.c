@@ -34,11 +34,12 @@
 #include "rcc.h"
 #include "aq_mavlink.h"
 #include "nav_ukf.h"
+#include "supervisor.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
 
-telemetryStruct_t telemetryData;
+telemetryStruct_t telemetryData __attribute__((section(".ccm")));
 
 void telemetryDo(void) {
     static unsigned long lastAqUpdate;
@@ -112,7 +113,7 @@ void telemetryDo(void) {
 	    downlinkSendFloat(UKF_ACC_BIAS_X);
 	    downlinkSendFloat(UKF_ACC_BIAS_Y);
 	    downlinkSendFloat(UKF_ACC_BIAS_Z);
-	    downlinkSendFloat(0.0f);
+	    downlinkSendFloat(supervisorData.flightTimeRemaining);
 	    downlinkSendChecksum();
 
 	    // release serial port
@@ -129,4 +130,8 @@ void telemetryEnable(void) {
 
 void telemetryDisable(void) {
     telemetryData.telemetryEnable = 0;
+}
+
+void telemetryInit(void) {
+    memset((void *)&telemetryData, 0, sizeof(telemetryData));
 }

@@ -21,6 +21,9 @@
 
 #include <CoOS.h>
 
+#define COMMAND_STACK_SIZE	    128
+#define COMMAND_PRIORITY	    45
+
 #define COMMAND_SYNC1		    'A'
 #define COMMAND_SYNC2		    'q'
 #define COMMAND_COMMAND		    'C'

@@ -22,10 +22,11 @@
 #include "util.h"
 #include "aq_timer.h"
 #include "notice.h"
+#include <string.h>
 
-radioStruct_t radioData;
+radioStruct_t radioData __attribute__((section(".ccm")));
 
-OS_STK radioTaskStack[TASK_STACK_SIZE];
+OS_STK *radioTaskStack;
 
 // calculate radio reception quality
 void radioReceptionQuality(int q) {
@@ -35,7 +36,7 @@ void radioReceptionQuality(int q) {
 void radioTaskCode(void *unused) {
     serialPort_t *s = radioData.serialPort;
 
-    AQ_NOTICE("Radio task started...\n");
+    AQ_NOTICE("Radio task started\n");
 
     while (1) {
 	// wait for data
@@ -68,7 +69,9 @@ void radioTaskCode(void *unused) {
 }
 
 void radioInit(void) {
-    AQ_NOTICE("Radio init... ");
+    AQ_NOTICE("Radio init\n");
+
+    memset((void *)&radioData, 0, sizeof(radioData));
 
     utilFilterInit(&radioData.qualityFilter, (1.0f / 50.0f), 0.75f, 0.0f);
 
@@ -82,5 +85,7 @@ void radioInit(void) {
 	break;
     }
 
-    radioData.radioTask = CoCreateTask(radioTaskCode, (void *)0, 25, &radioTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    radioTaskStack = aqStackInit(RADIO_STACK_SIZE);
+
+    radioData.radioTask = CoCreateTask(radioTaskCode, (void *)0, RADIO_PRIORITY, &radioTaskStack[RADIO_STACK_SIZE-1], RADIO_STACK_SIZE);
 }

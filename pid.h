@@ -19,6 +19,8 @@
 #ifndef pid_h
 #define pid_h
 
+#include "aq.h"
+
 typedef struct {
     float setPoint;		// Last setpoint
     float dState;		// Last position input
@@ -28,7 +30,7 @@ typedef struct {
     float *dGain;		// derivative gain
     float *fGain;		// low pass filter factor (1 - pole) for derivative gain
     float *pMax, *iMax, *dMax, *oMax;
-    int *pTrim, *iTrim, *dTrim, *fTrim;	// pointers to radio trim channels (or NULL)
+    int16_t *pTrim, *iTrim, *dTrim, *fTrim;	// pointers to radio trim channels (or NULL)
     float pv_1, pv_2;
     float co_1;
     float pTerm_1;
@@ -37,7 +39,7 @@ typedef struct {
     float sp_1;
 } pidStruct_t;
 
-extern pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float *iMax, float *dMax, float *oMax, int *pTrim, int *iTrim, int *dTrim, int *fTrim);
+extern pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float *iMax, float *dMax, float *oMax, int16_t *pTrim, int16_t *iTrim, int16_t *dTrim, int16_t *fTrim);
 extern float pidUpdate(pidStruct_t *pid, float setpoint, float position);
 extern float pidUpdateTest(pidStruct_t *pid, float setpoint, float position);
 extern float pidUpdate2(pidStruct_t *pid, float setpoint, float position);

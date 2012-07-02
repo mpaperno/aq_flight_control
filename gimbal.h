@@ -21,11 +21,8 @@
 
 #include "pwm.h"
 
-//#define GIMBAL_PORT_PITCH	PWM_3	// comment out to disable
-//#define GIMBAL_PORT_ROLL	PWM_6	// comment out to disable
-
 typedef struct {
-    float radioPitch;
+    float tilt;
     pwmStruct_t *pitch;
     pwmStruct_t *roll;
 } gimbalStruct_t;

@@ -25,10 +25,12 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define GPS_LATENCY	75000	// us (comment out to use uBlox timepulse)
-#define GPS_PRIORITY	35
-//#define GPS_LOG_BUF	8192	// comment out to disable logging
-//#define GPS_FNAME	"GPS"
+#define GPS_STACK_SIZE	    96
+#define GPS_PRIORITY	    35
+
+#define GPS_LATENCY	    75000	// us (comment out to use uBlox timepulse)
+//#define GPS_LOG_BUF	    8192	// comment out to disable logging
+//#define GPS_FNAME	    "GPS"
 //#define GPS_DO_RTK		// comment out to disable GPS Raw data reports
 
 typedef struct {

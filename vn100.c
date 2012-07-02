@@ -286,7 +286,9 @@ void vn100Init(void) {
     DMA_InitTypeDef DMA_InitStructure;
     int i;
 
-    AQ_NOTICE("VN100 init... ");
+    AQ_NOTICE("VN100 init\n");
+
+    memset((void *)&vn100Data, 0, sizeof(vn100Data));
 
     // reprgm pin
     vn100Data.reprgm = digitalInit(VN100_REPRGM_PORT, VN100_REPRGM_PIN);
@@ -492,8 +494,6 @@ void vn100Init(void) {
     vn100Data.mags[0] = vn100Data.recvBuf.parameters[0];
     vn100Data.mags[1] = vn100Data.recvBuf.parameters[1];
     vn100Data.mags[2] = vn100Data.recvBuf.parameters[2];
-
-    AQ_NOTICE("Done\n");
 }
 
 // dead end

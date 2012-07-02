@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <math.h>
 
-float p[CONFIG_NUM_PARAMS];
+float p[CONFIG_NUM_PARAMS] __attribute__((section(".ccm")));
 char configBuf[CONFIG_BUF_SIZE];
 
 const char *configParameterStrings[] = {
@@ -143,6 +143,7 @@ const char *configParameterStrings[] = {
     "DOWNLINK_BAUD",
     "TELEMETRY_RATE",
     "NAV_MAX_SPEED",
+    "NAV_MAX_DECENT",
     "NAV_SPEED_P",
     "NAV_SPEED_I",
     "NAV_SPEED_PM",
@@ -247,6 +248,9 @@ const char *configParameterStrings[] = {
     "IMU_GYO_ALGN_ZY",
     "IMU_MAG_INCL",
     "IMU_MAG_DECL",
+    "IMU_PRESS_SENSE",
+    "GMBL_PITCH_PORT",
+    "GMBL_ROLL_PORT",
     "GMBL_PWM_MAX",
     "GMBL_PWM_MIN",
     "GMBL_NTRL_PITCH",
@@ -256,6 +260,12 @@ const char *configParameterStrings[] = {
     "GMBL_SLEW_RATE",
     "SPVR_LOW_BAT1",
     "SPVR_LOW_BAT2",
+    "SPVR_BAT_CRV1",
+    "SPVR_BAT_CRV2",
+    "SPVR_BAT_CRV3",
+    "SPVR_BAT_CRV4",
+    "SPVR_BAT_CRV5",
+    "SPVR_BAT_CRV6",
     "UKF_VEL_Q",
     "UKF_VEL_ALT_Q",
     "UKF_POS_Q",
@@ -297,7 +307,65 @@ const char *configParameterStrings[] = {
     "VN100_MAG_ALGN_YX",
     "VN100_MAG_ALGN_YZ",
     "VN100_MAG_ALGN_ZX",
-    "VN100_MAG_ALGN_ZY"
+    "VN100_MAG_ALGN_ZY",
+    "L1_ATT_J_ROLL",
+    "L1_ATT_J_PITCH",
+    "L1_ATT_J_YAW",
+    "L1_ATT_AM1",
+    "L1_ATT_AM2",
+    "L1_ATT_T2R_A1",
+    "L1_ATT_T2R_A2",
+    "L1_ATT_PROP_K1",
+    "L1_ATT_MAX_RATE",
+    "L1_ATT_MAX_OUT",
+    "L1_ATT_QUAT_TAU",
+    "L1_ATT_L1_ASP",
+    "L1_ATT_L1_K1",
+    "L1_ATT_PWM_LO",
+    "L1_ATT_PWM_HI",
+    "L1_ATT_PWM_SCALE",
+    "L1_ATT_MM_R01",
+    "L1_ATT_MM_P01",
+    "L1_ATT_MM_Y01",
+    "L1_ATT_MM_R02",
+    "L1_ATT_MM_P02",
+    "L1_ATT_MM_Y02",
+    "L1_ATT_MM_R03",
+    "L1_ATT_MM_P03",
+    "L1_ATT_MM_Y03",
+    "L1_ATT_MM_R04",
+    "L1_ATT_MM_P04",
+    "L1_ATT_MM_Y04",
+    "L1_ATT_MM_R05",
+    "L1_ATT_MM_P05",
+    "L1_ATT_MM_Y05",
+    "L1_ATT_MM_R06",
+    "L1_ATT_MM_P06",
+    "L1_ATT_MM_Y06",
+    "L1_ATT_MM_R07",
+    "L1_ATT_MM_P07",
+    "L1_ATT_MM_Y07",
+    "L1_ATT_MM_R08",
+    "L1_ATT_MM_P08",
+    "L1_ATT_MM_Y08",
+    "L1_ATT_MM_R09",
+    "L1_ATT_MM_P09",
+    "L1_ATT_MM_Y09",
+    "L1_ATT_MM_R10",
+    "L1_ATT_MM_P10",
+    "L1_ATT_MM_Y10",
+    "L1_ATT_MM_R11",
+    "L1_ATT_MM_P11",
+    "L1_ATT_MM_Y11",
+    "L1_ATT_MM_R12",
+    "L1_ATT_MM_P12",
+    "L1_ATT_MM_Y12",
+    "L1_ATT_MM_R13",
+    "L1_ATT_MM_P13",
+    "L1_ATT_MM_Y13",
+    "L1_ATT_MM_R14",
+    "L1_ATT_MM_P14",
+    "L1_ATT_MM_Y14"
 };
 
 void configLoadDefault(void) {
@@ -413,6 +481,7 @@ void configLoadDefault(void) {
     p[DOWNLINK_BAUD] = DEFAULT_DOWNLINK_BAUD;
     p[TELEMETRY_RATE] = DEFAULT_TELEMETRY_RATE;
     p[NAV_MAX_SPEED] = DEFAULT_NAV_MAX_SPEED;
+    p[NAV_MAX_DECENT] = DEFAULT_NAV_MAX_DECENT;
     p[NAV_SPEED_P] = DEFAULT_NAV_SPEED_P;
     p[NAV_SPEED_I] = DEFAULT_NAV_SPEED_I;
     p[NAV_SPEED_PM] = DEFAULT_NAV_SPEED_PM;
@@ -517,6 +586,9 @@ void configLoadDefault(void) {
     p[IMU_GYO_ALGN_ZY] = DEFAULT_IMU_GYO_ALGN_ZY;
     p[IMU_MAG_INCL] = DEFAULT_IMU_MAG_INCL;
     p[IMU_MAG_DECL] = DEFAULT_IMU_MAG_DECL;
+    p[IMU_PRESS_SENSE] = DEFAULT_IMU_PRESS_SENSE;
+    p[GMBL_PITCH_PORT] = DEFAULT_GMBL_PITCH_PORT;
+    p[GMBL_ROLL_PORT] = DEFAULT_GMBL_ROLL_PORT;
     p[GMBL_PWM_MAX] = DEFAULT_GMBL_PWM_MAX;
     p[GMBL_PWM_MIN] = DEFAULT_GMBL_PWM_MIN;
     p[GMBL_NTRL_PITCH] = DEFAULT_GMBL_NTRL_PITCH;
@@ -524,8 +596,14 @@ void configLoadDefault(void) {
     p[GMBL_SCAL_PITCH] = DEFAULT_GMBL_SCAL_PITCH;
     p[GMBL_SCAL_ROLL] = DEFAULT_GMBL_SCAL_ROLL;
     p[GMBL_SLEW_RATE] = DEFAULT_GMBL_SLEW_RATE;
-    p[SPVR_LOW_BAT1] = DEFAULT_SPVR_LOW_BAT1,
-    p[SPVR_LOW_BAT2] = DEFAULT_SPVR_LOW_BAT2,
+    p[SPVR_LOW_BAT1] = DEFAULT_SPVR_LOW_BAT1;
+    p[SPVR_LOW_BAT2] = DEFAULT_SPVR_LOW_BAT2;
+    p[SPVR_BAT_CRV1] = DEFAULT_SPVR_BAT_CRV1;
+    p[SPVR_BAT_CRV2] = DEFAULT_SPVR_BAT_CRV2;
+    p[SPVR_BAT_CRV3] = DEFAULT_SPVR_BAT_CRV3;
+    p[SPVR_BAT_CRV4] = DEFAULT_SPVR_BAT_CRV4;
+    p[SPVR_BAT_CRV5] = DEFAULT_SPVR_BAT_CRV5;
+    p[SPVR_BAT_CRV6] = DEFAULT_SPVR_BAT_CRV6;
     p[UKF_VEL_Q] = DEFAULT_UKF_VEL_Q;
     p[UKF_VEL_ALT_Q] = DEFAULT_UKF_VEL_ALT_Q;
     p[UKF_POS_Q] = DEFAULT_UKF_POS_Q;
@@ -568,6 +646,64 @@ void configLoadDefault(void) {
     p[VN100_MAG_ALGN_YZ] = DEFAULT_VN100_MAG_ALGN_YZ;
     p[VN100_MAG_ALGN_ZX] = DEFAULT_VN100_MAG_ALGN_ZX;
     p[VN100_MAG_ALGN_ZY] = DEFAULT_VN100_MAG_ALGN_ZY;
+    p[L1_ATT_J_ROLL] = DEFAULT_L1_ATT_J_ROLL;
+    p[L1_ATT_J_PITCH] = DEFAULT_L1_ATT_J_PITCH;
+    p[L1_ATT_J_YAW] = DEFAULT_L1_ATT_J_YAW;
+    p[L1_ATT_AM1] = DEFAULT_L1_ATT_AM1;
+    p[L1_ATT_AM2] = DEFAULT_L1_ATT_AM2;
+    p[L1_ATT_T2R_A1] = DEFAULT_L1_ATT_T2R_A1;
+    p[L1_ATT_T2R_A2] = DEFAULT_L1_ATT_T2R_A2;
+    p[L1_ATT_PROP_K1] = DEFAULT_L1_ATT_PROP_K1;
+    p[L1_ATT_MAX_RATE] = DEFAULT_L1_ATT_MAX_RATE;
+    p[L1_ATT_MAX_OUT] = DEFAULT_L1_ATT_MAX_OUT;
+    p[L1_ATT_QUAT_TAU] = DEFAULT_L1_ATT_QUAT_TAU;
+    p[L1_ATT_L1_ASP] = DEFAULT_L1_ATT_L1_ASP;
+    p[L1_ATT_L1_K1] = DEFAULT_L1_ATT_L1_K1;
+    p[L1_ATT_PWM_LO] = DEFAULT_L1_ATT_PWM_LO;
+    p[L1_ATT_PWM_HI] = DEFAULT_L1_ATT_PWM_HI;
+    p[L1_ATT_PWM_SCALE] = DEFAULT_L1_ATT_PWM_SCALE;
+    p[L1_ATT_MM_R01] = DEFAULT_L1_ATT_MM_R01;
+    p[L1_ATT_MM_P01] = DEFAULT_L1_ATT_MM_P01;
+    p[L1_ATT_MM_Y01] = DEFAULT_L1_ATT_MM_Y01;
+    p[L1_ATT_MM_R02] = DEFAULT_L1_ATT_MM_R02;
+    p[L1_ATT_MM_P02] = DEFAULT_L1_ATT_MM_P02;
+    p[L1_ATT_MM_Y02] = DEFAULT_L1_ATT_MM_Y02;
+    p[L1_ATT_MM_R03] = DEFAULT_L1_ATT_MM_R03;
+    p[L1_ATT_MM_P03] = DEFAULT_L1_ATT_MM_P03;
+    p[L1_ATT_MM_Y03] = DEFAULT_L1_ATT_MM_Y03;
+    p[L1_ATT_MM_R04] = DEFAULT_L1_ATT_MM_R04;
+    p[L1_ATT_MM_P04] = DEFAULT_L1_ATT_MM_P04;
+    p[L1_ATT_MM_Y04] = DEFAULT_L1_ATT_MM_Y04;
+    p[L1_ATT_MM_R05] = DEFAULT_L1_ATT_MM_R05;
+    p[L1_ATT_MM_P05] = DEFAULT_L1_ATT_MM_P05;
+    p[L1_ATT_MM_Y05] = DEFAULT_L1_ATT_MM_Y05;
+    p[L1_ATT_MM_R06] = DEFAULT_L1_ATT_MM_R06;
+    p[L1_ATT_MM_P06] = DEFAULT_L1_ATT_MM_P06;
+    p[L1_ATT_MM_Y06] = DEFAULT_L1_ATT_MM_Y06;
+    p[L1_ATT_MM_R07] = DEFAULT_L1_ATT_MM_R07;
+    p[L1_ATT_MM_P07] = DEFAULT_L1_ATT_MM_P07;
+    p[L1_ATT_MM_Y07] = DEFAULT_L1_ATT_MM_Y07;
+    p[L1_ATT_MM_R08] = DEFAULT_L1_ATT_MM_R08;
+    p[L1_ATT_MM_P08] = DEFAULT_L1_ATT_MM_P08;
+    p[L1_ATT_MM_Y08] = DEFAULT_L1_ATT_MM_Y08;
+    p[L1_ATT_MM_R09] = DEFAULT_L1_ATT_MM_R09;
+    p[L1_ATT_MM_P09] = DEFAULT_L1_ATT_MM_P09;
+    p[L1_ATT_MM_Y09] = DEFAULT_L1_ATT_MM_Y09;
+    p[L1_ATT_MM_R10] = DEFAULT_L1_ATT_MM_R10;
+    p[L1_ATT_MM_P10] = DEFAULT_L1_ATT_MM_P10;
+    p[L1_ATT_MM_Y10] = DEFAULT_L1_ATT_MM_Y10;
+    p[L1_ATT_MM_R11] = DEFAULT_L1_ATT_MM_R11;
+    p[L1_ATT_MM_P11] = DEFAULT_L1_ATT_MM_P11;
+    p[L1_ATT_MM_Y11] = DEFAULT_L1_ATT_MM_Y11;
+    p[L1_ATT_MM_R12] = DEFAULT_L1_ATT_MM_R12;
+    p[L1_ATT_MM_P12] = DEFAULT_L1_ATT_MM_P12;
+    p[L1_ATT_MM_Y12] = DEFAULT_L1_ATT_MM_Y12;
+    p[L1_ATT_MM_R13] = DEFAULT_L1_ATT_MM_R13;
+    p[L1_ATT_MM_P13] = DEFAULT_L1_ATT_MM_P13;
+    p[L1_ATT_MM_Y13] = DEFAULT_L1_ATT_MM_Y13;
+    p[L1_ATT_MM_R14] = DEFAULT_L1_ATT_MM_R14;
+    p[L1_ATT_MM_P14] = DEFAULT_L1_ATT_MM_P14;
+    p[L1_ATT_MM_Y14] = DEFAULT_L1_ATT_MM_Y14;
 }
 
 void configFlashRead(void) {
@@ -647,7 +783,7 @@ int8_t configReadFile(char *fname) {
 	fname = CONFIG_FILE_NAME;
 
     if ((fh = filerGetHandle(fname)) < 0) {
-	AQ_NOTICE("config: cannot get read file handle");
+	AQ_NOTICE("config: cannot get read file handle\n");
 	return -1;
     }
 
@@ -701,7 +837,7 @@ int8_t configWriteFile(char *fname) {
 	fname = CONFIG_FILE_NAME;
 
     if ((fh = filerGetHandle(fname)) < 0) {
-	AQ_NOTICE("config: cannot get write file handle");
+	AQ_NOTICE("config: cannot get write file handle\n");
 	return -1;
     }
 
@@ -710,7 +846,7 @@ int8_t configWriteFile(char *fname) {
 	ret = filerWrite(fh, buf, -1, n);
 
 	if (ret < n) {
-	    AQ_NOTICE("config: file write error");
+	    AQ_NOTICE("config: file write error\n");
 	    ret = -1;
 	    break;
 	}

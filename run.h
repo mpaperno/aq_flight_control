@@ -21,6 +21,9 @@
 
 #include <CoOS.h>
 
+#define RUN_TASK_SIZE		192
+#define RUN_PRIORITY		30
+
 #define RUN_SENSOR_HIST		10	    // number of timesteps to average observation sensors' data
 #define RUN_ACC_MASK		1.0f//10.0f	    // allow GPS accuracy to ramp up after startup
 
@@ -29,8 +32,8 @@ typedef struct {
 
     float accMask;
     float bestHacc;
-    float accHist[RUN_SENSOR_HIST][3];
-    float magHist[RUN_SENSOR_HIST][3];
+    float accHist[3][RUN_SENSOR_HIST];
+    float magHist[3][RUN_SENSOR_HIST];
     float presHist[RUN_SENSOR_HIST];
     float sumAcc[3];
     float sumMag[3];

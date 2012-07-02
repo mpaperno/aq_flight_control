@@ -40,7 +40,7 @@
 mavlinkStruct_t mavlinkData;
 mavlink_system_t mavlink_system;
 
-OS_STK mavlinkRecvTaskStack[TASK_STACK_SIZE];
+OS_STK *mavlinkRecvTaskStack;
 
 void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
     serialWrite(mavlinkData.serialPort, ch);
@@ -60,7 +60,6 @@ void mavlinkWpAnnounceCurrent(uint16_t seqId) {
 }
 
 void mavlinkDo(void) {
-    serialPort_t *s = mavlinkData.serialPort;
     StatusType result;
     void *msg;
     static unsigned long mavCounter;
@@ -123,11 +122,12 @@ void mavlinkDo(void) {
     // send pending notices
     msg = CoAcceptQueueMail(mavlinkData.notices, &result);
     if (result == E_OK)
-	    mavlink_msg_statustext_send(MAVLINK_COMM_0, 0, (const int8_t*)msg);
+	    mavlink_msg_statustext_send(MAVLINK_COMM_0, 0, (const char *)msg);
 
     // list all parameters
     if (mavlinkData.currentParam < mavlinkData.numParams && mavlinkData.nextParam < micros) {
-	mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[mavlinkData.currentParam], p[mavlinkData.currentParam], MAVLINK_TYPE_FLOAT, mavlinkData.numParams, mavlinkData.currentParam++);
+	mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[mavlinkData.currentParam], p[mavlinkData.currentParam], MAVLINK_TYPE_FLOAT, mavlinkData.numParams, mavlinkData.currentParam);
+	mavlinkData.currentParam++;
 	mavlinkData.nextParam = micros + MAVLINK_PARAM_INTERVAL;
     }
     else if (mavlinkData.wpCurrent < mavlinkData.wpCount && mavlinkData.wpNext < micros) {
@@ -190,10 +190,10 @@ void mavlinkRecvTaskCode(void *unused) {
     serialPort_t *s = mavlinkData.serialPort;
     mavlink_message_t msg;
     mavlink_status_t status;
-    int8_t paramId[16];
+    char paramId[16];
     uint8_t c;
 
-    AQ_NOTICE("Mavlink receive task started...\n");
+    AQ_NOTICE("Mavlink receive task started\n");
 
     while (1) {
 	yield(5);
@@ -323,7 +323,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				    wp->targetRadius = mavlink_msg_mission_item_get_param1(&msg);
 				    wp->loiterTime = mavlink_msg_mission_item_get_param2(&msg) * 1000;
 				    wp->poiHeading = mavlink_msg_mission_item_get_param4(&msg);
-				    wp->maxSpeed = p[NAV_MAX_SPEED];
+				    wp->maxHorizSpeed = p[NAV_MAX_SPEED];
 				}
 				else if (command == MAV_CMD_NAV_WAYPOINT) {
 				    wp = navGetWaypoint(seqId);
@@ -335,7 +335,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				    wp->targetRadius = mavlink_msg_mission_item_get_param1(&msg);
 				    wp->loiterTime = mavlink_msg_mission_item_get_param2(&msg) * 1000;
 				    wp->poiHeading = mavlink_msg_mission_item_get_param4(&msg);
-				    wp->maxSpeed = p[NAV_MAX_SPEED];
+				    wp->maxHorizSpeed = p[NAV_MAX_SPEED];
 				}
 				else if (command == MAV_CMD_DO_SET_HOME) {
 				    // use current location
@@ -353,7 +353,7 @@ void mavlinkRecvTaskCode(void *unused) {
 					wp->targetRadius = mavlink_msg_mission_item_get_param1(&msg);
 					wp->loiterTime = mavlink_msg_mission_item_get_param2(&msg) * 1000;
 					wp->poiHeading = mavlink_msg_mission_item_get_param4(&msg);
-					wp->maxSpeed = p[NAV_MAX_SPEED];
+					wp->maxHorizSpeed = p[NAV_MAX_SPEED];
 				    }
 				}
 				else {
@@ -446,6 +446,8 @@ void mavlinkInit(void) {
     unsigned long micros;
     int i;
 
+    memset((void *)&mavlinkData, 0, sizeof(mavlinkData));
+
     mavlinkData.serialPort = serialOpen(MAVLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_RTS_CTS, 0, 0);
 
     // setup mutex for serial port access
@@ -453,15 +455,16 @@ void mavlinkInit(void) {
 
     mavlinkData.notices = CoCreateQueue(mavlinkData.noticeQueue, MAVLINK_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
 
-    AQ_NOTICE("Mavlink init... ");
+    AQ_NOTICE("Mavlink init\n");
 
     mavlinkData.numParams = CONFIG_NUM_PARAMS;
     mavlinkData.currentParam = mavlinkData.numParams;
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
 
-    // start send thread with high priority so that it can process startup notices - will drop priority later
-    mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, 40, &mavlinkRecvTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    mavlinkRecvTaskStack = aqStackInit(MAVLINK_STACK_SIZE);
+
+    mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, MAVLINK_PRIORITY, &mavlinkRecvTaskStack[MAVLINK_STACK_SIZE-1], MAVLINK_STACK_SIZE);
 
     mavlink_system.sysid = flashSerno() % 250;
     mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;

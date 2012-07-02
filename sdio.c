@@ -23,10 +23,11 @@
 #include "rtc.h"
 #include "aq_timer.h"
 #include "notice.h"
-//#include "supervisor.h"
 #include <CoOS.h>
+#include <stdio.h>
+#include <string.h>
 
-sdioStruct_t sdioData;
+sdioStruct_t sdioData __attribute__((section(".ccm")));
 
 // Detect if SD card is correctly plugged in the memory slot.
 uint8_t SD_DetectLowLevel(void) {
@@ -906,6 +907,8 @@ void sdioLowLevelInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
 
+    memset((void *)&sdioData, 0, sizeof(sdioData));
+
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_SDIO);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_SDIO);
     GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_SDIO);
@@ -1783,8 +1786,17 @@ DRESULT disk_read (
 	return RES_NOTRDY;	// No card in the socket
 
     do {
-	if (tries)
-	    noticeSend("SDIO write retry\n");
+	if (tries) {
+	    char s[32];
+
+	    if (error != SD_OK) {
+		noticeSend("SDIO READ error != SD_OK\n");
+	    }
+	    else {
+		    sprintf(s, "SDIO READ status = %d\n", sdioData.errorDetected);
+		noticeSend(s);
+	    }
+	}
 
 	if (count > 1) {
 	    error = SD_ReadMultiBlocks(buff, sector*512, 512, count);
@@ -1827,11 +1839,19 @@ DRESULT disk_write (
     if (SD_Detect() == SD_NOT_PRESENT)
 	return RES_NOTRDY;	// No card in the socket
 
-//    supervisorDiskWait(1);
-
     do {
-	if (tries)
-	    noticeSend("SDIO write retry\n");
+	if (tries) {
+	    char s[32];
+
+	    if (error != SD_OK) {
+		noticeSend("SDIO WRITE error != SD_OK\n");
+	    }
+	    else {
+		sprintf(s, "SDIO WRITE status = %d\n", sdioData.errorDetected);
+		noticeSend(s);
+	    }
+	}
+
 	if (count > 1) {
 	    error = SD_WriteMultiBlocks((uint8_t *)buff, sector*512, 512, count);
 	}
@@ -1848,8 +1868,6 @@ DRESULT disk_write (
 
 	tries++;
     } while ((error != SD_OK || sdioData.errorDetected) && tries < SDIO_RETRIES);
-
-//    supervisorDiskWait(0);
 
     if (sdioData.errorDetected)
 	return RES_ERROR;
@@ -1913,7 +1931,7 @@ SD_Error SD_ProcessIRQSrc(void) {
 
     status = SDIO->STA &(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_STBITERR);
     if (status) {
-	sdioData.errorDetected = 1;
+	sdioData.errorDetected = status;
 	SDIO_ClearITPendingBit(status);
     }
     else {

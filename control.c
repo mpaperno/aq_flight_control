@@ -33,28 +33,28 @@
 #include "aq_mavlink.h"
 #include "supervisor.h"
 #include "gps.h"
-#ifdef USE_BACKSTEP_CONTROLLER
-#include "backstep.h"
+#ifdef USE_L1_ATTITUDE
+#include "l1_attitude.h"
 #endif
 #include <CoOS.h>
 #include <string.h>
 #include <math.h>
 
-controlStruct_t controlData;
-OS_STK controlTaskStack[TASK_STACK_SIZE];
+controlStruct_t controlData __attribute__((section(".ccm")));
+
+OS_STK *controlTaskStack;
 
 void controlTaskCode(void *unused) {
-    float pitch, roll, yaw;
+    float yaw;
     float throttle;
-#ifdef USE_BACKSTEP_CONTROLLER
-#if USE_BACKSTEP_CONTROLLER == 2
+#ifdef USE_L1_ATTITUDE
     float quat[4];
-#endif	// USE_BACKSTEP_CONTROLLER == 2
 #else
+    float pitch, roll;
     float pitchCommand, rollCommand, ruddCommand;
-#endif	// USE_BACKSTEP_CONTROLLER
+#endif	// USE_L1_ATTITUDE
 
-    AQ_NOTICE("Control task started...\n");
+    AQ_NOTICE("Control task started\n");
 
     while (1) {
 	// wait for work
@@ -102,8 +102,8 @@ void controlTaskCode(void *unused) {
 		    else
 			yaw = (RADIO_RUDD + p[CTRL_DEAD_BAND]) * p[CTRL_FACT_RUDD];
 
-		    // don't allow desired yaw angle to lead attitude yaw angle by more than 90 deg
-		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW) < 90.0f)) {
+		    // don't allow desired yaw angle to lead attitude yaw angle by more than 10 deg
+		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW) < 10.0f)) {
 			controlData.yaw = compassNormalize(controlData.yaw + yaw);
 			navData.holdHeading = compassNormalize(navData.holdHeading + yaw);
 		    }
@@ -133,7 +133,34 @@ void controlTaskCode(void *unused) {
 		    controlData.navPitchTarget = 0.0f;
 		    controlData.navRollTarget = 0.0f;
 		}
-#if USE_BACKSTEP_CONTROLLER != 2
+
+#ifdef USE_L1_ATTITUDE
+		// calculate required thrust for each axis + throttle
+
+		// determine which frame of reference to control from
+		if (navData.mode <= NAV_STATUS_ALTHOLD)
+		    // craft frame - manual
+		    eulerToQuatYPR(quat, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
+		else
+		    // world frame - autonomous
+		    eulerToQuatRPY(quat, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
+
+		// reset controller on startup
+		if (motorsData.throttle == 0) {
+		    quat[0] = UKF_Q1;
+		    quat[1] = UKF_Q2;
+		    quat[2] = UKF_Q3;
+		    quat[3] = UKF_Q4;
+		    l1AttitudeReset(quat);
+		}
+
+		l1Attitude(quat);
+
+		l1AttitudePowerDistribution(throttle);
+		motorsSendValues();
+		motorsData.throttle = throttle;
+#else
+
 		// smooth
 		controlData.userPitchTarget = utilFilter3(controlData.userPitchFilter, controlData.userPitchTarget);
 		controlData.userRollTarget = utilFilter3(controlData.userRollFilter, controlData.userRollTarget);
@@ -149,40 +176,6 @@ void controlTaskCode(void *unused) {
 		// combine nav & user requests (both are already smoothed)
 		controlData.pitch = pitch + controlData.userPitchTarget;
 		controlData.roll = roll + controlData.userRollTarget;
-#endif
-
-#ifdef USE_BACKSTEP_CONTROLLER
-		// calculate required thrust for each axis + throttle
-#if USE_BACKSTEP_CONTROLLER == 1
-		// reset controller on startup
-		if (motorsData.throttle == 0)
-		    backStepResetEuler(controlData.roll, controlData.pitch, controlData.yaw);
-
-		backStepEuler(controlData.roll, controlData.pitch, controlData.yaw);
-#else
-		// determine which frame of reference to control from
-		if (navData.mode <= NAV_STATUS_ALTHOLD)
-		    // craft frame - manual
-		    eulerToQuatYPR(quat, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
-		else
-		    // world frame - autonomous
-		    eulerToQuatRPY(quat, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
-
-		// reset controller on startup
-		if (motorsData.throttle == 0) {
-		    quat[0] = UKF_Q1;
-		    quat[1] = UKF_Q2;
-		    quat[2] = UKF_Q3;
-		    quat[3] = UKF_Q4;
-		    backStepResetQuat(quat);
-		}
-
-		backStepQuat(quat);
-#endif  // USE_BACKSTEP_CONTROLLER == 1
-		backStepPowerDistribution(throttle);
-		motorsSendValues();
-		motorsData.throttle = throttle;
-#else
 
 		if (p[CTRL_PID_TYPE] == 0) {
 		    // pitch angle
@@ -239,10 +232,12 @@ void controlTaskCode(void *unused) {
 void controlInit(void) {
     int i;
 
-    AQ_NOTICE("Control init... ");
+    AQ_NOTICE("Control init\n");
 
-#ifdef USE_BACKSTEP_CONTROLLER
-    backStepInit();
+    memset((void *)&controlData, 0, sizeof(controlData));
+
+#ifdef USE_L1_ATTITUDE
+    l1AttitudeInit();
 #endif
 
     for (i = 0; i < 3; i++) {
@@ -260,5 +255,7 @@ void controlInit(void) {
     controlData.rollAnglePID = pidInit(&p[CTRL_TLT_ANG_P], &p[CTRL_TLT_ANG_I], &p[CTRL_TLT_ANG_D], &p[CTRL_TLT_ANG_F], &p[CTRL_TLT_ANG_PM], &p[CTRL_TLT_ANG_IM], &p[CTRL_TLT_ANG_DM], &p[CTRL_TLT_ANG_OM], 0, 0, 0, 0);
     controlData.yawAnglePID = pidInit(&p[CTRL_YAW_ANG_P], &p[CTRL_YAW_ANG_I], &p[CTRL_YAW_ANG_D], &p[CTRL_YAW_ANG_F], &p[CTRL_YAW_ANG_PM], &p[CTRL_YAW_ANG_IM], &p[CTRL_YAW_ANG_DM], &p[CTRL_YAW_ANG_OM], 0, 0, 0, 0);
 
-    controlData.controlTask = CoCreateTask(controlTaskCode, (void *)0, 5, &controlTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    controlTaskStack = aqStackInit(CONTROL_STACK_SIZE);
+
+    controlData.controlTask = CoCreateTask(controlTaskCode, (void *)0, CONTROL_PRIORITY, &controlTaskStack[CONTROL_STACK_SIZE-1], CONTROL_STACK_SIZE);
 }

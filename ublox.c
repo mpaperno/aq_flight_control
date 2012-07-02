@@ -27,28 +27,9 @@
 #include "rtc.h"
 #include "filer.h"
 #include <CoOS.h>
+#include <string.h>
 
-struct {
-    unsigned char state;
-    unsigned char count;
-    unsigned char class;
-    unsigned char id;
-    unsigned char length;
-    union {
-	ubloxStructPOSLLH_t posllh;
-	ubloxStructVALNED_t valned;
-	ubloxStructDOP_t dop;
-	ubloxStructTP_t tp;
-	ubloxStructTIMEUTC_t timeutc;
-	char other[UBLOX_MAX_PAYLOAD];
-    } payload;
-
-    unsigned char ubloxRxCK_A;
-    unsigned char ubloxRxCK_B;
-
-    unsigned char ubloxTxCK_A;
-    unsigned char ubloxTxCK_B;
-} ubloxData;
+ubloxStruct_t ubloxData __attribute__((section(".ccm")));
 
 void ubloxWriteU1(unsigned char c) {
     serialWrite(gpsData.gpsPort, c);
@@ -193,6 +174,8 @@ void ubloxSendSetup(void) {
 }
 
 void ubloxInit(void) {
+    memset((void *)&ubloxData, 0, sizeof(ubloxData));
+
     ubloxSendSetup();
     ubloxData.state = UBLOX_WAIT_SYNC1;
 }

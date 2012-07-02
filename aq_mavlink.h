@@ -26,6 +26,9 @@
 #include "config.h"
 #include "../mavlink_types.h"
 
+#define MAVLINK_STACK_SIZE		    256
+#define MAVLINK_PRIORITY		    40
+
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6	    //  1Hz
 #define MAVLINK_PARAM_INTERVAL		    2e4	    // 50Hz
 #define MAVLINK_WP_TIMEOUT		    1e6	    // 1 second

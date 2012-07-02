@@ -30,7 +30,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-motorsStruct_t motorsData;
+motorsStruct_t motorsData __attribute__((section(".ccm")));
 
 // Plus configuration
 const motorsPowerStruct_t motorsDefaultPlus[] = {//  MOTOR PORT
@@ -129,9 +129,6 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     // calculate voltage factor
     nominalBatVolts = MOTORS_CELL_VOLTS*adcData.batCellCount;
     voltageFactor = 1.0f + (nominalBatVolts - adcData.vIn) / nominalBatVolts;
-//    pitchCommand += pitchCommand * voltageFactor;
-//    rollCommand += rollCommand * voltageFactor;
-//    ruddCommand += ruddCommand * voltageFactor;
 
     // calculate and set each motor value
     for (i = 0; i < MOTORS_NUM; i++) {
@@ -167,7 +164,9 @@ void motorsInit(void) {
     float sumPitch, sumRoll, sumYaw;
     int i;
 
-    AQ_NOTICE("Motors init... ");
+    AQ_NOTICE("Motors init\n");
+
+    memset((void *)&motorsData, 0, sizeof(motorsData));
 
     switch ((int)p[MOT_FRAME]) {
 	// custom
@@ -194,7 +193,11 @@ void motorsInit(void) {
 
 	if (d->throttle != 0.0 || d->pitch != 0.0 || d->roll != 0.0 || d->yaw != 0.0) {
 
-	    motorsData.pwm[i] = pwmInit(i, 10000, PWM_OUTPUT, p[MOT_START]);
+#ifdef USE_L1_ATTITUDE
+	    motorsData.pwm[i] = pwmInit(i, 10000, PWM_OUTPUT, p[MOT_START], 1);	    // closed loop RPM mode
+#else
+	    motorsData.pwm[i] = pwmInit(i, 10000, PWM_OUTPUT, p[MOT_START], 0);	    // open loop mode
+#endif
 	    motorsData.active[i] = 1;
 
 	    sumPitch += d->pitch;
@@ -203,13 +206,13 @@ void motorsInit(void) {
 	}
     }
 
-    if (sumPitch != 0.0f)
+    if (fabsf(sumPitch) > 0.01f)
 	AQ_NOTICE("Motors: Warning pitch control imbalance\n");
 
-    if (sumRoll != 0.0f)
+    if (fabsf(sumRoll) > 0.01f)
 	AQ_NOTICE("Motors: Warning roll control imbalance\n");
 
-    if (sumYaw != 0.0f)
+    if (fabsf(sumYaw) > 0.01f)
 	AQ_NOTICE("Motors: Warning yaw control imbalance\n");
 
     motorsOff();

@@ -22,6 +22,9 @@
 #include "digital.h"
 #include <CoOS.h>
 
+#define ADC_STACK_SIZE		80
+#define ADC_PRIORITY		10
+
 // 400 Hz inner loop
 
 // 153.6Khz sample rate
@@ -98,8 +101,8 @@ typedef struct {
     OS_TID adcTask;
     OS_FlagID adcFlag;
 
-    uint16_t adc123Raw1[ADC_CHANNELS*3];
-    uint16_t adc123Raw2[ADC_CHANNELS*3];
+//    uint16_t adc123Raw1[ADC_CHANNELS*3];
+//    uint16_t adc123Raw2[ADC_CHANNELS*3];
     unsigned long interrupt123Sums[ADC_SENSORS];
 
     unsigned long volatile adcSums[ADC_SENSORS];
@@ -113,12 +116,12 @@ typedef struct {
     float batCellCount;
     float pressure1;
     float pressure2;
+    float pressure;
 
     float volatile dRateX, dRateY, dRateZ;
     float volatile rateX, rateY, rateZ;
     float volatile accX, accY, accZ;
     float volatile magX, magY, magZ;
-    int magSign;
 
     float magBridgeBiasX, magBridgeBiasY, magBridgeBiasZ;
     float rateBiasX, rateBiasY, rateBiasZ;
@@ -134,6 +137,7 @@ typedef struct {
     volatile unsigned long lastSample;
     volatile unsigned long sampleTime;
     float dt;
+    int8_t magSign;
 } adcStruct_t;
 
 extern adcStruct_t adcData;

@@ -24,6 +24,9 @@
 #include "futaba.h"
 #include "util.h"
 
+#define RADIO_STACK_SIZE	64
+#define RADIO_PRIORITY		25
+
 #define RADIO_THROT		radioData.channels[0]
 #define RADIO_ROLL		radioData.channels[1]
 #define RADIO_PITCH		radioData.channels[2]
@@ -46,7 +49,7 @@ typedef struct {
 
     serialPort_t *serialPort;
 
-    int channels[18];
+    int16_t channels[18];
 
     utilFilter_t qualityFilter;
     unsigned int errorCount;

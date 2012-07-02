@@ -1,7 +1,7 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="aqv6_5" target="8" version="2">
-  <project Name="aqv6_5">
-    <configuration Name="Common" Placement="Flash" Target="STM32F407VG" arm_architecture="v7EM" arm_core_type="Cortex-M4" arm_fp_abi="Hard" arm_fpu_type="FPv4-SP-D16" arm_gcc_target="arm-unknown-eabi" arm_linker_heap_size="5120" arm_linker_jtag_pad_pre_dr="1" arm_linker_jtag_pad_pre_ir="5" arm_linker_process_stack_size="512" arm_linker_stack_size="512" arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="STM32F407VG;0x100000;0x20000" arm_target_debug_interface_type="ADIv5" arm_target_loader_applicable_loaders="Flash" arm_target_loader_default_loader="Flash" arm_target_loader_parameter="25000000" build_remove_unused_symbols="Yes" c_additional_options="-I../mavlink/include/common;-I." c_only_additional_options="-fsingle-precision-constant;-fno-gcse;-Wall" c_preprocessor_definitions="__FPU_PRESENT;ARM_MATH_CM4" c_user_include_directories="$(TargetsDir)/STM32/include" double_is_float="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F407VG_MemoryMap.xml" linker_output_format="hex" linker_printf_fp_enabled="Yes" linker_scanf_fp_enabled="Yes" linker_section_placement_file="$(TargetsDir)/STM32/flash_placement.xml" oscillator_frequency="25MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml" target_reset_script="Reset()"/>
+<solution Name="aqv6.6" target="8" version="2">
+  <project Name="aqv6.6">
+    <configuration Name="Common" Placement="Flash" Target="STM32F407VG" arm_architecture="v7EM" arm_core_type="Cortex-M4" arm_fp_abi="Hard" arm_fpu_type="FPv4-SP-D16" arm_gcc_target="arm-unknown-eabi" arm_linker_heap_size="71680" arm_linker_jtag_pad_pre_dr="1" arm_linker_jtag_pad_pre_ir="5" arm_linker_process_stack_size="0" arm_linker_stack_size="512" arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="STM32F407VG;0x100000;0x20000" arm_target_debug_interface_type="ADIv5" arm_target_loader_applicable_loaders="Flash" arm_target_loader_default_loader="Flash" arm_target_loader_parameter="25000000" build_remove_unused_symbols="Yes" c_additional_options="-I../mavlink/include/common;-I." c_only_additional_options="-fsingle-precision-constant;-fno-gcse;-Wall" c_preprocessor_definitions="__FPU_PRESENT;ARM_MATH_CM4" c_user_include_directories="$(TargetsDir)/STM32/include" double_is_float="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F407VG_MemoryMap.xml" linker_output_format="hex" linker_printf_fp_enabled="Yes" linker_scanf_fp_enabled="Yes" linker_section_placement_file="$(ProjectDir)/flash_placement.xml" oscillator_frequency="25MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml" target_reset_script="Reset()"/>
     <configuration Name="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/STM32/Release/STM32F2xx_Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader" arm_target_loader_can_lock_all="No" arm_target_loader_can_lock_range="No" arm_target_loader_can_unlock_all="No" arm_target_loader_can_unlock_range="No" target_reset_script="FLASHReset()"/>
     <folder Name="Source Files">
       <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc"/>
@@ -82,9 +82,14 @@
       <file file_name="config_default.h"/>
       <file file_name="config_hex.h"/>
       <file file_name="board_6_1.h"/>
+      <file file_name="board_paya.h"/>
+      <file file_name="config_albatross.h"/>
+      <file file_name="config_rat.h"/>
+      <file file_name="1wire.c"/>
+      <file file_name="1wire.h"/>
+      <file file_name="config_oct.h"/>
     </folder>
     <folder Name="System Files">
-      <file file_name="$(StudioDir)/source/thumb_crt0.s"/>
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
       <file file_name="$(TargetsDir)/STM32/STM32_Target.js">
         <configuration Name="Common" file_type="Reset Script"/>
@@ -92,6 +97,8 @@
       <file file_name="system_stm32f4xx.c"/>
       <file file_name="stm32f4xx.h"/>
       <file file_name="core_cm4.h"/>
+      <file file_name="flash_placement.xml"/>
+      <file file_name="thumb_crt0.s"/>
     </folder>
     <folder Name="STM Driver Lib">
       <folder Name="inc">

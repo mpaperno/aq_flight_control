@@ -25,7 +25,7 @@
 #include "nav.h"
 #include <stdlib.h>
 
-pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float *iMax, float *dMax, float *oMax, int *pTrim, int *iTrim, int *dTrim, int *fTrim) {
+pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float *iMax, float *dMax, float *oMax, int16_t *pTrim, int16_t *iTrim, int16_t *dTrim, int16_t *fTrim) {
     pidStruct_t *pid;
 
     pid = (pidStruct_t *)aqDataCalloc(1, sizeof(pidStruct_t));

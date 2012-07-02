@@ -38,13 +38,7 @@
 #define AQ_PITCH		navUkfData.pitch
 #define AQ_ROLL			navUkfData.roll
 #define AQ_PRES_ADJ		UKF_PRES_ALT
-#if (PRESSURE_SENSOR == 1)
-#define AQ_PRESSURE		adcData.pressure1
-#elif (PRESSURE_SENSOR == 2)
-#define AQ_PRESSURE		adcData.pressure1
-#elif (PRESSURE_SENSOR == 3)
-#define AQ_PRESSURE		((adcData.pressure1 + adcData.pressure2)*0.5f)
-#endif	// PRESSURE_SENSOR
+#define AQ_PRESSURE		adcData.pressure
 
 #ifdef IMU_USE_VN100
 // using VN100 as IMU

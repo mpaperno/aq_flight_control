@@ -32,14 +32,14 @@
 #include <CoOS.h>
 #include <intrinsics.h>
 
-OS_STK runTaskStack[TASK_STACK_SIZE];
+OS_STK *runTaskStack;
 
-runStruct_t runData;
+runStruct_t runData __attribute__((section(".ccm")));
 
 void runTaskCode(void *p) {
     uint32_t loops = 0;
 
-    AQ_NOTICE("Run task started...\n");
+    AQ_NOTICE("Run task started\n");
 
     while (1) {
 	// wait for data
@@ -49,30 +49,30 @@ void runTaskCode(void *p) {
 
 	// record history for acc & mag & pressure readings for smoothing purposes
 	// acc
-	runData.sumAcc[0] -= runData.accHist[runData.sensorHistIndex][0];
-	runData.sumAcc[1] -= runData.accHist[runData.sensorHistIndex][1];
-	runData.sumAcc[2] -= runData.accHist[runData.sensorHistIndex][2];
+	runData.sumAcc[0] -= runData.accHist[0][runData.sensorHistIndex];
+	runData.sumAcc[1] -= runData.accHist[1][runData.sensorHistIndex];
+	runData.sumAcc[2] -= runData.accHist[2][runData.sensorHistIndex];
 
-	runData.accHist[runData.sensorHistIndex][0] = IMU_ACCX;
-	runData.accHist[runData.sensorHistIndex][1] = IMU_ACCY;
-	runData.accHist[runData.sensorHistIndex][2] = IMU_ACCZ;
+	runData.accHist[0][runData.sensorHistIndex] = IMU_ACCX;
+	runData.accHist[1][runData.sensorHistIndex] = IMU_ACCY;
+	runData.accHist[2][runData.sensorHistIndex] = IMU_ACCZ;
 
-	runData.sumAcc[0] += runData.accHist[runData.sensorHistIndex][0];
-	runData.sumAcc[1] += runData.accHist[runData.sensorHistIndex][1];
-	runData.sumAcc[2] += runData.accHist[runData.sensorHistIndex][2];
+	runData.sumAcc[0] += runData.accHist[0][runData.sensorHistIndex];
+	runData.sumAcc[1] += runData.accHist[1][runData.sensorHistIndex];
+	runData.sumAcc[2] += runData.accHist[2][runData.sensorHistIndex];
 
 	// mag
-	runData.sumMag[0] -= runData.magHist[runData.sensorHistIndex][0];
-	runData.sumMag[1] -= runData.magHist[runData.sensorHistIndex][1];
-	runData.sumMag[2] -= runData.magHist[runData.sensorHistIndex][2];
+	runData.sumMag[0] -= runData.magHist[0][runData.sensorHistIndex];
+	runData.sumMag[1] -= runData.magHist[1][runData.sensorHistIndex];
+	runData.sumMag[2] -= runData.magHist[2][runData.sensorHistIndex];
 
-	runData.magHist[runData.sensorHistIndex][0] = IMU_MAGX;
-	runData.magHist[runData.sensorHistIndex][1] = IMU_MAGY;
-	runData.magHist[runData.sensorHistIndex][2] = IMU_MAGZ;
+	runData.magHist[0][runData.sensorHistIndex] = IMU_MAGX;
+	runData.magHist[1][runData.sensorHistIndex] = IMU_MAGY;
+	runData.magHist[2][runData.sensorHistIndex] = IMU_MAGZ;
 
-	runData.sumMag[0] += runData.magHist[runData.sensorHistIndex][0];
-	runData.sumMag[1] += runData.magHist[runData.sensorHistIndex][1];
-	runData.sumMag[2] += runData.magHist[runData.sensorHistIndex][2];
+	runData.sumMag[0] += runData.magHist[0][runData.sensorHistIndex];
+	runData.sumMag[1] += runData.magHist[1][runData.sensorHistIndex];
+	runData.sumMag[2] += runData.magHist[2][runData.sensorHistIndex];
 
 	// pressure
 	runData.sumPres -= runData.presHist[runData.sensorHistIndex];
@@ -91,7 +91,7 @@ void runTaskCode(void *p) {
 	   simDoMagUpdate(runData.sumMag[0]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0 / (float)RUN_SENSOR_HIST));
 	}
 	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK) {
-	    if (runData.accMask > 1.0f && /*(supervisorData.state & STATE_FLYING) &&*/ gpsData.hAcc < 5.0f) {
+	    if (runData.accMask > 1.0f && gpsData.hAcc < 5.0f) {
 		// 50 readings before mask is completely dropped
 		runData.accMask -= RUN_ACC_MASK / 50.0f;
 		if (runData.accMask < 1.0f)
@@ -110,9 +110,23 @@ void runTaskCode(void *p) {
 	    navUkfGpsVelUpate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc*runData.accMask);
 	    CoClearFlag(gpsData.gpsVelFlag);
 	}
-	
+	// observe that the rates are exactly 0 if not flying or moving
+	else if (!(supervisorData.state & STATE_FLYING)) {
+	    static uint32_t axis = 0;
+	    float stdX, stdY, stdZ;
+
+	    arm_std_f32(runData.accHist[0], RUN_SENSOR_HIST, &stdX);
+	    arm_std_f32(runData.accHist[1], RUN_SENSOR_HIST, &stdY);
+	    arm_std_f32(runData.accHist[2], RUN_SENSOR_HIST, &stdZ);
+
+	    if ((stdX + stdY + stdZ) < (IMU_STATIC_STD*2))
+		navUkfZeroRate(IMU_RATEZ, (axis++) % 3);
+	}
+
 	navUkfFinish();
 	navNavigate();
+	if (!(loops % 200))
+	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();
 #ifdef USE_MAVLINK
@@ -130,7 +144,11 @@ void runInit(void) {
     float pres;
     int i;
 
-    runData.runTask = CoCreateTask(runTaskCode, (void *)0, 30, &runTaskStack[TASK_STACK_SIZE-1], TASK_STACK_SIZE);
+    memset((void *)&runData, 0, sizeof(runData));
+
+    runTaskStack = aqStackInit(RUN_TASK_SIZE);
+
+    runData.runTask = CoCreateTask(runTaskCode, (void *)0, RUN_PRIORITY, &runTaskStack[RUN_TASK_SIZE-1], RUN_TASK_SIZE);
 
     acc[0] = IMU_ACCX;
     acc[1] = IMU_ACCY;
@@ -143,12 +161,12 @@ void runInit(void) {
     pres = AQ_PRESSURE;
 
     for (i = 0; i < RUN_SENSOR_HIST; i++) {
-	runData.accHist[i][0] = acc[0];
-	runData.accHist[i][1] = acc[1];
-	runData.accHist[i][2] = acc[2];
-	runData.magHist[i][0] = mag[0];
-	runData.magHist[i][1] = mag[1];
-	runData.magHist[i][2] = mag[2];
+	runData.accHist[0][i] = acc[0];
+	runData.accHist[1][i] = acc[1];
+	runData.accHist[2][i] = acc[2];
+	runData.magHist[0][i] = mag[0];
+	runData.magHist[1][i] = mag[1];
+	runData.magHist[2][i] = mag[2];
 	runData.presHist[i] = pres;
 
 	runData.sumAcc[0] += acc[0];

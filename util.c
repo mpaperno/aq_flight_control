@@ -31,12 +31,37 @@
 
 uint32_t heapUsed, dataSramUsed;
 
+uint32_t *ccmHeap[UTIL_CCM_HEAP_SIZE] __attribute__((section(".ccm")));
+
+#ifdef UTIL_STACK_CHECK
+int32_t numStacks;
+void *stackPointers[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
+uint16_t stackSizes[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
+uint16_t stackFrees[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
+
+void utilStackCheck(void) {
+    char s[48];
+    int i, j;
+
+    for (i = 0; i < numStacks; i++) {
+	for (j = 0; j < stackSizes[i]; j++)
+	    if (*(char *)(stackPointers[i]+j) != 0xFF)
+		break;
+	stackFrees[i] = j;
+	if (j < 16) {
+	    sprintf(s, "Potential stack overflow [%d]!\n", i);
+	    AQ_NOTICE(s);
+	}
+    }
+}
+#endif
+
 void *aqCalloc(size_t count, size_t size) {
     char *addr;
 
-    heapUsed += count * size;
-
     addr = calloc(count, size);
+
+    heapUsed += count * size;
 
     if (addr == 0)
 	AQ_NOTICE("Out of heap memory!\n");
@@ -46,16 +71,38 @@ void *aqCalloc(size_t count, size_t size) {
 
 // allocates memory from 64KB CCM
 void *aqDataCalloc(uint16_t count, uint16_t size) {
-    uint32_t bytes = count*size;
+    uint32_t words;
 
-    if ((dataSramUsed + bytes) > (UTIL_DATA_SRAM_END - UTIL_DATA_SRAM_START)) {
+    // round up to word size
+    words = (count*size + sizeof(int)-1) / sizeof(int);
+
+    if ((dataSramUsed + words) > UTIL_CCM_HEAP_SIZE) {
 	AQ_NOTICE("Out of data SRAM!\n");
     }
     else {
-	dataSramUsed += bytes;
+	dataSramUsed += words;
     }
 
-    return (void *)(UTIL_DATA_SRAM_START + dataSramUsed - bytes);
+    return (void *)(ccmHeap + dataSramUsed - words);
+}
+
+// size in words
+OS_STK *aqStackInit(uint16_t size) {
+    OS_STK *sp;
+
+    // use memory in the CCM
+    sp = (OS_STK *)aqDataCalloc(1, size*4);
+
+    // fill memory with pattern to ease overflow detection
+    memset(sp, 0xFF, size*4);
+
+#ifdef UTIL_STACK_CHECK
+    stackPointers[numStacks] = sp;
+    stackSizes[numStacks] = size*4;
+    numStacks++;
+#endif
+
+    return sp;
 }
 
 void delayMicros(unsigned long t) {
@@ -89,19 +136,23 @@ float constrainFloat(float i, float lo, float hi) {
 }
 
 void info(void) {
-    char s[64];
+    char s[96];
 
     sprintf(s, "AQ S/N: %lu, Mavlink SYS ID: %d\n", flashSerno(), flashSerno() % 250);
     AQ_NOTICE(s);
-    delay(10);
+    yield(100);
 
     sprintf(s, "SYS Clock: %u MHz\n", rccClocks.SYSCLK_Frequency / 1000000);
     AQ_NOTICE(s);
-    delay(10);
+    yield(100);
 
-    sprintf(s, "%u heap used, %u data SRAM used\n", heapUsed, dataSramUsed);
+    sprintf(s, "%u heap used\n", heapUsed);
     AQ_NOTICE(s);
-    delay(10);
+    yield(100);
+
+    sprintf(s, "%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
+    AQ_NOTICE(s);
+    yield(100);
 }
 
 void utilFilterReset(utilFilter_t *f, float setpoint) {

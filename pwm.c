@@ -18,8 +18,12 @@
 
 #include "aq.h"
 #include "pwm.h"
+#include "1wire.h"
+#include "notice.h"
+#include "util.h"
+#include <stdio.h>
 
-pwmStruct_t pwmData[PWM_NUM_PORTS];
+pwmStruct_t pwmData[PWM_NUM_PORTS] __attribute__((section(".ccm")));
 
 PWM_TIMERS;
 PWM_AFS;
@@ -91,16 +95,103 @@ void pwmGPIOInit(const GPIO_TypeDef *gpio, uint32_t pin) {
     GPIO_Init((GPIO_TypeDef *)gpio, &GPIO_InitStructure);
 }
 
+float pwmESC32ReadParam(uint8_t paramId) {
+    float value;
+    uint8_t *p;
+
+    owData.buf[0] = OW_PARAM_READ;
+    owData.buf[1] = paramId;
+    owTransaction(2, 6);
+
+    p = (uint8_t *)&value;
+    p[0] = owData.buf[2];
+    p[1] = owData.buf[3];
+    p[2] = owData.buf[4];
+    p[3] = owData.buf[5];
+
+    return value;
+}
+
+float pwmESC32WriteParam(uint8_t paramId, float value) {
+    uint8_t *p;
+
+    owData.buf[0] = OW_PARAM_WRITE;
+    owData.buf[1] = paramId;
+
+    p = (uint8_t *)&value;
+    owData.buf[2] = p[0];
+    owData.buf[3] = p[1];
+    owData.buf[4] = p[2];
+    owData.buf[5] = p[3];
+    owTransaction(6, 6);
+
+    return pwmESC32ReadParam(paramId);
+}
+
+// set ESC32 mode
+uint8_t pwmSetESC32Mode(uint8_t ESC32Mode) {
+    owData.buf[0] = OW_SET_MODE;
+    owData.buf[1] = ESC32Mode;
+    owTransaction(2, 2);
+
+    owData.buf[0] = OW_GET_MODE;
+    owData.buf[1] = 0;
+    owTransaction(1, 2);
+
+    if (owData.buf[0] != OW_GET_MODE)
+	return -1;
+    else
+	return owData.buf[1];
+}
+
+void pwmESC32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t ESC32Mode) {
+    char s[32];
+
+    owInit((GPIO_TypeDef *)port, pin);
+
+    // get ESC32 version
+    owData.buf[0] = OW_VERSION;
+    owTransaction(1, 16);
+
+    if (owData.status != OW_STATUS_NO_PRESENSE) {
+	sprintf(s, "ESC32 ver: %s\n", owData.buf);
+	AQ_NOTICE(s);
+
+	// set parameters
+	if (pwmESC32ReadParam(ESC32_STARTUP_MODE) != (float)ESC32Mode) {
+	    if (pwmESC32WriteParam(ESC32_STARTUP_MODE, (float)ESC32Mode) != (float)ESC32Mode)
+		AQ_NOTICE("ESC32: failed to write ESC32_STARTUP_MODE parameter\n");
+
+	    // write to flash
+	    owData.buf[0] = OW_CONFIG_WRITE;
+	    owTransaction(1, 0);
+
+	    AQ_NOTICE("ESC32: stored config to flash\n");
+
+	    // wait for flash to finish
+	    yield(250);
+
+	    if (pwmSetESC32Mode(ESC32Mode) != ESC32Mode)
+		    AQ_NOTICE("ESC32: failed to set mode\n");
+	}
+    }
+}
+
 // note - assumes all timer clocks have been enable during system startup
-pwmStruct_t *pwmInit(uint8_t pwmPort, uint32_t period, uint8_t direction, uint32_t inititalValue) {
+pwmStruct_t *pwmInit(uint8_t pwmPort, uint32_t period, uint8_t direction, uint32_t inititalValue, int8_t ESC32Mode) {
     pwmStruct_t *p = 0;
 
     if (pwmPort < PWM_NUM_PORTS) {
 	p = &pwmData[pwmPort];
 
-	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);
-	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort]);
 	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / 1000000);
+
+	// set ESC32 mode via 1-wire protocol if necessary before activating PWM output
+	if (ESC32Mode >= 0)
+	    pwmESC32Setup(pwmPorts[pwmPort], pwmPins[pwmPort], ESC32Mode);
+
+	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort]);
+	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);
 
 	if (direction == PWM_OUTPUT) {
 	    pwmOCInit(pwmTimers[pwmPort], pwmTimerChannels[pwmPort], inititalValue);

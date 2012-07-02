@@ -37,7 +37,7 @@ Max number of tasks that can be running.
 /*!<
 Idle task stack size(word).
 */
-#define CFG_IDLE_STACK_SIZE     (50)
+#define CFG_IDLE_STACK_SIZE     (64)
 
 /*!<
 System frequency (Hz).
