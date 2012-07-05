@@ -35,7 +35,7 @@ typedef struct {
 
 typedef struct {
     motorsPowerStruct_t *distribution;
-    pwmStruct_t *pwm[MOTORS_NUM];
+    pwmPortStruct_t *pwm[MOTORS_NUM];
     int16_t value[MOTORS_NUM];	    // in us
     float thrust[MOTORS_NUM];
     float pitch, roll, yaw;

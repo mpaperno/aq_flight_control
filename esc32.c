@@ -211,9 +211,8 @@ int8_t esc32ReadFile(char *fname) {
 		    n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
 		    if (n != 2) {
 			n = sscanf(lineBuf, "#define %15s %f", param, &value);
-			if (n != 2) {
+			if (n != 2)
 			    n = sscanf(lineBuf, "%15s %f", param, &value);
-			}
 		    }
 
 		    if (n == 2) {
@@ -227,6 +226,9 @@ int8_t esc32ReadFile(char *fname) {
 				if (esc32WriteParam(paramId, value)) {
 				    AQ_NOTICE("esc32: wrote parameter from file\n");
 				    needsConfigWrite = 1;
+				}
+				else {
+				    AQ_NOTICE("esc32: parameter write failed!\n");
 				}
 			    }
 		    }
@@ -278,7 +280,7 @@ void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
 	    AQ_NOTICE("ESC32: stored config to flash\n");
 
 	    // wait for flash to finish
-	    yield(250);
+	    yield(100);
 	}
     }
 }

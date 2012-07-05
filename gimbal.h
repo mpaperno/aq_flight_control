@@ -23,8 +23,8 @@
 
 typedef struct {
     float tilt;
-    pwmStruct_t *pitch;
-    pwmStruct_t *roll;
+    pwmPortStruct_t *pitch;
+    pwmPortStruct_t *roll;
 } gimbalStruct_t;
 
 extern gimbalStruct_t gimbalData;

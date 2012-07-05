@@ -33,10 +33,10 @@ void gimbalInit(void) {
     memset((void *)&gimbalData, 0, sizeof(gimbalData));
 
     if (p[GMBL_PITCH_PORT] >= 1.0f)
-	gimbalData.pitch = pwmInit((uint8_t)(p[GMBL_PITCH_PORT] - 1.0f), 5000, PWM_OUTPUT, p[GMBL_NTRL_PITCH], -1);
+	gimbalData.pitch = pwmInitOut((uint8_t)(p[GMBL_PITCH_PORT] - 1.0f), 5000, p[GMBL_NTRL_PITCH], -1);
 
     if (p[GMBL_ROLL_PORT] >= 1.0f)
-	gimbalData.roll = pwmInit((uint8_t)(p[GMBL_ROLL_PORT] - 1.0f), 5000, PWM_OUTPUT, p[GMBL_NTRL_ROLL], -1);
+	gimbalData.roll = pwmInitOut((uint8_t)(p[GMBL_ROLL_PORT] - 1.0f), 5000, p[GMBL_NTRL_ROLL], -1);
 }
 
 void gimbalUpdate(void) {

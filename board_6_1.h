@@ -133,20 +133,20 @@ enum pwmPorts {
 };
 
 #define PWM_TIMERCHANNELS   const uint8_t pwmTimerChannels[] = { \
-    1, \
-    2, \
-    3, \
-    4, \
-    1, \
-    2, \
-    3, \
-    4, \
-    1, \
-    2, \
-    3, \
-    4, \
-    1, \
-    1 \
+    TIM_Channel_1, \
+    TIM_Channel_2, \
+    TIM_Channel_3, \
+    TIM_Channel_4, \
+    TIM_Channel_1, \
+    TIM_Channel_2, \
+    TIM_Channel_3, \
+    TIM_Channel_4, \
+    TIM_Channel_1, \
+    TIM_Channel_2, \
+    TIM_Channel_3, \
+    TIM_Channel_4, \
+    TIM_Channel_1, \
+    TIM_Channel_1 \
 };
 
 #define PWM_BDTRS   const uint8_t pwmBDTRs[] = { \
@@ -182,6 +182,38 @@ enum pwmPorts {
     168000000, \
     168000000 \
 };
+
+#define PWM_IC_IRQS  const uint8_t pwmIcIrqChannels[] = { \
+    TIM1_CC_IRQn, \
+    TIM1_CC_IRQn, \
+    TIM1_CC_IRQn, \
+    TIM1_CC_IRQn, \
+    TIM4_IRQn, \
+    TIM4_IRQn, \
+    TIM4_IRQn, \
+    TIM4_IRQn, \
+    TIM1_BRK_TIM9_IRQn, \
+    TIM1_BRK_TIM9_IRQn, \
+    TIM2_IRQn, \
+    TIM2_IRQn, \
+    TIM1_UP_TIM10_IRQn, \
+    TIM1_TRG_COM_TIM11_IRQn \
+};
+
+#define PWM_IRQ_TIM1_CH1	0
+#define PWM_IRQ_TIM1_CH2	1
+#define PWM_IRQ_TIM1_CH3	2
+#define PWM_IRQ_TIM1_CH4	3
+#define PWM_IRQ_TIM4_CH1	4
+#define PWM_IRQ_TIM4_CH2	5
+#define PWM_IRQ_TIM4_CH3	6
+#define PWM_IRQ_TIM4_CH4	7
+#define PWM_IRQ_TIM9_CH1	8
+#define PWM_IRQ_TIM9_CH2	9
+#define PWM_IRQ_TIM2_CH3	10
+#define PWM_IRQ_TIM2_CH4	11
+#define PWM_IRQ_TIM10_CH1	12
+#define PWM_IRQ_TIM11_CH1	13
 
 #define VN100_UART		USART2
 

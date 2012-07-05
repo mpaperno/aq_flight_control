@@ -194,9 +194,9 @@ void motorsInit(void) {
 	if (d->throttle != 0.0 || d->pitch != 0.0 || d->roll != 0.0 || d->yaw != 0.0) {
 
 #ifdef USE_L1_ATTITUDE
-	    motorsData.pwm[i] = pwmInit(i, 10000, PWM_OUTPUT, p[MOT_START], 1);	    // closed loop RPM mode
+	    motorsData.pwm[i] = pwmInitOut(i, 10000, p[MOT_START], 1);	    // closed loop RPM mode
 #else
-	    motorsData.pwm[i] = pwmInit(i, 10000, PWM_OUTPUT, p[MOT_START], 0);	    // open loop mode
+	    motorsData.pwm[i] = pwmInitOut(i, 10000, p[MOT_START], 0);	    // open loop mode
 #endif
 	    motorsData.active[i] = 1;
 

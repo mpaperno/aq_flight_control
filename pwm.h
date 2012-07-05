@@ -19,16 +19,23 @@
 #ifndef _pwm_h
 #define _pwm_h
 
+#define PWM_DEFAULT_PERIOD	5000	// 200Hz
+
 enum pwmDirections {
-    PWM_OUTPUT,
+    PWM_OUTPUT = 1,
     PWM_INPUT
 };
+
+typedef void pwmCallback_t(uint32_t);
 
 typedef struct {
     volatile uint32_t *ccr;
     volatile uint32_t *cnt;
-} pwmStruct_t;
+    pwmCallback_t *callback;
+    uint32_t period;
+    int8_t direction;
+} pwmPortStruct_t;
 
-extern pwmStruct_t *pwmInit(uint8_t pwmPort, uint32_t period, uint8_t direction, uint32_t inititalValue, int8_t ESC32Mode);
+extern pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode);
 
 #endif
