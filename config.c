@@ -22,13 +22,13 @@
 #include "filer.h"
 #include "notice.h"
 #include "supervisor.h"
+#include "util.h"
 #include CONFIG_HEADER
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
 
 float p[CONFIG_NUM_PARAMS] __attribute__((section(".ccm")));
-char configBuf[CONFIG_BUF_SIZE];
 
 const char *configParameterStrings[] = {
     "CONFIG_VERSION",
@@ -721,13 +721,11 @@ void configInit(void) {
     configFlashRead();
 
     // try to load any config params from uSD card
-    if (configReadFile(0) < 0) {
+    if (configReadFile(0) < 0)
 	// clear config if read error
 	memset(p, 0, sizeof(p));
-    }
-    else {
+    else
 	supervisorConfigRead();
-    }
 
     // get flash version
     ver = *(float *)flashStartAddr();
@@ -735,18 +733,15 @@ void configInit(void) {
 	ver = 0.0f;
 
     // if compiled defaults are greater than flash version and loaded version
-    if (DEFAULT_CONFIG_VERSION > ver && DEFAULT_CONFIG_VERSION > p[CONFIG_VERSION]) {
+    if (DEFAULT_CONFIG_VERSION > ver && DEFAULT_CONFIG_VERSION > p[CONFIG_VERSION])
 	configLoadDefault();
-    }
     // if flash version greater than or equal to currently loaded version
-    else if (ver >= p[CONFIG_VERSION]) {
+    else if (ver >= p[CONFIG_VERSION])
 	configFlashRead();
-    }
 
     // if loaded version greater than flash version
-    if (p[CONFIG_VERSION] > ver) {
+    if (p[CONFIG_VERSION] > ver)
 	configFlashWrite();
-    }
 }
 
 unsigned int configParameterRead(void *data) {
@@ -770,7 +765,8 @@ unsigned int configParameterWrite(void *data) {
 
 // read config from uSD
 int8_t configReadFile(char *fname) {
-    char buf[128];
+    char *lineBuf;
+    char *fileBuf;
     char param[16];
     float value;
     int8_t fh;
@@ -787,40 +783,48 @@ int8_t configReadFile(char *fname) {
 	return -1;
     }
 
+    fileBuf = (char *)aqCalloc(CONFIG_FILE_BUF_SIZE, sizeof(char));
+    lineBuf = (char *)aqCalloc(CONFIG_LINE_BUF_SIZE, sizeof(char));
+
     p1 = 0;
     do {
-	ret = filerRead(fh, configBuf, -1, CONFIG_BUF_SIZE);
+	ret = filerRead(fh, fileBuf, -1, CONFIG_FILE_BUF_SIZE);
 
 	p2 = 0;
 	for (i = 0; i < ret; i++) {
-	    c = configBuf[p2++];
-	    if (c == '\n' || p1 == (sizeof(buf)-1)) {
-		buf[p1] = 0;
+	    c = fileBuf[p2++];
+	    if (c == '\n' || p1 == (CONFIG_LINE_BUF_SIZE-1)) {
+		lineBuf[p1] = 0;
 
-		n = sscanf(buf, "%15s %f", param, &value);
+		n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
 		if (n != 2) {
-		    n = sscanf(buf, "#define %15s %f", param, &value);
+		    n = sscanf(lineBuf, "%15s %f", param, &value);
 		    if (n != 2) {
-			n = sscanf(buf, "#define DEFAULT_%15s %f", param, &value);
+			n = sscanf(lineBuf, "#define %15s %f", param, &value);
 		    }
 		}
 
 		if (n == 2) {
 		    for (j = 0; j < CONFIG_NUM_PARAMS; j++) {
-			if (!strncmp(param, configParameterStrings[j], sizeof(param)))
+			if (!strncasecmp(param, configParameterStrings[j], sizeof(param)))
 			    p[j] = value;
 		    }
 		}
 		p1 = 0;
 	    }
 	    else {
-		buf[p1++] = c;
+		lineBuf[p1++] = c;
 	    }
 	}
 
     } while (ret > 0);
 
     filerClose(fh);
+
+    if (lineBuf)
+	aqFree(lineBuf, CONFIG_LINE_BUF_SIZE, sizeof(char));
+    if (fileBuf)
+	aqFree(fileBuf, CONFIG_FILE_BUF_SIZE, sizeof(char));
 
     return ret;
 }
@@ -842,7 +846,7 @@ int8_t configWriteFile(char *fname) {
     }
 
     for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
-	n = sprintf(buf, "%-15s\t\t%+e\n", configParameterStrings[i], p[i]);
+	n = sprintf(buf, "%-15s\t\t%+.10e\n", configParameterStrings[i], p[i]);
 	ret = filerWrite(fh, buf, -1, n);
 
 	if (ret < n) {

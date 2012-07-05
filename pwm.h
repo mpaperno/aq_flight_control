@@ -24,47 +24,10 @@ enum pwmDirections {
     PWM_INPUT
 };
 
-enum pwmESC32configParameters {
-    ESC32_CONFIG_VERSION = 0,
-    ESC32_STARTUP_MODE,
-    ESC32_BAUD_RATE,
-    ESC32_PTERM,
-    ESC32_ITERM,
-    ESC32_FF1TERM,
-    ESC32_FF2TERM,
-    ESC32_CL1TERM,
-    ESC32_CL2TERM,
-    ESC32_CL3TERM,
-    ESC32_CL4TERM,
-    ESC32_CL5TERM,
-    ESC32_SHUNT_RESISTANCE,
-    ESC32_MIN_PERIOD,
-    ESC32_MAX_PERIOD,
-    ESC32_BLANKING_MICROS,
-    ESC32_ADVANCE,
-    ESC32_START_VOLTAGE,
-    ESC32_GOOD_DETECTS_START,
-    ESC32_BAD_DETECTS_DISARM,
-    ESC32_MAX_CURRENT,
-    ESC32_SWITCH_FREQ,
-    ESC32_MOTOR_POLES,
-    ESC32_PWM_MIN_PERIOD,
-    ESC32_PWM_MAX_PERIOD,
-    ESC32_PWM_MIN_VALUE,
-    ESC32_PWM_LO_VALUE,
-    ESC32_PWM_HI_VALUE,
-    ESC32_PWM_MAX_VALUE,
-    ESC32_PWM_MIN_START,
-    ESC32_PWM_RPM_SCALE,
-    ESC32_FET_BRAKING,
-    ESC32_CONFIG_NUM_PARAMS
-};
-
 typedef struct {
     volatile uint32_t *ccr;
     volatile uint32_t *cnt;
 } pwmStruct_t;
-
 
 extern pwmStruct_t *pwmInit(uint8_t pwmPort, uint32_t period, uint8_t direction, uint32_t inititalValue, int8_t ESC32Mode);
 

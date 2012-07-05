@@ -47,6 +47,7 @@ extern void dumpInt(unsigned char n, int *ints);
 extern void info(void);
 extern OS_STK *aqStackInit(uint16_t size);
 extern void *aqCalloc(size_t count, size_t size);
+extern void aqFree(void *ptr, size_t count, size_t size);
 extern void *aqDataCalloc(uint16_t count, uint16_t size);
 extern void utilFilterInit(utilFilter_t *f, float dt, float tau, float setpoint);
 extern void utilFilterInit3(utilFilter_t *f, float dt, float tau, float setpoint);

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint32_t heapUsed, dataSramUsed;
+uint32_t heapUsed, heapHighWater, dataSramUsed;
 
 uint32_t *ccmHeap[UTIL_CCM_HEAP_SIZE] __attribute__((section(".ccm")));
 
@@ -62,11 +62,20 @@ void *aqCalloc(size_t count, size_t size) {
     addr = calloc(count, size);
 
     heapUsed += count * size;
+    if (heapUsed > heapHighWater)
+	heapHighWater = heapUsed;
 
     if (addr == 0)
 	AQ_NOTICE("Out of heap memory!\n");
 
     return addr;
+}
+
+void aqFree(void *ptr, size_t count, size_t size) {
+    if (ptr) {
+	free(ptr);
+	heapUsed -= count * size;
+    }
 }
 
 // allocates memory from 64KB CCM
@@ -146,7 +155,7 @@ void info(void) {
     AQ_NOTICE(s);
     yield(100);
 
-    sprintf(s, "%u heap used\n", heapUsed);
+    sprintf(s, "%u/%u heap used/high water\n", heapUsed, heapHighWater);
     AQ_NOTICE(s);
     yield(100);
 
