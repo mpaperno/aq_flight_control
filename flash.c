@@ -116,6 +116,6 @@ uint32_t flashStartAddr(void) {
     return FLASH_START_ADDR;
 }
 
-uint32_t flashSerno(void) {
-    return *(uint32_t *)(0x1FFF7A10);
+uint32_t flashSerno(uint8_t n) {
+    return *((uint32_t *)(0x1FFF7A10) + n);
 }

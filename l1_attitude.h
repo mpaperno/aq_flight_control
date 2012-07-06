@@ -16,27 +16,16 @@
     Copyright © 2011, 2012  Bill Nesbitt
 */
 
-#ifndef _pwm_h
-#define _pwm_h
+#ifndef _l1_attitude_h
+#define _l1_attitude_h
 
-#define PWM_DEFAULT_PERIOD	5000	// 200Hz
+#include "aq_math.h"
 
-enum pwmDirections {
-    PWM_OUTPUT = 1,
-    PWM_INPUT
-};
-
-typedef void pwmCallback_t(uint32_t);
-
-typedef struct {
-    volatile uint32_t *ccr;
-    volatile uint32_t *cnt;
-    pwmCallback_t *callback;
-    uint32_t period;
-    int8_t direction;
-} pwmPortStruct_t;
-
-extern pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode);
-extern pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, pwmCallback_t callback);
+extern void l1AttitudeInit(void);
+extern void l1AttitudeReset(float32_t *quat);
+extern void l1Attitude(float32_t *quatD);
+extern void l1AttitudePowerDistribution(float32_t hoverThrot);
+extern void eulerToQuatYPR(float32_t *q, float32_t yaw, float32_t pitch, float32_t roll);
+extern void eulerToQuatRPY(float32_t *q, float32_t roll, float32_t pitch, float32_t yaw);
 
 #endif

@@ -26,7 +26,8 @@
 //#define CONFIG_HEADER	    "config_oct.h"
 
 #define CONFIG_FILE_NAME	    "params.txt"
-#define CONFIG_BUF_SIZE		    512
+#define CONFIG_FILE_BUF_SIZE	    512
+#define CONFIG_LINE_BUF_SIZE	    128
 
 enum configParameters {
     CONFIG_VERSION = 0,

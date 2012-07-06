@@ -85,6 +85,7 @@
       <file file_name="board_paya.h"/>
       <file file_name="config_albatross.h"/>
       <file file_name="config_rat.h"/>
+      <file file_name="l1_attitude.h"/>
       <file file_name="1wire.c"/>
       <file file_name="1wire.h"/>
       <file file_name="config_oct.h"/>

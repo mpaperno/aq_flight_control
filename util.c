@@ -147,7 +147,11 @@ float constrainFloat(float i, float lo, float hi) {
 void info(void) {
     char s[96];
 
-    sprintf(s, "AQ S/N: %lu, Mavlink SYS ID: %d\n", flashSerno(), flashSerno() % 250);
+    sprintf(s, "AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
+    AQ_NOTICE(s);
+    yield(100);
+
+    sprintf(s, "Mavlink SYS ID: %d\n", flashSerno(0) % 250);
     AQ_NOTICE(s);
     yield(100);
 

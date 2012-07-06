@@ -466,7 +466,7 @@ void mavlinkInit(void) {
 
     mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, MAVLINK_PRIORITY, &mavlinkRecvTaskStack[MAVLINK_STACK_SIZE-1], MAVLINK_STACK_SIZE);
 
-    mavlink_system.sysid = flashSerno() % 250;
+    mavlink_system.sysid = flashSerno(0) % 250;
     mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
     mavlink_system.type = MAV_TYPE_QUADROTOR;
 

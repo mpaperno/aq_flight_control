@@ -41,6 +41,6 @@
 
 extern int flashAddress(uint32_t startAddr, uint32_t *data, unsigned int len);
 extern uint32_t flashStartAddr(void);
-extern uint32_t flashSerno(void);
+extern uint32_t flashSerno(uint8_t n);
 
 #endif
