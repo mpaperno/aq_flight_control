@@ -26,7 +26,7 @@ enum pwmDirections {
     PWM_INPUT
 };
 
-typedef void pwmCallback_t(uint32_t);
+typedef void pwmCallback_t(uint32_t, uint8_t);
 
 typedef struct {
     volatile uint32_t *ccr;
