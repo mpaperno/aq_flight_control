@@ -28,9 +28,9 @@
 #define NAV_LANDING_VEL		0.33f					    // default landing/takeoff vertical velocity
 #define NAV_LANDING_DECEL	(-1.5f * GRAVITY)			    // deceleration needed to indicate a landing (1.5g)
 
-#define NAV_EQUATORIAL_RADIUS	(6378.137f * 1000.0f)			    // meters
-#define NAV_FLATTENING		(1.0f / 298.257223563f)			    // WGS-84
-#define NAV_E_2			(NAV_FLATTENING * (2.0f - NAV_FLATTENING))
+#define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
+#define NAV_FLATTENING		(1.0 / 298.257223563)			    // WGS-84
+#define NAV_E_2			(NAV_FLATTENING * (2.0 - NAV_FLATTENING))
 
 #define NAV_STATUS_MANUAL	0x00					    // full manual control
 #define NAV_STATUS_ALTHOLD	0x01					    // altitude hold only

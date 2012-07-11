@@ -44,18 +44,18 @@ void UKFPressureAdjust(float altitude) {
 }
 
 void navUkfCalcEarthRadius(double lat) {
-    float sinLat2;
+    double sinLat2;
 
-    sinLat2 = sinf(lat * DEG_TO_RAD);
+    sinLat2 = sin(lat * (double)DEG_TO_RAD);
     sinLat2 = sinLat2 * sinLat2;
 
-    navUkfData.r1 = NAV_EQUATORIAL_RADIUS * DEG_TO_RAD * (1.0f - NAV_E_2) / powf(1.0f - (NAV_E_2 * sinLat2), (3.0f / 2.0f));
-    navUkfData.r2 = NAV_EQUATORIAL_RADIUS * DEG_TO_RAD / __sqrtf(1.0f - (NAV_E_2 * sinLat2));
+    navUkfData.r1 = (double)NAV_EQUATORIAL_RADIUS * (double)DEG_TO_RAD * ((double)1.0 - (double)NAV_E_2) / pow((double)1.0 - ((double)NAV_E_2 * sinLat2), ((double)3.0 / (double)2.0));
+    navUkfData.r2 = (double)NAV_EQUATORIAL_RADIUS * (double)DEG_TO_RAD / sqrt((double)1.0 - ((double)NAV_E_2 * sinLat2)) * cos(lat * (double)DEG_TO_RAD);
 }
 
 void navUkfCalcDistance(double lat, double lon, float *posNorth, float *posEast) {
     *posNorth = (lat - navUkfData.holdLat) * navUkfData.r1;
-    *posEast = (lon - navUkfData.holdLon) * cosf(lat * DEG_TO_RAD) * navUkfData.r2;
+    *posEast = (lon - navUkfData.holdLon) * navUkfData.r2;
 }
 
 void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
@@ -504,8 +504,11 @@ void navUkfGpsPosUpate(uint32_t gpsMicros, double lat, double lon, float alt, fl
 	    log[4] = noise[0];
 	    log[5] = noise[1];
 	    log[6] = noise[2];
+	    log[7] = posDelta[0];
+	    log[8] = posDelta[1];
+	    log[9] = posDelta[2];
 
-	    navUkfData.logPointer = (navUkfData.logPointer + 7*sizeof(float)) % UKF_LOG_BUF;
+	    navUkfData.logPointer = (navUkfData.logPointer + 10*sizeof(float)) % UKF_LOG_BUF;
 	    filerSetHead(navUkfData.logHandle, navUkfData.logPointer);
 	}
 #endif
@@ -575,15 +578,18 @@ void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, f
 	{
 	    float *log = (float *)&ukfLog[navUkfData.logPointer];
 
-	    *(uint32_t *)&log[0] = 0xffffffff;
+	    *(uint32_t *)&log[0] = 0xfffffffe;
 	    log[1] = y[0];
 	    log[2] = y[1];
 	    log[3] = y[2];
 	    log[4] = noise[0];
 	    log[5] = noise[1];
 	    log[6] = noise[2];
+	    log[7] = velDelta[0];
+	    log[8] = velDelta[1];
+	    log[9] = velDelta[2];
 
-	    navUkfData.logPointer = (navUkfData.logPointer + 7*sizeof(float)) % UKF_LOG_BUF;
+	    navUkfData.logPointer = (navUkfData.logPointer + 10*sizeof(float)) % UKF_LOG_BUF;
 	    filerSetHead(navUkfData.logHandle, navUkfData.logPointer);
 	}
 #endif

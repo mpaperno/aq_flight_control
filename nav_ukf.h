@@ -22,7 +22,7 @@
 #include "aq.h"
 #include "srcdkf.h"
 
-//#define UKF_LOG_BUF		(7*sizeof(float)*100)	// comment out to disable logging
+//#define UKF_LOG_BUF		(10*sizeof(float)*100)	// comment out to disable logging
 //#define UKF_FNAME		"UKF"
 
 #define SIM_S                   17		// states
@@ -65,7 +65,7 @@ typedef struct {
     float v0a[3];
     float v0m[3];
     double holdLat, holdLon;
-    float r1, r2;
+    double r1, r2;
     float posN[UKF_HIST];
     float posE[UKF_HIST];
     float posD[UKF_HIST];

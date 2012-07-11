@@ -192,20 +192,26 @@ unsigned char ubloxPublish(void) {
     CoSetPriority(gpsData.gpsTask, 1);
 
     if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_POSLLH) {
-	gpsData.iTOW = ubloxData.payload.posllh.iTOW;
-	gpsData.lat = (double)ubloxData.payload.posllh.lat * (double)1e-7;
-	gpsData.lon = (double)ubloxData.payload.posllh.lon * (double)1e-7;
-	gpsData.height = ubloxData.payload.posllh.hMSL * 0.001f;    // mm => m
-	gpsData.hAcc = ubloxData.payload.posllh.hAcc * 0.001f;	    // mm => m
-	gpsData.vAcc = ubloxData.payload.posllh.vAcc * 0.001f;	    // mm => m
+	// work around uBlox's inability to give new data on each report sometimes
+	if (ubloxData.lastLat != ubloxData.payload.posllh.lat || ubloxData.lastLon != ubloxData.payload.posllh.lon) {
+	    ubloxData.lastLat = ubloxData.payload.posllh.lat;
+	    ubloxData.lastLon = ubloxData.payload.posllh.lon;
+
+	    gpsData.iTOW = ubloxData.payload.posllh.iTOW;
+	    gpsData.lat = (double)ubloxData.payload.posllh.lat * (double)1e-7;
+	    gpsData.lon = (double)ubloxData.payload.posllh.lon * (double)1e-7;
+	    gpsData.height = ubloxData.payload.posllh.hMSL * 0.001f;    // mm => m
+	    gpsData.hAcc = ubloxData.payload.posllh.hAcc * 0.001f;	    // mm => m
+	    gpsData.vAcc = ubloxData.payload.posllh.vAcc * 0.001f;	    // mm => m
 
 #ifdef GPS_LATENCY
-	gpsData.lastPosUpdate = timerMicros() - GPS_LATENCY;
+	    gpsData.lastPosUpdate = timerMicros() - GPS_LATENCY;
 #else
-	gpsData.lastPosUpdate = gpsData.lastTimepulse + (ubloxData.payload.posllh.iTOW - gpsData.TPtowMS) * 1000;
+	    gpsData.lastPosUpdate = gpsData.lastTimepulse + (ubloxData.payload.posllh.iTOW - gpsData.TPtowMS) * 1000;
 #endif
-	// position update
-	ret = 1;
+	    // position update
+	    ret = 1;
+	}
     }
     else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_VALNED) {
 	gpsData.iTOW = ubloxData.payload.valned.iTOW;

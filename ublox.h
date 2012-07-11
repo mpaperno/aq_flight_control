@@ -109,11 +109,7 @@ typedef struct {
 } __attribute__((packed)) ubloxStructTIMEUTC_t;
 
 typedef struct {
-    unsigned char state;
-    unsigned char count;
-    unsigned char class;
-    unsigned char id;
-    unsigned char length;
+    signed long lastLat, lastLon;
     union {
 	ubloxStructPOSLLH_t posllh;
 	ubloxStructVALNED_t valned;
@@ -122,6 +118,12 @@ typedef struct {
 	ubloxStructTIMEUTC_t timeutc;
 	char other[UBLOX_MAX_PAYLOAD];
     } payload;
+
+    unsigned char state;
+    unsigned char count;
+    unsigned char class;
+    unsigned char id;
+    unsigned char length;
 
     unsigned char ubloxRxCK_A;
     unsigned char ubloxRxCK_B;
