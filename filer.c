@@ -147,8 +147,6 @@ int32_t filerProcessClose(filerFileStruct_t *f) {
 	f->open = 0;
     }
 
-    f->allocated = 0;
-
     if (res != FR_OK)
 	return -1;
     else
@@ -382,6 +380,8 @@ int32_t filerClose(int8_t handle) {
 	CoClearFlag(f->completeFlag);
 	CoWaitForSingleFlag(f->completeFlag, 0);
     }
+
+    f->allocated = 0;
 
     return f->status;
 }
