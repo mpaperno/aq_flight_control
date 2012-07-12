@@ -114,7 +114,7 @@ void mavlinkDo(void) {
     }
     // raw controller
     else if ((mavlinkData.streamInterval[MAV_DATA_STREAM_ALL] || mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER]) && mavlinkData.streamNext[MAV_DATA_STREAM_RAW_CONTROLLER] < micros) {
-	mavlink_msg_attitude_send(MAVLINK_COMM_0, micros, -AQ_ROLL*DEG_TO_RAD, AQ_PITCH*DEG_TO_RAD, AQ_YAW*DEG_TO_RAD, -(IMU_RATEX - UKF_GYO_BIAS_X)*DEG_TO_RAD, (IMU_RATEY - UKF_GYO_BIAS_Y)*DEG_TO_RAD, (IMU_RATEZ - UKF_GYO_BIAS_Z)*DEG_TO_RAD);
+	mavlink_msg_attitude_send(MAVLINK_COMM_0, micros, AQ_ROLL*DEG_TO_RAD, AQ_PITCH*DEG_TO_RAD, AQ_YAW*DEG_TO_RAD, -(IMU_RATEX - UKF_GYO_BIAS_X)*DEG_TO_RAD, (IMU_RATEY - UKF_GYO_BIAS_Y)*DEG_TO_RAD, (IMU_RATEZ - UKF_GYO_BIAS_Z)*DEG_TO_RAD);
 	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
 	mavlinkData.streamNext[MAV_DATA_STREAM_RAW_CONTROLLER] = micros + mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER];
     }
