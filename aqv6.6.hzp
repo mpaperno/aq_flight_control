@@ -73,6 +73,8 @@
       <file file_name="radio.h"/>
       <file file_name="futaba.c"/>
       <file file_name="futaba.h"/>
+      <file file_name="ppm.c"/>
+      <file file_name="ppm.h"/>
       <file file_name="filer.c"/>
       <file file_name="filer.h"/>
       <file file_name="pwm.h"/>

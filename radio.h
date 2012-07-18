@@ -22,6 +22,7 @@
 #include "serial.h"
 #include "spektrum.h"
 #include "futaba.h"
+#include "ppm.h"
 #include "util.h"
 
 #define RADIO_STACK_SIZE	64

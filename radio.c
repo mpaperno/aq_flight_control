@@ -35,6 +35,7 @@ void radioReceptionQuality(int q) {
 
 void radioTaskCode(void *unused) {
     serialPort_t *s = radioData.serialPort;
+    int q;
 
     AQ_NOTICE("Radio task started\n");
 
@@ -42,24 +43,26 @@ void radioTaskCode(void *unused) {
 	// wait for data
 	yield(2);
 
-	while (serialAvailable(s)) {
-	    int q;
-
-	    switch ((int)p[RADIO_TYPE]) {
-	    case 0:
-	    case 1:
+	switch ((int)p[RADIO_TYPE]) {
+	case 0:
+	case 1:
+	    while (serialAvailable(s))
 		if ((q = spektrumCharIn(serialRead(s)))) {
 		    radioData.lastUpdate = timerMicros();
 		    radioReceptionQuality(q);
 		}
-		break;
-	    case 2:
+	    break;
+	case 2:
+	    while (serialAvailable(s))
 		if ((q = futabaCharIn(serialRead(s)))) {
 		    radioData.lastUpdate = timerMicros();
 		    radioReceptionQuality(q);
 		}
-		break;
-	    }
+	    break;
+	case 3:
+	    if (ppmDataAvailable())
+		radioReceptionQuality(1);
+	    break;
 	}
 
 	// no radio?
@@ -83,6 +86,12 @@ void radioInit(void) {
     case 2:
 	futabaInit();
 	break;
+    case 3:
+        ppmInit();
+        break;
+    case 4:
+        // TODO
+        break;
     }
 
     radioTaskStack = aqStackInit(RADIO_STACK_SIZE);
