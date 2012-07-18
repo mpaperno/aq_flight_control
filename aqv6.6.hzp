@@ -80,15 +80,10 @@
       <file file_name="gimbal.h"/>
       <file file_name="gimbal.c"/>
       <file file_name="config_default.h"/>
-      <file file_name="config_hex.h"/>
       <file file_name="board_6_1.h"/>
-      <file file_name="board_paya.h"/>
-      <file file_name="config_albatross.h"/>
-      <file file_name="config_rat.h"/>
       <file file_name="l1_attitude.h"/>
       <file file_name="1wire.c"/>
       <file file_name="1wire.h"/>
-      <file file_name="config_oct.h"/>
       <file file_name="esc32.h"/>
       <file file_name="esc32.c"/>
     </folder>

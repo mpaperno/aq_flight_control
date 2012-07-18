@@ -199,7 +199,7 @@ void navNavigate(void) {
 	    pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
 
 	    navData.mode = NAV_STATUS_ALTHOLD;
-	    navData.holdSpeedAlt = -UKF_VELD;
+	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
 	}
 
 	// are we not in position hold mode now?

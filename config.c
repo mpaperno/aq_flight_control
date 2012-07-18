@@ -316,7 +316,8 @@ const char *configParameterStrings[] = {
     "L1_ATT_T2R_A1",
     "L1_ATT_T2R_A2",
     "L1_ATT_PROP_K1",
-    "L1_ATT_MAX_RATE",
+    "L1_ATT_M_TLT_RT",
+    "L1_ATT_M_YAW_RT",
     "L1_ATT_MAX_OUT",
     "L1_ATT_QUAT_TAU",
     "L1_ATT_L1_ASP",
@@ -654,7 +655,8 @@ void configLoadDefault(void) {
     p[L1_ATT_T2R_A1] = DEFAULT_L1_ATT_T2R_A1;
     p[L1_ATT_T2R_A2] = DEFAULT_L1_ATT_T2R_A2;
     p[L1_ATT_PROP_K1] = DEFAULT_L1_ATT_PROP_K1;
-    p[L1_ATT_MAX_RATE] = DEFAULT_L1_ATT_MAX_RATE;
+    p[L1_ATT_M_TLT_RT] = DEFAULT_L1_ATT_M_TLT_RT;
+    p[L1_ATT_M_YAW_RT] = DEFAULT_L1_ATT_M_YAW_RT;
     p[L1_ATT_MAX_OUT] = DEFAULT_L1_ATT_MAX_OUT;
     p[L1_ATT_QUAT_TAU] = DEFAULT_L1_ATT_QUAT_TAU;
     p[L1_ATT_L1_ASP] = DEFAULT_L1_ATT_L1_ASP;

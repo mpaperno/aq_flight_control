@@ -22,8 +22,6 @@
 #include "aq.h"
 
 #define CONFIG_HEADER	    "config_default.h"
-//#define CONFIG_HEADER	    "config_hex.h"
-//#define CONFIG_HEADER	    "config_oct.h"
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -315,7 +313,8 @@ enum configParameters {
     L1_ATT_T2R_A1,
     L1_ATT_T2R_A2,
     L1_ATT_PROP_K1,
-    L1_ATT_MAX_RATE,
+    L1_ATT_M_TLT_RT,
+    L1_ATT_M_YAW_RT,
     L1_ATT_MAX_OUT,
     L1_ATT_QUAT_TAU,
     L1_ATT_L1_ASP,

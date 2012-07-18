@@ -179,14 +179,14 @@ void pwmNVICInit(uint8_t irqChannel) {
     NVIC_Init(&NVIC_InitStructure);
 }
 
-pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, pwmCallback_t callback) {
+pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, pwmCallback_t callback) {
     pwmPortStruct_t *p = 0;
 
     if (pwmValidatePort(pwmPort, 0)) {
 	p = &pwmData[pwmPort];
     	p->direction = PWM_INPUT;
 
-	pwmTimeBase(pwmTimers[pwmPort], PWM_DEFAULT_PERIOD, pwmClocks[pwmPort] / 1000000);
+	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / 1000000);
 
 	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort]);
 	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);
@@ -213,6 +213,8 @@ pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, pwmCallback_t cal
 		TIM_ITConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_IT_CC4, ENABLE);
 		break;
 	}
+
+	p->callback = callback;
     }
 
     return p;
