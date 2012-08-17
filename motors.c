@@ -168,6 +168,9 @@ void motorsInit(void) {
 
     memset((void *)&motorsData, 0, sizeof(motorsData));
 
+#ifdef USE_L1_ATTITUDE
+	motorsData.distribution = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
+#else
     switch ((int)p[MOT_FRAME]) {
 	// custom
 	case 0:
@@ -183,6 +186,7 @@ void motorsInit(void) {
 	    motorsData.distribution = (motorsPowerStruct_t *)motorsDefaultHex;
 	    break;
     }
+#endif	// USE_L1_ATTITUDE
 
     sumPitch = 0.0f;
     sumRoll = 0.0f;

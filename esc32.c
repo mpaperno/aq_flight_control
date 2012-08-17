@@ -283,4 +283,7 @@ void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
 	    yield(100);
 	}
     }
+    else {
+	AQ_NOTICE("ESC32: cannot detect ESC via OW\n");
+    }
 }

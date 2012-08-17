@@ -103,7 +103,7 @@ void controlTaskCode(void *unused) {
 			yaw = (RADIO_RUDD + p[CTRL_DEAD_BAND]) * p[CTRL_FACT_RUDD];
 
 		    // don't allow desired yaw angle to lead attitude yaw angle by more than 90 deg
-		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW) < 90.0f)) {
+		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW)) < 90.0f) {
 			controlData.yaw = compassNormalize(controlData.yaw + yaw);
 			navData.holdHeading = compassNormalize(navData.holdHeading + yaw);
 		    }

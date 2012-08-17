@@ -182,9 +182,10 @@ void pwmNVICInit(uint8_t irqChannel) {
 pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, pwmCallback_t callback) {
     pwmPortStruct_t *p = 0;
 
-    if (pwmValidatePort(pwmPort, 0)) {
+    if (pwmValidatePort(pwmPort, 0) && callback) {
 	p = &pwmData[pwmPort];
     	p->direction = PWM_INPUT;
+	p->callback = callback;
 
 	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / 1000000);
 
@@ -213,8 +214,6 @@ pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, 
 		TIM_ITConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_IT_CC4, ENABLE);
 		break;
 	}
-
-	p->callback = callback;
     }
 
     return p;

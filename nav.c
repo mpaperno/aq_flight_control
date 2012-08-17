@@ -198,8 +198,8 @@ void navNavigate(void) {
 	    pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle);
 	    pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
 
-	    navData.mode = NAV_STATUS_ALTHOLD;
 	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
+	    navData.mode = NAV_STATUS_ALTHOLD;
 	}
 
 	// are we not in position hold mode now?
