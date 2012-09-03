@@ -44,7 +44,7 @@ void gimbalUpdate(void) {
     float tilt;
 
     if (gimbalData.pitch) {
-	tilt = RADIO_AUX3 + navData.poiAngle * (2000 - 1000);
+	tilt = (RADIO_AUX3 / p[GMBL_SCAL_PITCH]) + navData.poiAngle * (2000 - 1000);
 
 	// smooth
 	if (tilt != gimbalData.tilt)
