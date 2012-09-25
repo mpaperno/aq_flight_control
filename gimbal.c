@@ -50,13 +50,13 @@ void gimbalUpdate(void) {
 	if (tilt != gimbalData.tilt)
 	    gimbalData.tilt -= (gimbalData.tilt - tilt) * p[GMBL_SLEW_RATE];
 
-	pwm = constrainInt((-AQ_PITCH * (2000 - 1000)  + gimbalData.tilt )* p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH], p[GMBL_PWM_MIN], p[GMBL_PWM_MAX]);
+	pwm = constrainInt((-AQ_PITCH * (2000 - 1000)  + gimbalData.tilt )* p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH], p[GMBL_PWM_MIN_ROLL], p[GMBL_PWM_MAX_ROLL]);
 	if (timerMicros() > 20000000)
 	    *gimbalData.pitch->ccr = pwm;
     }
 
     if (gimbalData.roll) {
-	pwm = constrainInt(-AQ_ROLL * (2000 - 1000) * p[GMBL_SCAL_ROLL] + p[GMBL_NTRL_ROLL], p[GMBL_PWM_MIN], p[GMBL_PWM_MAX]);
+        pwm = constrainInt(-AQ_ROLL * (2000 - 1000) * p[GMBL_SCAL_ROLL] + p[GMBL_NTRL_ROLL], p[GMBL_PWM_MIN_ROLL], p[GMBL_PWM_MAX_ROLL]);
 	if (timerMicros() > 20000000)
 	    *gimbalData.roll->ccr = pwm;
     }

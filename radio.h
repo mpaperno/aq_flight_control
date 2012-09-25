@@ -28,22 +28,22 @@
 #define RADIO_STACK_SIZE	64
 #define RADIO_PRIORITY		25
 
-#define RADIO_THROT		radioData.channels[0]
-#define RADIO_ROLL		radioData.channels[1]
-#define RADIO_PITCH		radioData.channels[2]
-#define RADIO_RUDD		radioData.channels[3]
-#define RADIO_GEAR		radioData.channels[4]
-#define RADIO_FLAPS		radioData.channels[5]
-#define RADIO_AUX2		radioData.channels[6]
-#define RADIO_AUX3		radioData.channels[7]
-#define RADIO_AUX4		radioData.channels[8]
-#define RADIO_AUX5		radioData.channels[9]
-#define RADIO_AUX6		radioData.channels[10]
-#define RADIO_AUX7		radioData.channels[11]
+#define RADIO_THROT             radioData.channels[(int)p[RADIO_THRO_CH]]
+#define RADIO_ROLL		radioData.channels[(int)p[RADIO_ROLL_CH]]
+#define RADIO_PITCH		radioData.channels[(int)p[RADIO_PITC_CH]]
+#define RADIO_RUDD		radioData.channels[(int)p[RADIO_RUDD_CH]]
+#define RADIO_GEAR		radioData.channels[(int)p[RADIO_GEAR_CH]]
+#define RADIO_FLAPS		radioData.channels[(int)p[RADIO_FLAP_CH]]
+#define RADIO_AUX2		radioData.channels[(int)p[RADIO_AUX2_CH]]
+#define RADIO_AUX3		radioData.channels[(int)p[RADIO_AUX3_CH]]
+#define RADIO_AUX4		radioData.channels[(int)p[RADIO_AUX4_CH]]
+#define RADIO_AUX5		radioData.channels[(int)p[RADIO_AUX5_CH]]
+#define RADIO_AUX6		radioData.channels[(int)p[RADIO_AUX6_CH]]
+#define RADIO_AUX7		radioData.channels[(int)p[RADIO_AUX7_CH]]
 
-#define RADIO_FRAME_COUNT   radioData.frameCount
-#define RADIO_ERROR_COUNT   radioData.errorCount
-#define RADIO_QUALITY	    radioData.quality
+#define RADIO_FRAME_COUNT       radioData.frameCount
+#define RADIO_ERROR_COUNT       radioData.errorCount
+#define RADIO_QUALITY           radioData.quality
 
 typedef struct {
     OS_TID radioTask;

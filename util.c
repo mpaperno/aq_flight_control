@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "buildnum.h"
 
 uint32_t heapUsed, heapHighWater, dataSramUsed;
 
@@ -166,6 +167,11 @@ void info(void) {
     sprintf(s, "%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
     AQ_NOTICE(s);
     yield(100);
+
+    sprintf(s, "AutoQuad version: %sr%d\n", VERSION, BUILDNUMBER);
+    AQ_NOTICE(s);
+    yield(100);
+
 }
 
 void utilFilterReset(utilFilter_t *f, float setpoint) {

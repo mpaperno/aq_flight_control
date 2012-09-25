@@ -276,8 +276,13 @@
 
 #define DEFAULT_GMBL_PITCH_PORT	    0.0f		// 0 == disabled
 #define DEFAULT_GMBL_ROLL_PORT	    0.0f		// 0 == disabled
-#define DEFAULT_GMBL_PWM_MAX	    2250
-#define DEFAULT_GMBL_PWM_MIN	    750
+
+#define DEFAULT_GMBL_PWM_MAX_ROLL   2250
+#define DEFAULT_GMBL_PWM_MIN_ROLL   750
+#define DEFAULT_GMBL_PWM_MAX_PITCH  2250
+#define DEFAULT_GMBL_PWM_MIN_PITCH  750
+
+
 #define DEFAULT_GMBL_NTRL_PITCH	    1575
 #define DEFAULT_GMBL_NTRL_ROLL	    1442
 #define DEFAULT_GMBL_SCAL_PITCH	    (1.0f / 91.0f)
@@ -398,3 +403,19 @@
 #define DEFAULT_L1_ATT_MM_R14		0.0f
 #define DEFAULT_L1_ATT_MM_P14		0.0f
 #define DEFAULT_L1_ATT_MM_Y14		0.0f
+#define DEFAULT_RADIO_THRO_CH           0
+#define DEFAULT_RADIO_ROLL_CH           1
+#define DEFAULT_RADIO_PITC_CH           2
+#define DEFAULT_RADIO_RUDD_CH           3
+#define DEFAULT_RADIO_GEAR_CH           4
+#define DEFAULT_RADIO_FLAP_CH           5
+#define DEFAULT_RADIO_AUX2_CH           6
+#define DEFAULT_RADIO_AUX3_CH           7
+#define DEFAULT_RADIO_AUX4_CH           8
+#define DEFAULT_RADIO_AUX5_CH           9
+#define DEFAULT_RADIO_AUX6_CH           10
+#define DEFAULT_RADIO_AUX7_CH           11
+#define DEFAULT_PPM_SCALER              3             // good for FrSky & Graupner HOTT
+#define DEFAULT_PPM_THROT_LOW           1090          // throttle value at low stick
+#define DEFAULT_PPM_CHAN_MID            1512          // middle of the stick range
+

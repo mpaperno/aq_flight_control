@@ -95,6 +95,7 @@ typedef struct {
     uint8_t mode;			// navigation mode
     uint8_t navCapable;
     uint8_t missionLeg;
+    uint8_t fixType;                    // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)
 } navStruct_t;
 
 extern navStruct_t navData;
