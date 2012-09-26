@@ -43,7 +43,8 @@
 #define ADC_REF_VOLTAGE		3.3f
 #define ADC_DIVISOR		((double)ADC_REF_VOLTAGE / (double)4096.0 / (double)ADC_SAMPLES)
 
-#define ADC_VIN_SLOPE		((4.7f + 1.33f) / 1.33f)    // Rtop = 4.7K, Rbot = 1.33K
+#define ADC_VIN_RTOP		8.45f	// first run beta boards were 4.7K, second run are 8.45K
+#define ADC_VIN_SLOPE		((ADC_VIN_RTOP + 1.33f) / 1.33f)    // Rbot = 1.33K
 #define ADC_VIN_OFFSET		0.0f
 
 #define ADC_IDG_TEMP_OFFSET	1.25f			    // volts (IDG500 PTATS)
