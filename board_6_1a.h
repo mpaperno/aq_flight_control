@@ -273,7 +273,7 @@ enum pwmPorts {
 #define GPS_LED_PIN		GPIO_Pin_0
 #define GPS_USART		USART3
 
-#define ADC_VIN_RTOP            4.7f   // first run beta boards were 4.7K, second run are 8.45K
+#define ADC_VIN_RTOP            8.45f   // first run beta boards were 4.7K, second run are 8.45K
 #define ADC_PRESSURE_3V3
 
 #endif
