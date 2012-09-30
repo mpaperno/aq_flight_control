@@ -16,7 +16,7 @@
     Copyright © 2011, 2012  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    100
+#define DEFAULT_CONFIG_VERSION	    101
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
 
@@ -276,18 +276,16 @@
 
 #define DEFAULT_GMBL_PITCH_PORT	    0.0f		// 0 == disabled
 #define DEFAULT_GMBL_ROLL_PORT	    0.0f		// 0 == disabled
-
 #define DEFAULT_GMBL_PWM_MAX_ROLL   2250
 #define DEFAULT_GMBL_PWM_MIN_ROLL   750
 #define DEFAULT_GMBL_PWM_MAX_PITCH  2250
 #define DEFAULT_GMBL_PWM_MIN_PITCH  750
-
-
 #define DEFAULT_GMBL_NTRL_PITCH	    1575
 #define DEFAULT_GMBL_NTRL_ROLL	    1442
 #define DEFAULT_GMBL_SCAL_PITCH	    (1.0f / 91.0f)
 #define DEFAULT_GMBL_SCAL_ROLL	    (1.0f / 70.0f)
 #define DEFAULT_GMBL_SLEW_RATE	    0.005f
+
 
 #define DEFAULT_SPVR_LOW_BAT1	    3.5f	    // cell volts
 #define DEFAULT_SPVR_LOW_BAT2	    3.3f	    // cell volts
@@ -297,6 +295,7 @@
 #define DEFAULT_SPVR_BAT_CRV4	    +1.166082e+02f
 #define DEFAULT_SPVR_BAT_CRV5	    -1.074193e+02f
 #define DEFAULT_SPVR_BAT_CRV6	    +3.779082e+01f
+
 
 #define DEFAULT_UKF_VEL_Q		+7.6020e-02	// +0.076019661680	 0.000109304521 -0.001443424436
 #define DEFAULT_UKF_VEL_ALT_Q		+1.4149e-01	// +0.141489724652	 0.000109419473 +0.000987597731
@@ -403,6 +402,7 @@
 #define DEFAULT_L1_ATT_MM_R14		0.0f
 #define DEFAULT_L1_ATT_MM_P14		0.0f
 #define DEFAULT_L1_ATT_MM_Y14		0.0f
+
 #define DEFAULT_RADIO_THRO_CH           0
 #define DEFAULT_RADIO_ROLL_CH           1
 #define DEFAULT_RADIO_PITC_CH           2
@@ -418,4 +418,3 @@
 #define DEFAULT_PPM_SCALER              3             // good for FrSky & Graupner HOTT
 #define DEFAULT_PPM_THROT_LOW           1090          // throttle value at low stick
 #define DEFAULT_PPM_CHAN_MID            1512          // middle of the stick range
-

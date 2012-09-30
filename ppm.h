@@ -19,6 +19,7 @@
 
 /*
     PPM module written by TC
+    Heavily modified by Menno de Gans
 */
 
 #ifndef _ppm_h
@@ -35,7 +36,6 @@
 #define PPM_MAX_PULSE_WIDTH	    2250
 #define PPM_STAB_CHANNEL_FRAMES     20    // number of consequitive frames with the same number of channels after which we assume that number of channels is stable ;)
 
-
 #define PPM_THROT           ppmData.channels[(int)p[RADIO_THRO_CH]]
 #define PPM_ROLL            ppmData.channels[(int)p[RADIO_ROLL_CH]]
 #define PPM_PITCH           ppmData.channels[(int)p[RADIO_PITC_CH]]
@@ -49,23 +49,26 @@
 #define PPM_AUX6            ppmData.channels[(int)p[RADIO_AUX6_CH]]
 #define PPM_AUX7            ppmData.channels[(int)p[RADIO_AUX7_CH]]
 
+#define ppmLimitRange( v ) ( ( v < -1024 ) ? -1024 : ( ( v > 1023 ) ? 1023 : v ) )
+#define ppmLimitRangeThrottle( v ) ( ( v < -338 ) ? -338 : ( ( v > 1709 ) ? 1709 : v ) )
+
 typedef struct {
     pwmPortStruct_t *ppmPort;
     volatile int frameParsed;
     uint32_t lastCaptureValue;
-    uint8_t lastChannel;         // index into channels[]
-    uint8_t previousChannels;    // number of channels seen in previous frame;
-                                 // used to autodetermine number of channels
-    uint8_t numberChannels;      // autodetermined number of channels or 0
-    uint8_t stableChannelsCount; // number of frames with the same number of channels
-    uint8_t signalQuality;       // -1 serious error
-                                 //  0 signal is there but not stable
-                                 //  1 signal Ok
-    uint8_t inputValid;          // 1 valid
-                                 // 0 current frame is invalid
+    uint8_t lastChannel;		    // index into channels[]
+    uint8_t previousChannels;		    // number of channels seen in previous frame;
+					    // used to autodetermine number of channels
+    uint8_t numberChannels;		    // autodetermined number of channels or 0
+    uint8_t stableChannelsCount;	    // number of frames with the same number of channels
+    uint8_t signalQuality;		    // -1 serious error
+					    //  0 signal is there but not stable
+					    //  1 signal Ok
+    uint8_t inputValid;			    // 1 valid
+					    // 0 current frame is invalid
 
-    int16_t channels[PPM_MAX_CHANNELS];     // channel values are stored here after successful
-                                            // capture of the whole frame
+    int16_t channels[PPM_MAX_CHANNELS];	    // channel values are stored here after successful
+					    // capture of the whole frame
     int16_t tmp_channels[PPM_MAX_CHANNELS]; // temporary channel values while capturing the frame
 } ppmStruct_t;
 

@@ -167,10 +167,6 @@ void navNavigate(void) {
     // de-activate GPS LED
     digitalLo(gpsData.gpsLed);
 
-    if (gpsData.lat == 0.0 || gpsData.lon == 0.0) navData.fixType = 0;
-    if ( (gpsData.lat !=0.0) && (gpsData.lon !=0.0) && (!navData.navCapable) ) navData.fixType = 2;
-    if ( (gpsData.lat !=0.0) && (gpsData.lon !=0.0) && (navData.navCapable) ) navData.fixType = 3;
-
     // do we have a sufficient, recent fix?
     if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && (gpsData.hAcc/* * runData.accMask*/) < NAV_MIN_GPS_ACC) {
 	// activate GPS LED
@@ -181,7 +177,6 @@ void navNavigate(void) {
     else if (navData.mode < NAV_STATUS_POSHOLD) {
 	// Cannot Navigate
 	navData.navCapable = 0;
-        navData.fixType = 2;
     }
 
     // Can we navigate && do we want to be in mission mode?
@@ -431,6 +426,13 @@ void navNavigate(void) {
 	if (navData.missionLegs[leg].type == NAV_LEG_LAND && IMU_ACCZ < NAV_LANDING_DECEL)
 	    // shut everything down (sure hope we are really on the ground :)
 	    supervisorDisarm();
+    }
+
+    if (gpsData.lat != 0.0 && gpsData.lon != 0.0) {
+	if (navData.navCapable)
+	    navData.fixType = 3;
+	else
+	    navData.fixType = 2;
     }
 
     navData.lastUpdate = currentTime;

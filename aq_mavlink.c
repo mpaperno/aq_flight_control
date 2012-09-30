@@ -79,39 +79,49 @@ void mavlinkDo(void) {
     CoEnterMutexSection(mavlinkData.serialPortMutex);
 
     switch (supervisorData.state) {
-      case STATE_DISARMED:
-        mavlinkData.status = MAV_STATE_STANDBY;
-      break;
-      case STATE_ARMED:
-        mavlinkData.status = MAV_STATE_ACTIVE;
-      break;
-      case STATE_RADIO_LOSS1:
-        mavlinkData.status =  MAV_STATE_CRITICAL;
-      break;
-      case STATE_RADIO_LOSS2:
-        mavlinkData.status =  MAV_STATE_CRITICAL;
-      break;
+    case STATE_DISARMED:
+	mavlinkData.status = MAV_STATE_STANDBY;
+	break;
+
+    case STATE_ARMED:
+	mavlinkData.status = MAV_STATE_ACTIVE;
+	break;
+
+    case STATE_RADIO_LOSS1:
+	mavlinkData.status =  MAV_STATE_CRITICAL;
+	break;
+
+    case STATE_RADIO_LOSS2:
+	mavlinkData.status =  MAV_STATE_CRITICAL;
+	break;
     }
 
     switch(navData.mode) {
-      case NAV_STATUS_ALTHOLD:
-        mavlinkData.mode= 128 + 16;
-      break;
-      case NAV_STATUS_POSHOLD:
-        mavlinkData.mode= 128 + 16;
-      break;
-      case NAV_STATUS_MISSION:
-        mavlinkData.mode= 128 + 4;
-      break;
-      case NAV_STATUS_DVH:
-        mavlinkData.mode= 128 + 64 + 16;
-      break;
-      case NAV_STATUS_MANUAL:
-        mavlinkData.mode= 128 + 64;
-      break;
-      default:
-        if (supervisorData.state==STATE_DISARMED) mavlinkData.mode = 64;
-        if (supervisorData.state==STATE_ARMED) mavlinkData.mode = 128 + 64;
+    case NAV_STATUS_ALTHOLD:
+	mavlinkData.mode= 128 + 16;
+	break;
+
+    case NAV_STATUS_POSHOLD:
+	mavlinkData.mode= 128 + 16;
+	break;
+
+    case NAV_STATUS_MISSION:
+	mavlinkData.mode= 128 + 4;
+	break;
+
+    case NAV_STATUS_DVH:
+	mavlinkData.mode= 128 + 64 + 16;
+	break;
+
+    case NAV_STATUS_MANUAL:
+	mavlinkData.mode= 128 + 64;
+	break;
+
+    default:
+	if (supervisorData.state == STATE_DISARMED)
+	    mavlinkData.mode = 64;
+	if (supervisorData.state == STATE_ARMED)
+	    mavlinkData.mode = 128 + 64;
     }
 
 
@@ -129,7 +139,7 @@ void mavlinkDo(void) {
     }
     // raw sensors
     else if ((mavlinkData.streamInterval[MAV_DATA_STREAM_ALL] || mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_SENSORS]) && mavlinkData.streamNext[MAV_DATA_STREAM_RAW_SENSORS] < micros) {
-	mavlink_msg_scaled_imu_send(MAVLINK_COMM_0, micros, IMU_ACCX*1000.0, IMU_ACCY*1000.0, IMU_ACCZ*1000.0, IMU_RATEX*1000.0, IMU_RATEY*1000.0, IMU_RATEZ*1000.0, IMU_MAGX*1000.0, IMU_MAGY*1000.0, IMU_MAGZ*1000.0);
+	mavlink_msg_scaled_imu_send(MAVLINK_COMM_0, micros, IMU_ACCX*1000.0f, IMU_ACCY*1000.0f, IMU_ACCZ*1000.0f, IMU_RATEX*1000.0f, IMU_RATEY*1000.0f, IMU_RATEZ*1000.0f, IMU_MAGX*1000.0f, IMU_MAGY*1000.0f, IMU_MAGZ*1000.0f);
 	mavlink_msg_scaled_pressure_send(MAVLINK_COMM_0, micros, AQ_PRESSURE*0.01f, 0.0f, IMU_TEMP*100);
 	mavlinkData.streamNext[MAV_DATA_STREAM_RAW_SENSORS] = micros + mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_SENSORS];
     }
@@ -288,10 +298,10 @@ void mavlinkRecvTaskCode(void *unused) {
 
 				mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
 				    seqId, MAV_FRAME_GLOBAL, MAV_CMD_NAV_RETURN_TO_LAUNCH, (navData.missionLeg == seqId) ? 1 : 0, 1,
-				    wp->targetRadius, wp->loiterTime/1000, 0.0, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
+				    wp->targetRadius, wp->loiterTime/1000, 0.0f, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
 			    }
-                            else if (wp->type == NAV_LEG_GOTO){
-                                if ( wp->relativeAlt == 1 ) {
+                            else if (wp->type == NAV_LEG_GOTO) {
+                                if (wp->relativeAlt == 1) {
                                     mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
                                         seqId, MAV_FRAME_GLOBAL_RELATIVE_ALT, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                         wp->targetRadius, wp->loiterTime/1000, wp->maxHorizSpeed, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
@@ -302,17 +312,17 @@ void mavlinkRecvTaskCode(void *unused) {
                                         wp->targetRadius, wp->loiterTime/1000, wp->maxHorizSpeed, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
                                 }
                             }
-                            else if (wp->type == NAV_LEG_TAKEOFF){
+                            else if (wp->type == NAV_LEG_TAKEOFF) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
                                     seqId, MAV_FRAME_GLOBAL, MAV_CMD_NAV_TAKEOFF, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     wp->targetRadius, wp->loiterTime/1000, wp->poiHeading, wp->maxVertSpeed, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
-                            else if (wp->type == NAV_LEG_ORBIT){
+                            else if (wp->type == NAV_LEG_ORBIT) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
                                     seqId, MAV_FRAME_GLOBAL, 1, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     wp->targetRadius, wp->loiterTime/1000, wp->maxHorizSpeed, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
-                            else if (wp->type == NAV_LEG_LAND){
+                            else if (wp->type == NAV_LEG_LAND) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
                                     seqId, MAV_FRAME_GLOBAL, MAV_CMD_NAV_LAND, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     0.0f, wp->maxVertSpeed, wp->maxHorizSpeed, wp->poiAltitude, wp->targetLat, wp->targetLon, wp->targetAlt);
@@ -320,7 +330,7 @@ void mavlinkRecvTaskCode(void *unused) {
 			    else {
 				mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
 				    seqId, MAV_FRAME_GLOBAL, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
-				    wp->targetRadius, wp->loiterTime/1000, 0.0, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
+				    wp->targetRadius, wp->loiterTime/1000, 0.0f, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
 			    }
 			}
 			break;
@@ -393,7 +403,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				}
 				else if (command == MAV_CMD_NAV_WAYPOINT) {
 				    wp = navGetWaypoint(seqId);
-                                    if ( frame == MAV_FRAME_GLOBAL_RELATIVE_ALT )
+                                    if (frame == MAV_FRAME_GLOBAL_RELATIVE_ALT)
                                         wp->relativeAlt = 1;
                                     else
                                         wp->relativeAlt = 0;
@@ -428,7 +438,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				}
 				else if (command == MAV_CMD_NAV_TAKEOFF) {
 				    wp = navGetWaypoint(seqId);
-                                    if ( frame == MAV_FRAME_GLOBAL_RELATIVE_ALT )
+                                    if (frame == MAV_FRAME_GLOBAL_RELATIVE_ALT)
                                         wp->relativeAlt = 1;
                                     else
                                         wp->relativeAlt = 0;
@@ -444,7 +454,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				}
 				else if (command == 1) {
 				    wp = navGetWaypoint(seqId);
-                                    if ( frame == MAV_FRAME_GLOBAL_RELATIVE_ALT )
+                                    if (frame == MAV_FRAME_GLOBAL_RELATIVE_ALT)
                                         wp->relativeAlt = 1;
                                     else
                                         wp->relativeAlt = 0;
@@ -460,7 +470,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				}
 				else if (command == MAV_CMD_NAV_LAND) {
 				    wp = navGetWaypoint(seqId);
-                                    if ( frame == MAV_FRAME_GLOBAL_RELATIVE_ALT )
+                                    if (frame == MAV_FRAME_GLOBAL_RELATIVE_ALT)
                                         wp->relativeAlt = 1;
                                     else
                                         wp->relativeAlt = 0;
@@ -479,7 +489,7 @@ void mavlinkRecvTaskCode(void *unused) {
 				}
 			    }
 
-			    mavlinkData.wpCurrent = seqId+1;
+			    mavlinkData.wpCurrent = seqId + 1;
 			    mavlinkData.wpNext = timerMicros();
 			    mavlink_msg_mission_ack_send(MAVLINK_COMM_0, mavlink_system.sysid, mavlink_system.compid, ack);
 			}

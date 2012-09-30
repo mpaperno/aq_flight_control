@@ -24,11 +24,11 @@
 #include "notice.h"
 #include "aq_mavlink.h"
 #include "aq_timer.h"
+#include "buildnum.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "buildnum.h"
 
 uint32_t heapUsed, heapHighWater, dataSramUsed;
 
