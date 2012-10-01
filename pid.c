@@ -391,8 +391,9 @@ float pidUpdateC(pidStruct_t *pid, float setpoint, float position) {
 */
 
 void pidZeroIntegral(pidStruct_t *pid, float pv, float iState) {
-    pid->iState = iState;
-    pid->dState = pv;
+    if (*pid->iGain != 0.0f)
+	pid->iState = iState / *pid->iGain;
+    pid->dState = -pv;
     pid->sp_1 = pv;
     pid->co_1 = 0.0f;
     pid->pv_1 = pv;
