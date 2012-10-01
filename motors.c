@@ -91,6 +91,8 @@ void motorsSendValues(void) {
 
     for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.active[i]) {
+	    // ensure motor output is constrained
+	    motorsData.value[i] = constrainInt(motorsData.value[i], p[MOT_START], p[MOT_MAX]);
 	    *motorsData.pwm[i]->ccr = motorsData.value[i];
 	    *motorsData.pwm[i]->cnt = 0;
 	}
@@ -100,10 +102,11 @@ void motorsOff(void) {
     int i;
 
     for (i = 0; i < MOTORS_NUM; i++)
-	if (motorsData.active[i])
+	if (motorsData.active[i]) {
 	    motorsData.value[i] = p[MOT_MIN];
-
-    motorsSendValues();
+	    *motorsData.pwm[i]->ccr = motorsData.value[i];
+	    *motorsData.pwm[i]->cnt = 0;
+    }
 
     motorsData.throttle = 0;
     motorsData.throttleLimiter = 0.0f;
@@ -141,7 +144,7 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 	    value += (rollCommand * d->roll * 0.01f);
 	    value += (ruddCommand * d->yaw * 0.01f);
 
-	    motorsData.value[i] = constrainInt(value*voltageFactor + p[MOT_START], p[MOT_START], p[MOT_MAX]);
+	    motorsData.value[i] = value*voltageFactor + p[MOT_START];
 
 	    // check for over throttle
 	    if (motorsData.value[i] == p[MOT_MAX])

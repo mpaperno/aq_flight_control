@@ -250,7 +250,7 @@ void srcdkfMeasurementUpdate(srcdkf_t *f, float32_t *u, float32_t *ym, int M, in
 	if (noise) {
 		f->Sn.numRows = N;
 		f->Sn.numCols = N;
-		arm_fill_f32(0, f->Sn.pData, N*N);
+		arm_fill_f32(0.0f, f->Sn.pData, N*N);
 		for (i = 0; i < N; i++)
 			arm_sqrt_f32(fabsf(noise[i]), &Sn[i*N + i]);
 	}
