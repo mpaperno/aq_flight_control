@@ -268,9 +268,12 @@
     <folder Name="DSPLIB">
       <file file_name="arm_math.h"/>
       <file file_name="arm_fill_f32.c"/>
+      <file file_name="arm_copy_f32.c"/>
       <file file_name="arm_mat_init_f32.c"/>
       <file file_name="arm_mat_trans_f32.c"/>
       <file file_name="arm_mat_mult_f32.c"/>
+      <file file_name="arm_mat_add_f32.c"/>
+      <file file_name="arm_mat_sub_f32.c"/>
       <file file_name="arm_std_f32.c"/>
       <file file_name="arm_mean_f32.c"/>
       <file file_name="arm_mat_inverse_f32.c"/>

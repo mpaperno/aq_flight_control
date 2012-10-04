@@ -289,15 +289,15 @@ void mavlinkRecvTaskCode(void *unused) {
 		    case MAVLINK_MSG_ID_MISSION_REQUEST:
 			if (mavlink_msg_mission_request_get_target_system(&msg) == mavlink_system.sysid) {
 			    uint16_t seqId;
-                            uint16_t MavFrame;
+                            uint16_t mavFrame;
 			    navMission_t *wp;
 
 			    seqId = mavlink_msg_mission_request_get_seq(&msg);
 			    wp = navGetWaypoint(seqId);
                             if (wp->relativeAlt == 1)
-                                MavFrame = MAV_FRAME_GLOBAL_RELATIVE_ALT;
+                                mavFrame = MAV_FRAME_GLOBAL_RELATIVE_ALT;
                             else
-                                MavFrame = MAV_FRAME_GLOBAL;
+                                mavFrame = MAV_FRAME_GLOBAL;
 
 			    if (wp->type == NAV_LEG_HOME) {
 				wp = navGetHomeWaypoint();
@@ -308,27 +308,27 @@ void mavlinkRecvTaskCode(void *unused) {
 			    }
                             else if (wp->type == NAV_LEG_GOTO) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
-                                    seqId, MavFrame, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
+                                    seqId, mavFrame, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     wp->targetRadius, wp->loiterTime/1000, wp->maxHorizSpeed, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
                             else if (wp->type == NAV_LEG_TAKEOFF) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
-                                    seqId, MavFrame, MAV_CMD_NAV_TAKEOFF, (navData.missionLeg == seqId) ? 1 : 0, 1,
+                                    seqId, mavFrame, MAV_CMD_NAV_TAKEOFF, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     wp->targetRadius, wp->loiterTime/1000, wp->poiHeading, wp->maxVertSpeed, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
                             else if (wp->type == NAV_LEG_ORBIT) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
-                                    seqId, MavFrame, 1, (navData.missionLeg == seqId) ? 1 : 0, 1,
+                                    seqId, mavFrame, 1, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     wp->targetRadius, wp->loiterTime/1000, wp->maxHorizSpeed, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
                             else if (wp->type == NAV_LEG_LAND) {
                                 mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
-                                    seqId, MavFrame, MAV_CMD_NAV_LAND, (navData.missionLeg == seqId) ? 1 : 0, 1,
+                                    seqId, mavFrame, MAV_CMD_NAV_LAND, (navData.missionLeg == seqId) ? 1 : 0, 1,
                                     0.0f, wp->maxVertSpeed, wp->maxHorizSpeed, wp->poiAltitude, wp->targetLat, wp->targetLon, wp->targetAlt);
                             }
 			    else {
 				mavlink_msg_mission_item_send(MAVLINK_COMM_0, msg.sysid, MAV_COMP_ID_MISSIONPLANNER,
-				    seqId, MavFrame, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
+				    seqId, mavFrame, MAV_CMD_NAV_WAYPOINT, (navData.missionLeg == seqId) ? 1 : 0, 1,
 				    wp->targetRadius, wp->loiterTime/1000, 0.0f, wp->poiHeading, wp->targetLat, wp->targetLon, wp->targetAlt);
 			    }
 			}
