@@ -94,7 +94,6 @@ void motorsSendValues(void) {
 	    // ensure motor output is constrained
 	    motorsData.value[i] = constrainInt(motorsData.value[i], p[MOT_START], p[MOT_MAX]);
 	    *motorsData.pwm[i]->ccr = motorsData.value[i];
-	    *motorsData.pwm[i]->cnt = 0;
 	}
 }
 
@@ -105,7 +104,6 @@ void motorsOff(void) {
 	if (motorsData.active[i]) {
 	    motorsData.value[i] = p[MOT_MIN];
 	    *motorsData.pwm[i]->ccr = motorsData.value[i];
-	    *motorsData.pwm[i]->cnt = 0;
     }
 
     motorsData.throttle = 0;
@@ -201,9 +199,9 @@ void motorsInit(void) {
 	if (d->throttle != 0.0 || d->pitch != 0.0 || d->roll != 0.0 || d->yaw != 0.0) {
 
 #ifdef USE_L1_ATTITUDE
-	    motorsData.pwm[i] = pwmInitOut(i, 10000, p[MOT_START], 1);	    // closed loop RPM mode
+	    motorsData.pwm[i] = pwmInitOut(i, 2500, p[MOT_START], 1);	    // closed loop RPM mode
 #else
-	    motorsData.pwm[i] = pwmInitOut(i, 10000, p[MOT_START], 0);	    // open loop mode
+	    motorsData.pwm[i] = pwmInitOut(i, 2500, p[MOT_START], 0);	    // open loop mode
 #endif
 	    motorsData.active[i] = 1;
 
