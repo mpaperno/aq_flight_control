@@ -16,9 +16,25 @@
     Copyright © 2011, 2012  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    101
+#define DEFAULT_CONFIG_VERSION	    102
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
+#define DEFAULT_RADIO_THRO_CH	    0
+#define DEFAULT_RADIO_ROLL_CH	    1
+#define DEFAULT_RADIO_PITC_CH	    2
+#define DEFAULT_RADIO_RUDD_CH	    3
+#define DEFAULT_RADIO_GEAR_CH	    4
+#define DEFAULT_RADIO_FLAP_CH	    5
+#define DEFAULT_RADIO_AUX2_CH	    6
+#define DEFAULT_RADIO_AUX3_CH	    7
+#define DEFAULT_RADIO_AUX4_CH	    8
+#define DEFAULT_RADIO_AUX5_CH	    9
+#define DEFAULT_RADIO_AUX6_CH	    10
+#define DEFAULT_RADIO_AUX7_CH	    11
+
+#define DEFAULT_PPM_SCALER	    3		// good for FrSky & Graupner HOTT
+#define DEFAULT_PPM_THROT_LOW	    1090	// throttle value at low stick
+#define DEFAULT_PPM_CHAN_MID	    1512	// middle of the stick range
 
 #define DEFAULT_CTRL_PID_TYPE	    0		// 0 == parallel TILT/RATE PIDs, 1 == cascading TILT/RATE PIDs
 
@@ -359,6 +375,10 @@
 #define DEFAULT_L1_ATT_PWM_LO		1000.0f		    // us
 #define DEFAULT_L1_ATT_PWM_HI		1950.0f		    // us
 #define DEFAULT_L1_ATT_PWM_SCALE	6500.0f		    // RPM
+#define DEFAULT_L1_ATT_AM1_KNOB		0.0f		    // AM1
+#define DEFAULT_L1_ATT_AM2_KNOB		0.0f		    // AM2
+#define DEFAULT_L1_ATT_K1_KNOB		0.0f		    // L1_K1
+#define DEFAULT_L1_ATT_PT_KNOB		0.0f		    // prop torque
 
 #define DEFAULT_L1_ATT_MM_R01		0.0f
 #define DEFAULT_L1_ATT_MM_P01		0.0f
@@ -402,19 +422,3 @@
 #define DEFAULT_L1_ATT_MM_R14		0.0f
 #define DEFAULT_L1_ATT_MM_P14		0.0f
 #define DEFAULT_L1_ATT_MM_Y14		0.0f
-
-#define DEFAULT_RADIO_THRO_CH           0
-#define DEFAULT_RADIO_ROLL_CH           1
-#define DEFAULT_RADIO_PITC_CH           2
-#define DEFAULT_RADIO_RUDD_CH           3
-#define DEFAULT_RADIO_GEAR_CH           4
-#define DEFAULT_RADIO_FLAP_CH           5
-#define DEFAULT_RADIO_AUX2_CH           6
-#define DEFAULT_RADIO_AUX3_CH           7
-#define DEFAULT_RADIO_AUX4_CH           8
-#define DEFAULT_RADIO_AUX5_CH           9
-#define DEFAULT_RADIO_AUX6_CH           10
-#define DEFAULT_RADIO_AUX7_CH           11
-#define DEFAULT_PPM_SCALER              3             // good for FrSky & Graupner HOTT
-#define DEFAULT_PPM_THROT_LOW           1090          // throttle value at low stick
-#define DEFAULT_PPM_CHAN_MID            1512          // middle of the stick range
