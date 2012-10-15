@@ -25,6 +25,7 @@
 
 #define CONTROL_STACK_SIZE	150//80
 #define CONTROL_PRIORITY	5
+#define CONTROL_MAX_THROT	(1400 * p[CTRL_FACT_THRO])
 
 typedef struct {
     OS_TID controlTask;

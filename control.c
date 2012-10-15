@@ -73,7 +73,8 @@ void controlTaskCode(void *unused) {
 		else {
 		    throttle = (RADIO_THROT - p[CTRL_MIN_THROT]) * p[CTRL_FACT_THRO];
 		}
-		throttle = constrainInt(throttle, 1, 1400 * p[CTRL_FACT_THRO]);
+		// limit
+		throttle = constrainInt(throttle, 1, CONTROL_MAX_THROT);
 
 		// if motors are not yet running, use this heading as hold heading
 		if (motorsData.throttle == 0) {
@@ -102,8 +103,8 @@ void controlTaskCode(void *unused) {
 		    else
 			yaw = (RADIO_RUDD + p[CTRL_DEAD_BAND]) * p[CTRL_FACT_RUDD];
 
-		    // don't allow desired yaw angle to lead attitude yaw angle by more than 90 deg
-		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW)) < 90.0f) {
+		    // don't allow desired yaw angle to lead attitude yaw angle by more than 45 deg
+		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW)) < 45.0f) {
 			controlData.yaw = compassNormalize(controlData.yaw + yaw);
 			navData.holdHeading = compassNormalize(navData.holdHeading + yaw);
 		    }
@@ -230,8 +231,6 @@ void controlTaskCode(void *unused) {
 }
 
 void controlInit(void) {
-    int i;
-
     AQ_NOTICE("Control init\n");
 
     memset((void *)&controlData, 0, sizeof(controlData));
@@ -240,12 +239,10 @@ void controlInit(void) {
     l1AttitudeInit();
 #endif
 
-    for (i = 0; i < 3; i++) {
-	utilFilterInit(&controlData.userPitchFilter[i], 1.0f/400.0f, 0.1f, 0.0f);
-	utilFilterInit(&controlData.userRollFilter[i], 1.0f/400.0f, 0.1f, 0.0f);
-	utilFilterInit(&controlData.navPitchFilter[i], 1.0f/400.0f, 0.125f, 0.0f);
-	utilFilterInit(&controlData.navRollFilter[i], 1.0f/400.0f, 0.125f, 0.0f);
-    }
+    utilFilterInit3(controlData.userPitchFilter, 1.0f/400.0f, 0.1f, 0.0f);
+    utilFilterInit3(controlData.userRollFilter, 1.0f/400.0f, 0.1f, 0.0f);
+    utilFilterInit3(controlData.navPitchFilter, 1.0f/400.0f, 0.125f, 0.0f);
+    utilFilterInit3(controlData.navRollFilter, 1.0f/400.0f, 0.125f, 0.0f);
 
     controlData.pitchRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
     controlData.rollRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
