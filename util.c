@@ -184,6 +184,7 @@ void utilFilterReset3(utilFilter_t *f, float setpoint) {
     utilFilterReset(&f[2], setpoint);
 }
 
+// larger tau, smoother filter
 void utilFilterInit(utilFilter_t *f, float dt, float tau, float setpoint) {
     f->tc = dt / tau;
     utilFilterReset(f, setpoint);

@@ -201,11 +201,8 @@ void navNavigate(void) {
 	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
 	    navData.mode = NAV_STATUS_ALTHOLD;
 
-#ifdef USE_MAVLINK
             // notify ground
-            mavlinkNotice ("Altitude Hold engaged");
-#endif
-
+            AQ_NOTICE("Altitude Hold engaged\n");
 	}
 
 	// are we not in position hold mode now?
@@ -236,11 +233,9 @@ void navNavigate(void) {
 
 	    // activate pos hold
 	    navData.mode = NAV_STATUS_POSHOLD;
-#ifdef USE_MAVLINK
-            // notify ground
-            mavlinkNotice ("Position Hold engaged");
-#endif
 
+	    // notify ground
+            AQ_NOTICE("Position Hold engaged\n");
 	}
 	// DVH
 	else if (navData.navCapable && (
