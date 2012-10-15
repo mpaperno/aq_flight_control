@@ -62,124 +62,130 @@ void matrixFree(arm_matrix_instance_f32 *m) {
 //      notes:  A matrix is modified
 //      Adapted from Java code originaly written by Joni Salonen
 //
-void qrDecompositionT_f32(arm_matrix_instance_f32 *A, arm_matrix_instance_f32 *Q, arm_matrix_instance_f32 *R) {
-        int minor;
-        int row, col;
-        int m = A->numCols;
-        int n = A->numRows;
-        int min;
+// returns 1 for success, 0 for failure
+int qrDecompositionT_f32(arm_matrix_instance_f32 *A, arm_matrix_instance_f32 *Q, arm_matrix_instance_f32 *R) {
+    int minor;
+    int row, col;
+    int m = A->numCols;
+    int n = A->numRows;
+    int min;
 
-        // clear R
-        arm_fill_f32(0, R->pData, R->numRows*R->numCols);
+    // clear R
+    arm_fill_f32(0, R->pData, R->numRows*R->numCols);
 
-        min = MIN(m, n);
+    min = MIN(m, n);
 
-        /*
-        * The QR decomposition of a matrix A is calculated using Householder
-        * reflectors by repeating the following operations to each minor
-        * A(minor,minor) of A:
-        */
-        for (minor = 0; minor < min; minor++) {
-                float xNormSqr = 0.0f;
-                float a;
+    /*
+    * The QR decomposition of a matrix A is calculated using Householder
+    * reflectors by repeating the following operations to each minor
+    * A(minor,minor) of A:
+    */
+    for (minor = 0; minor < min; minor++) {
+	    float xNormSqr = 0.0f;
+	    float a;
 
-                /*
-                * Let x be the first column of the minor, and a^2 = |x|^2.
-                * x will be in the positions A[minor][minor] through A[m][minor].
-                * The first column of the transformed minor will be (a,0,0,..)'
-                * The sign of a is chosen to be opposite to the sign of the first
-                * component of x. Let's find a:
-                */
-                for (row = minor; row < m; row++)
-                        xNormSqr += A->pData[minor*m + row]*A->pData[minor*m + row];
+	    /*
+	    * Let x be the first column of the minor, and a^2 = |x|^2.
+	    * x will be in the positions A[minor][minor] through A[m][minor].
+	    * The first column of the transformed minor will be (a,0,0,..)'
+	    * The sign of a is chosen to be opposite to the sign of the first
+	    * component of x. Let's find a:
+	    */
+	    for (row = minor; row < m; row++)
+		    xNormSqr += A->pData[minor*m + row]*A->pData[minor*m + row];
 
-		a = __sqrtf(xNormSqr);
-                if (A->pData[minor*m + minor] > 0.0f)
-                        a = -a;
+	    a = __sqrtf(xNormSqr);
+	    if (A->pData[minor*m + minor] > 0.0f)
+		    a = -a;
 
-                R->pData[minor*R->numCols + minor] = a;
+	    if (a != 0.0f) {
+		    R->pData[minor*R->numCols + minor] = a;
 
-                if (a != 0.0f) {
-                        /*
-                        * Calculate the normalized reflection vector v and transform
-                        * the first column. We know the norm of v beforehand: v = x-ae
-                        * so |v|^2 = <x-ae,x-ae> = <x,x>-2a<x,e>+a^2<e,e> =
-                        * a^2+a^2-2a<x,e> = 2a*(a - <x,e>).
-                        * Here <x, e> is now A[minor][minor].
-                        * v = x-ae is stored in the column at A:
-                        */
-                        A->pData[minor*m + minor] -= a; // now |v|^2 = -2a*(A[minor][minor])
+		    /*
+		    * Calculate the normalized reflection vector v and transform
+		    * the first column. We know the norm of v beforehand: v = x-ae
+		    * so |v|^2 = <x-ae,x-ae> = <x,x>-2a<x,e>+a^2<e,e> =
+		    * a^2+a^2-2a<x,e> = 2a*(a - <x,e>).
+		    * Here <x, e> is now A[minor][minor].
+		    * v = x-ae is stored in the column at A:
+		    */
+		    A->pData[minor*m + minor] -= a; // now |v|^2 = -2a*(A[minor][minor])
 
-                        /*
-                        * Transform the rest of the columns of the minor:
-                        * They will be transformed by the matrix H = I-2vv'/|v|^2.
-                        * If x is a column vector of the minor, then
-                        * Hx = (I-2vv'/|v|^2)x = x-2vv'x/|v|^2 = x - 2<x,v>/|v|^2 v.
-                        * Therefore the transformation is easily calculated by
-                        * subtracting the column vector (2<x,v>/|v|^2)v from x.
-                        *
-                        * Let 2<x,v>/|v|^2 = alpha. From above we have
-                        * |v|^2 = -2a*(A[minor][minor]), so
-                        * alpha = -<x,v>/(a*A[minor][minor])
-                        */
-                        for (col = minor+1; col < n; col++) {
-                                float alpha = 0.0f;
+		    /*
+		    * Transform the rest of the columns of the minor:
+		    * They will be transformed by the matrix H = I-2vv'/|v|^2.
+		    * If x is a column vector of the minor, then
+		    * Hx = (I-2vv'/|v|^2)x = x-2vv'x/|v|^2 = x - 2<x,v>/|v|^2 v.
+		    * Therefore the transformation is easily calculated by
+		    * subtracting the column vector (2<x,v>/|v|^2)v from x.
+		    *
+		    * Let 2<x,v>/|v|^2 = alpha. From above we have
+		    * |v|^2 = -2a*(A[minor][minor]), so
+		    * alpha = -<x,v>/(a*A[minor][minor])
+		    */
+		    for (col = minor+1; col < n; col++) {
+			    float alpha = 0.0f;
 
-                                for (row = minor; row < m; row++)
-                                        alpha -= A->pData[col*m + row]*A->pData[minor*m + row];
+			    for (row = minor; row < m; row++)
+				    alpha -= A->pData[col*m + row]*A->pData[minor*m + row];
 
-                                alpha /= a*A->pData[minor*m + minor];
+			    alpha /= a*A->pData[minor*m + minor];
 
-                                // Subtract the column vector alpha*v from x.
-                                for (row = minor; row < m; row++)
-                                        A->pData[col*m + row] -= alpha*A->pData[minor*m + row];
-                        }
-                }
-        }
+			    // Subtract the column vector alpha*v from x.
+			    for (row = minor; row < m; row++)
+				    A->pData[col*m + row] -= alpha*A->pData[minor*m + row];
+		    }
+	    }
+	    // rank deficient
+	    else
+		return 0;
+    }
 
-        // Form the matrix R of the QR-decomposition.
-        //      R is supposed to be m x n, but only calculate n x n
-        // copy the upper triangle of A
-        for (row = min-1; row >= 0; row--)
-                for (col = row+1; col < n; col++)
-                        R->pData[row*R->numCols + col] = A->pData[col*m + row];
+    // Form the matrix R of the QR-decomposition.
+    //      R is supposed to be m x n, but only calculate n x n
+    // copy the upper triangle of A
+    for (row = min-1; row >= 0; row--)
+	    for (col = row+1; col < n; col++)
+		    R->pData[row*R->numCols + col] = A->pData[col*m + row];
 
-        // Form the matrix Q of the QR-decomposition.
-        //      Q is supposed to be m x m
+    // Form the matrix Q of the QR-decomposition.
+    //      Q is supposed to be m x m
 
-        // only compute Q if requested
-        if (Q) {
-                arm_fill_f32(0, Q->pData, Q->numRows*Q->numCols);
+    // only compute Q if requested
+    if (Q) {
+	    arm_fill_f32(0, Q->pData, Q->numRows*Q->numCols);
 
-                /*
-                * Q = Q1 Q2 ... Q_m, so Q is formed by first constructing Q_m and then
-                * applying the Householder transformations Q_(m-1),Q_(m-2),...,Q1 in
-                * succession to the result
-                */
-                for (minor = m-1; minor >= min; minor--)
-                        Q->pData[minor*m + minor] = 1.0f;
+	    /*
+	    * Q = Q1 Q2 ... Q_m, so Q is formed by first constructing Q_m and then
+	    * applying the Householder transformations Q_(m-1),Q_(m-2),...,Q1 in
+	    * succession to the result
+	    */
+	    for (minor = m-1; minor >= min; minor--)
+		    Q->pData[minor*m + minor] = 1.0f;
 
-                for (minor = min-1; minor >= 0; minor--) {
-                        Q->pData[minor * m + minor] = 1.0f;
+	    for (minor = min-1; minor >= 0; minor--) {
+		    Q->pData[minor * m + minor] = 1.0f;
 
-                        if (A->pData[minor*m + minor] != 0.0f) {
-                                for (col = minor; col < m; col++) {
-                                        float alpha = 0.0f;
+		    if (A->pData[minor*m + minor] != 0.0f) {
+			    for (col = minor; col < m; col++) {
+				    float alpha = 0.0f;
 
-                                        for (row = minor; row < m; row++)
-                                                alpha -= Q->pData[row*m + col]*A->pData[minor*m + row];
+				    for (row = minor; row < m; row++)
+					    alpha -= Q->pData[row*m + col]*A->pData[minor*m + row];
 
-                                        alpha /= R->pData[minor*R->numCols + minor]*A->pData[minor*m + minor];
+				    alpha /= R->pData[minor*R->numCols + minor]*A->pData[minor*m + minor];
 
-                                        for (row = minor; row < m; row++)
-                                                Q->pData[row*m + col] -= alpha*A->pData[minor*m + row];
-                                }
-                        }
-                }
-        }
+				    for (row = minor; row < m; row++)
+					    Q->pData[row*m + col] -= alpha*A->pData[minor*m + row];
+			    }
+		    }
+	    }
+    }
+
+    return 1;
 }
 
-// Solves m sets of n equations A * X = B using QR decomposition and backsubstitution
+// Solves m sets of n equations B * X = A using QR decomposition and backsubstitution
 void matrixDiv_f32(arm_matrix_instance_f32 *X, arm_matrix_instance_f32 *A, arm_matrix_instance_f32 *B, arm_matrix_instance_f32 *Q, arm_matrix_instance_f32 *R, arm_matrix_instance_f32 *AQ) {
         int i, j, k;
         int m, n;
