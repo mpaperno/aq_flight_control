@@ -151,15 +151,19 @@ pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalV
 	switch (pwmTimerChannels[pwmPort]) {
 	    case TIM_Channel_1:
 		p->ccr = (volatile uint32_t *)&pwmTimers[pwmPort]->CCR1;
+		TIM_OC1PreloadConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_OCPreload_Enable);
 		break;
 	    case TIM_Channel_2:
 		p->ccr = (volatile uint32_t *)&pwmTimers[pwmPort]->CCR2;
+		TIM_OC2PreloadConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_OCPreload_Enable);
 		break;
 	    case TIM_Channel_3:
 		p->ccr = (volatile uint32_t *)&pwmTimers[pwmPort]->CCR3;
+		TIM_OC3PreloadConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_OCPreload_Enable);
 		break;
 	    case TIM_Channel_4:
 		p->ccr = (volatile uint32_t *)&pwmTimers[pwmPort]->CCR4;
+		TIM_OC4PreloadConfig((TIM_TypeDef *)pwmTimers[pwmPort], TIM_OCPreload_Enable);
 		break;
 	}
 
