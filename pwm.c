@@ -125,6 +125,21 @@ int pwmValidatePort(uint8_t pwmPort, uint32_t period) {
     return ret;
 }
 
+// Sets the TIMx prescaler values to zero to facilitate detection of used timers.
+void pwmZeroTimers(void) {
+    for (uint8_t i = 0; i < PWM_NUM_PORTS; i++) {
+	TIM_PrescalerConfig((TIM_TypeDef *) pwmTimers[i], 0, TIM_PSCReloadMode_Immediate);
+    }
+}
+
+// returns configured timer prescaler value for given port
+// should be zero if timer is not used
+uint16_t pwmCheckTimer(uint8_t pwmPort) {
+    uint16_t ret = TIM_GetPrescaler((TIM_TypeDef *) pwmTimers[pwmPort]);
+
+    return ret;
+}
+
 // note - assumes all timer clocks have been enable during system startup
 pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode) {
     pwmPortStruct_t *p = 0;

@@ -25,18 +25,46 @@
 #include "config.h"
 #include "aq_timer.h"
 #include "nav.h"
+#include "aq_mavlink.h"
 #include <string.h>
 
 gimbalStruct_t gimbalData __attribute__((section(".ccm")));
 
 void gimbalInit(void) {
+    uint16_t pwmPeriod;
+    int8_t pitchPwmPort = -1;
+    int8_t rollPwmPort = -1;
+
     memset((void *)&gimbalData, 0, sizeof(gimbalData));
 
-    if (p[GMBL_PITCH_PORT] >= 1.0f)
-	gimbalData.pitch = pwmInitOut((uint8_t)(p[GMBL_PITCH_PORT] - 1.0f), 5000, p[GMBL_NTRL_PITCH], -1);
+    if (p[GMBL_PWM_FREQ]) {
+	pwmPeriod = 200.0f / p[GMBL_PWM_FREQ] * 5000;
 
-    if (p[GMBL_ROLL_PORT] >= 1.0f)
-	gimbalData.roll = pwmInitOut((uint8_t)(p[GMBL_ROLL_PORT] - 1.0f), 5000, p[GMBL_NTRL_ROLL], -1);
+	if (p[GMBL_PITCH_PORT] && p[GMBL_PITCH_PORT] <= PWM_NUM_PORTS) {
+	    pitchPwmPort = p[GMBL_PITCH_PORT] - 1;
+	    if (pwmCheckTimer(pitchPwmPort)) {
+		pitchPwmPort = -1;
+		AQ_NOTICE("Warning: gimbal PITCH port timer conflict!\n");
+	    }
+	}
+	if (p[GMBL_ROLL_PORT] && p[GMBL_ROLL_PORT] <= PWM_NUM_PORTS) {
+	    rollPwmPort = p[GMBL_ROLL_PORT] - 1;
+	    if (pwmCheckTimer(rollPwmPort)) {
+		rollPwmPort = -1;
+		AQ_NOTICE("Warning: gimbal ROLL port timer conflict!\n");
+	    }
+	}
+
+	if (pitchPwmPort > -1) {
+	    gimbalData.pitch = pwmInitOut(pitchPwmPort, pwmPeriod, p[GMBL_NTRL_PITCH], -1);
+	    AQ_NOTICE("Gimbal PITCH port initialized.\n");
+	}
+
+	if (rollPwmPort > -1) {
+	    gimbalData.roll = pwmInitOut(rollPwmPort, pwmPeriod, p[GMBL_NTRL_ROLL], -1);
+	    AQ_NOTICE("Gimbal ROLL port initialized.\n");
+	}
+    }
 }
 
 void gimbalUpdate(void) {
@@ -50,14 +78,19 @@ void gimbalUpdate(void) {
 	if (tilt != gimbalData.tilt)
 	    gimbalData.tilt -= (gimbalData.tilt - tilt) * p[GMBL_SLEW_RATE];
 
-	pwm = constrainInt((-AQ_PITCH * (2000 - 1000)  + gimbalData.tilt )* p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH], p[GMBL_PWM_MIN_ROLL], p[GMBL_PWM_MAX_ROLL]);
-	if (timerMicros() > 20000000)
+	pwm = constrainInt((-AQ_PITCH * (2000 - 1000)  + gimbalData.tilt )* p[GMBL_SCAL_PITCH] + p[GMBL_NTRL_PITCH], p[GMBL_PWM_MIN_PT], p[GMBL_PWM_MAX_PT]);
+
+	if (timerMicros() > 10000)
 	    *gimbalData.pitch->ccr = pwm;
     }
 
     if (gimbalData.roll) {
-        pwm = constrainInt(-AQ_ROLL * (2000 - 1000) * p[GMBL_SCAL_ROLL] + p[GMBL_NTRL_ROLL], p[GMBL_PWM_MIN_ROLL], p[GMBL_PWM_MAX_ROLL]);
-	if (timerMicros() > 20000000)
+	if (p[GMBL_ROLL_EXPO])
+	    pwm = constrainInt((-AQ_ROLL * (abs(AQ_ROLL) / (100 / p[GMBL_ROLL_EXPO]))) * (2000 - 1000) * p[GMBL_SCAL_ROLL] + p[GMBL_NTRL_ROLL], p[GMBL_PWM_MIN_RL], p[GMBL_PWM_MAX_RL]);
+	else
+	    pwm = constrainInt(-AQ_ROLL * (2000 - 1000) * p[GMBL_SCAL_ROLL] + p[GMBL_NTRL_ROLL], p[GMBL_PWM_MIN_RL], p[GMBL_PWM_MAX_RL]);
+
+	if (timerMicros() > 10000)
 	    *gimbalData.roll->ccr = pwm;
     }
 }

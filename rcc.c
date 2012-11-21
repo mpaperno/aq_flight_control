@@ -17,6 +17,7 @@
 */
 
 #include "aq.h"
+#include "pwm.h"
 
 RCC_ClocksTypeDef rccClocks;
 
@@ -52,4 +53,6 @@ void rccConfiguration(void) {
     RCC_ClearFlag();
 
     RCC_GetClocksFreq(&rccClocks);
+
+    pwmZeroTimers();
 }

@@ -36,5 +36,7 @@ typedef struct {
 
 extern pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode);
 extern pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, pwmCallback_t callback);
+extern uint16_t pwmCheckTimer(uint8_t pwmPort);
+extern void pwmZeroTimers(void);
 
 #endif

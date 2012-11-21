@@ -63,8 +63,8 @@ void aqInit(void *pdata) {
     noticeInit();
     telemetryInit();
 #endif
-    gimbalInit();
     motorsInit();
+    gimbalInit();
     imuInit();
     navUkfInit();
     radioInit();
