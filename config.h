@@ -51,6 +51,7 @@ enum configParameters {
     CTRL_FACT_ROLL,
     CTRL_FACT_RUDD,
     CTRL_DEAD_BAND,
+    CTRL_DBAND_THRO,
     CTRL_MIN_THROT,
     CTRL_MAX,
     CTRL_NAV_YAW_RT,

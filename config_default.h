@@ -42,7 +42,8 @@
 #define DEFAULT_CTRL_FACT_PITC	    0.05f	// user pitch multiplier
 #define DEFAULT_CTRL_FACT_ROLL	    0.05f	// user roll multiplier
 #define DEFAULT_CTRL_FACT_RUDD	    0.0004f	// user rudder multiplier
-#define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band (for DVH & rudder control)
+#define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band (for pitch, roll, & rudder control)
+#define DEFAULT_CTRL_DBAND_THRO	    40.0f	// rc control dead band (for throttle channel only)
 #define DEFAULT_CTRL_MIN_THROT	    20.0f	// minimum user throttle to activate motors
 #define DEFAULT_CTRL_MAX	    300.0f	// maximum control applied to motors +- throttle
 #define DEFAULT_CTRL_NAV_YAW_RT	    180.0f	// maximum navigation yaw rate deg/s

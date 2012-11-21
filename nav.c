@@ -373,12 +373,12 @@ void navNavigate(void) {
 
 	// Throttle controls vertical speed
 	vertStick = RADIO_THROT - 700;
-	if (vertStick > p[CTRL_DEAD_BAND] || vertStick < -p[CTRL_DEAD_BAND]) {
+	if (vertStick > p[CTRL_DBAND_THRO] || vertStick < -p[CTRL_DBAND_THRO]) {
 	    // altitude velocity proportional to throttle stick
 	    if (vertStick > 0.0f)
-		navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DEAD_BAND]) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
+		navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO]) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
 	    else
-		navData.targetHoldSpeedAlt = (vertStick + p[CTRL_DEAD_BAND]) * p[NAV_MAX_DECENT] * (1.0f / 700.0f);
+		navData.targetHoldSpeedAlt = (vertStick + p[CTRL_DBAND_THRO]) * p[NAV_MAX_DECENT] * (1.0f / 700.0f);
 
 	    // set new hold altitude to wherever we are during vertical speed overrides
 	    if (navData.mode != NAV_STATUS_MISSION)
