@@ -102,7 +102,7 @@ void mavlinkDo(void) {
 	break;
 
     case NAV_STATUS_POSHOLD:
-	mavlinkData.mode= 128 + 16;
+	mavlinkData.mode= 128 + 16 + 1;
 	break;
 
     case NAV_STATUS_MISSION:
