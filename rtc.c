@@ -200,7 +200,7 @@ void rtcInit(void) {
     RTC_InitStructure.RTC_HourFormat = RTC_HourFormat_24;
     RTC_Init(&RTC_InitStructure);
 
-    rtcSetDataTime(2012, 01, 01, 00, 00, 00);
+    RTC_BypassShadowCmd(ENABLE);
 }
 
 void RTC_WKUP_IRQHandler(void) {
