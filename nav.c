@@ -71,6 +71,8 @@ void navSetHomeCurrent(void) {
     navData.homeLeg.targetLon = gpsData.lon;
     navData.homeLeg.maxHorizSpeed = p[NAV_MAX_SPEED];
     navData.homeLeg.poiHeading = AQ_YAW;
+    if (p[NAV_CEILING])
+	navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
 }
 
 void navRecallHome(void) {
@@ -263,6 +265,24 @@ void navNavigate(void) {
 	navSetHoldAlt(UKF_ALTITUDE, 0);
     }
 
+    // Ceiling
+    if (navData.ceilingAlt) { // ceiling set ?, 0 is disable
+	if ( UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag ) { // ceiling reached 1st time
+	    navData.setCeilingFlag = 1;
+	    navData.ceilingTimer = timerMicros();
+	} else if ( navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) { // ceiling still reached for 5 seconds
+	    navData.ceilingTimer = timerMicros();
+	    if (!navData.setCeilingReached)
+		AQ_NOTICE("Warning: Altitude ceiling reached.");
+	    navData.setCeilingReached = 1;
+	} else if ( (navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt ) {
+	    if (navData.setCeilingReached)
+		AQ_NOTICE("Notice: Altitude returned to within ceiling.");
+	    navData.setCeilingFlag = 0;
+	    navData.setCeilingReached = 0;
+	}
+    }
+
     // home set
     if (RADIO_AUX2 > 250) {
 	navSetHomeCurrent();
@@ -373,7 +393,7 @@ void navNavigate(void) {
 
 	// Throttle controls vertical speed
 	vertStick = RADIO_THROT - 700;
-	if (vertStick > p[CTRL_DBAND_THRO] || vertStick < -p[CTRL_DBAND_THRO]) {
+	if ( (vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO] ) {
 	    // altitude velocity proportional to throttle stick
 	    if (vertStick > 0.0f)
 		navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO]) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
@@ -399,7 +419,7 @@ void navNavigate(void) {
 	navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.01f;
     }
 
-    // calculate POI angle
+    // calculate POI angle (used for tilt in gimbal function)
     if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].poiAltitude != 0.0f) {
 	float a, b, c;
 
@@ -446,6 +466,9 @@ void navInit(void) {
     navData.distanceEPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
     navData.altSpeedPID = pidInit(&p[NAV_ATL_SPED_P], &p[NAV_ATL_SPED_I], 0, 0, &p[NAV_ATL_SPED_PM], &p[NAV_ATL_SPED_IM], 0, &p[NAV_ATL_SPED_OM], 0, 0, 0, 0);
     navData.altPosPID = pidInit(&p[NAV_ALT_POS_P], &p[NAV_ALT_POS_I], 0, 0, &p[NAV_ALT_POS_PM], &p[NAV_ALT_POS_IM], 0, &p[NAV_ALT_POS_OM], 0, 0, 0, 0);
+    navData.ceilingAlt = 0.0f;
+    navData.setCeilingFlag = 0;
+    navData.setCeilingReached = 0;
 
     navData.mode = NAV_STATUS_MANUAL;
     navSetHoldHeading(AQ_YAW);

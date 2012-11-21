@@ -164,6 +164,7 @@
 
 #define DEFAULT_NAV_MAX_SPEED	    5.0f	// m/s
 #define DEFAULT_NAV_MAX_DECENT	    1.5f	// m/s
+#define DEFAULT_NAV_CEILING         0.0f	// m relative to home alt. Maximum altitude in alt/pos/mission/dvh modes
 
 // speed => tilt PID
 #define DEFAULT_NAV_SPEED_P	    7.0f

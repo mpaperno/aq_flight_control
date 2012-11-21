@@ -157,6 +157,7 @@ enum configParameters {
     TELEMETRY_RATE,
     NAV_MAX_SPEED,
     NAV_MAX_DECENT,
+    NAV_CEILING,
     NAV_SPEED_P,
     NAV_SPEED_I,
     NAV_SPEED_PM,
