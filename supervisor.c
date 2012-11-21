@@ -139,16 +139,17 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.lastGoodRadioMicros = timerMicros();
 
 		if (supervisorData.state & STATE_RADIO_LOSS1)
-		    AQ_NOTICE("Supervisor: radio signal regained\n");
+		    AQ_NOTICE("Warning: radio signal regained\n");
 
 		supervisorData.state &= ~(STATE_RADIO_LOSS1 | STATE_RADIO_LOSS2);
 	    }
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS1) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS1) {
 		supervisorData.state |= STATE_RADIO_LOSS1;
-		AQ_NOTICE("Supervisor: radio loss stage 1 detected\n");
+		AQ_NOTICE("Warning: Radio loss stage 1 detected\n");
 
 		// hold position
 		RADIO_FLAPS = 0;    // position hold
+		RADIO_AUX2 = 0;     // normal home mode
 		RADIO_PITCH = 0;    // center sticks
 		RADIO_ROLL = 0;
 		RADIO_RUDD = 0;
@@ -156,11 +157,13 @@ void supervisorTaskCode(void *unused) {
 	    }
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
 		supervisorData.state |= STATE_RADIO_LOSS2;
-		AQ_NOTICE("Supervisor: radio loss stage 2 detected\n");
+		AQ_NOTICE("Warning: Radio loss stage 2 detected\n");
 
-		// TODO: something
-                // for example:
-		// RADIO_THROT -= 150; // ~0.5 m/s down speed
+		RADIO_THROT -= 200; // slow decent
+
+		if ((int)p[SPVR_FS_RAD_ST2]==1)
+                  RADIO_AUX2 = -700;  // return to home
+
 	    }
 	}
 
@@ -188,13 +191,13 @@ void supervisorTaskCode(void *unused) {
 	// low battery
 	if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*adcData.batCellCount)) {
 	    supervisorData.state |= STATE_LOW_BATTERY1;
-	    AQ_NOTICE("Supervisor: low battery stage 1 detected\n");
+	    AQ_NOTICE("Warning: Low battery stage 1\n");
 
 	    // TODO: something
 	}
 	else if (!(supervisorData.state & STATE_LOW_BATTERY2) && supervisorData.vInLPF < (p[SPVR_LOW_BAT2]*adcData.batCellCount)) {
 	    supervisorData.state |= STATE_LOW_BATTERY2;
-	    AQ_NOTICE("Supervisor: low battery stage 2 detected\n");
+	    AQ_NOTICE("Warning: Low battery stage 2\n");
 
 	    // TODO: something
 	}

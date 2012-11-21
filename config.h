@@ -284,6 +284,8 @@ enum configParameters {
     SPVR_BAT_CRV4,
     SPVR_BAT_CRV5,
     SPVR_BAT_CRV6,
+    SPVR_FS_RAD_ST1,
+    SPVR_FS_RAD_ST2,
     UKF_VEL_Q,
     UKF_VEL_ALT_Q,
     UKF_POS_Q,

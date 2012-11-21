@@ -287,6 +287,8 @@ const char *configParameterStrings[] = {
     "SPVR_BAT_CRV4",
     "SPVR_BAT_CRV5",
     "SPVR_BAT_CRV6",
+    "SPVR_FS_RAD_ST1",
+    "SPVR_FS_RAD_ST2",
     "UKF_VEL_Q",
     "UKF_VEL_ALT_Q",
     "UKF_POS_Q",
@@ -651,6 +653,8 @@ void configLoadDefault(void) {
     p[SPVR_BAT_CRV4] = DEFAULT_SPVR_BAT_CRV4;
     p[SPVR_BAT_CRV5] = DEFAULT_SPVR_BAT_CRV5;
     p[SPVR_BAT_CRV6] = DEFAULT_SPVR_BAT_CRV6;
+    p[SPVR_FS_RAD_ST1] = DEFAULT_SPVR_FS_RAD_ST1;
+    p[SPVR_FS_RAD_ST2] = DEFAULT_SPVR_FS_RAD_ST2;
     p[UKF_VEL_Q] = DEFAULT_UKF_VEL_Q;
     p[UKF_VEL_ALT_Q] = DEFAULT_UKF_VEL_ALT_Q;
     p[UKF_POS_Q] = DEFAULT_UKF_POS_Q;

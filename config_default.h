@@ -315,6 +315,9 @@
 #define DEFAULT_SPVR_BAT_CRV4	    +1.166082e+02f
 #define DEFAULT_SPVR_BAT_CRV5	    -1.074193e+02f
 #define DEFAULT_SPVR_BAT_CRV6	    +3.779082e+01f
+#define DEFAULT_SPVR_FS_RAD_ST1     0           // radio failsafe stage 1 action (0 = position hold)
+#define DEFAULT_SPVR_FS_RAD_ST2     0           // radio failsafe stage 2 action (0 = slow decent, 1 = RTH + slow decent)
+
 
 
 #define DEFAULT_UKF_VEL_Q		+7.6020e-02	// +0.076019661680	 0.000109304521 -0.001443424436
