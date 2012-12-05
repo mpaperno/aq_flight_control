@@ -56,6 +56,7 @@ typedef struct {
     unsigned int errorCount;
     unsigned int frameCount;
     float quality;
+    int8_t radioType;
 
     unsigned long lastUpdate;
 } radioStruct_t;

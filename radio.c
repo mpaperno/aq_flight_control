@@ -43,7 +43,7 @@ void radioTaskCode(void *unused) {
 	// wait for data
 	yield(2);
 
-	switch ((int)p[RADIO_TYPE]) {
+	switch (radioData.radioType) {
 	case 0:
 	case 1:
 	    while (serialAvailable(s))
@@ -78,7 +78,9 @@ void radioInit(void) {
 
     utilFilterInit(&radioData.qualityFilter, (1.0f / 50.0f), 0.75f, 0.0f);
 
-    switch ((int)p[RADIO_TYPE]) {
+    radioData.radioType = (int8_t)p[RADIO_TYPE];
+
+    switch (radioData.radioType) {
     case 0:
     case 1:
 	spektrumInit();
