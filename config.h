@@ -397,7 +397,7 @@ enum configParameters {
 typedef struct {
     unsigned int paramId;
     unsigned int num;
-    float values[248];
+    float values[CONFIG_NUM_PARAMS];
 } __attribute__((packed)) paramStruct_t;
 
 extern float p[CONFIG_NUM_PARAMS];
