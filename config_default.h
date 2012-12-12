@@ -16,7 +16,7 @@
     Copyright © 2011, 2012  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    102
+#define DEFAULT_CONFIG_VERSION	    103
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -381,7 +381,7 @@
 #define DEFAULT_L1_ATT_L1_K1		18.6f
 #define DEFAULT_L1_ATT_PWM_LO		1000.0f		    // us
 #define DEFAULT_L1_ATT_PWM_HI		1950.0f		    // us
-#define DEFAULT_L1_ATT_PWM_SCALE	6500.0f		    // RPM
+#define DEFAULT_L1_ATT_PWM_SCAL 	6500.0f		    // RPM
 #define DEFAULT_L1_ATT_AM1_KNOB		0.0f		    // AM1
 #define DEFAULT_L1_ATT_AM2_KNOB		0.0f		    // AM2
 #define DEFAULT_L1_ATT_K1_KNOB		0.0f		    // L1_K1

@@ -344,7 +344,7 @@ enum configParameters {
     L1_ATT_L1_K1,
     L1_ATT_PWM_LO,
     L1_ATT_PWM_HI,
-    L1_ATT_PWM_SCALE,
+    L1_ATT_PWM_SCAL,
     L1_ATT_AM1_KNOB,
     L1_ATT_AM2_KNOB,
     L1_ATT_K1_KNOB,

@@ -347,7 +347,7 @@ const char *configParameterStrings[] = {
     "L1_ATT_L1_K1",
     "L1_ATT_PWM_LO",
     "L1_ATT_PWM_HI",
-    "L1_ATT_PWM_SCALE",
+    "L1_ATT_PWM_SCAL",
     "L1_ATT_AM1_KNOB",
     "L1_ATT_AM2_KNOB",
     "L1_ATT_K1_KNOB",
@@ -713,7 +713,7 @@ void configLoadDefault(void) {
     p[L1_ATT_L1_K1] = DEFAULT_L1_ATT_L1_K1;
     p[L1_ATT_PWM_LO] = DEFAULT_L1_ATT_PWM_LO;
     p[L1_ATT_PWM_HI] = DEFAULT_L1_ATT_PWM_HI;
-    p[L1_ATT_PWM_SCALE] = DEFAULT_L1_ATT_PWM_SCALE;
+    p[L1_ATT_PWM_SCAL] = DEFAULT_L1_ATT_PWM_SCAL;
     p[L1_ATT_AM1_KNOB] = DEFAULT_L1_ATT_AM1_KNOB;
     p[L1_ATT_AM2_KNOB] = DEFAULT_L1_ATT_AM2_KNOB;
     p[L1_ATT_K1_KNOB] = DEFAULT_L1_ATT_K1_KNOB;
