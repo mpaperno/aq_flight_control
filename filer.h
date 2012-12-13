@@ -22,8 +22,8 @@
 #include "ff.h"
 #include <CoOS.h>
 
-#define FILER_PRIORITY		70
-#define FILER_STACK_SIZE	154
+#define FILER_PRIORITY		62
+#define FILER_STACK_SIZE	160
 
 #define FILER_SESS_FNAME	"session.txt"
 #define FILER_MAX_FILES		4
