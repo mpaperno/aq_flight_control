@@ -25,7 +25,7 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define GPS_STACK_SIZE	    96
+#define GPS_STACK_SIZE	    104
 #define GPS_PRIORITY	    35
 
 #define GPS_LATENCY	    75000	// us (comment out to use uBlox timepulse)

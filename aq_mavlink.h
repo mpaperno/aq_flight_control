@@ -26,7 +26,7 @@
 #include "config.h"
 #include "../mavlink_types.h"
 
-#define MAVLINK_STACK_SIZE		    256
+#define MAVLINK_STACK_SIZE		    280
 #define MAVLINK_PRIORITY		    40
 
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6	    //  1Hz

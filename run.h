@@ -21,7 +21,7 @@
 
 #include <CoOS.h>
 
-#define RUN_TASK_SIZE		192
+#define RUN_TASK_SIZE		250
 #define RUN_PRIORITY		30
 
 #define RUN_SENSOR_HIST		10	    // number of timesteps to average observation sensors' data

@@ -22,7 +22,7 @@
 #include <CoOS.h>
 #include "digital.h"
 
-#define SUPERVISOR_STACK_SIZE	    64
+#define SUPERVISOR_STACK_SIZE	    72
 #define SUPERVISOR_PRIORITY	    34
 
 #define SUPERVISOR_RATE		    10		    // Hz
