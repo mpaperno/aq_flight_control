@@ -1,2 +1,2 @@
 #define VERSION "6.6 - BETA "
-#define BUILDNUMBER 46
+#define BUILDNUMBER 47
