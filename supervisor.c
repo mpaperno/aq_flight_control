@@ -246,7 +246,7 @@ void supervisorInit(void) {
     digitalLo(supervisorData.debugLed);
 
     supervisorData.state = STATE_INITIALIZING;
-    supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE);
+    supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE, "SUPERVISOR");
 
     supervisorData.supervisorTask = CoCreateTask(supervisorTaskCode, (void *)0, SUPERVISOR_PRIORITY, &supervisorTaskStack[SUPERVISOR_STACK_SIZE-1], SUPERVISOR_STACK_SIZE);
 }

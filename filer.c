@@ -298,7 +298,7 @@ void filerInit(void) {
     memset((void *)&filerData, 0, sizeof(filerData));
 
     filerData.filerFlag = CoCreateFlag(0, 0);   // manual reset
-    filerTaskStack = aqStackInit(FILER_STACK_SIZE);
+    filerTaskStack = aqStackInit(FILER_STACK_SIZE, "FILER");
 
     filerData.filerTask = CoCreateTask(filerTaskCode, (void *)0, FILER_PRIORITY, &filerTaskStack[FILER_STACK_SIZE-1], FILER_STACK_SIZE);
 }

@@ -522,7 +522,7 @@ void adcInit(void) {
     ADC_Cmd(ADC3, ENABLE);
 
     adcData.adcFlag = CoCreateFlag(1, 0);
-    adcTaskStack = aqStackInit(ADC_STACK_SIZE);
+    adcTaskStack = aqStackInit(ADC_STACK_SIZE, "ADC");
 
     adcData.adcTask = CoCreateTask(adcTaskCode, (void *)0, ADC_PRIORITY, &adcTaskStack[ADC_STACK_SIZE-1], ADC_STACK_SIZE);
 

@@ -206,8 +206,6 @@ void rtcInit(void) {
 void RTC_WKUP_IRQHandler(void) {
     if (RTC_GetITStatus(RTC_IT_WUT) != RESET) {
 	// nothing at the moment
-//vn100SerialSend("VNRRG,42");
-//vn100SerialSend("VNRRG,40");
 
 	RTC_ClearITPendingBit(RTC_IT_WUT);
 	EXTI_ClearITPendingBit(EXTI_Line22);

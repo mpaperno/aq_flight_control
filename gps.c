@@ -142,7 +142,7 @@ void gpsInit(void) {
     // manual reset flags
     gpsData.gpsVelFlag = CoCreateFlag(0, 0);
     gpsData.gpsPosFlag = CoCreateFlag(0, 0);
-    gpsTaskStack = aqStackInit(GPS_STACK_SIZE);
+    gpsTaskStack = aqStackInit(GPS_STACK_SIZE, "GPS");
 
     gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 

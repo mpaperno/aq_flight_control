@@ -252,7 +252,7 @@ void controlInit(void) {
     controlData.rollAnglePID = pidInit(&p[CTRL_TLT_ANG_P], &p[CTRL_TLT_ANG_I], &p[CTRL_TLT_ANG_D], &p[CTRL_TLT_ANG_F], &p[CTRL_TLT_ANG_PM], &p[CTRL_TLT_ANG_IM], &p[CTRL_TLT_ANG_DM], &p[CTRL_TLT_ANG_OM], 0, 0, 0, 0);
     controlData.yawAnglePID = pidInit(&p[CTRL_YAW_ANG_P], &p[CTRL_YAW_ANG_I], &p[CTRL_YAW_ANG_D], &p[CTRL_YAW_ANG_F], &p[CTRL_YAW_ANG_PM], &p[CTRL_YAW_ANG_IM], &p[CTRL_YAW_ANG_DM], &p[CTRL_YAW_ANG_OM], 0, 0, 0, 0);
 
-    controlTaskStack = aqStackInit(CONTROL_STACK_SIZE);
+    controlTaskStack = aqStackInit(CONTROL_STACK_SIZE, "CONTROL");
 
     controlData.controlTask = CoCreateTask(controlTaskCode, (void *)0, CONTROL_PRIORITY, &controlTaskStack[CONTROL_STACK_SIZE-1], CONTROL_STACK_SIZE);
 }

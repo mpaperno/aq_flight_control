@@ -96,7 +96,7 @@ void radioInit(void) {
         break;
     }
 
-    radioTaskStack = aqStackInit(RADIO_STACK_SIZE);
+    radioTaskStack = aqStackInit(RADIO_STACK_SIZE, "RADIO");
 
     radioData.radioTask = CoCreateTask(radioTaskCode, (void *)0, RADIO_PRIORITY, &radioTaskStack[RADIO_STACK_SIZE-1], RADIO_STACK_SIZE);
 }

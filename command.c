@@ -355,7 +355,7 @@ void commandInit(void) {
 
     memset((void *)&commandData, 0, sizeof(commandData));
 
-    commandTaskStack = aqStackInit(COMMAND_STACK_SIZE);
+    commandTaskStack = aqStackInit(COMMAND_STACK_SIZE, "COMMAND");
 
     commandData.commandTask = CoCreateTask(commandTaskCode, (void *)0, COMMAND_PRIORITY, &commandTaskStack[COMMAND_STACK_SIZE-1], COMMAND_STACK_SIZE);
 

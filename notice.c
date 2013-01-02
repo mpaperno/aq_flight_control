@@ -68,7 +68,7 @@ void noticeTaskCode(void *unused) {
 
 void noticeInit(void) {
     noticeData.notices = CoCreateQueue(noticeData.noticeQueue, NOTICE_QUEUE_DEPTH, EVENT_SORT_TYPE_FIFO);
-    noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE);
+    noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE, "NOTICE");
 
     // start notice thread with high priority so that it can process startup notices - will drop priority later
     noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[NOTICE_STACK_SIZE-1], NOTICE_STACK_SIZE);

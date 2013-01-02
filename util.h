@@ -45,7 +45,7 @@ extern float constrainFloat(float i, float lo, float hi);
 extern void dumpFloat(unsigned char n, float *floats);
 extern void dumpInt(unsigned char n, int *ints);
 extern void info(void);
-extern OS_STK *aqStackInit(uint16_t size);
+extern OS_STK *aqStackInit(uint16_t size, char *name);
 extern void *aqCalloc(size_t count, size_t size);
 extern void aqFree(void *ptr, size_t count, size_t size);
 extern void *aqDataCalloc(uint16_t count, uint16_t size);

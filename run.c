@@ -146,7 +146,7 @@ void runInit(void) {
 
     memset((void *)&runData, 0, sizeof(runData));
 
-    runTaskStack = aqStackInit(RUN_TASK_SIZE);
+    runTaskStack = aqStackInit(RUN_TASK_SIZE, "RUN");
 
     runData.runTask = CoCreateTask(runTaskCode, (void *)0, RUN_PRIORITY, &runTaskStack[RUN_TASK_SIZE-1], RUN_TASK_SIZE);
 

@@ -588,7 +588,7 @@ void mavlinkInit(void) {
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
 
-    mavlinkRecvTaskStack = aqStackInit(MAVLINK_STACK_SIZE);
+    mavlinkRecvTaskStack = aqStackInit(MAVLINK_STACK_SIZE, "MAVLINK");
 
     mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, MAVLINK_PRIORITY, &mavlinkRecvTaskStack[MAVLINK_STACK_SIZE-1], MAVLINK_STACK_SIZE);
 

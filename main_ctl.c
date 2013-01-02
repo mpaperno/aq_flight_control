@@ -37,7 +37,7 @@ int main(void) {
 
     CoInitOS();
 
-    aqInitStack = aqStackInit(AQINIT_STACK_SIZE);
+    aqInitStack = aqStackInit(AQINIT_STACK_SIZE, "INIT");
 
     CoCreateTask(aqInit, (void *)0, AQINIT_PRIORITY, &aqInitStack[AQINIT_STACK_SIZE-1], AQINIT_STACK_SIZE);
     CoStartOS();

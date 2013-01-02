@@ -39,18 +39,20 @@ int32_t numStacks;
 void *stackPointers[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 uint16_t stackSizes[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 uint16_t stackFrees[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
+char *stackNames[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 
 void utilStackCheck(void) {
-    char s[48];
+    char s[64];
     int i, j;
 
     for (i = 0; i < numStacks; i++) {
 	for (j = 0; j < stackSizes[i]; j++)
 	    if (*(char *)(stackPointers[i]+j) != 0xFF)
 		break;
-	stackFrees[i] = j;
+	if (stackFrees[i] > j)
+	    stackFrees[i] = j;
 	if (j < 16) {
-	    sprintf(s, "Potential stack overflow [%d]!\n", i);
+	    sprintf(s, "Possible stack overflow [%s]!\n", stackNames[i]);
 	    AQ_NOTICE(s);
 	}
     }
@@ -97,7 +99,7 @@ void *aqDataCalloc(uint16_t count, uint16_t size) {
 }
 
 // size in words
-OS_STK *aqStackInit(uint16_t size) {
+OS_STK *aqStackInit(uint16_t size, char *name) {
     OS_STK *sp;
 
     // use memory in the CCM
@@ -109,6 +111,8 @@ OS_STK *aqStackInit(uint16_t size) {
 #ifdef UTIL_STACK_CHECK
     stackPointers[numStacks] = sp;
     stackSizes[numStacks] = size*4;
+    stackFrees[numStacks] = stackSizes[numStacks];
+    stackNames[numStacks] = name;
     numStacks++;
 #endif
 
