@@ -89,6 +89,8 @@
       <file file_name="esc32.h"/>
       <file file_name="esc32.c"/>
       <file file_name="buildnum.h"/>
+      <file file_name="can.c"/>
+      <file file_name="can.h"/>
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
@@ -105,7 +107,7 @@
       <file file_name="core_cmInstr.h"/>
     </folder>
     <folder Name="STM Driver Lib">
-      <folder Name="inc">
+      <folder Name="inc" file_name="">
         <file file_name="misc.c"/>
         <file file_name="stm32f4xx_adc.c"/>
         <file file_name="stm32f4xx_dma.c"/>
@@ -120,8 +122,9 @@
         <file file_name="stm32f4xx_tim.c"/>
         <file file_name="stm32f4xx_usart.c"/>
         <file file_name="stm32f4xx_pwr.c"/>
+        <file file_name="stm32f4xx_can.h"/>
       </folder>
-      <folder Name="src">
+      <folder Name="src" file_name="">
         <file file_name="stm32f4xx_conf.h"/>
         <file file_name="misc.h"/>
         <file file_name="stm32f4xx_adc.h"/>
@@ -137,6 +140,7 @@
         <file file_name="stm32f4xx_tim.h"/>
         <file file_name="stm32f4xx_usart.h"/>
         <file file_name="stm32f4xx_pwr.h"/>
+        <file file_name="stm32f4xx_can.c"/>
       </folder>
     </folder>
     <folder Name="mavlink">

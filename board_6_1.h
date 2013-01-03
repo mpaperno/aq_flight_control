@@ -276,4 +276,13 @@ enum pwmPorts {
 #define ADC_VIN_RTOP            4.7f   // first run beta boards were 4.7K, second run are 8.45K
 #define ADC_PRESSURE_3V3
 
+#define CANx			    CAN1
+#define CAN_CLK			    RCC_APB1Periph_CAN1
+#define CAN_RX_PIN		    GPIO_Pin_0
+#define CAN_TX_PIN		    GPIO_Pin_1
+#define CAN_GPIO_PORT		    GPIOD
+#define CAN_AF_PORT		    GPIO_AF_CAN1
+#define CAN_RX_SOURCE		    GPIO_PinSource0
+#define CAN_TX_SOURCE		    GPIO_PinSource1
+
 #endif

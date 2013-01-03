@@ -29,6 +29,7 @@
 #include "logger.h"
 #include "supervisor.h"
 #include "gimbal.h"
+#include "can.h"
 #include <CoOS.h>
 #include <intrinsics.h>
 
@@ -133,6 +134,13 @@ void runTaskCode(void *p) {
 	mavlinkDo();
 #else
 	telemetryDo();
+#endif
+#ifdef USE_CAN
+	canCheckMessage();
+    #if CAN_OUTPUT_IMU_FREQ > 0
+	if (!(loops % (200 / CAN_OUTPUT_IMU_FREQ / 2)))
+	    canTxIMUData(loops);
+    #endif
 #endif
 
 	loops++;

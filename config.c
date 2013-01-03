@@ -916,3 +916,7 @@ int8_t configWriteFile(char *fname) {
 
     return ret;
 }
+
+void configSetParamByID(int id, float value) {
+    p[id] = value;
+}

@@ -411,5 +411,6 @@ extern unsigned int configParameterRead(void *data);
 extern unsigned int configParameterWrite(void *data);
 extern int8_t configReadFile(char *fname);
 extern int8_t configWriteFile(char *fname);
+extern void configSetParamByID(int id, float value);
 
 #endif

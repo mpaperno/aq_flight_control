@@ -45,6 +45,7 @@
 #include "supervisor.h"
 #include "gimbal.h"
 #include "sdio.h"
+#include "can.h"
 #include <CoOS.h>
 
 OS_STK *aqInitStack;
@@ -73,6 +74,9 @@ void aqInit(void *pdata) {
     navInit();
 #ifndef USE_MAVLINK
     commandInit();
+#endif
+#ifdef USE_CAN
+    canInit();
 #endif
     loggerInit();
     runInit();

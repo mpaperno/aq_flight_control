@@ -29,6 +29,7 @@
 
 //#define HAS_VN100
 //#define USE_VN100
+//#define USE_CAN
 
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 
