@@ -201,6 +201,7 @@ void navNavigate(void) {
 	    pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
 
 	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
+            navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 	    navData.mode = NAV_STATUS_ALTHOLD;
 
             // notify ground

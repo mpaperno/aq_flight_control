@@ -319,6 +319,11 @@ void navUkfPresUpdate(float *u, float *x, float *noise, float *y) {
     y[0] = x[16] + noise[0]; // return altitude
 }
 
+void navUkfPresGPSAltUpdate(float *u, float *x, float *noise, float *y) {
+    y[0] = x[16] + noise[0];// return pres altitude
+    y[1] = x[5] + noise[1]; // return GPS altitude
+}
+
 void navUkfPosUpdate(float *u, float *x, float *noise, float *y) {
     y[0] = x[3] + noise[0]; // return position
     y[1] = x[4] + noise[1];
@@ -382,16 +387,24 @@ void navUkfZeroRate(float rate, int axis) {
 }
 
 void simDoPresUpdate(float pres) {
-    float noise[1];        // measurement variance
-    float y[1];            // measurment(s)
+    float noise[2];        // measurement variance
+    float y[2];            // measurment(s)
 
     noise[0] = p[UKF_ALT_N];
-    if (!(supervisorData.state & STATE_FLYING))
-	noise[0] *= 0.001f;
+//    if (!(supervisorData.state & STATE_FLYING))
+//	noise[0] *= 0.001f;
+
+    noise[1] = noise[0];
 
     y[0] = navUkfPresToAlt(pres);
+    y[1] = y[0];
 
-    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 1, 1, noise, navUkfPresUpdate);
+    // if GPS altitude data has been available, only update pressure altitude
+    if (navUkfData.presAltOffset != 0.0f)
+	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 1, 1, noise, navUkfPresUpdate);
+    // otherwise update pressure and GPS altitude from the single pressure reading
+    else
+	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 2, 2, noise, navUkfPresGPSAltUpdate);
 }
 
 void simDoAccUpdate(float accX, float accY, float accZ) {
@@ -429,8 +442,6 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     float norm;
 
     noise[0] = p[UKF_MAG_N];
-//    if (!(supervisorData.state & STATE_FLYING))
-//	noise[0] *= 0.001f;
     if (!(supervisorData.state & STATE_FLYING))
 	noise[0] *= 0.001f;
 
