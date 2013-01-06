@@ -88,12 +88,12 @@ void gpsTaskCode(void *p) {
 	    // position update
 	    if (ret == 1) {
 		// notify world of new data
-		CoSetFlag(gpsData.gpsVelFlag);
+		CoSetFlag(gpsData.gpsPosFlag);
 	    }
 	    // velocity update
 	    else if (ret == 2) {
 		// notify world of new data
-		CoSetFlag(gpsData.gpsPosFlag);
+		CoSetFlag(gpsData.gpsVelFlag);
 	    }
 	    // lost sync
 	    else if (ret == 3) {
