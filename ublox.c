@@ -26,6 +26,7 @@
 #include "util.h"
 #include "rtc.h"
 #include "filer.h"
+#include "supervisor.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -164,7 +165,7 @@ void ubloxSendSetup(void) {
     ubloxEnableMessage(UBLOX_TIM_CLASS, UBLOX_TP, 1);		// TIM TP
     ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_DOP, 5);		// NAV DOP
     ubloxEnableMessage(UBLOX_AID_CLASS, UBLOX_AID_REQ, 1);	// AID REQ
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 255);    // TIME UTC
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 5);    // TIME UTC
 #ifdef GPS_DO_RTK
     ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_RAW, 1);		// RXM RAW
     ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_SFRB, 1);		// RXM SFRB
@@ -247,9 +248,11 @@ unsigned char ubloxPublish(void) {
     else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_TIMEUTC) {
 	// is it valid?
 	if (ubloxData.payload.timeutc.valid & 0b100) {
-	    rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
-		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec);
-	        ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);    // disable message
+            if ( (supervisorData.state & 0x07) <= STATE_DISARMED ) {
+                rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
+                    ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec);
+                    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);    // disable message
+            }
 	}
     }
 
@@ -338,7 +341,10 @@ unsigned char ubloxCharIn(unsigned char c) {
     case UBLOX_WAIT_LEN2:
 	ubloxData.length += (c << 8);
 	ubloxChecksum(c);
-	if (ubloxData.length > 0) {
+        if (ubloxData.length >= (UBLOX_MAX_PAYLOAD-1)) { // avoid length to exceed payload size (just in case of syn loss)
+            ubloxData.length = 0;
+            ubloxData.state = UBLOX_WAIT_SYNC1;
+        } else if (ubloxData.length > 0) {
 	    ubloxData.count = 0;
 	    ubloxData.state = UBLOX_PAYLOAD;
 	}

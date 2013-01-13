@@ -120,10 +120,10 @@ typedef struct {
     } payload;
 
     unsigned char state;
-    unsigned char count;
+    unsigned int count;
     unsigned char class;
     unsigned char id;
-    unsigned char length;
+    unsigned int length;
 
     unsigned char ubloxRxCK_A;
     unsigned char ubloxRxCK_B;
