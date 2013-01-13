@@ -130,18 +130,18 @@ int8_t vn100SendReceive(const char *command) {
     } while (c != '\n' && timerMicros() <= micros && i < sizeof(vn100Data.inBuf));
 
     if (timerMicros() > micros) {
-	noticeSend("VN100: serial timeout\n");
+	AQ_NOTICE("VN100: serial timeout\n");
 	return -1;
     }
     else {
 	vn100Data.inBuf[i] = 0;
-	noticeSend(vn100Data.inBuf);
+	AQ_NOTICE(vn100Data.inBuf);
 	if (vn100ValidateChecksum(vn100Data.inBuf)) {
-	    noticeSend("VN100: checksum error\n");
+	    AQ_NOTICE("VN100: checksum error\n");
 	    return -1;
 	}
 	else if (memcmp(&vn100Data.inBuf[1], command, 8)) {
-	    noticeSend("VN100: compare failed\n");
+	    AQ_NOTICE("VN100: compare failed\n");
 	    return -1;
 	}
 	else

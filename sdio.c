@@ -1790,11 +1790,11 @@ DRESULT disk_read (
 	    static char s[32];
 
 	    if (error != SD_OK) {
-		noticeSend("SDIO READ error != SD_OK\n");
+		AQ_NOTICE("SDIO READ error != SD_OK\n");
 	    }
 	    else {
 		    sprintf(s, "SDIO READ status = %d\n", sdioData.errorDetected);
-		noticeSend(s);
+		AQ_NOTICE(s);
 	    }
 	}
 
@@ -1844,11 +1844,11 @@ DRESULT disk_write (
 	    static char s[32];
 
 	    if (error != SD_OK) {
-		noticeSend("SDIO WRITE error != SD_OK\n");
+		AQ_NOTICE("SDIO WRITE error != SD_OK\n");
 	    }
 	    else {
 		sprintf(s, "SDIO WRITE status = %d\n", sdioData.errorDetected);
-		noticeSend(s);
+		AQ_NOTICE(s);
 	    }
 	}
 

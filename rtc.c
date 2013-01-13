@@ -52,7 +52,7 @@ void rtcSetDataTime(int year, int month, int day, int hour, int minute, int seco
     RTC_SetTime(RTC_Format_BIN, &time);
 
     sprintf(s, "RTC set: %d-%02d-%02d %02d:%02d:%02d UTC\n", date.RTC_Year+2000, date.RTC_Month, date.RTC_Date, time.RTC_Hours, time.RTC_Minutes, time.RTC_Seconds);
-    noticeSend(s);
+    AQ_NOTICE(s);
 }
 
 void rtcSetDateTimeLong(unsigned long dateTime) {
