@@ -137,7 +137,7 @@ float esc32ReadParamByName(char *param) {
 }
 
 int8_t esc32WriteParamByName(char *param, float value) {
-    char s[64];
+    static char s[64];
     int paramId;
 
     paramId = esc32ParamIdByName(param);
@@ -253,7 +253,7 @@ int8_t esc32ReadFile(char *fname) {
 }
 
 void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
-    char s[32];
+    static char s[32];
 
     owInit((GPIO_TypeDef *)port, pin);
 

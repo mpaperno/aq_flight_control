@@ -42,7 +42,7 @@ uint16_t stackFrees[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 char *stackNames[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 
 void utilStackCheck(void) {
-    char s[64];
+    static char s[64];
     int i, j;
 
     for (i = 0; i < numStacks; i++) {
@@ -150,8 +150,9 @@ float constrainFloat(float i, float lo, float hi) {
 }
 
 void info(void) {
-    char s[96];
+    static char s[96];
 
+	yield(100);
     sprintf(s, "AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
     AQ_NOTICE(s);
     yield(100);

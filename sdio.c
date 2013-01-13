@@ -1787,7 +1787,7 @@ DRESULT disk_read (
 
     do {
 	if (tries) {
-	    char s[32];
+	    static char s[32];
 
 	    if (error != SD_OK) {
 		noticeSend("SDIO READ error != SD_OK\n");
@@ -1841,7 +1841,7 @@ DRESULT disk_write (
 
     do {
 	if (tries) {
-	    char s[32];
+	    static char s[32];
 
 	    if (error != SD_OK) {
 		noticeSend("SDIO WRITE error != SD_OK\n");
