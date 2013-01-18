@@ -23,7 +23,7 @@
 #define ESC32_FILE_BUF_SIZE		512
 #define ESC32_LINE_BUF_SIZE		128
 
-enum configParameters {
+enum esc32configParameters {
     ESC32_CONFIG_VERSION = 0,
     ESC32_STARTUP_MODE,
     ESC32_BAUD_RATE,
