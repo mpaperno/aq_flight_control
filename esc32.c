@@ -58,7 +58,18 @@ const char *esc32ParameterStrings[] = {
     "PWM_MAX_VALUE",
     "PWM_MIN_START",
     "PWM_RPM_SCALE",
-    "FET_BRAKING"
+    "FET_BRAKING",
+    "PNFAC",
+    "INFAC",
+    "THR1TERM",
+    "THR2TERM",
+    "START_ALIGN_TIME",
+    "START_ALIGN_VOLTAGE",
+    "START_STEPS_NUM",
+    "START_STEPS_PERIOD",
+    "START_STEPS_ACCEL",
+    "PWM_LOWPASS",
+    "RPM_MEAS_LP"
 };
 
 float esc32ReadParamTransaction(uint8_t paramId) {
