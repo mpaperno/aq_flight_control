@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright Â© 2011, 2012  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -31,60 +31,6 @@
 #include <stdlib.h>
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
-
-// Plus configuration
-const motorsPowerStruct_t motorsDefaultPlus[] = {//  MOTOR PORT
-    { 100.0,  100.0,    0.0, -100.0},	//  1
-    { 100.0,    0.0,  100.0,  100.0},	//  2
-    {   0.0,    0.0,    0.0,    0.0},	//  3
-    {   0.0,    0.0,    0.0,    0.0},	//  4
-    {   0.0,    0.0,    0.0,    0.0},	//  5
-    {   0.0,    0.0,    0.0,    0.0},	//  6
-    {   0.0,    0.0,    0.0,    0.0},	//  7
-    { 100.0, -100.0,    0.0, -100.0},	//  8
-    { 100.0,    0.0, -100.0,  100.0},	//  9
-    {   0.0,    0.0,    0.0,    0.0},	//  10
-    {   0.0,    0.0,    0.0,    0.0},	//  11
-    {   0.0,    0.0,    0.0,    0.0},	//  12
-    {   0.0,    0.0,    0.0,    0.0},	//  13
-    {   0.0,    0.0,    0.0,    0.0},	//  14
-};
-
-// X configuration
-const motorsPowerStruct_t motorsDefaultX[] = {	//  MOTOR PORT
-    {   0.0,    0.0,    0.0,    0.0},	//  1
-    { 100.0,   50.0,   50.0,  100.0},	//  2
-    {   0.0,    0.0,    0.0,    0.0},	//  3
-    {   0.0,    0.0,    0.0,    0.0},	//  4
-    { 100.0,  -50.0,   50.0, -100.0},	//  5
-    {   0.0,    0.0,    0.0,    0.0},	//  6
-    {   0.0,    0.0,    0.0,    0.0},	//  7
-    {   0.0,    0.0,    0.0,    0.0},	//  8
-    { 100.0,   50.0,  -50.0, -100.0},	//  9
-    {   0.0,    0.0,    0.0,    0.0},	//  10
-    {   0.0,    0.0,    0.0,    0.0},	//  11
-    {   0.0,    0.0,    0.0,    0.0},	//  12
-    { 100.0,  -50.0,  -50.0,  100.0},	//  13
-    {   0.0,    0.0,    0.0,    0.0},	//  14
-};
-
-// Hex configuration
-const motorsPowerStruct_t motorsDefaultHex[] = {//  MOTOR PORT
-    {   0.0,    0.0,    0.0,    0.0},	//  1
-    { 100.0, -100.0,  100.0, -100.0},	//  2
-    {   0.0,    0.0,    0.0,    0.0},	//  3
-    { 100.0,  -75.0,    0.0,  100.0},	//  4
-    { 100.0,  100.0,  100.0,  100.0},	//  5
-    {   0.0,    0.0,    0.0,    0.0},	//  6
-    {   0.0,    0.0,    0.0,    0.0},	//  7
-    {   0.0,    0.0,    0.0,    0.0},	//  8
-    { 100.0,  +75.0,    0.0, -100.0},	//  9
-    {   0.0,    0.0,    0.0,    0.0},	//  10
-    {   0.0,    0.0,    0.0,    0.0},	//  11
-    { 100.0, -100.0, -100.0, -100.0},	//  12
-    { 100.0,  100.0, -100.0,  100.0},	//  13
-    {   0.0,    0.0,    0.0,    0.0},	//  14
-};
 
 void motorsSendValues(void) {
     int i;
@@ -169,25 +115,12 @@ void motorsInit(void) {
 
     memset((void *)&motorsData, 0, sizeof(motorsData));
 
-#ifdef USE_L1_ATTITUDE
-	motorsData.distribution = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
-#else
-    switch ((int)p[MOT_FRAME]) {
-	// custom
-	case 0:
-	    motorsData.distribution = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
-	    break;
-	case 1:
-	    motorsData.distribution = (motorsPowerStruct_t *)motorsDefaultPlus;
-	    break;
-	case 2:
-	    motorsData.distribution = (motorsPowerStruct_t *)motorsDefaultX;
-	    break;
-	case 3:
-	    motorsData.distribution = (motorsPowerStruct_t *)motorsDefaultHex;
-	    break;
+    if ( p[MOT_FRAME] > 0.01f && p[MOT_FRAME] < 4.01f ) {
+	AQ_NOTICE("Motors: ERROR! Predefined frame types are no longer supported.\n");
+	return;
     }
-#endif	// USE_L1_ATTITUDE
+
+    motorsData.distribution = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
 
     sumPitch = 0.0f;
     sumRoll = 0.0f;
