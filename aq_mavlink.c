@@ -199,6 +199,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
     uint16_t command;
     float param;
     uint8_t ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
+    static char s[32];
 
     command = mavlink_msg_command_long_get_command(msg);
 
