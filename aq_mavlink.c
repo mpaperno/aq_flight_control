@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright Â© 2011, 2012  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -34,8 +34,10 @@
 #include "rcc.h"
 #include "supervisor.h"
 #include "nav_ukf.h"
+#include "buildnum.h"
 #include <CoOS.h>
 #include <string.h>
+#include <stdio.h>
 
 mavlinkStruct_t mavlinkData;
 mavlink_system_t mavlink_system;
@@ -122,6 +124,7 @@ void mavlinkDo(void) {
 	    mavlinkData.mode = 64;
 	if (supervisorData.state == STATE_ARMED)
 	    mavlinkData.mode = 128 + 64;
+	break;
     }
 
 
@@ -224,6 +227,12 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		ack = MAV_CMD_ACK_ERR_FAIL;
 	    }
 
+	    break;
+
+	case 4: // send version number
+	    sprintf(s, "AutoQuad version: %s r%d", VERSION, BUILDNUMBER);
+	    AQ_NOTICE(s);
+	    ack = MAV_CMD_ACK_OK;
 	    break;
 
 	default:
