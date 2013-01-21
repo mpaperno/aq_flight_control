@@ -199,7 +199,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
     uint16_t command;
     float param;
     uint8_t ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
-    static char s[32];
+    static char s[48];
 
     command = mavlink_msg_command_long_get_command(msg);
 
@@ -584,7 +584,11 @@ void mavlinkInit(void) {
 
     memset((void *)&mavlinkData, 0, sizeof(mavlinkData));
 
+#ifdef MAVLINK_SERIAL_PORT_FLOW_NONE
+    mavlinkData.serialPort = serialOpen(MAVLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_None, 0, 0);
+#else
     mavlinkData.serialPort = serialOpen(MAVLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_RTS_CTS, 0, 0);
+#endif
 
     // setup mutex for serial port access
     mavlinkData.serialPortMutex = CoCreateMutex();

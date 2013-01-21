@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright ï¿½ 2011, 2012  Bill Nesbitt
 */
 
 // NOTE: These parameters must be passed to GCC:
@@ -35,9 +35,17 @@
 
 //#define USE_L1_ATTITUDE
 
+#ifndef HARDWARE_REVISION
+    #define HARDWARE_REVISION	1
+#endif
+
 #include "stm32f4xx.h"
 
-#include "board_6_1.h"
+#if HARDWARE_REVISION == 1
+    #include "board_6_1.h"
+#elif HARDWARE_REVISION == 2
+    #include "board_6_1a.h"
+#endif
 
 #ifndef M_PI
 #define M_PI			3.14159265f
