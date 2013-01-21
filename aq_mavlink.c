@@ -231,7 +231,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 	    break;
 
 	case 4: // send version number
-	    sprintf(s, "AutoQuad version: %s r%d", VERSION, BUILDNUMBER);
+            sprintf(s, "AutoQuad version: %s r%d hwrev%d", VERSION, BUILDNUMBER, HARDWARE_REVISION);
 	    AQ_NOTICE(s);
 	    ack = MAV_CMD_ACK_OK;
 	    break;

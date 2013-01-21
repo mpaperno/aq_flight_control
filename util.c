@@ -173,7 +173,7 @@ void info(void) {
     AQ_NOTICE(s);
     yield(100);
 
-    sprintf(s, "AutoQuad version: %sr%d\n", VERSION, BUILDNUMBER);
+    sprintf(s, "AutoQuad version: %s r%d hwrev%d\n", VERSION, BUILDNUMBER, HARDWARE_REVISION);
     AQ_NOTICE(s);
     yield(100);
 
