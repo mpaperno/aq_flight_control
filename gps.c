@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright Â© 2011, 2012  Bill Nesbitt
 */
 
 #include "gps.h"
@@ -59,6 +59,21 @@ void gpsCheckBaud(serialPort_t *s) {
 	gpsData.lastMessage = IMU_LASTUPD;
     }
 }
+
+#ifdef SET_LOG_TIME_FROM_GPS
+
+void gpsSetUtcDateTime(const unsigned year, const unsigned month, const unsigned day, const unsigned hour, const unsigned minute, const unsigned second) {
+/*
+    if ( year-1980 != (gpsData.utcDateTime>>25) ) { // notify only once per year :)
+	static char s[34];
+	sprintf(s, "DateTime set: %04d-%02d-%02d %02d:%02d:%02d UTC\n", year, month, day, hour, minute, second);
+	AQ_NOTICE(s);
+    }
+*/
+    gpsData.utcDateTime = (year - 1980)<<25 | month<<21 | day<<16 | hour<<11 | minute<<5 | second>>1;
+}
+
+#endif
 
 void gpsTaskCode(void *p) {
     serialPort_t *s = gpsData.gpsPort;
@@ -171,6 +186,10 @@ void gpsInit(void) {
     gpsData.microsPerSecond = AQ_US_PER_SEC<<11;
 
     gpsData.hAcc = gpsData.vAcc = gpsData.sAcc = 1e6f;
+
+#ifdef SET_LOG_TIME_FROM_GPS
+    gpsSetUtcDateTime(2000, 1, 1, 0, 0, 0);
+#endif
 
 #ifdef GPS_LOG_BUF
     gpsData.logHandle = filerGetHandle(GPS_FNAME);

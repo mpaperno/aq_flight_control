@@ -35,6 +35,8 @@
 
 //#define USE_L1_ATTITUDE
 
+#define SET_LOG_TIME_FROM_GPS	// uncomment to set log file timestamp directly from GPS data; otherwise use RTC (currently buggy)
+
 #ifndef HARDWARE_REVISION
     #define HARDWARE_REVISION	1
 #endif

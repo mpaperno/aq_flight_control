@@ -20,9 +20,13 @@
 #include "sdio.h"
 #include "diskio.h"
 #include "util.h"
-#include "rtc.h"
 #include "aq_timer.h"
 #include "notice.h"
+#ifdef SET_LOG_TIME_FROM_GPS
+    #include "gps.h"
+#else
+    #include "rtc.h"
+#endif
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -1736,7 +1740,11 @@ SDTransferState SD_GetStatus(void) {
 }
 
 DWORD get_fattime(void) {
+#ifdef SET_LOG_TIME_FROM_GPS
+    return gpsData.utcDateTime;
+#else
     return rtcGetDateTime();
+#endif
 }
 
 DSTATUS disk_initialize(BYTE drv) {
@@ -1920,6 +1928,7 @@ DRESULT disk_ioctl (
 
     default:
 	res = RES_PARERR;
+	break;
     }
 
     return res;
