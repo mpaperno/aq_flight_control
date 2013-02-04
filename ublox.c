@@ -253,11 +253,11 @@ unsigned char ubloxPublish(void) {
 	gpsSetUtcDateTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
 		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec);
 #else
-	rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
-		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec);
+	// if setting the RTC succeeds, disable the TIMEUTC message
+	if (rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
+		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec))
+	    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);
 #endif
-
-	// ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);    // disable message
     }
 
     gpsData.lastMessage = IMU_LASTUPD;
