@@ -91,6 +91,10 @@
       <file file_name="buildnum.h"/>
       <file file_name="can.c"/>
       <file file_name="can.h"/>
+      <file file_name="getbuildnum.c">
+	<configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
+      </file>
+      <file file_name="getbuildnum.h"/>
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
