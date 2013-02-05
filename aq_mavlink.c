@@ -34,7 +34,6 @@
 #include "rcc.h"
 #include "supervisor.h"
 #include "nav_ukf.h"
-#include "buildnum.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -67,6 +66,11 @@ void mavlinkDo(void) {
     static unsigned long mavCounter;
     static unsigned long lastMicros = 0;
     unsigned long micros;
+#ifdef MAVLINK_ENABLED_AUTOQUAD
+    uint8_t autopilotType = MAV_AUTOPILOT_AUTOQUAD;
+#else
+    uint8_t autopilotType = MAV_AUTOPILOT_GENERIC_WAYPOINTS_ONLY;
+#endif
 
     micros = timerMicros();
 
@@ -80,57 +84,38 @@ void mavlinkDo(void) {
     supervisorSendDataStart();
     CoEnterMutexSection(mavlinkData.serialPortMutex);
 
-    switch (supervisorData.state) {
-    case STATE_DISARMED:
-	mavlinkData.status = MAV_STATE_STANDBY;
-	break;
+    mavlinkData.status = MAV_STATE_STANDBY;
+    mavlinkData.mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
 
-    case STATE_ARMED:
+    if ((supervisorData.state & STATE_RADIO_LOSS1) || (supervisorData.state & STATE_LOW_BATTERY2))
+	mavlinkData.status =  MAV_STATE_CRITICAL;
+    else if (supervisorData.state & STATE_FLYING)
 	mavlinkData.status = MAV_STATE_ACTIVE;
-	break;
-
-    case STATE_RADIO_LOSS1:
-	mavlinkData.status =  MAV_STATE_CRITICAL;
-	break;
-
-    case STATE_RADIO_LOSS2:
-	mavlinkData.status =  MAV_STATE_CRITICAL;
-	break;
-    }
 
     switch(navData.mode) {
     case NAV_STATUS_ALTHOLD:
-	mavlinkData.mode= 128 + 16;
+	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED;
 	break;
-
     case NAV_STATUS_POSHOLD:
-	mavlinkData.mode= 128 + 16 + 1;
+	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
 	break;
-
     case NAV_STATUS_MISSION:
-	mavlinkData.mode= 128 + 4;
+	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_AUTO_ENABLED;
 	break;
-
     case NAV_STATUS_DVH:
-	mavlinkData.mode= 128 + 64 + 16;
-	break;
-
-    case NAV_STATUS_MANUAL:
-	mavlinkData.mode= 128 + 64;
-	break;
-
-    default:
-	if (supervisorData.state == STATE_DISARMED)
-	    mavlinkData.mode = 64;
-	if (supervisorData.state == STATE_ARMED)
-	    mavlinkData.mode = 128 + 64;
+	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_GUIDED_ENABLED;
 	break;
     }
 
+    if (supervisorData.state & STATE_ARMED)
+	mavlinkData.mode = mavlinkData.mode | MAV_MODE_FLAG_SAFETY_ARMED;
 
+#ifdef MAVLINK_MSG_ID_AQ_TELEMETRY_F
+    if ( !mavlinkData.sendTelemetry ) {
+#endif
     // heartbeat & status
     if (mavlinkData.nextHeartbeat < micros) {
-	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, mavlink_system.type, MAV_AUTOPILOT_GENERIC_WAYPOINTS_ONLY, mavlinkData.mode, mavlinkData.nav_mode, mavlinkData.status);
+	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, mavlink_system.type, autopilotType, mavlinkData.mode, mavlinkData.nav_mode, mavlinkData.status);
 	// calculate idle time
 	mavCounter = counter;
 	mavlinkData.idlePercent = (mavCounter - mavlinkData.lastCounter) * minCycles * 1000.0f / (MAVLINK_HEARTBEAT_INTERVAL * rccClocks.SYSCLK_Frequency / 1e6f);
@@ -188,6 +173,30 @@ void mavlinkDo(void) {
 	mavlink_msg_mission_ack_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, 0);
 	mavlinkData.wpCurrent++;
     }
+#ifdef MAVLINK_MSG_ID_AQ_TELEMETRY_F
+    }
+    else {
+        if (( mavlinkData.nextTelemetry < micros ) || ( mavlinkData.indexTelemetry != 0 )) {
+            mavlinkData.indexTelemetry++;
+            if ( mavlinkData.indexTelemetry == 1 ) {
+                mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,0,AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
+                	navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, adcData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
+            }
+            else if ( mavlinkData.indexTelemetry == 6 ) {
+                mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,1,gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,
+                	navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, UKF_VELD,
+                	RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, 0.0f);
+            }
+            else if ( mavlinkData.indexTelemetry >= 12 ) {
+                mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,2,RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, RADIO_FLAPS, RADIO_AUX2,
+                	motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6],
+                	motorsData.value[7], motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13]);
+                mavlinkData.indexTelemetry = 0;
+                mavlinkData.nextTelemetry = micros + mavlinkData.telemetryFrequency;
+            }
+        }
+    }
+#endif
 
     supervisorSendDataStop();
     CoLeaveMutexSection(mavlinkData.serialPortMutex);
@@ -230,8 +239,26 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 	    break;
 
-	case 4: // send version number
-            utilVersionString(s);
+#ifdef MAVLINK_MSG_ID_AQ_TELEMETRY_F
+        case MAV_CMD_AQ_TELEMETRY:  // enable/disable telemetry data message and set frequency
+            param = mavlink_msg_command_long_get_param1(msg);
+            mavlinkData.telemetryFrequency = (unsigned long) mavlink_msg_command_long_get_param2(msg);
+            if (param == 0.0f) {
+                mavlinkData.sendTelemetry = 0;
+                ack = MAV_CMD_ACK_OK;
+            }
+            else if (param == 1.0f) {
+                mavlinkData.sendTelemetry = 1;
+                ack = MAV_CMD_ACK_OK;
+            }
+	    else {
+		ack = MAV_CMD_ACK_ERR_FAIL;
+	    }
+            break;
+#endif
+
+	case 4: // send firmware version number; should = MAV_CMD_AQ_REQUEST_VERSION
+	    utilVersionString(s);
 	    AQ_NOTICE(s);
 	    ack = MAV_CMD_ACK_OK;
 	    break;
@@ -610,17 +637,17 @@ void mavlinkInit(void) {
     mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
     mavlink_system.type = MAV_TYPE_QUADROTOR;
 
-    mavlinkData.mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
+    mavlinkData.mode = MAV_MODE_PREFLIGHT;
     mavlinkData.nav_mode = MAV_STATE_STANDBY;
-    mavlinkData.status = MAV_STATE_ACTIVE;
+    mavlinkData.status = MAV_STATE_BOOT;
 
     // turn on all streams at 1Hz & spread them out
     micros = timerMicros();
-    for (i = 1; i < 13; i++) {	// TODO: remove hardcoded value
-	mavlinkData.streamInterval[i] = 1e6f;
-	mavlinkData.streamNext[i] = micros + 5e6f + i * 5e3f;
+    for (i = 1; i < MAV_DATA_STREAM_ENUM_END; i++) {
+	mavlinkData.streamInterval[i] = 1e6;
+	mavlinkData.streamNext[i] = micros + 5e6 + i * 5e3;
     }
     // send IMU data at an initial rate of 10Hz
-    mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER] = 1e6f/10.0f;
+    mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER] = 1e6/10.0;
 }
 #endif	// USE_MAVLINK

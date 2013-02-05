@@ -147,77 +147,9 @@
         <file file_name="stm32f4xx_can.c"/>
       </folder>
     </folder>
-    <folder Name="mavlink">
-      <file file_name="../mavlink/include/checksum.h"/>
-      <file file_name="../mavlink/include/mavlink_types.h"/>
-      <file file_name="../mavlink/include/protocol.h"/>
-      <folder Name="common">
-        <file file_name="../mavlink/include/common/common.h"/>
-        <file file_name="../mavlink/include/common/mavlink.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_action.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_action_ack.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_attitude.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_attitude_controller_output.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_auth_key.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_boot.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_change_operator_control.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_change_operator_control_ack.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_command.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_command_ack.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_control_status.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_debug.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_debug_vect.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_global_position.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_global_position_int.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_gps_local_origin_set.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_gps_raw.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_gps_raw_int.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_gps_set_global_origin.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_gps_status.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_heartbeat.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_local_position.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_local_position_setpoint.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_local_position_setpoint_set.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_manual_control.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_named_value_float.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_named_value_int.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_nav_controller_output.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_param_request_list.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_param_request_read.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_param_set.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_param_value.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_ping.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_position_controller_output.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_position_target.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_raw_imu.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_raw_pressure.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_rc_channels_raw.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_rc_channels_scaled.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_request_data_stream.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_safety_allowed_area.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_safety_set_allowed_area.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_scaled_imu.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_scaled_pressure.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_servo_output_raw.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_set_altitude.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_set_mode.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_set_nav_mode.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_state_correction.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_statustext.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_sys_status.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_system_time.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_system_time_utc.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_vfr_hud.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_ack.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_clear_all.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_count.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_current.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_reached.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_request.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_request_list.h"/>
-        <file file_name="../mavlink/include/common/mavlink_msg_waypoint_set_current.h"/>
-      </folder>
+    <folder Name="mavlink" filter="*.h" path="../mavlink/include" recurse="No">
+      <folder Name="common" filter="*.h" path="../mavlink/include/common" recurse="No"/>
+      <folder Name="autoquad" filter="*.h" path="../mavlink/include/autoquad" recurse="No"/>
     </folder>
     <folder Name="CoOS" file_name="">
       <folder Name="kernel">

@@ -25,7 +25,7 @@
 #ifndef _aq_h
 #define _aq_h
 
-//#define USE_MAVLINK
+#define USE_MAVLINK
 
 //#define HAS_VN100
 //#define USE_VN100

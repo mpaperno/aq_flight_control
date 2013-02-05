@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright Â© 2011, 2012  Bill Nesbitt
 */
 
 #ifndef _aq_mavlink_h
@@ -52,6 +52,7 @@ typedef struct {
     unsigned int currentParam;
 
     // TODO: pull actual count from header files
+    // the array lengths should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
     unsigned long streamInterval[13];
     unsigned long streamNext[13];
 
@@ -70,6 +71,12 @@ typedef struct {
     uint32_t wpNext;
 
     unsigned long lastCounter;
+
+    uint8_t sendTelemetry;  // enable/disable telemetry messages
+    uint8_t indexTelemetry; // current index in telemetry sequence
+    unsigned long telemetryFrequency; // how often to send data, in us
+    unsigned long nextTelemetry; // micros counter for next data send
+
 } mavlinkStruct_t;
 
 extern mavlinkStruct_t mavlinkData;
