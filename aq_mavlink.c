@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -231,7 +231,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 	    break;
 
 	case 4: // send version number
-            sprintf(s, "AutoQuad version: %s r%d hwrev%d", VERSION, BUILDNUMBER, HARDWARE_REVISION);
+            utilVersionString(s);
 	    AQ_NOTICE(s);
 	    ack = MAV_CMD_ACK_OK;
 	    break;

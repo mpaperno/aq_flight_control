@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _util_h
@@ -56,6 +56,7 @@ extern float utilFilter3(utilFilter_t *f, float signal);
 extern void utilFilterReset(utilFilter_t *f, float setpoint);
 extern void utilFilterReset3(utilFilter_t *f, float setpoint);
 extern int ftoa(char *buf, float f, unsigned int digits);
+extern void utilVersionString(char *s);
 #ifdef UTIL_STACK_CHECK
 extern void utilStackCheck(void);
 #endif

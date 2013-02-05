@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013ds  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -24,7 +24,7 @@
 #include "notice.h"
 #include "aq_mavlink.h"
 #include "aq_timer.h"
-#include "buildnum.h"
+#include "getbuildnum.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,6 +149,10 @@ float constrainFloat(float i, float lo, float hi) {
     return i;
 }
 
+void utilVersionString(char *s) {
+    sprintf(s, "AutoQuad ver: %s r%d b%d hwrev%d\n", VERSION, getRevisionNumber(), getBuildNumber(), HARDWARE_REVISION);
+}
+
 void info(void) {
     static char s[96];
 
@@ -173,7 +177,7 @@ void info(void) {
     AQ_NOTICE(s);
     yield(100);
 
-    sprintf(s, "AutoQuad version: %s r%d hwrev%d\n", VERSION, BUILDNUMBER, HARDWARE_REVISION);
+    utilVersionString(s);
     AQ_NOTICE(s);
     yield(100);
 
