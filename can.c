@@ -57,10 +57,10 @@ void canInit(void) {
     CAN_InitStructure.CAN_RFLM = DISABLE;
     CAN_InitStructure.CAN_TXFP = DISABLE;
     CAN_InitStructure.CAN_Mode = CAN_Mode_Normal;
-    CAN_InitStructure.CAN_SJW = CAN_SJW_1tq;
+    CAN_InitStructure.CAN_SJW = CAN_SJW_2tq;
 
     // CAN Baudrate = ~1 Mbps (CAN clocked at 42 MHz)
-    CAN_InitStructure.CAN_BS1 = CAN_BS1_6tq;
+    CAN_InitStructure.CAN_BS1 = CAN_BS1_5tq; //CAN_BS1_6tq;
     CAN_InitStructure.CAN_BS2 = CAN_BS2_8tq;
     CAN_InitStructure.CAN_Prescaler = 3;
     CAN_Init(CANx, &CAN_InitStructure);
