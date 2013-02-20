@@ -56,38 +56,39 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
         // If we have seen enough frames with the same number of channels,
         // store this number of channels in number_of_channels
         if (ppmData.numberChannels == 0) {
-            // We are still determining number of channels
-            ppmData.signalQuality = 0; // "signal not stable enough" ;)
+            // We are still determining number of channels, "signal not stable"
+            ppmData.tmp_abortedFramesCount++;
 
             if (ppmData.lastChannel <= PPM_MAX_CHANNELS
                 && ppmData.lastChannel == ppmData.previousChannels) {
 
                 if (ppmData.stableChannelsCount >= PPM_STAB_CHANNEL_FRAMES) {
                     ppmData.numberChannels = ppmData.lastChannel;
-                    ppmData.signalQuality = 1;
                 }
-		else {
+                else {
                     ppmData.stableChannelsCount++;
                 }
             }
-	    else {
+            else {
                 ppmData.stableChannelsCount = 0;
             }
         }
-	else {
+        else {
             // Number of channels is already known. So verify that there were
             // no errors during last frame capture and store channel values
             if (ppmData.inputValid) {
                 if (ppmData.lastChannel != ppmData.numberChannels) { // Wrong number of channels
                     ppmData.inputValid    = 0;
                     ppmData.frameParsed   = 0;
-                    ppmData.signalQuality = 0;
+                    ppmData.tmp_abortedFramesCount++;
                 }
-		else {
-                    ppmData.signalQuality = 1;
-                    ppmData.frameParsed = 1;
+                else {
+                    // valid frame, pass values to ppmData.channels
                     memcpy(ppmData.channels, ppmData.tmp_channels, sizeof(ppmData.channels));
-	            radioData.lastUpdate = timerMicros();
+                    ppmData.abortedFramesCount = ppmData.tmp_abortedFramesCount;
+                    ppmData.tmp_abortedFramesCount = 0;
+                    radioData.lastUpdate = timerMicros();
+                    ppmData.frameParsed = 1;
                 }
             }
         }
@@ -98,16 +99,16 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
     else if (ppmData.inputValid) { // We are inside the frame and no errors found this far in the frame
         if (ppmData.lastChannel >= PPM_MAX_CHANNELS) {    // Too many channels
             ppmData.inputValid    = 0;
-            ppmData.signalQuality = 0;
+            ppmData.tmp_abortedFramesCount++;
         }
-	else if (diff > PPM_MIN_PULSE_WIDTH && diff < PPM_MAX_PULSE_WIDTH) {
+        else if (diff > PPM_MIN_PULSE_WIDTH && diff < PPM_MAX_PULSE_WIDTH) {
             ppmData.tmp_channels[(ppmData.lastChannel)++] = diff;
         }
-	else {
+        else {
             ppmData.inputValid    = 0;
-            ppmData.signalQuality = 0;
-            ppmData.channels[(ppmData.lastChannel)++] = 0;
-	}
+            ppmData.tmp_abortedFramesCount++;
+            ppmData.tmp_channels[(ppmData.lastChannel)++] = 0;
+        }
     }
 }
 
@@ -119,21 +120,19 @@ void ppmInit(void) {
 int ppmDataAvailable(void) {
 
     if (ppmData.frameParsed) {
-	ppmData.frameParsed = 0;
-
-	RADIO_THROT	= ppmLimitRangeThrottle((PPM_THROT-p[PPM_THROT_LOW])*5 / p[PPM_SCALER]);
-	RADIO_ROLL 	= ppmLimitRange((PPM_ROLL-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_PITCH	= ppmLimitRange((PPM_PITCH-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_RUDD 	= ppmLimitRange((PPM_RUDD-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_GEAR 	= ppmLimitRange((PPM_GEAR-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_FLAPS	= ppmLimitRange((PPM_FLAPS-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX2 	= ppmLimitRange((PPM_AUX2-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX3 	= ppmLimitRange((PPM_AUX3-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX4 	= ppmLimitRange((PPM_AUX4-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX5 	= ppmLimitRange((PPM_AUX5-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX6 	= ppmLimitRange((PPM_AUX6-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-	RADIO_AUX7 	= ppmLimitRange((PPM_AUX7-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]); 
-
+        ppmData.frameParsed = 0;
+        RADIO_THROT       = ppmLimitRangeThrottle((PPM_THROT-p[PPM_THROT_LOW])*5 / p[PPM_SCALER]);
+        RADIO_ROLL        = ppmLimitRange((PPM_ROLL-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_PITCH       = ppmLimitRange((PPM_PITCH-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_RUDD        = ppmLimitRange((PPM_RUDD-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_GEAR        = ppmLimitRange((PPM_GEAR-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_FLAPS       = ppmLimitRange((PPM_FLAPS-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX2        = ppmLimitRange((PPM_AUX2-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX3        = ppmLimitRange((PPM_AUX3-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX4        = ppmLimitRange((PPM_AUX4-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX5        = ppmLimitRange((PPM_AUX5-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX6        = ppmLimitRange((PPM_AUX6-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
+        RADIO_AUX7        = ppmLimitRange((PPM_AUX7-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]); 
         return 1;
     }
     else {
@@ -141,6 +140,10 @@ int ppmDataAvailable(void) {
     }
 }
 
-int ppmGetSignalQuality(void) {
-    return ppmData.signalQuality;
+
+// retrieve number of aborted ppm frames
+//  shall be called after ppmDataAvailable returned 1
+int ppmGetSignalAbortedFrames(void) {
+
+  return ppmData.abortedFramesCount;
 }

@@ -31,7 +31,7 @@
 
 #define PPM_PWM_CHANNEL		    13    // which PWM channel to use for PPM capture
 #define PPM_MAX_CHANNELS	    12    // can't be > 18
-#define PPM_GUARD_PULSE_LENGTH	    3500
+#define PPM_GUARD_PULSE_LENGTH	    2700
 #define PPM_MIN_PULSE_WIDTH	    750
 #define PPM_MAX_PULSE_WIDTH	    2250
 #define PPM_STAB_CHANNEL_FRAMES     20    // number of consequitive frames with the same number of channels after which we assume that number of channels is stable ;)
@@ -55,15 +55,14 @@
 typedef struct {
     pwmPortStruct_t *ppmPort;
     volatile int frameParsed;
+    volatile int abortedFramesCount;        // number of frame aborts
+    int tmp_abortedFramesCount;             // number of frame aborts, temporary while capturing
     uint32_t lastCaptureValue;
     uint8_t lastChannel;		    // index into channels[]
     uint8_t previousChannels;		    // number of channels seen in previous frame;
 					    // used to autodetermine number of channels
     uint8_t numberChannels;		    // autodetermined number of channels or 0
     uint8_t stableChannelsCount;	    // number of frames with the same number of channels
-    uint8_t signalQuality;		    // -1 serious error
-					    //  0 signal is there but not stable
-					    //  1 signal Ok
     uint8_t inputValid;			    // 1 valid
 					    // 0 current frame is invalid
 
@@ -74,6 +73,6 @@ typedef struct {
 
 extern void ppmInit( void );
 extern int  ppmDataAvailable( void );
-extern int  ppmGetSignalQuality( void );
+extern int  ppmGetSignalAbortedFrames( void );
 
 #endif
