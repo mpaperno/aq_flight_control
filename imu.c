@@ -50,7 +50,7 @@ void imuQuasiStatic(int n) {
 	}
 
 	i++;
-    } while (i <= n || (stdX + stdY + stdZ) > IMU_STATIC_STD);
+    } while (i < (int)(1.0f / AQ_TIMESTEP)*IMU_STATIC_TIMEOUT && (i <= n || (stdX + stdY + stdZ) > IMU_STATIC_STD));
 }
 
 void imuInit(void) {

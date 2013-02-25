@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _imu_h
@@ -24,6 +24,7 @@
 #include "vn100.h"
 
 #define IMU_STATIC_STD		0.05f
+#define IMU_STATIC_TIMEOUT	5	// seconds
 
 #ifdef HAS_VN100
 #define IMU_HAS_VN100

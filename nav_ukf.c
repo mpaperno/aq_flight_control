@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "nav_ukf.h"
@@ -724,7 +724,7 @@ void navUkfInitState(void) {
 	}
 
 	i++;
-    } while (i <= UKF_GYO_AVG_NUM*5 || (stdX + stdY + stdZ) > 0.004f);
+    } while (i < (int)(1.0f / AQ_TIMESTEP)*IMU_STATIC_TIMEOUT && (i <= UKF_GYO_AVG_NUM*5 || (stdX + stdY + stdZ) > 0.004f));
 
     arm_mean_f32(vX, UKF_GYO_AVG_NUM, &UKF_GYO_BIAS_X);
     arm_mean_f32(vY, UKF_GYO_AVG_NUM, &UKF_GYO_BIAS_Y);
