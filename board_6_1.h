@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _board_h
@@ -284,5 +284,49 @@ enum pwmPorts {
 #define CAN_AF_PORT		    GPIO_AF_CAN1
 #define CAN_RX_SOURCE		    GPIO_PinSource0
 #define CAN_TX_SOURCE		    GPIO_PinSource1
+
+//#define SPI_SPI1_CLOCK		    RCC_APB2Periph_SPI1
+//#define SPI_SPI1_AF		    GPIO_AF_SPI1
+//#define SPI_SPI1_SCK_PORT	    GPIOA
+//#define SPI_SPI1_MISO_PORT	    GPIOA
+//#define SPI_SPI1_MOSI_PORT	    GPIOA
+//#define SPI_SPI1_SCK_PIN	    GPIO_Pin_5
+//#define SPI_SPI1_MISO_PIN	    GPIO_Pin_6
+//#define SPI_SPI1_MOSI_PIN	    GPIO_Pin_7
+//#define SPI_SPI1_SCK_SOURCE	    GPIO_PinSource5
+//#define SPI_SPI1_MISO_SOURCE	    GPIO_PinSource6
+//#define SPI_SPI1_MOSI_SOURCE	    GPIO_PinSource7
+//
+//#define SPI_SPI1_DMA_RX		    DMA2_Stream0
+//#define SPI_SPI1_DMA_RX_CHANNEL	    DMA_Channel_3
+//#define SPI_SPI1_DMA_RX_FLAGS	    (DMA_IT_TEIF0 | DMA_IT_DMEIF0 | DMA_IT_FEIF0 | DMA_IT_TCIF0 | DMA_IT_HTIF0)
+//#define SPI_SPI1_DMA_RX_IRQ	    DMA2_Stream0_IRQn
+//#define SPI_SPI1_DMA_RX_HANDLER	    DMA2_Stream0_IRQHandler
+//
+//#define SPI_SPI1_DMA_TX		    DMA2_Stream3
+//#define SPI_SPI1_DMA_TX_CHANNEL	    DMA_Channel_3
+//#define SPI_SPI1_DMA_TX_FLAGS	    (DMA_IT_TEIF3 | DMA_IT_DMEIF3 | DMA_IT_FEIF3 | DMA_IT_TCIF3 | DMA_IT_HTIF3)
+
+#define SPI_SPI2_CLOCK		    RCC_APB1Periph_SPI2
+#define SPI_SPI2_AF		    GPIO_AF_SPI2
+#define SPI_SPI2_SCK_PORT	    GPIOB
+#define SPI_SPI2_MISO_PORT	    GPIOB
+#define SPI_SPI2_MOSI_PORT	    GPIOB
+#define SPI_SPI2_SCK_PIN	    GPIO_Pin_13
+#define SPI_SPI2_MISO_PIN	    GPIO_Pin_14
+#define SPI_SPI2_MOSI_PIN	    GPIO_Pin_15
+#define SPI_SPI2_SCK_SOURCE	    GPIO_PinSource13
+#define SPI_SPI2_MISO_SOURCE	    GPIO_PinSource14
+#define SPI_SPI2_MOSI_SOURCE	    GPIO_PinSource15
+
+#define SPI_SPI2_DMA_RX		    DMA1_Stream3
+#define SPI_SPI2_DMA_RX_CHANNEL	    DMA_Channel_0
+#define SPI_SPI2_DMA_RX_FLAGS	    (DMA_IT_TEIF3 | DMA_IT_DMEIF3 | DMA_IT_FEIF3 | DMA_IT_TCIF3 | DMA_IT_HTIF3)
+#define SPI_SPI2_DMA_RX_IRQ	    DMA1_Stream3_IRQn
+#define SPI_SPI2_DMA_RX_HANDLER	    DMA1_Stream3_IRQHandler
+
+#define SPI_SPI2_DMA_TX		    DMA1_Stream4
+#define SPI_SPI2_DMA_TX_CHANNEL	    DMA_Channel_0
+#define SPI_SPI2_DMA_TX_FLAGS	    (DMA_IT_TEIF4 | DMA_IT_DMEIF4 | DMA_IT_FEIF4 | DMA_IT_TCIF4 | DMA_IT_HTIF4)
 
 #endif

@@ -89,8 +89,10 @@
       <file file_name="esc32.h"/>
       <file file_name="esc32.c"/>
       <file file_name="buildnum.h"/>
-      <file file_name="can.c"/>
       <file file_name="can.h"/>
+      <file file_name="can.c"/>
+      <file file_name="spi.h"/>
+      <file file_name="spi.c"/>
       <file file_name="getbuildnum.c">
 	<configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
       </file>
