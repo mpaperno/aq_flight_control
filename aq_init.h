@@ -22,7 +22,7 @@
 #include "aq.h"
 #include <CoOS.h>
 
-#define AQINIT_STACK_SIZE   268
+#define AQINIT_STACK_SIZE   400
 #define AQINIT_PRIORITY	    12
 
 extern void aqInit(void *pdata);
