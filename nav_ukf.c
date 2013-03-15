@@ -250,6 +250,7 @@ void navUkfRotateQuat(float *qr, float *q, float *rate, float dt) {
     qr[3] = -rate[2]*q1[0] - rate[1]*q1[1] + rate[0]*q1[2] + lg*q1[3];
 }
 
+float t1, t2, t3;
 void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt) {
     float tmp[3], acc[3];
     float rate[3];
@@ -681,9 +682,9 @@ void navUkfInitState(void) {
 	while (lastUpdate == IMU_LASTUPD)
 	    ;
 
-	vX[j] = IMU_RATEX;
-	vY[j] = IMU_RATEY;
-	vZ[j] = IMU_RATEZ;
+	vX[j] = -IMU_RATEX;
+	vY[j] = -IMU_RATEY;
+	vZ[j] = -IMU_RATEZ;
 	j = (j + 1) % UKF_GYO_AVG_NUM;
 
 	mag[0] = IMU_MAGX;
