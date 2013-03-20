@@ -19,10 +19,10 @@
 /*
     This module handles the coordination of multiple SPI clients which may be
     sharing an SPI bus.  Once a transfer request has been queued, the caller
-    will be notified via a flag or callback at their option.  Requests are
-    handled on a FIFO basis.  It is up to the client(s) to make sure that they
-    do not call spiTransaction() concurrently as it is not thread safe.  This
-    can easily be handled if clients all submit transaction requests via
+    will be notified via a flag or callback at their option when complete.
+    Requests are handled on a FIFO basis.  It is up to the client(s) to make sure
+    that they do not call spiTransaction() concurrently as it is not thread safe.
+    This can easily be handled if clients all submit transaction requests via
     data-ready ISR's of the same priority and preemption level.
 
     The Ethernet periphreal's interrupt lines are stolen for the SPI scheduler.
@@ -32,6 +32,7 @@
 #include "spi.h"
 #include "aq_timer.h"
 #include "util.h"
+#include "digital.h"
 
 spiStruct_t spiData[2];
 
@@ -155,6 +156,7 @@ void spi1Init(uint16_t baud) {
 }
 #endif
 
+#ifdef SPI_SPI2_CLOCK
 void spi2Init(uint16_t baud) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
@@ -265,6 +267,7 @@ void spi2Init(uint16_t baud) {
 	NVIC_Init(&NVIC_InitStructure);
     }
 }
+#endif
 
 void spiDeselect(spiClient_t *client) {
     digitalHi(client->cs);
@@ -369,12 +372,16 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
 	spi1Init(baud);
     }
 #endif
+#ifdef SPI_SPI2_CLOCK
     if (spi == SPI2) {
 	s->interface = 1;
 	spi2Init(baud);
     }
+#endif
 
     s->cs = digitalInit(csPort, csPin);
+    digitalHi(s->cs);
+
     s->baud = baud;
     s->flag = flag;
     s->callback = callback;
@@ -382,6 +389,7 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
     return s;
 }
 
+#ifdef SPI_SPI2_CLOCK
 void SPI_SPI2_DMA_RX_HANDLER(void) {
     DMA_ClearITPendingBit(SPI_SPI2_DMA_RX, SPI_SPI2_DMA_RX_FLAGS);
     DMA_ClearITPendingBit(SPI_SPI2_DMA_TX, SPI_SPI2_DMA_TX_FLAGS);
@@ -389,6 +397,7 @@ void SPI_SPI2_DMA_RX_HANDLER(void) {
     // finish transaction
     spiEndTxn(&spiData[1]);
 }
+#endif
 
 #ifdef SPI_SPI1_CLOCK
 void SPI_SPI1_DMA_RX_HANDLER(void) {
