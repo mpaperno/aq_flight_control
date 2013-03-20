@@ -223,6 +223,7 @@
     <folder Name="MATHLIB">
       <file file_name="algebra.c"/>
       <file file_name="aq_math.h"/>
+      <file file_name="rotations.c"/>
     </folder>
     <configuration Name="Release" c_preprocessor_definitions="STARTUP_FROM_RESET" gcc_debugging_level="Level 2" gcc_optimization_level="Level 2" gcc_strip_symbols="No"/>
     <configuration Name="Debug" c_preprocessor_definitions="USE_FULL_ASSERT" gcc_optimization_level="Level 1"/>

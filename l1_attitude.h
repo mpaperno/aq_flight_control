@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _l1_attitude_h
@@ -25,7 +25,5 @@ extern void l1AttitudeInit(void);
 extern void l1AttitudeReset(float32_t *quat);
 extern void l1Attitude(float32_t *quatD);
 extern void l1AttitudePowerDistribution(float32_t hoverThrot);
-extern void eulerToQuatYPR(float32_t *q, float32_t yaw, float32_t pitch, float32_t roll);
-extern void eulerToQuatRPY(float32_t *q, float32_t roll, float32_t pitch, float32_t yaw);
 
 #endif

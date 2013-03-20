@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq_math.h"
@@ -213,5 +213,26 @@ void matrixDiv_f32(arm_matrix_instance_f32 *X, arm_matrix_instance_f32 *A, arm_m
                         X->pData[i*n + j] = AQ->pData[i*n + j] / R->pData[j*n + j];
                 }
         }
+}
+
+void vectorNormalize(float32_t *v, int n) {
+    float32_t t;
+    int i;
+
+    t = 0.0f;
+    for (i = 0; i < n; i++)
+	t += v[i] * v[i];
+
+    t = __sqrtf(t);
+
+    if (t > 1e-6f) {
+	t = 1.0f / t;
+	for (i = 0; i < n; i++)
+	    v[i] *= t;
+    }
+    else {
+	for (i = 0; i < n; i++)
+	    v[i] *= 0.0f;
+    }
 }
 
