@@ -186,7 +186,7 @@ AQV6_OBJS := 1wire.o adc.o algebra.o aq_init.o aq_mavlink.o aq_timer.o \
 	gimbal.o gps.o getbuildnum.o imu.o util.o logger.o \
 	main_ctl.o motors.o \
 	nav.o nav_ukf.o notice.o pid.o ppm.o pwm.o \
-	radio.o rcc.o rtc.o run.o \
+	radio.o rotations.o rcc.o rtc.o run.o \
 	sdio.o serial.o spektrum.o spi.o srcdkf.o supervisor.o \
 	telemetry.o ublox.o vn100.o
 
