@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 // NOTE: These parameters must be passed to GCC:
@@ -34,7 +34,6 @@
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 
 //#define USE_L1_ATTITUDE
-//#define SET_LOG_TIME_FROM_GPS	// uncomment to set log file timestamp directly from GPS data; otherwise use RTC
 
 #ifndef HARDWARE_REVISION
     #define HARDWARE_REVISION	1

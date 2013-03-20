@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _gps_h
@@ -75,10 +75,6 @@ typedef struct {
     unsigned long lastVelUpdate;
     unsigned long lastMessage;
     signed long microsPerSecond;
-#ifdef SET_LOG_TIME_FROM_GPS
-    unsigned long utcDateTime;
-#endif
-
 } gpsStruct_t;
 
 extern gpsStruct_t gpsData;
@@ -86,9 +82,5 @@ extern gpsStruct_t gpsData;
 extern void gpsInit(void);
 extern void gpsPassthrough(serialPort_t *from, serialPort_t *to);
 extern void gpsSendPacket(unsigned char len, char *buf);
-
-#ifdef SET_LOG_TIME_FROM_GPS
-    extern void gpsSetUtcDateTime(const unsigned year, const unsigned month, const unsigned day, const unsigned hour, const unsigned minute, const unsigned second);
-#endif
 
 #endif

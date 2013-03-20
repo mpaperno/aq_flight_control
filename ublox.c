@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -24,9 +24,7 @@
 #include "imu.h"
 #include "config.h"
 #include "util.h"
-#ifndef SET_LOG_TIME_FROM_GPS
-    #include "rtc.h"
-#endif
+#include "rtc.h"
 #include "filer.h"
 #include "supervisor.h"
 #include <CoOS.h>
@@ -249,15 +247,10 @@ unsigned char ubloxPublish(void) {
     }
     else if ( ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100) ) {
 
-#ifdef SET_LOG_TIME_FROM_GPS
-	gpsSetUtcDateTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
-		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec);
-#else
 	// if setting the RTC succeeds, disable the TIMEUTC message
 	if (rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
 		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec))
 	    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);
-#endif
     }
 
     gpsData.lastMessage = IMU_LASTUPD;

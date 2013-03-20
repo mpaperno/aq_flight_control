@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -22,11 +22,7 @@
 #include "util.h"
 #include "aq_timer.h"
 #include "notice.h"
-#ifdef SET_LOG_TIME_FROM_GPS
-    #include "gps.h"
-#else
-    #include "rtc.h"
-#endif
+#include "rtc.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -1740,11 +1736,7 @@ SDTransferState SD_GetStatus(void) {
 }
 
 DWORD get_fattime(void) {
-#ifdef SET_LOG_TIME_FROM_GPS
-    return gpsData.utcDateTime;
-#else
     return rtcGetDateTime();
-#endif
 }
 
 DSTATUS disk_initialize(BYTE drv) {
