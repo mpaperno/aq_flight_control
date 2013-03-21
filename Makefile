@@ -20,12 +20,12 @@ SRC_PATH ?= .
 USE_SIGNALING ?= 0
 # Hardware revision to build for (1|2)
 BOARD_REV ?= 1
-# Increment build number? (0|1)
+# Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
 # Use the single-folder source file organization from AQ repo? (0|1)
 FLAT_SRC ?= 1
 # Produced binaries file name prefix
-BIN_NAME ?= aqv6.6
+BIN_NAME ?= aqv6.7
 # Build debug version? (0|1; true by default if build_type contains the word "debug")
 ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 	DEBUG_BUILD ?= 1
@@ -84,9 +84,14 @@ ifeq ($(INCR_BUILDNUM), 1)
 endif
 
 # Resulting bin file names before extension
-BIN_NAME := $(BIN_NAME).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
-ifdef ($(BIN_SUFFIX))
-	BIN_NAME := $(BIN_NAME)-$(BIN_SUFFIX)
+ifeq ($(DEBUG_BUILD), 1)
+	BIN_NAME := $(BIN_NAME)-debug
+	INCR_BUILDNUM = 0
+else
+	BIN_NAME := $(BIN_NAME).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
+	ifdef ($(BIN_SUFFIX))
+		BIN_NAME := $(BIN_NAME)-$(BIN_SUFFIX)
+	endif
 endif
 
 # Compiler-specific paths
@@ -99,7 +104,7 @@ LD = $(CC_BIN_PATH)/ld
 OBJCP = $(CC_BIN_PATH)/objcopy
 
 # External libraries required by AQ
-MAVINC_PATH = $(AQLIB_PATH)/mavlink-fork/include/autoquad
+MAVINC_PATH = $(AQLIB_PATH)/mavlink/include/autoquad
 STMLIB_PATH = $(AQLIB_PATH)/STM32
 # also STM32f4.ld should be here
 
