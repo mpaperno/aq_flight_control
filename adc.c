@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -60,15 +60,6 @@ float adcVsenseToVin(float volts) {
     return (volts - ADC_VIN_OFFSET) * ADC_VIN_SLOPE;
 }
 
-void adcCalcRot(void) {
-    float rotAngle;
-
-    rotAngle = p[IMU_ROT] * DEG_TO_RAD;
-
-    adcData.sinIMURot = sinf(rotAngle);
-    adcData.cosIMURot = cosf(rotAngle);
-}
-
 void adcTaskCode(void *unused) {
     float dRateVoltageX, dRateVoltageY, dRateVoltageZ;
     double sumMagX, sumMagY, sumMagZ;
@@ -109,24 +100,24 @@ void adcTaskCode(void *unused) {
 	dRateVoltageY = (double)adcData.adcSums[ADC_VOLTS_RATEY] * ADC_DIVISOR * (1.0 / 4.0);
 	dRateVoltageZ = (double)adcData.adcSums[ADC_VOLTS_RATEZ] * ADC_DIVISOR * (1.0 / 4.0);
 
-	// we don't care about temperature drift here
-//	x = +(dRateVoltageX + adcData.rateBiasX) / p[IMU_GYO_SCAL_X];
-//	y = -(dRateVoltageY + adcData.rateBiasY) / p[IMU_GYO_SCAL_Y];
-//	z = -(dRateVoltageZ + adcData.rateBiasZ) / p[IMU_GYO_SCAL_Z];
 	// rates
-	x = +(dRateVoltageX + adcData.rateBiasX + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3) / p[IMU_GYO_SCAL_X];
-	y = -(dRateVoltageY + adcData.rateBiasY + p[IMU_GYO_BIAS1_Y]*dTemp + p[IMU_GYO_BIAS2_Y]*dTemp2 + p[IMU_GYO_BIAS3_Y]*dTemp3) / p[IMU_GYO_SCAL_Y];
-	z = -(dRateVoltageZ + adcData.rateBiasZ + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3) / p[IMU_GYO_SCAL_Z];
+	x = +(dRateVoltageX + adcData.rateBiasX + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3);// / p[IMU_GYO_SCAL_X];
+	y = -(dRateVoltageY + adcData.rateBiasY + p[IMU_GYO_BIAS1_Y]*dTemp + p[IMU_GYO_BIAS2_Y]*dTemp2 + p[IMU_GYO_BIAS3_Y]*dTemp3);// / p[IMU_GYO_SCAL_Y];
+	z = -(dRateVoltageZ + adcData.rateBiasZ + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3);// / p[IMU_GYO_SCAL_Z];
 
 	a = x + y*p[IMU_GYO_ALGN_XY] + z*p[IMU_GYO_ALGN_XZ];
 	b = x*p[IMU_GYO_ALGN_YX] + y + z*p[IMU_GYO_ALGN_YZ];
 	c = x*p[IMU_GYO_ALGN_ZX] + y*p[IMU_GYO_ALGN_ZY] + z;
 
-	adcData.dRateX = (adcData.dRateX + a * adcData.cosIMURot - b * adcData.sinIMURot) * 0.5f;
-	adcData.dRateY = (adcData.dRateY + b * adcData.cosIMURot + a * adcData.sinIMURot) * 0.5f;
+	a /= p[IMU_GYO_SCAL_X];
+	b /= p[IMU_GYO_SCAL_Y];
+	c /= p[IMU_GYO_SCAL_Z];
+
+	adcData.dRateX = (adcData.dRateX + a * imuData.cosRot - b * imuData.sinRot) * 0.5f;
+	adcData.dRateY = (adcData.dRateY + b * imuData.cosRot + a * imuData.sinRot) * 0.5f;
 	adcData.dRateZ = (adcData.dRateZ + c) * 0.5f;
-//	adcData.dRateX = a * adcData.cosIMURot - b * adcData.sinIMURot;
-//	adcData.dRateY = b * adcData.cosIMURot + a * adcData.sinIMURot;
+//	adcData.dRateX = a * imuData.cosRot - b * imuData.sinRot;
+//	adcData.dRateY = b * imuData.cosRot + a * imuData.sinRot;
 //	adcData.dRateZ = c;
 
 	// notify IMU of double rate GYO readings are ready
@@ -179,21 +170,25 @@ void adcTaskCode(void *unused) {
 	    adcData.temperature = adcData.temp3;
 
 	    // temperature difference
-	    dTemp = adcData.temperature - ADC_ROOM_TEMP;
+	    dTemp = adcData.temperature - IMU_ROOM_TEMP;
 	    dTemp2 = dTemp*dTemp;
 	    dTemp3 = dTemp2*dTemp;
 
 	    // rates
-	    x = +(adcData.voltages[ADC_VOLTS_RATEX] + adcData.rateBiasX + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3) / p[IMU_GYO_SCAL_X];
-	    y = -(adcData.voltages[ADC_VOLTS_RATEY] + adcData.rateBiasY + p[IMU_GYO_BIAS1_Y]*dTemp + p[IMU_GYO_BIAS2_Y]*dTemp2 + p[IMU_GYO_BIAS3_Y]*dTemp3) / p[IMU_GYO_SCAL_Y];
-	    z = -(adcData.voltages[ADC_VOLTS_RATEZ] + adcData.rateBiasZ + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3) / p[IMU_GYO_SCAL_Z];
+	    x = +(adcData.voltages[ADC_VOLTS_RATEX] + adcData.rateBiasX + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3);// / p[IMU_GYO_SCAL_X];
+	    y = -(adcData.voltages[ADC_VOLTS_RATEY] + adcData.rateBiasY + p[IMU_GYO_BIAS1_Y]*dTemp + p[IMU_GYO_BIAS2_Y]*dTemp2 + p[IMU_GYO_BIAS3_Y]*dTemp3);// / p[IMU_GYO_SCAL_Y];
+	    z = -(adcData.voltages[ADC_VOLTS_RATEZ] + adcData.rateBiasZ + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3);// / p[IMU_GYO_SCAL_Z];
 
 	    a = x + y*p[IMU_GYO_ALGN_XY] + z*p[IMU_GYO_ALGN_XZ];
 	    b = x*p[IMU_GYO_ALGN_YX] + y + z*p[IMU_GYO_ALGN_YZ];
 	    c = x*p[IMU_GYO_ALGN_ZX] + y*p[IMU_GYO_ALGN_ZY] + z;
 
-	    adcData.rateX = a * adcData.cosIMURot - b * adcData.sinIMURot;
-	    adcData.rateY = b * adcData.cosIMURot + a * adcData.sinIMURot;
+	    a /= p[IMU_GYO_SCAL_X];
+	    b /= p[IMU_GYO_SCAL_Y];
+	    c /= p[IMU_GYO_SCAL_Z];
+
+	    adcData.rateX = a * imuData.cosRot - b * imuData.sinRot;
+	    adcData.rateY = b * imuData.cosRot + a * imuData.sinRot;
 	    adcData.rateZ = c;
 
 	    // Vin
@@ -204,18 +199,18 @@ void adcTaskCode(void *unused) {
 	    y = +(adcData.voltages[ADC_VOLTS_ACCY] + p[IMU_ACC_BIAS_Y] + p[IMU_ACC_BIAS1_Y]*dTemp + p[IMU_ACC_BIAS2_Y]*dTemp2 + p[IMU_ACC_BIAS3_X]*dTemp3);
 	    z = -(adcData.voltages[ADC_VOLTS_ACCZ] + p[IMU_ACC_BIAS_Z] + p[IMU_ACC_BIAS1_Z]*dTemp + p[IMU_ACC_BIAS2_Z]*dTemp2 + p[IMU_ACC_BIAS3_X]*dTemp3);
 
-	    // scale
-	    x /= (p[IMU_ACC_SCAL_X] + p[IMU_ACC_SCAL1_X]*dTemp + p[IMU_ACC_SCAL2_X]*dTemp2 + p[IMU_ACC_SCAL3_X]*dTemp3);
-	    y /= (p[IMU_ACC_SCAL_Y] + p[IMU_ACC_SCAL1_Y]*dTemp + p[IMU_ACC_SCAL2_Y]*dTemp2 + p[IMU_ACC_SCAL3_Y]*dTemp3);
-	    z /= (p[IMU_ACC_SCAL_Z] + p[IMU_ACC_SCAL1_Z]*dTemp + p[IMU_ACC_SCAL2_Z]*dTemp2 + p[IMU_ACC_SCAL3_Z]*dTemp3);
-
 	    // misalignment
 	    a = x + y*p[IMU_ACC_ALGN_XY] + z*p[IMU_ACC_ALGN_XZ];
 	    b = x*p[IMU_ACC_ALGN_YX] + y + z*p[IMU_ACC_ALGN_YZ];
 	    c = x*p[IMU_ACC_ALGN_ZX] + y*p[IMU_ACC_ALGN_ZY] + z;
 
-	    adcData.accX = a * adcData.cosIMURot - b * adcData.sinIMURot;
-	    adcData.accY = b * adcData.cosIMURot + a * adcData.sinIMURot;
+	    // scale
+	    a /= (p[IMU_ACC_SCAL_X] + p[IMU_ACC_SCAL1_X]*dTemp + p[IMU_ACC_SCAL2_X]*dTemp2 + p[IMU_ACC_SCAL3_X]*dTemp3);
+	    b /= (p[IMU_ACC_SCAL_Y] + p[IMU_ACC_SCAL1_Y]*dTemp + p[IMU_ACC_SCAL2_Y]*dTemp2 + p[IMU_ACC_SCAL3_Y]*dTemp3);
+	    c /= (p[IMU_ACC_SCAL_Z] + p[IMU_ACC_SCAL1_Z]*dTemp + p[IMU_ACC_SCAL2_Z]*dTemp2 + p[IMU_ACC_SCAL3_Z]*dTemp3);
+
+	    adcData.accX = a * imuData.cosRot - b * imuData.sinRot;
+	    adcData.accY = b * imuData.cosRot + a * imuData.sinRot;
 	    adcData.accZ = c;
 
 #ifdef ADC_PRESSURE_3V3
@@ -243,18 +238,18 @@ void adcTaskCode(void *unused) {
 	    // store the mag sign used for this iteration
 	    adcData.magSign = (magSign ? -1 : 1);
 
-	    // scale
-	    x /= (p[IMU_MAG_SCAL_X] + p[IMU_MAG_SCAL1_X]*dTemp + p[IMU_MAG_SCAL2_X]*dTemp2 + p[IMU_MAG_SCAL3_X]*dTemp3);
-	    y /= (p[IMU_MAG_SCAL_Y] + p[IMU_MAG_SCAL1_Y]*dTemp + p[IMU_MAG_SCAL2_Y]*dTemp2 + p[IMU_MAG_SCAL3_Y]*dTemp3);
-	    z /= (p[IMU_MAG_SCAL_Z] + p[IMU_MAG_SCAL1_Z]*dTemp + p[IMU_MAG_SCAL2_Z]*dTemp2 + p[IMU_MAG_SCAL3_Z]*dTemp3);
-
 	    // misalignment
 	    a = x + y*p[IMU_MAG_ALGN_XY] + z*p[IMU_MAG_ALGN_XZ];
 	    b = x*p[IMU_MAG_ALGN_YX] + y + z*p[IMU_MAG_ALGN_YZ];
 	    c = x*p[IMU_MAG_ALGN_ZX] + y*p[IMU_MAG_ALGN_ZY] + z;
 
-	    adcData.magX = a * adcData.cosIMURot - b * adcData.sinIMURot;
-	    adcData.magY = b * adcData.cosIMURot + a * adcData.sinIMURot;
+	    // scale
+	    a /= (p[IMU_MAG_SCAL_X] + p[IMU_MAG_SCAL1_X]*dTemp + p[IMU_MAG_SCAL2_X]*dTemp2 + p[IMU_MAG_SCAL3_X]*dTemp3);
+	    b /= (p[IMU_MAG_SCAL_Y] + p[IMU_MAG_SCAL1_Y]*dTemp + p[IMU_MAG_SCAL2_Y]*dTemp2 + p[IMU_MAG_SCAL3_Y]*dTemp3);
+	    c /= (p[IMU_MAG_SCAL_Z] + p[IMU_MAG_SCAL1_Z]*dTemp + p[IMU_MAG_SCAL2_Z]*dTemp2 + p[IMU_MAG_SCAL3_Z]*dTemp3);
+
+	    adcData.magX = a * imuData.cosRot - b * imuData.sinRot;
+	    adcData.magY = b * imuData.cosRot + a * imuData.sinRot;
 	    adcData.magZ = c;
 
 	    sumMagX += adcData.voltages[ADC_VOLTS_MAGX];
@@ -297,8 +292,10 @@ void adcCalibOffsets(void) {
 
     delay(100);
 
-#ifndef IMU_USE_VN100
+#ifndef USE_VN100
+#ifndef USE_DIGITAL_IMU
     imuQuasiStatic(ADC_RATE_CALIB_SAMPLES);
+#endif
 #endif
 
     sumRate[0] = sumRate[1] = sumRate[2] = 0.0;
@@ -315,7 +312,7 @@ void adcCalibOffsets(void) {
 	sumRate[2] += adcData.voltages[ADC_VOLTS_RATEZ];
     }
 
-    dTemp = adcData.temperature - ADC_ROOM_TEMP;
+    dTemp = adcData.temperature - IMU_ROOM_TEMP;
     dTemp2 = dTemp*dTemp;
     dTemp3 = dTemp*dTemp2;
 
@@ -339,20 +336,17 @@ void adcInit(void) {
 
     memset((void *)&adcData, 0, sizeof(adcData));
 
-    // calculate IMU rotation
-    adcCalcRot();
-
     // energize mag's set/reset circuit
     adcData.magSetReset = digitalInit(GPIOE, GPIO_Pin_10);
     digitalHi(adcData.magSetReset);
 
     // use auto-zero function of gyros
     adcData.rateAutoZero = digitalInit(GPIOE, GPIO_Pin_8);
-    delay(200);
-    digitalHi(adcData.rateAutoZero);
-    delay(20);
+//    delay(200);
+//    digitalHi(adcData.rateAutoZero);
+//    delay(20);
     digitalLo(adcData.rateAutoZero);
-    delay(20);
+//    delay(20);
 
     // bring ACC's SELF TEST line low
     adcData.accST = digitalInit(GPIOE, GPIO_Pin_12);

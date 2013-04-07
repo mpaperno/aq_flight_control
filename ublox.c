@@ -245,8 +245,7 @@ unsigned char ubloxPublish(void) {
 	gpsData.eDOP = ubloxData.payload.dop.eDOP * 0.01f;
 	gpsData.gDOP = ubloxData.payload.dop.gDOP * 0.01f;
     }
-    else if ( ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100) ) {
-
+    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100)) {
 	// if setting the RTC succeeds, disable the TIMEUTC message
 	if (rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
 		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec))

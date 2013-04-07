@@ -29,6 +29,8 @@
 
 //#define HAS_VN100
 //#define USE_VN100
+//#define HAS_DIGITAL_IMU
+//#define USE_DIGITAL_IMU
 //#define USE_CAN
 
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS

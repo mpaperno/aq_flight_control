@@ -362,31 +362,31 @@ void spiTransaction(spiClient_t *client, void *rxBuf, void *txBuf, uint16_t size
 }
 
 spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort, uint16_t csPin, volatile uint32_t *flag, spiCallback_t *callback) {
-    spiClient_t *s;
+    spiClient_t *client;
 
-    s = (spiClient_t *)aqCalloc(1, sizeof(spiClient_t));
+    client = (spiClient_t *)aqCalloc(1, sizeof(spiClient_t));
 
 #ifdef SPI_SPI1_CLOCK
     if (spi == SPI1) {
-	s->interface = 0;
+	client->interface = 0;
 	spi1Init(baud);
     }
 #endif
 #ifdef SPI_SPI2_CLOCK
     if (spi == SPI2) {
-	s->interface = 1;
+	client->interface = 1;
 	spi2Init(baud);
     }
 #endif
 
-    s->cs = digitalInit(csPort, csPin);
-    digitalHi(s->cs);
+    client->cs = digitalInit(csPort, csPin);
+    spiDeselect(client);
 
-    s->baud = baud;
-    s->flag = flag;
-    s->callback = callback;
+    client->baud = baud;
+    client->flag = flag;
+    client->callback = callback;
 
-    return s;
+    return client;
 }
 
 #ifdef SPI_SPI2_CLOCK

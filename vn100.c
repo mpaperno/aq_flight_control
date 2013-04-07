@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -607,8 +607,8 @@ void VN100_DMX_RX_HANDLER(void) {
 	    y = vn100Data.recvBuf.parameters[7];
 	    z = vn100Data.recvBuf.parameters[8];
 
-	    vn100Data.doubleRates[0] = (vn100Data.doubleRates[0] + x * adcData.cosIMURot - y * adcData.sinIMURot) * 0.5f;
-	    vn100Data.doubleRates[1] = (vn100Data.doubleRates[1] + y * adcData.cosIMURot + x * adcData.sinIMURot) * 0.5f;
+	    vn100Data.doubleRates[0] = (vn100Data.doubleRates[0] + x * imuData.cosRot - y * imuData.sinRot) * 0.5f;
+	    vn100Data.doubleRates[1] = (vn100Data.doubleRates[1] + y * imuData.cosRot + x * imuData.sinRot) * 0.5f;
 	    vn100Data.doubleRates[2] = (vn100Data.doubleRates[2] + z) * 0.5f;
 	}
 	imuVN100DRateReady();
@@ -622,24 +622,24 @@ void VN100_DMX_RX_HANDLER(void) {
 		y = vn100Data.recvBuf.parameters[7];
 		z = vn100Data.recvBuf.parameters[8];
 
-		vn100Data.rates[0] = x * adcData.cosIMURot - y * adcData.sinIMURot;
-		vn100Data.rates[1] = y * adcData.cosIMURot + x * adcData.sinIMURot;
+		vn100Data.rates[0] = x * imuData.cosRot - y * imuData.sinRot;
+		vn100Data.rates[1] = y * imuData.cosRot + x * imuData.sinRot;
 		vn100Data.rates[2] = z;
 
 		x = vn100Data.recvBuf.parameters[3];
 		y = vn100Data.recvBuf.parameters[4];
 		z = vn100Data.recvBuf.parameters[5];
 
-		vn100Data.accs[0] = x * adcData.cosIMURot - y * adcData.sinIMURot;
-		vn100Data.accs[1] = y * adcData.cosIMURot + x * adcData.sinIMURot;
+		vn100Data.accs[0] = x * imuData.cosRot - y * imuData.sinRot;
+		vn100Data.accs[1] = y * imuData.cosRot + x * imuData.sinRot;
 		vn100Data.accs[2] = z;
 
 		x = vn100Data.recvBuf.parameters[0];
 		y = vn100Data.recvBuf.parameters[1];
 		z = vn100Data.recvBuf.parameters[2];
 
-		vn100Data.mags[0] = x * adcData.cosIMURot - y * adcData.sinIMURot;
-		vn100Data.mags[1] = y * adcData.cosIMURot + x * adcData.sinIMURot;
+		vn100Data.mags[0] = x * imuData.cosRot - y * imuData.sinRot;
+		vn100Data.mags[1] = y * imuData.cosRot + x * imuData.sinRot;
 		vn100Data.mags[2] = z;
 	    }
 	    imuVN100SensorReady();

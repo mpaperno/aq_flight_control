@@ -93,6 +93,16 @@
       <file file_name="can.c"/>
       <file file_name="spi.h"/>
       <file file_name="spi.c"/>
+      <folder Name="digitalIMU" file_name="">
+        <file file_name="mpu6000.c"/>
+        <file file_name="mpu6000.h"/>
+        <file file_name="d_imu.c"/>
+        <file file_name="d_imu.h"/>
+        <file file_name="hmc5983.h"/>
+        <file file_name="hmc5983.c"/>
+        <file file_name="ms5611.c"/>
+        <file file_name="ms5611.h"/>
+      </folder>
       <file file_name="getbuildnum.c">
 	<configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
       </file>
@@ -219,6 +229,7 @@
       <file file_name="arm_std_f32.c"/>
       <file file_name="arm_mean_f32.c"/>
       <file file_name="arm_mat_inverse_f32.c"/>
+      <file file_name="arm_scale_f32.c"/>
     </folder>
     <folder Name="MATHLIB">
       <file file_name="algebra.c"/>

@@ -22,26 +22,19 @@
 #include "aq.h"
 #include "adc.h"
 #include "vn100.h"
+#include "d_imu.h"
 
+#define IMU_ROOM_TEMP		20.0f
 #define IMU_STATIC_STD		0.05f
 #define IMU_STATIC_TIMEOUT	5	// seconds
 
-#ifdef HAS_VN100
-#define IMU_HAS_VN100
-#ifdef USE_VN100
-#define IMU_USE_VN100
-#endif	// USE_VN100
-#endif	// HAS_VN100
-
 // these define where to get certain data
-#define AQ_TIMESTEP		adcData.dt
 #define AQ_YAW			navUkfData.yaw
 #define AQ_PITCH		navUkfData.pitch
 #define AQ_ROLL			navUkfData.roll
 #define AQ_PRES_ADJ		UKF_PRES_ALT
-#define AQ_PRESSURE		adcData.pressure
 
-#ifdef IMU_USE_VN100
+#ifdef USE_VN100
 // using VN100 as IMU
 #define IMU_DRATEX		vn100Data.doubleRates[0]
 #define IMU_DRATEY		vn100Data.doubleRates[1]
@@ -57,22 +50,32 @@
 #define IMU_MAGZ		vn100Data.mags[2]
 #define IMU_TEMP		vn100Data.recvBuf.parameters[9]
 #define IMU_LASTUPD		vn100Data.solutionTime
+#define AQ_TIMESTEP		adcData.dt
+#define AQ_PRESSURE		adcData.pressure
+#endif	// USE_VN100
 
-#define IMU_DRATEX_AUX		adcData.dRateX
-#define IMU_DRATEY_AUX		adcData.dRateY
-#define IMU_DRATEZ_AUX		adcData.dRateZ
-#define IMU_RATEX_AUX		adcData.rateX
-#define IMU_RATEY_AUX		adcData.rateY
-#define IMU_RATEZ_AUX		adcData.rateZ
-#define IMU_ACCX_AUX		adcData.accX
-#define IMU_ACCY_AUX		adcData.accY
-#define IMU_ACCZ_AUX		adcData.accZ
-#define IMU_MAGX_AUX		adcData.magX
-#define IMU_MAGY_AUX		adcData.magY
-#define IMU_MAGZ_AUX		adcData.magZ
-#define IMU_TEMP_AUX		adcData.temperature
+#ifdef USE_DIGITAL_IMU
+// using the Digital IMU as IMU
+#define IMU_DRATEX		mpu6000Data.gyo[0]
+#define IMU_DRATEY		mpu6000Data.gyo[1]
+#define IMU_DRATEZ		mpu6000Data.gyo[2]
+#define IMU_RATEX		mpu6000Data.gyo[0]
+#define IMU_RATEY		mpu6000Data.gyo[1]
+#define IMU_RATEZ		mpu6000Data.gyo[2]
+#define IMU_ACCX		mpu6000Data.acc[0]
+#define IMU_ACCY		mpu6000Data.acc[1]
+#define IMU_ACCZ		mpu6000Data.acc[2]
+#define IMU_MAGX		hmc5983Data.mag[0]
+#define IMU_MAGY		hmc5983Data.mag[1]
+#define IMU_MAGZ		hmc5983Data.mag[2]
+#define IMU_TEMP		dImuData.temp
+#define IMU_LASTUPD		dImuData.lastUpdate
+#define AQ_TIMESTEP		DIMU_DT
+#define AQ_PRESSURE		ms5611Data.pres
+#endif	// USE_DIGITAL_IMU
 
-#else
+#ifndef USE_VN100
+#ifndef USE_DIGITAL_IMU
 // using ADC as IMU
 #define IMU_DRATEX		adcData.dRateX
 #define IMU_DRATEY		adcData.dRateY
@@ -88,41 +91,15 @@
 #define IMU_MAGZ		adcData.magZ
 #define IMU_TEMP		adcData.temperature
 #define IMU_LASTUPD		adcData.lastUpdate
-
-#ifdef IMU_HAS_VN100
-#define IMU_DRATEX_AUX		vn100Data.doubleRates[0]
-#define IMU_DRATEY_AUX		vn100Data.doubleRates[1]
-#define IMU_DRATEZ_AUX		vn100Data.doubleRates[2]
-#define IMU_RATEX_AUX		vn100Data.rates[0]
-#define IMU_RATEY_AUX		vn100Data.rates[1]
-#define IMU_RATEZ_AUX		vn100Data.rates[2]
-#define IMU_ACCX_AUX		vn100Data.accs[0]
-#define IMU_ACCY_AUX		vn100Data.accs[1]
-#define IMU_ACCZ_AUX		vn100Data.accs[2]
-#define IMU_MAGX_AUX		vn100Data.mags[0]
-#define IMU_MAGY_AUX		vn100Data.mags[1]
-#define IMU_MAGZ_AUX		vn100Data.mags[2]
-#define IMU_TEMP_AUX		vn100Data.regBuf.parameters[9]
-#else
-#define IMU_DRATEX_AUX		(0.0f)
-#define IMU_DRATEY_AUX		(0.0f)
-#define IMU_DRATEZ_AUX		(0.0f)
-#define IMU_RATEX_AUX		(0.0f)
-#define IMU_RATEY_AUX		(0.0f)
-#define IMU_RATEZ_AUX		(0.0f)
-#define IMU_ACCX_AUX		(0.0f)
-#define IMU_ACCY_AUX		(0.0f)
-#define IMU_ACCZ_AUX		(0.0f)
-#define IMU_MAGX_AUX		(0.0f)
-#define IMU_MAGY_AUX		(0.0f)
-#define IMU_MAGZ_AUX		(0.0f)
-#define IMU_TEMP_AUX		(0.0f)
-#endif	// IMU_HAS_VN100
-#endif	// IMU_USE_VN100
+#define AQ_TIMESTEP		adcData.dt
+#define AQ_PRESSURE		adcData.pressure
+#endif
+#endif
 
 typedef struct {
     OS_FlagID dRateFlag;
     OS_FlagID sensorFlag;
+    float sinRot, cosRot;
     uint32_t fullUpdates;
     uint32_t halfUpdates;
 } imuStruct_t;
@@ -135,5 +112,7 @@ extern void imuAdcDRateReady(void);
 extern void imuAdcSensorReady(void);
 extern void imuVN100DRateReady(void);
 extern void imuVN100SensorReady(void);
+extern void imuDImuDRateReady(void);
+extern void imuDImuSensorReady(void);
 
 #endif

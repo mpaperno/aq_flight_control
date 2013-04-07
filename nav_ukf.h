@@ -30,7 +30,7 @@
 #define SIM_V                   16		// process noise
 #define SIM_N                   3		// max observation noise
 
-#define UKF_GYO_AVG_NUM		20
+#define UKF_GYO_AVG_NUM		40
 
 #define UKF_VELN		navUkfData.x[0]
 #define UKF_VELE		navUkfData.x[1]

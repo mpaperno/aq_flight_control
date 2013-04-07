@@ -13,11 +13,12 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "imu.h"
 #include "arm_math.h"
+#include "config.h"
 #include <string.h>
 
 imuStruct_t imuData __attribute__((section(".ccm")));
@@ -53,44 +54,77 @@ void imuQuasiStatic(int n) {
     } while (i < (int)(1.0f / AQ_TIMESTEP)*IMU_STATIC_TIMEOUT && (i <= n || (stdX + stdY + stdZ) > IMU_STATIC_STD));
 }
 
+void imuCalcRot(void) {
+    float rotAngle;
+
+    rotAngle = p[IMU_ROT] * DEG_TO_RAD;
+
+    imuData.sinRot = sinf(rotAngle);
+    imuData.cosRot = cosf(rotAngle);
+}
+
 void imuInit(void) {
     memset((void *)&imuData, 0, sizeof(imuData));
 
     imuData.dRateFlag = CoCreateFlag(1, 0);
     imuData.sensorFlag = CoCreateFlag(1, 0);
 
+     // calculate IMU rotation
+    imuCalcRot();
+
     adcInit();
-#ifdef IMU_HAS_VN100
+
+#ifdef HAS_VN100
     vn100Init();
-#endif  // IMU_HAS_VN100
+#endif  // HAS_VN100
+
+#ifdef HAS_DIGITAL_IMU
+    dIMUInit();
+#endif	// HAS_DIGITAL_IMU
 }
 
 void imuAdcDRateReady(void) {
-#ifndef IMU_USE_VN100
+#ifndef USE_VN100
+#ifndef USE_DIGITAL_IMU
     imuData.halfUpdates++;
     CoSetFlag(imuData.dRateFlag);
-#endif	// IMU_USE_VN100
+#endif
+#endif	// USE_VN100
 }
 
 void imuAdcSensorReady(void) {
-#ifndef IMU_USE_VN100
+#ifndef USE_VN100
+#ifndef USE_DIGITAL_IMU
     imuData.fullUpdates++;
     CoSetFlag(imuData.sensorFlag);
-#endif	// IMU_USE_VN100
+#endif
+#endif	// USE_VN100
 }
 
-#ifdef IMU_HAS_VN100
 void imuVN100DRateReady(void) {
-#ifdef IMU_USE_VN100
+#ifdef USE_VN100
     imuData.halfUpdates++;
     isr_SetFlag(imuData.dRateFlag);
-#endif	// IMU_USE_VN100
+#endif	// USE_VN100
 }
 
 void imuVN100SensorReady(void) {
-#ifdef IMU_USE_VN100
+#ifdef USE_VN100
     imuData.fullUpdates++;
     isr_SetFlag(imuData.sensorFlag);
-#endif	// IMU_USE_VN100
+#endif	// USE_VN100
 }
-#endif  // IMU_HAS_VN100
+
+void imuDImuDRateReady(void) {
+#ifdef USE_DIGITAL_IMU
+    imuData.halfUpdates++;
+    CoSetFlag(imuData.dRateFlag);
+#endif	// USE_DIGITAL_IMU
+}
+
+void imuDImuSensorReady(void) {
+#ifdef USE_DIGITAL_IMU
+    imuData.fullUpdates++;
+    CoSetFlag(imuData.sensorFlag);
+#endif	// USE_DIGITAL_IMU
+}
