@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -244,22 +244,46 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&IMU_LASTUPD;
 		break;
 	    case LOG_VOLTAGE0:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[0];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[0];
+#endif
 		break;
 	    case LOG_VOLTAGE1:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[1];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[1];
+#endif
 		break;
 	    case LOG_VOLTAGE2:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[2];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[2];
+#endif
 		break;
 	    case LOG_VOLTAGE3:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[0];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[3];
+#endif
 		break;
 	    case LOG_VOLTAGE4:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[1];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[4];
+#endif
 		break;
 	    case LOG_VOLTAGE5:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[2];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[5];
+#endif
 		break;
 	    case LOG_VOLTAGE6:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[6];
@@ -268,13 +292,25 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[7];
 		break;
 	    case LOG_VOLTAGE8:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[0];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[8];
+#endif
 		break;
 	    case LOG_VOLTAGE9:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[1];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[9];
+#endif
 		break;
 	    case LOG_VOLTAGE10:
+#ifdef USE_DIGITAL_IMU
+		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[2];
+#else
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[10];
+#endif
 		break;
 	    case LOG_VOLTAGE11:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[11];
