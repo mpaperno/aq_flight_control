@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -198,7 +198,7 @@ void pwmNVICInit(uint8_t irqChannel) {
     NVIC_Init(&NVIC_InitStructure);
 }
 
-pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, pwmCallback_t callback) {
+pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, int16_t polarity, uint32_t period, pwmCallback_t callback) {
     pwmPortStruct_t *p = 0;
 
     if (pwmValidatePort(pwmPort, 0) && callback) {
@@ -213,7 +213,7 @@ pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, uint16_t polarity, uint32_t period, 
 
 	polarity = (polarity > 0) ? TIM_ICPolarity_Rising : ((polarity < 0) ? TIM_ICPolarity_Falling : TIM_ICPolarity_BothEdge);
 
-	pwmICInit(pwmTimers[pwmPort], pwmTimerChannels[pwmPort], polarity);
+	pwmICInit(pwmTimers[pwmPort], pwmTimerChannels[pwmPort], (uint16_t)polarity);
 
 	TIM_Cmd((TIM_TypeDef *)pwmTimers[pwmPort], ENABLE);
 
