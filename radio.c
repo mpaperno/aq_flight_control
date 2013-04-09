@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -29,17 +29,12 @@ radioStruct_t radioData __attribute__((section(".ccm")));
 OS_STK *radioTaskStack;
 
 // calculate radio reception quality
-void radioReceptionQuality(float q) {
-    radioData.quality = utilFilter(&radioData.qualityFilter, (q + 1)) * 0.5f * 100.0f;
+void radioReceptionQuality(int8_t q) {
+    radioData.quality = utilFilter(&radioData.qualityFilter, ((float)q + 1)) * 0.5f * 100.0f;
 }
 
 void radioTaskCode(void *unused) {
     serialPort_t *s = radioData.serialPort;
-    int q;
-
-    int radioTicks = 0;
-    int abortedFrames = 0;
-    float QppmSignalQuality = 0.0f;
 
     AQ_NOTICE("Radio task started\n");
 
@@ -47,37 +42,33 @@ void radioTaskCode(void *unused) {
 	// wait for data
 	yield(2); // 2ms
 
-        radioTicks++;
-
 	switch (radioData.radioType) {
-	case 0:
-	case 1:
+	case RADIO_TYPE_SPEKTRUM11:
+	case RADIO_TYPE_SPEKTRUM10:
 	    while (serialAvailable(s))
-		if ((q = spektrumCharIn(serialRead(s)))) {
+		if (spektrumCharIn(serialRead(s))) {
 		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(1.0);
+		    radioReceptionQuality(1);
 		}
 	    break;
-	case 2:
+	case RADIO_TYPE_SBUS:
 	    while (serialAvailable(s))
-		if ((q = futabaCharIn(serialRead(s)))) {
+		if (futabaCharIn(serialRead(s))) {
 		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(1.0);
+		    radioReceptionQuality(1);
 		}
 	    break;
-	case 3:
-	    if (ppmDataAvailable()) {
+	case RADIO_TYPE_PPM:
+	    if (ppmDataAvailable())
                 radioData.lastUpdate = timerMicros();
-                abortedFrames = ppmGetSignalAbortedFrames();
-                QppmSignalQuality = 1.0f/(abortedFrames + 1); // aborted frames will reduce signal quality by 50% max 
-                radioReceptionQuality(QppmSignalQuality);
-           }
-	   break;
+            break;
 	}
 
 	// no radio?
-	if (timerMicros() - radioData.lastUpdate > 50000)
-	    radioReceptionQuality(-1.0);  // minimum signal quality (0%) if no updates within 50ms
+	if (timerMicros() - radioData.lastUpdate > RADIO_UPDATE_TIMEOUT)
+	    radioReceptionQuality(-1);  // minimum signal quality (0%) if no updates within timeout value
+	else if (radioData.radioType == RADIO_TYPE_PPM)
+            radioReceptionQuality(ppmGetSignalQuality());  // signal quality based on PPM status
     }
 }
 
@@ -91,19 +82,20 @@ void radioInit(void) {
     radioData.radioType = (int8_t)p[RADIO_TYPE];
 
     switch (radioData.radioType) {
-    case 0:
-    case 1:
+    case RADIO_TYPE_SPEKTRUM11:
+    case RADIO_TYPE_SPEKTRUM10:
         spektrumInit();
         break;
-    case 2:
+    case RADIO_TYPE_SBUS:
         futabaInit();
         break;
-    case 3:
+    case RADIO_TYPE_PPM:
         ppmInit();
         break;
-    case 4:
-        // TODO
-        break;
+
+    default:
+	AQ_NOTICE("WARNING: Invalid radio type!");
+	return;
     }
 
     radioTaskStack = aqStackInit(RADIO_STACK_SIZE, "RADIO");

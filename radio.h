@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef radio_h
@@ -28,6 +28,8 @@
 #define RADIO_STACK_SIZE	64
 #define RADIO_PRIORITY		25
 
+#define RADIO_UPDATE_TIMEOUT	60000	// maximum time in micros between valid radio updates before signal is considered unstable;
+
 #define RADIO_THROT             radioData.channels[(int)p[RADIO_THRO_CH]]
 #define RADIO_ROLL		radioData.channels[(int)p[RADIO_ROLL_CH]]
 #define RADIO_PITCH		radioData.channels[(int)p[RADIO_PITC_CH]]
@@ -41,24 +43,29 @@
 #define RADIO_AUX6		radioData.channels[(int)p[RADIO_AUX6_CH]]
 #define RADIO_AUX7		radioData.channels[(int)p[RADIO_AUX7_CH]]
 
-#define RADIO_FRAME_COUNT       radioData.frameCount
+// #define RADIO_FRAME_COUNT       radioData.frameCount
 #define RADIO_ERROR_COUNT       radioData.errorCount
 #define RADIO_QUALITY           radioData.quality
 
+enum {
+    RADIO_TYPE_SPEKTRUM11 = 0,
+    RADIO_TYPE_SPEKTRUM10,
+    RADIO_TYPE_SBUS,
+    RADIO_TYPE_PPM
+};
+
 typedef struct {
     OS_TID radioTask;
-
     serialPort_t *serialPort;
-
-    int16_t channels[18];
-
     utilFilter_t qualityFilter;
-    unsigned int errorCount;
-    unsigned int frameCount;
-    float quality;
-    int8_t radioType;
 
-    unsigned long lastUpdate;
+    int16_t channels[18];	// holds channel values received from radio handler
+    unsigned int errorCount;	// cumulative error/lost frame counter
+//    unsigned int frameCount;  // currently unused
+    float quality;		// running measure of radio data stability, in range of 0-100
+    int8_t radioType;		// stores the radio type defined in parameters to avoid runtime changes
+    unsigned long lastUpdate;	// time of last valid data received from radio handler
+
 } radioStruct_t;
 
 extern radioStruct_t radioData;

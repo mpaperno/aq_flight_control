@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _logger_h
@@ -127,6 +127,7 @@ enum {
     LOG_RADIO_CHANNEL15,
     LOG_RADIO_CHANNEL16,
     LOG_RADIO_CHANNEL17,
+    LOG_RADIO_ERRORS,
     LOG_NUM_IDS
 };
 

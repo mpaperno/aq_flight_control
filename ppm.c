@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2012  Bill Nesbitt
+    Copyright © 2012, 2013  Bill Nesbitt
 */
 
 /*
@@ -51,13 +51,13 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
     ppmData.lastCaptureValue = capture;
 
     // Now parse CPPM. The code below is a bit oversimplified.
-    if (diff > PPM_GUARD_PULSE_LENGTH) { // New frame started
+    if (diff > PPM_GUARD_PULSE_LENGTH) { // Frame separator detected
         // Try to autodetermine number of channels
         // If we have seen enough frames with the same number of channels,
         // store this number of channels in number_of_channels
         if (ppmData.numberChannels == 0) {
             // We are still determining number of channels, "signal not stable"
-            ppmData.tmp_abortedFramesCount++;
+            ppmData.signalQuality = -1;
 
             if (ppmData.lastChannel <= PPM_MAX_CHANNELS
                 && ppmData.lastChannel == ppmData.previousChannels) {
@@ -73,48 +73,52 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
                 ppmData.stableChannelsCount = 0;
             }
         }
+        // Number of channels is already known. So verify that there were
+        // no errors during last frame capture and store channel values
         else {
-            // Number of channels is already known. So verify that there were
-            // no errors during last frame capture and store channel values
+            if (ppmData.lastChannel != ppmData.numberChannels) // Wrong number of channels
+                ppmData.inputValid = 0;
+
+            // valid frame, pass values to ppmData.channels
             if (ppmData.inputValid) {
-                if (ppmData.lastChannel != ppmData.numberChannels) { // Wrong number of channels
-                    ppmData.inputValid    = 0;
-                    ppmData.frameParsed   = 0;
-                    ppmData.tmp_abortedFramesCount++;
-                }
-                else {
-                    // valid frame, pass values to ppmData.channels
-                    memcpy(ppmData.channels, ppmData.tmp_channels, sizeof(ppmData.channels));
-                    ppmData.abortedFramesCount = ppmData.tmp_abortedFramesCount;
-                    ppmData.tmp_abortedFramesCount = 0;
-                    radioData.lastUpdate = timerMicros();
-                    ppmData.frameParsed = 1;
-                }
+		memcpy(ppmData.channels, ppmData.tmp_channels, sizeof(ppmData.channels));
+		ppmData.frameParsed = 1;
+	        ppmData.signalQuality = 1;  // normal operation
+            }
+            // handle invalid frame
+            else {
+                ppmData.signalQuality = -1; // critical error
+                radioData.errorCount++;     // increment shared cumulative error counter
             }
         }
+
         ppmData.previousChannels = ppmData.lastChannel;
         ppmData.lastChannel = 0;
         ppmData.inputValid  = 1;
-    }
+
+    } // end handling of frame separator
+
     else if (ppmData.inputValid) { // We are inside the frame and no errors found this far in the frame
-        if (ppmData.lastChannel >= PPM_MAX_CHANNELS) {    // Too many channels
-            ppmData.inputValid    = 0;
-            ppmData.tmp_abortedFramesCount++;
-        }
-        else if (diff > PPM_MIN_PULSE_WIDTH && diff < PPM_MAX_PULSE_WIDTH) {
+
+	// Too many channels, invalidate the whole frame
+        if (ppmData.lastChannel >= PPM_MAX_CHANNELS)
+            ppmData.inputValid = 0;
+
+        // Pulse length is valid, count it as the next channel value
+        else if (diff >= PPM_MIN_PULSE_WIDTH && diff <= PPM_MAX_PULSE_WIDTH)
             ppmData.tmp_channels[(ppmData.lastChannel)++] = diff;
-        }
-        else {
-            ppmData.inputValid    = 0;
-            ppmData.tmp_abortedFramesCount++;
-            ppmData.tmp_channels[(ppmData.lastChannel)++] = 0;
-        }
+
+        // Ignore invalid pulses (but count them as errors). If pulse was actually a channel, this will be caught later,
+        // when the frame is validated. If it was not a channel, then we should do well to just ignore it.
+        else
+            ppmData.signalQuality = 0; // non-critical error
+
     }
 }
 
 void ppmInit(void) {
     memset((void *)&ppmData, 0, sizeof(ppmData));
-    ppmData.ppmPort = pwmInitIn(PPM_PWM_CHANNEL, 1 /* rising polarity */, 0x10000, ppmCallback);
+    ppmData.ppmPort = pwmInitIn(PPM_PWM_CHANNEL, PPM_CAPTURE_EDGE, 0x10000, ppmCallback);
 }
 
 int ppmDataAvailable(void) {
@@ -140,10 +144,7 @@ int ppmDataAvailable(void) {
     }
 }
 
-
-// retrieve number of aborted ppm frames
-//  shall be called after ppmDataAvailable returned 1
-int ppmGetSignalAbortedFrames(void) {
-
-  return ppmData.abortedFramesCount;
+int8_t ppmGetSignalQuality(void) {
+  return ppmData.signalQuality;
 }
+

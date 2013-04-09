@@ -138,7 +138,8 @@ loggerFields_t loggerFields[] = {
 	{LOG_RADIO_CHANNEL14, LOG_TYPE_S16},
 	{LOG_RADIO_CHANNEL15, LOG_TYPE_S16},
 	{LOG_RADIO_CHANNEL16, LOG_TYPE_S16},
-	{LOG_RADIO_CHANNEL17, LOG_TYPE_S16}
+	{LOG_RADIO_CHANNEL17, LOG_TYPE_S16},
+	{LOG_RADIO_ERRORS, LOG_TYPE_U16}
     };
 
 int loggerCopy8(void *to, void *from) {
@@ -572,6 +573,9 @@ void loggerSetup(void) {
 		break;
 	    case LOG_RADIO_CHANNEL17:
 		loggerData.fp[i].fieldPointer = (void *)&radioData.channels[17];
+		break;
+	    case LOG_RADIO_ERRORS:
+		loggerData.fp[i].fieldPointer = (void *)&RADIO_ERROR_COUNT;
 		break;
 	}
 

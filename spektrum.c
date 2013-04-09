@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -34,7 +34,7 @@ void spektrumDecode(void) {
     int addr, val;
 
     // 10 bit
-    if (p[RADIO_TYPE] == 1) {
+    if (radioData.radioType == RADIO_TYPE_SPEKTRUM10) {
 	addr = (spektrumData.rawBuf[0]>>2) & 0x0f;
 	val = (((spektrumData.rawBuf[0] & 0x03)<<8) | spektrumData.rawBuf[1])<<1;
     }
@@ -58,7 +58,7 @@ unsigned char spektrumCharIn(int c) {
 
     // top of frame if it's been more than 7.5ms
     if (receiveTime - spektrumData.lastCharReceived > 7500)
-	    spektrumData.state = SPEKTRUM_ERR_COUNT1;
+	spektrumData.state = SPEKTRUM_ERR_COUNT1;
 
     spektrumData.lastCharReceived = timerMicros();
 
@@ -83,9 +83,9 @@ unsigned char spektrumCharIn(int c) {
 	spektrumData.rawBuf[1] = c;
 	spektrumDecode();
 	spektrumData.channelCount++;
-	if (spektrumData.channelCount == (p[RADIO_TYPE] == 1 ? 7 : 6)) {
+	if (spektrumData.channelCount == (radioData.radioType == RADIO_TYPE_SPEKTRUM10 ? 7 : 6)) {
 	    spektrumData.state = SPEKTRUM_WAIT_SYNC1;
-	    radioData.frameCount++;
+//	    radioData.frameCount++;
 	}
 	else {
 	    spektrumData.state = SPEKTRUM_CHANNEL1;
