@@ -46,6 +46,9 @@
 #include "gimbal.h"
 #include "sdio.h"
 #include "can.h"
+#ifdef USE_SIGNALING
+   #include "signaling.h"
+#endif
 #include <CoOS.h>
 
 OS_STK *aqInitStack;
@@ -77,6 +80,9 @@ void aqInit(void *pdata) {
 #endif
 #ifdef USE_CAN
     canInit();
+#endif
+#ifdef USE_SIGNALING
+    signalingInit();
 #endif
     loggerInit();
     runInit();

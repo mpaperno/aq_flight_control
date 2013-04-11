@@ -93,6 +93,8 @@
       <file file_name="can.c"/>
       <file file_name="spi.h"/>
       <file file_name="spi.c"/>
+      <file file_name="signaling.h"/>
+      <file file_name="signaling.c"/>
       <folder Name="digitalIMU" file_name="">
         <file file_name="mpu6000.c"/>
         <file file_name="mpu6000.h"/>

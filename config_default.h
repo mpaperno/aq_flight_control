@@ -36,6 +36,10 @@
 #define DEFAULT_PPM_THROT_LOW	    1090	// throttle value at low stick
 #define DEFAULT_PPM_CHAN_MID	    1512	// middle of the stick range
 
+#define DEFAULT_SIG_LED_1_PRT       0.0f        // External Led(1) port, 0.0f to disable
+#define DEFAULT_SIG_LED_2_PRT       0.0f        // External Led(2) port, 0.0f to disable
+#define DEFAULT_SIG_BEEP_PRT        0.0f        // negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer 
+
 #define DEFAULT_CTRL_PID_TYPE	    0		// 0 == parallel TILT/RATE PIDs, 1 == cascading TILT/RATE PIDs
 
 #define DEFAULT_CTRL_FACT_THRO	    0.70f	// user throttle multiplier

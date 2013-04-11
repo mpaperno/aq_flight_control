@@ -27,8 +27,12 @@
 #include "adc.h"
 #include "aq_timer.h"
 #include "util.h"
+#ifdef USE_SIGNALING
+   #include "signaling.h"
+#endif
 #include <stdlib.h>
 #include <string.h>
+
 
 supervisorStruct_t supervisorData __attribute__((section(".ccm")));
 
@@ -68,12 +72,12 @@ void supervisorCreateSOCTable(void) {
 
 void supervisorArm(void) {
     supervisorData.state = STATE_ARMED;
-    AQ_NOTICE("Supervisor: armed\n");
+    AQ_NOTICE("Armed\n");
 }
 
 void supervisorDisarm(void) {
     supervisorData.state = STATE_DISARMED;
-    AQ_NOTICE("Supervisor: disarmed\n");
+    AQ_NOTICE("Disarmed\n");
 }
 
 void supervisorTaskCode(void *unused) {
@@ -203,6 +207,10 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	count++;
+
+        #ifdef USE_SIGNALING
+	    signalingEvent();
+        #endif
     }
 }
 

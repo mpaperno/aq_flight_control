@@ -391,6 +391,9 @@ enum configParameters {
     L1_ATT_MM_R14,
     L1_ATT_MM_P14,
     L1_ATT_MM_Y14,
+    SIG_LED_1_PRT,
+    SIG_LED_2_PRT,
+    SIG_BEEP_PRT,
     CONFIG_NUM_PARAMS
 };
 
