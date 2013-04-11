@@ -57,6 +57,20 @@ void utilStackCheck(void) {
 	}
     }
 }
+
+uint16_t utilGetStackFree(const char *stackName) {
+    uint16_t stkFree = 0, i;
+
+    for (i=0; i < numStacks; i++) {
+	if ( !strncmp(stackName, stackNames[i], 20) ) {
+	    stkFree = stackFrees[i];
+	    break;
+	}
+    }
+
+    return stkFree;
+}
+
 #endif
 
 void *aqCalloc(size_t count, size_t size) {

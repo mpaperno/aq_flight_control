@@ -59,6 +59,8 @@ extern int ftoa(char *buf, float f, unsigned int digits);
 extern void utilVersionString(char *s);
 #ifdef UTIL_STACK_CHECK
 extern void utilStackCheck(void);
+extern uint16_t stackFrees[UTIL_STACK_CHECK];
+extern uint16_t utilGetStackFree(const char *stackName);
 #endif
 
 #endif
