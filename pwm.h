@@ -19,6 +19,12 @@
 #ifndef _pwm_h
 #define _pwm_h
 
+#include "aq.h"
+
+#define pwmDigitalHi(p)		{ p->port->BSRRL = p->pin; }
+#define pwmDigitalLo(p)		{ p->port->BSRRH = p->pin; }
+#define pwmDigitalGet(p)	((p->port->ODR & p->pin) != 0)
+
 enum pwmDirections {
     PWM_OUTPUT = 1,
     PWM_INPUT
@@ -32,11 +38,15 @@ typedef struct {
     pwmCallback_t *callback;
     uint32_t period;
     int8_t direction;
+    GPIO_TypeDef* port;
+    uint16_t pin;
 } pwmPortStruct_t;
 
 extern pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode);
+extern pwmPortStruct_t *pwmInitDigitalOut(uint8_t pwmPort);
 extern pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, int16_t polarity, uint32_t period, pwmCallback_t callback);
 extern uint16_t pwmCheckTimer(uint8_t pwmPort);
 extern void pwmZeroTimers(void);
+extern void pwmDigitalToggle(pwmPortStruct_t *p);
 
 #endif

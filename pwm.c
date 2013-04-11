@@ -98,12 +98,12 @@ void pwmBDTRInit(const TIM_TypeDef *tim) {
     TIM_BDTRConfig((TIM_TypeDef *)tim, &TIM_BDTRInitStruct);
 }
 
-void pwmGPIOInit(const GPIO_TypeDef *gpio, uint32_t pin) {
+void pwmGPIOInit(const GPIO_TypeDef *gpio, uint32_t pin, GPIOMode_TypeDef mode) {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = pin;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Mode = mode;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -154,7 +154,7 @@ pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalV
 	if (ESC32Mode >= 0)
 	    esc32Setup(pwmPorts[pwmPort], pwmPins[pwmPort], ESC32Mode);
 
-	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort]);
+	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort], GPIO_Mode_AF);
 	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);
 
 	pwmOCInit(pwmTimers[pwmPort], pwmTimerChannels[pwmPort], inititalValue);
@@ -188,6 +188,33 @@ pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalV
     return p;
 }
 
+
+pwmPortStruct_t *pwmInitDigitalOut(uint8_t pwmPort) {
+    pwmPortStruct_t *p = 0;
+
+    if (pwmValidatePort(pwmPort, 0)) {
+	p = &pwmData[pwmPort];
+	p->direction = PWM_OUTPUT;
+	p->pin = pwmPins[pwmPort];
+	p->port = (GPIO_TypeDef *)pwmPorts[pwmPort];
+
+	pwmDigitalLo(p);
+
+	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort], GPIO_Mode_OUT);
+
+    }
+
+    return p;
+}
+
+void pwmDigitalToggle(pwmPortStruct_t *p) {
+    if (pwmDigitalGet(p)) {
+	pwmDigitalLo(p);
+    } else {
+	pwmDigitalHi(p);
+    }
+}
+
 void pwmNVICInit(uint8_t irqChannel) {
     NVIC_InitTypeDef NVIC_InitStructure;
 
@@ -208,7 +235,7 @@ pwmPortStruct_t *pwmInitIn(uint8_t pwmPort, int16_t polarity, uint32_t period, p
 
 	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / 1000000);
 
-	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort]);
+	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort], GPIO_Mode_AF);
 	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);
 
 	polarity = (polarity > 0) ? TIM_ICPolarity_Rising : ((polarity < 0) ? TIM_ICPolarity_Falling : TIM_ICPolarity_BothEdge);
