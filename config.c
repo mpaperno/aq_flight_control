@@ -825,17 +825,51 @@ unsigned int configParameterWrite(void *data) {
     return configParameterRead(data);
 }
 
-// read config from uSD
-int8_t configReadFile(char *fname) {
-    char *lineBuf;
-    char *fileBuf;
+int configParseParams(char *fileBuf, int size, int p1) {
+    static char lineBuf[CONFIG_LINE_BUF_SIZE];
     char param[16];
     float value;
+    char c;
+    int p2;
+    int n;
+    int i, j;
+
+    p2 = 0;
+    for (i = 0; i < size; i++) {
+	c = fileBuf[p2++];
+	if (c == '\n' || p1 == (CONFIG_LINE_BUF_SIZE-1)) {
+	    lineBuf[p1] = 0;
+
+	    n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
+	    if (n != 2) {
+		n = sscanf(lineBuf, "%15s %f", param, &value);
+		if (n != 2) {
+		    n = sscanf(lineBuf, "#define %15s %f", param, &value);
+		}
+	    }
+
+	    if (n == 2) {
+		for (j = 0; j < CONFIG_NUM_PARAMS; j++) {
+		    if (!strncasecmp(param, configParameterStrings[j], sizeof(param)))
+			p[j] = value;
+		}
+	    }
+	    p1 = 0;
+	}
+	else {
+	    lineBuf[p1++] = c;
+	}
+    }
+
+    return p1;
+}
+
+// read config from uSD
+int8_t configReadFile(char *fname) {
+    char *fileBuf;
     int8_t fh;
     int ret;
-    char c;
-    int i, j, p1, p2;
-    int n;
+    int p1;
 
     if (fname == 0)
 	fname = CONFIG_FILE_NAME;
@@ -846,49 +880,21 @@ int8_t configReadFile(char *fname) {
     }
 
     fileBuf = (char *)aqCalloc(CONFIG_FILE_BUF_SIZE, sizeof(char));
-    lineBuf = (char *)aqCalloc(CONFIG_LINE_BUF_SIZE, sizeof(char));
 
     p1 = 0;
-    do {
-	ret = filerRead(fh, fileBuf, -1, CONFIG_FILE_BUF_SIZE);
-
-	p2 = 0;
-	for (i = 0; i < ret; i++) {
-	    c = fileBuf[p2++];
-	    if (c == '\n' || p1 == (CONFIG_LINE_BUF_SIZE-1)) {
-		lineBuf[p1] = 0;
-
-		n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
-		if (n != 2) {
-		    n = sscanf(lineBuf, "%15s %f", param, &value);
-		    if (n != 2) {
-			n = sscanf(lineBuf, "#define %15s %f", param, &value);
-		    }
-		}
-
-		if (n == 2) {
-		    for (j = 0; j < CONFIG_NUM_PARAMS; j++) {
-			if (!strncasecmp(param, configParameterStrings[j], sizeof(param)))
-			    p[j] = value;
-		    }
-		}
-		p1 = 0;
-	    }
-	    else {
-		lineBuf[p1++] = c;
-	    }
-	}
-
-    } while (ret > 0);
+    while ((ret = filerRead(fh, fileBuf, -1, CONFIG_FILE_BUF_SIZE)) > 0)
+	p1 = configParseParams((char *)fileBuf, ret, p1);
 
     filerClose(fh);
 
-    if (lineBuf)
-	aqFree(lineBuf, CONFIG_LINE_BUF_SIZE, sizeof(char));
     if (fileBuf)
 	aqFree(fileBuf, CONFIG_FILE_BUF_SIZE, sizeof(char));
 
     return ret;
+}
+
+int8_t configFormatParam(char *buf, int n) {
+    return sprintf(buf, "%-15s\t\t%+.10e\n", configParameterStrings[n], p[n]);
 }
 
 // write config to uSD
@@ -908,7 +914,7 @@ int8_t configWriteFile(char *fname) {
     }
 
     for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
-	n = sprintf(buf, "%-15s\t\t%+.10e\n", configParameterStrings[i], p[i]);
+	n = configFormatParam(buf, i);
 	ret = filerWrite(fh, buf, -1, n);
 
 	if (ret < n) {
