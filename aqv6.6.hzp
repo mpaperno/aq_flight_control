@@ -104,6 +104,8 @@
         <file file_name="hmc5983.c"/>
         <file file_name="ms5611.c"/>
         <file file_name="ms5611.h"/>
+        <file file_name="eeprom.h"/>
+        <file file_name="eeprom.c"/>
       </folder>
       <file file_name="getbuildnum.c">
 	<configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>

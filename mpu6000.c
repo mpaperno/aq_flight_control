@@ -106,9 +106,15 @@ void mpu6000Decode(void) {
     mpu6000Data.temp = utilFilter(&mpu6000Data.tempFilter, mpu6000Data.rawTemp);
 
     // 4g
-    mpu6000Data.rawAcc[0] =  acc[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
+#ifdef DIUM_IMUV1
+    mpu6000Data.rawAcc[0] = +acc[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    mpu6000Data.rawAcc[1] = +acc[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    mpu6000Data.rawAcc[2] = +acc[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
+#else
+    mpu6000Data.rawAcc[0] = +acc[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
     mpu6000Data.rawAcc[1] = -acc[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
     mpu6000Data.rawAcc[2] = -acc[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
+#endif
 
     // bias
     a = -(mpu6000Data.rawAcc[0] + p[IMU_ACC_BIAS_X] + p[IMU_ACC_BIAS1_X]*dImuData.dTemp + p[IMU_ACC_BIAS2_X]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
@@ -131,9 +137,15 @@ void mpu6000Decode(void) {
     mpu6000Data.acc[2] = z;
 
     // 500 deg/s
+#ifdef DIUM_IMUV1
     mpu6000Data.rawGyo[0] = -gyo[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    mpu6000Data.rawGyo[1] =  gyo[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    mpu6000Data.rawGyo[1] = -gyo[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    mpu6000Data.rawGyo[2] = +gyo[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+#else
+    mpu6000Data.rawGyo[0] = -gyo[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    mpu6000Data.rawGyo[1] = +gyo[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
     mpu6000Data.rawGyo[2] = -gyo[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+#endif
 
     // bias
     a = +(mpu6000Data.rawGyo[0] + mpu6000Data.gyoOffset[0] + p[IMU_GYO_BIAS_X] + p[IMU_GYO_BIAS1_X]*dImuData.dTemp + p[IMU_GYO_BIAS2_X]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_X]*dImuData.dTemp3);

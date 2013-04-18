@@ -57,9 +57,15 @@ void hmc5983Decode(void) {
 
     divisor = 1.0f / divisor;
 
+#ifdef DIUM_IMUV1
     hmc5983Data.rawMag[0] = -mag[0] * divisor * (1.0f / 390.0f);
-    hmc5983Data.rawMag[1] =  mag[1] * divisor * (1.0f / 390.0f);
+    hmc5983Data.rawMag[1] = -mag[1] * divisor * (1.0f / 390.0f);
+    hmc5983Data.rawMag[2] = +mag[2] * divisor * (1.0f / 390.0f);
+#else
+    hmc5983Data.rawMag[0] = -mag[0] * divisor * (1.0f / 390.0f);
+    hmc5983Data.rawMag[1] = +mag[1] * divisor * (1.0f / 390.0f);
     hmc5983Data.rawMag[2] = -mag[2] * divisor * (1.0f / 390.0f);
+#endif
 
     // bias
     a = +(hmc5983Data.rawMag[0] + p[IMU_MAG_BIAS_X] + p[IMU_MAG_BIAS1_X]*dImuData.dTemp + p[IMU_MAG_BIAS2_X]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_X]*dImuData.dTemp3);

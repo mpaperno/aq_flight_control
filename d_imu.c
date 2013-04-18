@@ -20,10 +20,96 @@
 #include "d_imu.h"
 #include "util.h"
 #include "aq_timer.h"
+#include "config.h"
+#include "notice.h"
 
 OS_STK *dIMUTaskStack;
 
 dImuStruct_t dImuData __attribute__((section(".ccm")));
+
+uint16_t dImuCalibParameters[] = {
+    IMU_ACC_BIAS_X,
+    IMU_ACC_BIAS_Y,
+    IMU_ACC_BIAS_Z,
+    IMU_ACC_BIAS1_X,
+    IMU_ACC_BIAS1_Y,
+    IMU_ACC_BIAS1_Z,
+    IMU_ACC_BIAS2_X,
+    IMU_ACC_BIAS2_Y,
+    IMU_ACC_BIAS2_Z,
+    IMU_ACC_BIAS3_X,
+    IMU_ACC_BIAS3_Y,
+    IMU_ACC_BIAS3_Z,
+    IMU_ACC_SCAL_X,
+    IMU_ACC_SCAL_Y,
+    IMU_ACC_SCAL_Z,
+    IMU_ACC_SCAL1_X,
+    IMU_ACC_SCAL1_Y,
+    IMU_ACC_SCAL1_Z,
+    IMU_ACC_SCAL2_X,
+    IMU_ACC_SCAL2_Y,
+    IMU_ACC_SCAL2_Z,
+    IMU_ACC_SCAL3_X,
+    IMU_ACC_SCAL3_Y,
+    IMU_ACC_SCAL3_Z,
+    IMU_ACC_ALGN_XY,
+    IMU_ACC_ALGN_XZ,
+    IMU_ACC_ALGN_YX,
+    IMU_ACC_ALGN_YZ,
+    IMU_ACC_ALGN_ZX,
+    IMU_ACC_ALGN_ZY,
+    IMU_MAG_BIAS_X,
+    IMU_MAG_BIAS_Y,
+    IMU_MAG_BIAS_Z,
+    IMU_MAG_BIAS1_X,
+    IMU_MAG_BIAS1_Y,
+    IMU_MAG_BIAS1_Z,
+    IMU_MAG_BIAS2_X,
+    IMU_MAG_BIAS2_Y,
+    IMU_MAG_BIAS2_Z,
+    IMU_MAG_BIAS3_X,
+    IMU_MAG_BIAS3_Y,
+    IMU_MAG_BIAS3_Z,
+    IMU_MAG_SCAL_X,
+    IMU_MAG_SCAL_Y,
+    IMU_MAG_SCAL_Z,
+    IMU_MAG_SCAL1_X,
+    IMU_MAG_SCAL1_Y,
+    IMU_MAG_SCAL1_Z,
+    IMU_MAG_SCAL2_X,
+    IMU_MAG_SCAL2_Y,
+    IMU_MAG_SCAL2_Z,
+    IMU_MAG_SCAL3_X,
+    IMU_MAG_SCAL3_Y,
+    IMU_MAG_SCAL3_Z,
+    IMU_MAG_ALGN_XY,
+    IMU_MAG_ALGN_XZ,
+    IMU_MAG_ALGN_YX,
+    IMU_MAG_ALGN_YZ,
+    IMU_MAG_ALGN_ZX,
+    IMU_MAG_ALGN_ZY,
+    IMU_GYO_BIAS_X,
+    IMU_GYO_BIAS_Y,
+    IMU_GYO_BIAS_Z,
+    IMU_GYO_BIAS1_X,
+    IMU_GYO_BIAS1_Y,
+    IMU_GYO_BIAS1_Z,
+    IMU_GYO_BIAS2_X,
+    IMU_GYO_BIAS2_Y,
+    IMU_GYO_BIAS2_Z,
+    IMU_GYO_BIAS3_X,
+    IMU_GYO_BIAS3_Y,
+    IMU_GYO_BIAS3_Z,
+    IMU_GYO_SCAL_X,
+    IMU_GYO_SCAL_Y,
+    IMU_GYO_SCAL_Z,
+    IMU_GYO_ALGN_XY,
+    IMU_GYO_ALGN_XZ,
+    IMU_GYO_ALGN_YX,
+    IMU_GYO_ALGN_YZ,
+    IMU_GYO_ALGN_ZX,
+    IMU_GYO_ALGN_ZY
+};
 
 void dIMUCalcTempDiff(void) {
     float temp = 0.0f;
@@ -79,6 +165,48 @@ void dIMUTaskCode(void *unused) {
     }
 }
 
+#ifdef DIMU_HAVE_EEPROM
+void dIMUReadCalib(void) {
+    uint8_t *buf;
+    int size;
+    int p1 = 0;
+
+    buf = eepromOpenRead();
+
+    if (buf == 0)
+	AQ_NOTICE("DIMU: cannot load EEPROM parameters!\n");
+    else
+	while ((size = eepromRead(EEPROM_BLOCK_SIZE)) != 0)
+	    p1 = configParseParams((char *)buf, size, p1);
+}
+
+void dIMUWriteCalib(void) {
+    uint8_t lineBuf[128];
+    uint8_t *buf;
+    int n;
+    int i, j, k;
+
+    buf = eepromOpenWrite();
+
+    k = 0;
+    for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++) {
+	n = configFormatParam((char *)lineBuf, dImuCalibParameters[i]);
+
+	for (j = 0; j < n; j++) {
+	    buf[k++] = lineBuf[j];
+	    if (k == EEPROM_BLOCK_SIZE) {
+		eepromWrite();
+		k = 0;
+	    }
+	}
+    }
+    if (k != 0)
+       eepromWrite();
+
+    eepromClose();
+}
+#endif
+
 void dIMUInit(void) {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
     TIM_OCInitTypeDef  TIM_OCInitStructure;
@@ -86,6 +214,9 @@ void dIMUInit(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6000PreInit();
+#endif
+#ifdef DIMU_HAVE_EEPROM
+    eepromPreInit();
 #endif
 #ifdef DIMU_HAVE_HMC5983
     hmc5983PreInit();
@@ -96,6 +227,12 @@ void dIMUInit(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6000Init();
+#endif
+#ifdef DIMU_HAVE_EEPROM
+    eepromInit();
+    if (eepromOpenRead() == 0)
+	dIMUWriteCalib();
+    dIMUReadCalib();
 #endif
 #ifdef DIMU_HAVE_HMC5983
     hmc5983Init();

@@ -175,9 +175,11 @@ void info(void) {
     AQ_NOTICE(s);
     yield(100);
 
+#ifdef USE_MAVLINK
     sprintf(s, "Mavlink SYS ID: %d\n", flashSerno(0) % 250);
     AQ_NOTICE(s);
     yield(100);
+#endif
 
     sprintf(s, "SYS Clock: %u MHz\n", rccClocks.SYSCLK_Frequency / 1000000);
     AQ_NOTICE(s);
