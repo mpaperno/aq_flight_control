@@ -58,6 +58,6 @@ extern uint8_t spiWriteByte(spiClient_t *spi, uint8_t val);
 extern spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort, uint16_t csPin, volatile uint32_t *flag, spiCallback_t *callback);
 extern void spiChangeBaud(spiClient_t *spi, uint16_t baud);
 extern void spiChangeCallback(spiClient_t *client, spiCallback_t *callback);
-extern void spiTransaction(spiClient_t *client, void *rxBuf, void *txBuf, uint16_t size);
+extern void spiTransaction(spiClient_t *client, volatile void *rxBuf, void *txBuf, uint16_t size);
 
 #endif

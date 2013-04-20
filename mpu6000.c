@@ -65,7 +65,7 @@ void mpu6600InitialBias(void) {
 }
 
 void mpu6000Decode(void) {
-    uint8_t *d = mpu6000Data.rxBuf;
+    volatile uint8_t *d = mpu6000Data.rxBuf;
     int32_t acc[3], temp, gyo[3];
     float divisor;
     float x, y, z;

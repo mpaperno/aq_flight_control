@@ -346,7 +346,7 @@ void spiChangeCallback(spiClient_t *client, spiCallback_t *callback) {
 }
 
 // TODO: not yet thread safe
-void spiTransaction(spiClient_t *client, void *rxBuf, void *txBuf, uint16_t size) {
+void spiTransaction(spiClient_t *client, volatile void *rxBuf, void *txBuf, uint16_t size) {
     spiStruct_t *interface = &spiData[client->interface];
     uint8_t head = interface->head;
     spiSlot_t *slot = &interface->slots[head];

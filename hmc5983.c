@@ -29,7 +29,7 @@ void hmc5983TransferComplete(int unused) {
 }
 
 void hmc5983Decode(void) {
-    uint8_t *d = hmc5983Data.rxBuf;
+    volatile uint8_t *d = hmc5983Data.rxBuf;
     int32_t mag[3];
     float divisor;
     float x, y, z;
@@ -144,7 +144,7 @@ void hmc5983Init(void) {
     while (hmc5983GetReg(0x0a) != 'H')
 	delay(100);
 
-    hmc5983SetReg(0x00, 0b11111100);
+    hmc5983SetReg(0x00, 0b11011100);
     delay(10);
     hmc5983SetReg(0x01, 0b00000000);
     delay(10);
