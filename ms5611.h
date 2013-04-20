@@ -35,14 +35,14 @@ typedef struct {
     spiClient_t *spi;
     volatile uint32_t spiFlag;
     uint16_t p[8];
-    uint8_t slot;
+    volatile uint8_t slot;
     uint8_t step;
     uint8_t enabled;
     uint8_t startTempConv;
     uint8_t startPresConv;
     uint8_t adcRead;
-    uint32_t d1[MS5611_SLOTS];
-    uint32_t d2[MS5611_SLOTS];
+    volatile uint32_t d1[MS5611_SLOTS];
+    volatile uint32_t d2[MS5611_SLOTS];
     float rawTemp;
     float temp;
     float pres;

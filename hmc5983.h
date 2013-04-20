@@ -44,8 +44,8 @@
 typedef struct {
     spiClient_t *spi;
     volatile uint32_t spiFlag;
-    uint8_t rxBuf[HMC5983_BYTES*HMC5983_SLOTS];
-    uint8_t slot;
+    volatile uint8_t rxBuf[HMC5983_BYTES*HMC5983_SLOTS];
+    volatile uint8_t slot;
     uint8_t readCmd;
     uint8_t enabled;
     float rawMag[3];

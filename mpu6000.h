@@ -47,8 +47,8 @@ typedef struct {
     utilFilter_t tempFilter;
     spiClient_t *spi;
     volatile uint32_t spiFlag;
-    uint8_t rxBuf[MPU6000_BYTES*MPU6000_SLOTS];
-    uint8_t slot;
+    volatile uint8_t rxBuf[MPU6000_BYTES*MPU6000_SLOTS];
+    volatile uint8_t slot;
     uint8_t readReg;
     uint8_t enabled;
     float rawTemp;
