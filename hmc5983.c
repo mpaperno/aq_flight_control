@@ -118,6 +118,17 @@ void hmc5983SetReg(uint8_t reg, uint8_t val) {
 	;
 }
 
+void hmc5983ReliablySetReg(uint8_t reg, uint8_t val) {
+    uint8_t ret;
+
+    do {
+	delay(10);
+	hmc5983SetReg(reg, val);
+	delay(10);
+	ret = hmc5983GetReg(reg);
+    } while (ret != val);
+}
+
 void hmc5983StartTransfer(void) {
     if (hmc5983Data.enabled)
 	spiTransaction(hmc5983Data.spi, &hmc5983Data.rxBuf[hmc5983Data.slot*HMC5983_BYTES], &hmc5983Data.readCmd, HMC5983_BYTES);
@@ -144,11 +155,14 @@ void hmc5983Init(void) {
     while (hmc5983GetReg(0x0a) != 'H')
 	delay(100);
 
-    hmc5983SetReg(0x00, 0b11011100);
+    // 75Hz, 8x oversample
+    hmc5983ReliablySetReg(0x00, 0b11111000);
     delay(10);
-    hmc5983SetReg(0x01, 0b00000000);
+
+    hmc5983ReliablySetReg(0x01, 0b00000000);
     delay(10);
-    hmc5983SetReg(0x02, 0b00000000);
+
+    hmc5983ReliablySetReg(0x02, 0b00000000);
     delay(10);
 
     hmc5983Data.readCmd = HMC5983_READ_MULT_BIT | 0x03;

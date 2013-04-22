@@ -35,7 +35,7 @@
 #define HMC5983_CS_PIN		    GPIO_Pin_10
 
 #define HMC5983_BYTES		    (1+6)
-#define HMC5983_SLOTS		    4				// 55Hz bandwidth
+#define HMC5983_SLOTS		    2				// 37.5Hz bandwidth
 
 #define HMC5983_READ_BIT	    (0b10000000)
 #define HMC5983_READ_MULT_BIT	    (0b11000000)
