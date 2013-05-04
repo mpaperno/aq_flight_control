@@ -148,21 +148,21 @@ void gpsInit(void) {
 
     // External Interrupt line PE1 for timepulse
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Pin = GPS_TP_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(GPIOE, &GPIO_InitStructure);
+    GPIO_Init(GPS_TP_PORT, &GPIO_InitStructure);
 
-    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource1);
+    SYSCFG_EXTILineConfig(GPS_TP_PORT_SOURCE, GPS_TP_PIN_SOURCE);
 
-    EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+    EXTI_InitStructure.EXTI_Line = GPS_TP_EXTI_LINE;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
 
     // Timepulse interrupt from GPS
-    NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = GPS_TP_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -208,7 +208,7 @@ void gpsSendPacket(unsigned char len, char *buf) {
 	serialWrite(gpsData.gpsPort, buf[i]);
 }
 
-void EXTI1_IRQHandler() {
+void GPS_TP_HANDLER() {
     unsigned long tp = timerMicros();
     unsigned long diff = (tp - gpsData.lastTimepulse);
 

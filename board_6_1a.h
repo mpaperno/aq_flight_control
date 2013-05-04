@@ -273,8 +273,28 @@ enum pwmPorts {
 #define GPS_LED_PIN		GPIO_Pin_0
 #define GPS_USART		USART3
 
+#define GPS_TP_PORT		GPIOE
+#define GPS_TP_PIN		GPIO_Pin_1
+#define GPS_TP_PORT_SOURCE	EXTI_PortSourceGPIOE
+#define GPS_TP_PIN_SOURCE	EXTI_PinSource1
+#define GPS_TP_IRQ		EXTI1_IRQn
+#define GPS_TP_HANDLER		EXTI1_IRQHandler
+#define GPS_TP_EXTI_LINE	EXTI_Line1
+
+
 #define ADC_VIN_RTOP            8.45f   // first run beta boards were 4.7K, second run are 8.45K
+#define ADC_VIN_RBOT            1.33f
 #define ADC_PRESSURE_3V3
+
+#define ADC_DMA_STREAM	    DMA2_Stream4
+#define ADC_DMA_CHANNEL	    DMA_Channel_0
+#define ADC_DMA_FLAGS	    (DMA_IT_TEIF4 | DMA_IT_DMEIF4 | DMA_IT_FEIF4 | DMA_IT_TCIF4 | DMA_IT_HTIF4)
+#define ADC_DMA_TC_FLAG	    DMA_IT_TCIF4
+#define ADC_DMA_ISR	    DMA2->HISR
+#define ADC_DMA_CR	    DMA2->HIFCR
+#define ADC_DMA_IRQ	    DMA2_Stream4_IRQn
+#define ADC_DMA_HANDLER	    DMA2_Stream4_IRQHandler
+
 
 #define CANx			    CAN1
 #define CAN_CLK			    RCC_APB1Periph_CAN1

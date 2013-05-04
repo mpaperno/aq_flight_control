@@ -22,10 +22,6 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
-#include "downlink.h"
-#include "motors.h"
-#include "radio.h"
-#include "aq_mavlink.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -373,11 +369,10 @@ void adcInit(void) {
 
     adcData.sample = ADC_SAMPLES - 1;
 
-    // Use STM32F2's Triple Regular Simultaneous Mode capable of ~ 6M samples per second
+    // Use STM32F4's Triple Regular Simultaneous Mode capable of ~ 6M samples per second
 
-    // DMA2 Stream 0, Channel 0 configuration (ADC1)
-    DMA_DeInit(DMA2_Stream0);
-    DMA_InitStructure.DMA_Channel = DMA_Channel_0;
+    DMA_DeInit(ADC_DMA_STREAM);
+    DMA_InitStructure.DMA_Channel = ADC_DMA_CHANNEL;
     DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)adcDMAData.adc123Raw1;
     DMA_InitStructure.DMA_PeripheralBaseAddr = ((uint32_t)0x40012308);
     DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
@@ -392,15 +387,14 @@ void adcInit(void) {
     DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
     DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-    DMA_Init(DMA2_Stream0, &DMA_InitStructure);
+    DMA_Init(ADC_DMA_STREAM, &DMA_InitStructure);
 
-    DMA_ITConfig(DMA2_Stream0, DMA_IT_HT | DMA_IT_TC, ENABLE);
-    DMA_ClearITPendingBit(DMA2_Stream0, DMA_IT_TEIF0 | DMA_IT_DMEIF0 | DMA_IT_FEIF0 | DMA_IT_TCIF0 | DMA_IT_HTIF0);
+    DMA_ITConfig(ADC_DMA_STREAM, DMA_IT_HT | DMA_IT_TC, ENABLE);
+    DMA_ClearITPendingBit(ADC_DMA_STREAM, ADC_DMA_FLAGS);
 
-    DMA_Cmd(DMA2_Stream0, ENABLE);
+    DMA_Cmd(ADC_DMA_STREAM, ENABLE);
 
-    // Enable the DMA2_Stream0 global Interrupt
-    NVIC_InitStructure.NVIC_IRQChannel = DMA2_Stream0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = ADC_DMA_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -554,17 +548,17 @@ void adcInit(void) {
 
 #pragma GCC optimize ("-O1")
 // every ~15.25us
-void DMA2_Stream0_IRQHandler(void) {
-    register uint32_t flag = DMA2->LISR;
+void ADC_DMA_HANDLER(void) {
+    register uint32_t flag = ADC_DMA_ISR;
     register unsigned long *s, *a;
     register uint16_t *w;
     int i;
 
     // clear intr flags
-    DMA2->LIFCR = (uint32_t)(DMA_IT_TEIF0 | DMA_IT_DMEIF0 | DMA_IT_FEIF0 | DMA_IT_TCIF0 | DMA_IT_HTIF0);
+    ADC_DMA_CR = (uint32_t)ADC_DMA_FLAGS;
 
     // second half?
-    w = ((flag & DMA_IT_TCIF0) == RESET) ? adcDMAData.adc123Raw1 : adcDMAData.adc123Raw2;
+    w = ((flag & ADC_DMA_TC_FLAG) == RESET) ? adcDMAData.adc123Raw1 : adcDMAData.adc123Raw2;
 
     // accumulate totals
     s = adcData.interrupt123Sums;

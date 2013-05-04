@@ -293,6 +293,7 @@ void TIM1_CC_IRQHandler(void) {
 void TIM4_IRQHandler(void) {
     int8_t pwmPort;
 
+#if defined(PWM_IRQ_TIM4_CH1) || defined(PWM_IRQ_TIM4_CH2)
     if (TIM_GetITStatus(TIM4, TIM_IT_CC1) == SET) {
 	pwmPort = PWM_IRQ_TIM4_CH1;
 	TIM_ClearITPendingBit(TIM4, TIM_IT_CC1);
@@ -303,7 +304,9 @@ void TIM4_IRQHandler(void) {
 	TIM_ClearITPendingBit(TIM4, TIM_IT_CC2);
 	pwmData[pwmPort].callback(TIM_GetCapture2(TIM4), GPIO_ReadInputDataBit((GPIO_TypeDef *)pwmPorts[pwmPort], (uint16_t)pwmPins[pwmPort]));
     }
-    else if (TIM_GetITStatus(TIM4, TIM_IT_CC3) == SET) {
+    else
+#endif
+    if (TIM_GetITStatus(TIM4, TIM_IT_CC3) == SET) {
 	pwmPort = PWM_IRQ_TIM4_CH3;
 	TIM_ClearITPendingBit(TIM4, TIM_IT_CC3);
 	pwmData[pwmPort].callback(TIM_GetCapture3(TIM4), GPIO_ReadInputDataBit((GPIO_TypeDef *)pwmPorts[pwmPort], (uint16_t)pwmPins[pwmPort]));
@@ -330,6 +333,7 @@ void TIM1_BRK_TIM9_IRQHandler(void) {
     }
 }
 
+#if defined(PWM_IRQ_TIM2_CH3) || defined(PWM_IRQ_TIM2_CH4)
 void TIM2_IRQHandler(void) {
     int8_t pwmPort;
 
@@ -344,6 +348,7 @@ void TIM2_IRQHandler(void) {
 	pwmData[pwmPort].callback(TIM_GetCapture4(TIM2), GPIO_ReadInputDataBit((GPIO_TypeDef *)pwmPorts[pwmPort], (uint16_t)pwmPins[pwmPort]));
     }
 }
+#endif
 
 #ifdef PWM_IRQ_TIM10_CH1
 void TIM1_UP_TIM10_IRQHandler(void) {
