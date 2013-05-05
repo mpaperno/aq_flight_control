@@ -217,5 +217,5 @@ void GPS_TP_HANDLER() {
     gpsData.lastTimepulse = tp;
     gpsData.TPtowMS = gpsData.lastReceivedTPtowMS;
 
-    EXTI_ClearITPendingBit(EXTI_Line1);
+    EXTI_ClearITPendingBit(GPS_TP_EXTI_LINE);
 }
