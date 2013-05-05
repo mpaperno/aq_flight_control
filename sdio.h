@@ -25,8 +25,8 @@
 #define SDIO_INIT_CLK_DIV                ((uint8_t)0xB2)	// SDIO Intialization Frequency (400KHz max)
 //#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x00)	// SDIO Data Transfer Frequency (25MHz max)
 //#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x02)	// SDIO Data Transfer Frequency (12.5MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6.25MHz max)
-#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3.125MHz max)
+#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6.25MHz max)
+//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3.125MHz max)
 //#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5625MHz max)
 #define SDIO_RETRIES			5
 
