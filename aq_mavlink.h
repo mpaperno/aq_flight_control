@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _aq_mavlink_h
@@ -32,9 +32,6 @@
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6	    //  1Hz
 #define MAVLINK_PARAM_INTERVAL		    2e4	    // 50Hz
 #define MAVLINK_WP_TIMEOUT		    1e6	    // 1 second
-#define MAVLINK_LED_PORT		    GPIOD
-#define MAVLINK_LED_PIN			    GPIO_Pin_11
-#define MAVLINK_USART			    USART1
 #define MAVLINK_NOTICE_DEPTH		    20
 #define MAVLINK_PARAMID_LEN		    16
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS

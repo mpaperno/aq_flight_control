@@ -38,16 +38,21 @@
 
 //#define USE_L1_ATTITUDE
 
-#ifndef HARDWARE_REVISION
-    #define HARDWARE_REVISION	1
+#ifndef BOARD_VERSION
+    #define BOARD_VERSION	6
+#endif
+#ifndef BOARD_REVISION
+    #define BOARD_REVISION	0
 #endif
 
 #include "stm32f4xx.h"
 
-#if HARDWARE_REVISION == 1
-    #include "board_6_1.h"
-#elif HARDWARE_REVISION == 2
-    #include "board_6_1a.h"
+#if BOARD_VERSION == 6
+    #if BOARD_REVISION == 0
+	#include "board_6_1.h"
+    #elif BOARD_REVISION == 1
+	#include "board_6_1a.h"
+    #endif
 #endif
 
 #ifndef M_PI

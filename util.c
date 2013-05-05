@@ -164,13 +164,13 @@ float constrainFloat(float i, float lo, float hi) {
 }
 
 void utilVersionString(char *s) {
-    sprintf(s, "AutoQuad ver: %s r%d b%d hwrev%d\n", VERSION, getRevisionNumber(), getBuildNumber(), HARDWARE_REVISION);
+    sprintf(s, "AutoQuad FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
 }
 
 void info(void) {
     static char s[96];
 
-	yield(100);
+    yield(100);
     sprintf(s, "AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
     AQ_NOTICE(s);
     yield(100);

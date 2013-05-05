@@ -381,4 +381,10 @@ enum pwmPorts {
 #define DIUM_MPU6000_INT_EXTI_IRQ   EXTI9_5_IRQn
 #define DIUM_MPU6000_INT_ISR	    EXTI9_5_IRQHandler
 
+#define MAVLINK_LED_PORT	    GPIOD
+#define MAVLINK_LED_PIN		    GPIO_Pin_11
+#define MAVLINK_USART		    USART1
+
+#define DOWNLINK_USART		    USART1
+
 #endif
