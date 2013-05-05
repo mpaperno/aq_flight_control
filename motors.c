@@ -39,7 +39,8 @@ void motorsSendValues(void) {
 	if (motorsData.active[i]) {
 	    // ensure motor output is constrained
 	    motorsData.value[i] = constrainInt(motorsData.value[i], p[MOT_START], p[MOT_MAX]);
-	    *motorsData.pwm[i]->ccr = motorsData.value[i];
+	    if (motorsData.pwm[i])
+		*motorsData.pwm[i]->ccr = motorsData.value[i];
 	}
 }
 
@@ -49,7 +50,8 @@ void motorsOff(void) {
     for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.active[i]) {
 	    motorsData.value[i] = p[MOT_MIN];
-	    *motorsData.pwm[i]->ccr = motorsData.value[i];
+	    if (motorsData.pwm[i])
+		*motorsData.pwm[i]->ccr = motorsData.value[i];
     }
 
     motorsData.throttle = 0;
