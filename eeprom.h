@@ -21,11 +21,11 @@
 
 #include "spi.h"
 
-#define DIUM_EEPROM_SPI_BAUD	    SPI_BaudRatePrescaler_4	// 10.5 MHz
+#define DIMU_EEPROM_SPI_BAUD	    SPI_BaudRatePrescaler_4	// 10.5 MHz
 
-#define DIUM_EEPROM_SIZE	    0x8000
-#define DIUM_EEPROM_BLOCK_SIZE	    0x40
-#define DIUM_EEPROM_MASK	    0x7fff
+#define DIMU_EEPROM_SIZE	    0x8000
+#define DIMU_EEPROM_BLOCK_SIZE	    0x40
+#define DIMU_EEPROM_MASK	    0x7fff
 //#define DIUM_EEPROM_SIZE		    0x10000
 //#define DIUM_EEPROM_BLOCK_SIZE	    0x80
 //#define DIUM_EEPROM_MASK		    0xffff
@@ -43,7 +43,7 @@
 typedef struct {
     uint8_t cmd;
     uint8_t addr[2];
-    uint8_t data[DIUM_EEPROM_BLOCK_SIZE];
+    uint8_t data[DIMU_EEPROM_BLOCK_SIZE];
 }  __attribute__((packed)) eepromBuf_t;
 
 typedef struct {

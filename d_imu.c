@@ -176,7 +176,7 @@ void dIMUReadCalib(void) {
     if (buf == 0)
 	AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
     else {
-	while ((size = eepromRead(DIUM_EEPROM_BLOCK_SIZE)) != 0)
+	while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
 	    p1 = configParseParams((char *)buf, size, p1);
 
 	AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
@@ -197,7 +197,7 @@ void dIMUWriteCalib(void) {
 
 	for (j = 0; j < n; j++) {
 	    buf[k++] = lineBuf[j];
-	    if (k == DIUM_EEPROM_BLOCK_SIZE) {
+	    if (k == DIMU_EEPROM_BLOCK_SIZE) {
 		eepromWrite();
 		k = 0;
 	    }

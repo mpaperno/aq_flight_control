@@ -221,7 +221,7 @@ inline void mpu6000Disable(void) {
 }
 
 void mpu6000PreInit(void) {
-    mpu6000Data.spi = spiClientInit(DIUM_MPU6000_SPI, MPU6000_SPI_REG_BAUD, DIUM_MPU6000_CS_PORT, DIUM_MPU6000_CS_PIN, &mpu6000Data.spiFlag, 0);
+    mpu6000Data.spi = spiClientInit(DIMU_MPU6000_SPI, MPU6000_SPI_REG_BAUD, DIMU_MPU6000_CS_PORT, DIMU_MPU6000_CS_PIN, &mpu6000Data.spiFlag, 0);
 }
 
 void mpu6000Init(void) {
@@ -270,28 +270,28 @@ void mpu6000Init(void) {
 
     // External Interrupt line for data ready
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = DIUM_MPU6000_INT_PIN;
+    GPIO_InitStructure.GPIO_Pin = DIMU_MPU6000_INT_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DIUM_MPU6000_INT_PORT, &GPIO_InitStructure);
+    GPIO_Init(DIMU_MPU6000_INT_PORT, &GPIO_InitStructure);
 
-    SYSCFG_EXTILineConfig(DIUM_MPU6000_INT_EXTI_PORT, DIUM_MPU6000_INT_EXTI_PIN);
+    SYSCFG_EXTILineConfig(DIMU_MPU6000_INT_EXTI_PORT, DIMU_MPU6000_INT_EXTI_PIN);
 
-    EXTI_InitStructure.EXTI_Line = DIUM_MPU6000_INT_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Line = DIMU_MPU6000_INT_EXTI_LINE;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = DIUM_MPU6000_INT_EXTI_IRQ;
+    NVIC_InitStructure.NVIC_IRQChannel = DIMU_MPU6000_INT_EXTI_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 }
 
-void MPU6000_INT_ISR(void) {
-    EXTI_ClearITPendingBit(DIUM_MPU6000_INT_EXTI_LINE);
+void DIMU_MPU6000_INT_ISR(void) {
+    EXTI_ClearITPendingBit(DIMU_MPU6000_INT_EXTI_LINE);
     mpu6000StartTransfer();
 }
 

@@ -24,7 +24,7 @@
 eepromStruct_t eepromData;
 
 void eepromPreInit(void) {
-    eepromData.spi = spiClientInit(DIUM_EEPROM_SPI, DIUM_EEPROM_SPI_BAUD, DIUM_EEPROM_CS_PORT, DIUM_EEPROM_CS_PIN, &eepromData.spiFlag, 0);
+    eepromData.spi = spiClientInit(DIMU_EEPROM_SPI, DIMU_EEPROM_SPI_BAUD, DIMU_EEPROM_CS_PORT, DIMU_EEPROM_CS_PIN, &eepromData.spiFlag, 0);
 }
 
 void eepromWriteStatus(int8_t status) {
@@ -139,7 +139,7 @@ uint8_t eepromFormat(void) {
     eepromData.header.signature = EEPROM_SIGNATURE;
     eepromData.header.version = EEPROM_VERSION;
     eepromData.header.seq = 0x01;
-    eepromData.header.start = DIUM_EEPROM_BLOCK_SIZE;
+    eepromData.header.start = DIMU_EEPROM_BLOCK_SIZE;
     eepromData.header.size = 0;
 
     eepromWriteHeader();
@@ -155,7 +155,7 @@ uint8_t *eepromOpenWrite(void) {
     eepromReadHeader();
 
     eepromData.header.seq++;
-    eepromData.header.start = (eepromData.header.start + (DIUM_EEPROM_SIZE>>1)) & DIUM_EEPROM_MASK;
+    eepromData.header.start = (eepromData.header.start + (DIMU_EEPROM_SIZE>>1)) & DIMU_EEPROM_MASK;
     eepromData.header.size = 0;
     eepromData.header.fileCk[0] = 0;
     eepromData.header.fileCk[1] = 0;
@@ -174,9 +174,9 @@ uint8_t eepromCheckFile(void) {
 
     eepromData.ck[0] = 0;
     eepromData.ck[1] = 0;
-    for (i = 0; i < eepromData.header.size; i += DIUM_EEPROM_BLOCK_SIZE) {
-	eepromReadBlock(eepromData.header.start + i, DIUM_EEPROM_BLOCK_SIZE);
-	eepromChecksum(eepromData.buf.data, DIUM_EEPROM_BLOCK_SIZE);
+    for (i = 0; i < eepromData.header.size; i += DIMU_EEPROM_BLOCK_SIZE) {
+	eepromReadBlock(eepromData.header.start + i, DIMU_EEPROM_BLOCK_SIZE);
+	eepromChecksum(eepromData.buf.data, DIMU_EEPROM_BLOCK_SIZE);
     }
 
     if (eepromData.ck[0] == eepromData.header.fileCk[0] && eepromData.ck[1] == eepromData.header.fileCk[1])
@@ -213,12 +213,12 @@ uint8_t eepromRead(int size) {
 }
 
 void eepromWrite(void) {
-    eepromChecksum(eepromData.buf.data, DIUM_EEPROM_BLOCK_SIZE);
+    eepromChecksum(eepromData.buf.data, DIMU_EEPROM_BLOCK_SIZE);
     eepromData.header.fileCk[0] = eepromData.ck[0];
     eepromData.header.fileCk[1] = eepromData.ck[1];
 
-    eepromWriteBlock(eepromData.header.start + eepromData.header.size, DIUM_EEPROM_BLOCK_SIZE);
-    eepromData.header.size += DIUM_EEPROM_BLOCK_SIZE;
+    eepromWriteBlock(eepromData.header.start + eepromData.header.size, DIMU_EEPROM_BLOCK_SIZE);
+    eepromData.header.size += DIMU_EEPROM_BLOCK_SIZE;
 }
 
 void eepromClose(void) {
