@@ -143,7 +143,7 @@ inline void hmc5983Disable(void) {
 }
 
 void hmc5983PreInit(void) {
-    hmc5983Data.spi = spiClientInit(HMC5983_SPI, HMC5983_SPI_BAUD, HMC5983_CS_PORT, HMC5983_CS_PIN, &hmc5983Data.spiFlag, 0);
+    hmc5983Data.spi = spiClientInit(DIUM_HMC5983_SPI, HMC5983_SPI_BAUD, DIUM_HMC5983_CS_PORT, DIUM_HMC5983_CS_PIN, &hmc5983Data.spiFlag, 0);
 }
 
 void hmc5983Init(void) {
@@ -171,20 +171,20 @@ void hmc5983Init(void) {
 
     // External Interrupt line for data ready
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = HMC5983_INT_PIN;
+    GPIO_InitStructure.GPIO_Pin = DIUM_HMC5983_INT_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(HMC5983_INT_PORT, &GPIO_InitStructure);
+    GPIO_Init(DIUM_HMC5983_INT_PORT, &GPIO_InitStructure);
 
-    SYSCFG_EXTILineConfig(HMC5983_INT_EXTI_PORT, HMC5983_INT_EXTI_PIN);
+    SYSCFG_EXTILineConfig(DIUM_HMC5983_INT_EXTI_PORT, DIUM_HMC5983_INT_EXTI_PIN);
 
-    EXTI_InitStructure.EXTI_Line = HMC5983_INT_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Line = DIUM_HMC5983_INT_EXTI_LINE;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = HMC5983_INT_EXTI_IRQ;
+    NVIC_InitStructure.NVIC_IRQChannel = DIUM_HMC5983_INT_EXTI_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -192,6 +192,6 @@ void hmc5983Init(void) {
 }
 
 void HMC5983_INT_ISR(void) {
-    EXTI_ClearITPendingBit(HMC5983_INT_EXTI_LINE);
+    EXTI_ClearITPendingBit(DIUM_HMC5983_INT_EXTI_LINE);
     hmc5983StartTransfer();
 }

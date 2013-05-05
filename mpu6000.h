@@ -22,18 +22,8 @@
 #include "spi.h"
 #include "util.h"
 
-#define MPU6000_INT_PORT	    GPIOD
-#define MPU6000_INT_PIN		    GPIO_Pin_6
-#define MPU6000_INT_EXTI_PORT	    EXTI_PortSourceGPIOD
-#define MPU6000_INT_EXTI_PIN	    EXTI_PinSource6
-#define MPU6000_INT_EXTI_LINE	    EXTI_Line6
-#define MPU6000_INT_EXTI_IRQ	    EXTI9_5_IRQn
-#define MPU6000_INT_ISR		    EXTI9_5_IRQHandler
-
-#define MPU6000_SPI		    SPI2
-#define MPU6000_SPI_BAUD	    SPI_BaudRatePrescaler_64
-#define MPU6000_CS_PORT		    GPIOD
-#define MPU6000_CS_PIN		    GPIO_Pin_4
+#define MPU6000_SPI_REG_BAUD	    SPI_BaudRatePrescaler_64	// initial setup only
+#define MPU6000_SPI_RUN_BAUD	    SPI_BaudRatePrescaler_2	// 21 MHz
 
 #define MPU6000_READ_BIT	    (0x01<<7)
 #define MPU6000_WRITE_BIT	    (0x00<<7)

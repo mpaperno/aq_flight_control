@@ -22,10 +22,7 @@
 #include "spi.h"
 #include "util.h"
 
-#define MS5611_CS_PORT		    GPIOE
-#define MS5611_CS_PIN		    GPIO_Pin_7
 
-#define MS5611_SPI		    SPI2
 #define MS5611_SPI_BAUD		    SPI_BaudRatePrescaler_4	// 10.5Mhz
 
 #define MS5611_SLOTS		    8				// ~13 Hz

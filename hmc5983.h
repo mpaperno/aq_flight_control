@@ -21,18 +21,7 @@
 
 #include "spi.h"
 
-#define HMC5983_INT_PORT	    GPIOE
-#define HMC5983_INT_PIN		    GPIO_Pin_2
-#define HMC5983_INT_EXTI_PORT	    EXTI_PortSourceGPIOE
-#define HMC5983_INT_EXTI_PIN	    EXTI_PinSource2
-#define HMC5983_INT_EXTI_LINE	    EXTI_Line2
-#define HMC5983_INT_EXTI_IRQ	    EXTI2_IRQn
-#define HMC5983_INT_ISR		    EXTI2_IRQHandler
-
-#define HMC5983_SPI		    SPI2
 #define HMC5983_SPI_BAUD	    SPI_BaudRatePrescaler_8	// 5.25 Mhz
-#define HMC5983_CS_PORT		    GPIOD
-#define HMC5983_CS_PIN		    GPIO_Pin_10
 
 #define HMC5983_BYTES		    (1+6)
 #define HMC5983_SLOTS		    2				// 37.5Hz bandwidth

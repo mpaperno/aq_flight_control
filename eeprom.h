@@ -21,14 +21,14 @@
 
 #include "spi.h"
 
-#define EEPROM_SPI		    SPI2
-#define EEPROM_SPI_BAUD		    SPI_BaudRatePrescaler_4	// 10.5 MHz
-#define EEPROM_CS_PORT		    GPIOB
-#define EEPROM_CS_PIN		    GPIO_Pin_12
+#define DIUM_EEPROM_SPI_BAUD	    SPI_BaudRatePrescaler_4	// 10.5 MHz
 
-#define EEPROM_SIZE		    0x8000
-#define EEPROM_BLOCK_SIZE	    0x40
-#define EEPROM_MASK		    0x7fff
+#define DIUM_EEPROM_SIZE	    0x8000
+#define DIUM_EEPROM_BLOCK_SIZE	    0x40
+#define DIUM_EEPROM_MASK	    0x7fff
+//#define DIUM_EEPROM_SIZE		    0x10000
+//#define DIUM_EEPROM_BLOCK_SIZE	    0x80
+//#define DIUM_EEPROM_MASK		    0xffff
 
 #define EEPROM_WREN		    0b0110
 #define EEPROM_WRDI		    0b0100
@@ -43,7 +43,7 @@
 typedef struct {
     uint8_t cmd;
     uint8_t addr[2];
-    uint8_t data[EEPROM_BLOCK_SIZE];
+    uint8_t data[DIUM_EEPROM_BLOCK_SIZE];
 }  __attribute__((packed)) eepromBuf_t;
 
 typedef struct {
