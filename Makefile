@@ -16,10 +16,10 @@
 BUILD_TYPE ?= Release
 # Path to source files - no trailing slash
 SRC_PATH ?= .
-# Include AQ signaling add-on? (1=yes)  ! this add-on is not part of the main code base !
-USE_SIGNALING ?= 0
-# Hardware revision to build for (1|2)
-BOARD_REV ?= 1
+# Board version to build for (6)
+BOARD_VER ?= 6
+# Board revision to build for (0|1)
+BOARD_REV ?= 0
 # Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
 # Use the single-folder source file organization from AQ repo? (0|1)
@@ -142,11 +142,7 @@ CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=
 CC_VARS = -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG -D__TARGET_F4XX= -DSTM32F4XX= -D__FPU_PRESENT \
 	-DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER 
 
-CC_VARS += -DHARDWARE_REVISION=$(BOARD_REV)
-
-ifeq ($(USE_SIGNALING),1)
-	CC_VARS += -DUSE_SIGNALING
-endif
+CC_VARS += -DBOARD_VERSION=$(BOARD_VER) -DBOARD_REVISION=$(BOARD_REV)
 
 ifeq ($(HW_FC_NONE),1)
 	CC_VARS += -DMAVLINK_SERIAL_PORT_FLOW_NONE
@@ -194,12 +190,8 @@ AQV6_OBJS := 1wire.o adc.o algebra.o aq_init.o aq_mavlink.o aq_timer.o \
 	main_ctl.o motors.o \
 	nav.o nav_ukf.o notice.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
-	sdio.o serial.o spektrum.o spi.o srcdkf.o supervisor.o \
+	sdio.o serial.o signaling.o spektrum.o spi.o srcdkf.o supervisor.o \
 	telemetry.o ublox.o vn100.o
-
-ifeq ($(USE_SIGNALING), 1)
-	AQV6_OBJS += signaling.o
-endif
 
 ## other objects to create
 
