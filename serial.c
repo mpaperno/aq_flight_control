@@ -45,6 +45,9 @@ serialPort_t *serialSTDIO;
 void serialOpenUART(serialPort_t *s) {
     USART_InitTypeDef USART_InitStructure;
 
+    // reduce oversampling to allow for higher baud rates
+    USART_OverSampling8Cmd(s->USARTx, ENABLE);
+
     /* USART configured as follow:
     - BaudRate = baud
     - Word Length = 8 Bits
@@ -53,6 +56,7 @@ void serialOpenUART(serialPort_t *s) {
     - Hardware flow control disabled (RTS and CTS signals)
     - Receive and transmit enabled
     */
+
     USART_StructInit(&USART_InitStructure);
     USART_InitStructure.USART_BaudRate = s->baudRate;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -74,7 +78,7 @@ serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, uns
     s = serialPort1 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
 
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -159,7 +163,7 @@ serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, uns
     s = serialPort2 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
 
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -244,7 +248,7 @@ serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, uns
     s = serialPort3 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
 
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -328,7 +332,7 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
 
     s = serialPort4 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -401,7 +405,7 @@ serialPort_t *serialUSART5(unsigned int flowControl, unsigned int rxBufSize, uns
     s = serialPort5 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
 
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
@@ -475,7 +479,7 @@ serialPort_t *serialUSART6(unsigned int flowControl, unsigned int rxBufSize, uns
     s = serialPort6 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
 
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
