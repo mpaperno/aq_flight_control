@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -35,6 +35,7 @@
 #include "aq_mavlink.h"
 #include "nav_ukf.h"
 #include "supervisor.h"
+#include "analog.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -80,7 +81,7 @@ void telemetryDo(void) {
 	    downlinkSendFloat(AQ_PRESSURE);
 	    downlinkSendFloat(IMU_TEMP);
 	    downlinkSendFloat(UKF_ALTITUDE);
-	    downlinkSendFloat(adcData.vIn);
+	    downlinkSendFloat(analogData.vIn);
 	    downlinkSendInt(gpsData.microsPerSecond>>11);  // us
 //		downlinkSendInt(AQ_LASTUPD - gpsData.lastPosUpdate);  // us
 	    downlinkSendFloat(UKF_POSN);

@@ -29,6 +29,7 @@
 #include "logger.h"
 #include "supervisor.h"
 #include "gimbal.h"
+#include "analog.h"
 #include "can.h"
 #include <CoOS.h>
 #include <intrinsics.h>
@@ -126,6 +127,9 @@ void runTaskCode(void *p) {
 
 	navUkfFinish();
 	navNavigate();
+#ifndef HAS_AIMU
+	analogDecode();
+#endif
 	if (!(loops % 200))
 	    loggerDoHeader();
 	loggerDo();

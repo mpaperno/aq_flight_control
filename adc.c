@@ -17,6 +17,8 @@
 */
 
 #include "aq.h"
+#ifdef HAS_AIMU
+#include "analog.h"
 #include "imu.h"
 #include "notice.h"
 #include "aq_timer.h"
@@ -188,7 +190,7 @@ void adcTaskCode(void *unused) {
 	    adcData.rateZ = c;
 
 	    // Vin
-	    adcData.vIn = adcData.vIn * (1.0f - ADC_TEMP_SMOOTH) + adcVsenseToVin(adcData.voltages[ADC_VOLTS_VIN]) * ADC_TEMP_SMOOTH;
+	    analogData.vIn = analogData.vIn * (1.0f - ADC_TEMP_SMOOTH) + adcVsenseToVin(adcData.voltages[ADC_VOLTS_VIN]) * ADC_TEMP_SMOOTH;
 
 	    // ADXL335: bias
 	    x = -(adcData.voltages[ADC_VOLTS_ACCX] + p[IMU_ACC_BIAS_X] + p[IMU_ACC_BIAS1_X]*dTemp + p[IMU_ACC_BIAS2_X]*dTemp2 + p[IMU_ACC_BIAS3_X]*dTemp3);
@@ -523,27 +525,9 @@ void adcInit(void) {
     adcData.temp1 = adcIDGVoltsToTemp(adcData.voltages[ADC_VOLTS_TEMP1]);
     adcData.temp2 = adcIDGVoltsToTemp(adcData.voltages[ADC_VOLTS_TEMP2]);
     adcData.temp3 = adcT1VoltsToTemp(adcData.voltages[ADC_VOLTS_TEMP3]);
-    adcData.vIn = adcVsenseToVin(adcData.voltages[ADC_VOLTS_VIN]);
+    analogData.vIn = adcVsenseToVin(adcData.voltages[ADC_VOLTS_VIN]);
 
     adcCalibOffsets();
-
-    // determine LiPo battery cell count
-    if (adcData.vIn < 8.5) {
-	adcData.batCellCount = 2.0f;
-	AQ_NOTICE("Battery cells: 2\n");
-    }
-    else if (adcData.vIn < 12.8f) {
-	adcData.batCellCount = 3.0f;
-	AQ_NOTICE("Battery cells: 3\n");
-    }
-    else if (adcData.vIn < 17.0f) {
-	adcData.batCellCount = 4.0f;
-	AQ_NOTICE("Battery cells: 4\n");
-    }
-    else if (adcData.vIn < 21.3f) {
-	adcData.batCellCount = 5.0f;
-	AQ_NOTICE("Battery cells: 5\n");
-    }
 }
 
 #pragma GCC optimize ("-O1")
@@ -606,3 +590,4 @@ void ADC_DMA_HANDLER(void) {
 	CoExitISR();
     }
 }
+#endif	// HAS_AIMU

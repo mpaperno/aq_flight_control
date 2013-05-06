@@ -27,6 +27,8 @@
       <file file_name="motors.h"/>
       <file file_name="spektrum.c"/>
       <file file_name="spektrum.h"/>
+      <file file_name="analog.c"/>
+      <file file_name="analog.h"/>
       <file file_name="adc.c"/>
       <file file_name="adc.h"/>
       <file file_name="control.c"/>

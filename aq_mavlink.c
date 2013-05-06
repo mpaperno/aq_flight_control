@@ -34,6 +34,7 @@
 #include "rcc.h"
 #include "supervisor.h"
 #include "nav_ukf.h"
+#include "analog.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -121,7 +122,7 @@ void mavlinkDo(void) {
 	mavlinkData.idlePercent = (mavCounter - mavlinkData.lastCounter) * minCycles * 1000.0f / (MAVLINK_HEARTBEAT_INTERVAL * rccClocks.SYSCLK_Frequency / 1e6f);
 	mavlinkData.lastCounter = mavCounter;
 
-	mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, adcData.vIn * 1000, -1, (adcData.vIn - 9.8f) / 12.6f * 1000, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
+	mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, analogData.vIn * 1000, -1, (analogData.vIn - 9.8f) / 12.6f * 1000, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
 
 	mavlinkData.nextHeartbeat = micros + MAVLINK_HEARTBEAT_INTERVAL;
     }
@@ -307,7 +308,7 @@ void mavlinkRecvTaskCode(void *unused) {
 		    case MAVLINK_MSG_ID_SET_MODE:
 			if (mavlink_msg_set_mode_get_target_system(&msg) == mavlink_system.sysid) {
 			    mavlinkData.mode = mavlink_msg_set_mode_get_base_mode(&msg);
-			    mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, adcData.vIn * 1000, -1, (adcData.vIn - 9.8f) / 12.6f * 1000, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
+			    mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, analogData.vIn * 1000, -1, (analogData.vIn - 9.8f) / 12.6f * 1000, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
 			}
 			break;
 

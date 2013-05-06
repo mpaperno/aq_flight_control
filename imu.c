@@ -72,7 +72,9 @@ void imuInit(void) {
      // calculate IMU rotation
     imuCalcRot();
 
+#ifdef HAS_AIMU
     adcInit();
+#endif
 
 #ifdef HAS_VN100
     vn100Init();

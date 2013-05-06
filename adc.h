@@ -41,7 +41,7 @@
 #define ADC_REF_VOLTAGE		3.3f
 #define ADC_DIVISOR		((double)ADC_REF_VOLTAGE / (double)4096.0 / (double)ADC_SAMPLES)
 
-#define ADC_VIN_SLOPE		((ADC_VIN_RTOP + ADC_VIN_RBOT) / ADC_VIN_RBOT)
+#define ADC_VIN_SLOPE		((ANALOG_VIN_RTOP + ANALOG_VIN_RBOT) / ANALOG_VIN_RBOT)
 #define ADC_VIN_OFFSET		0.0f
 
 #define ADC_IDG_TEMP_OFFSET	1.25f			    // volts (IDG500 PTATS)
@@ -107,8 +107,6 @@ typedef struct {
 
     float temp1, temp2, temp3;
     float temperature;
-    float vIn;
-    float batCellCount;
     float pressure1;
     float pressure2;
     float pressure;

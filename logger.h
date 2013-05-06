@@ -20,7 +20,6 @@
 #define _logger_h
 
 #include "ff.h"
-#include "adc.h"
 #include <CoOS.h>
 
 #define LOGGER_FNAME			"AQL"
@@ -74,8 +73,6 @@ enum {
     LOG_ADC_PRESSURE1,
     LOG_ADC_PRESSURE2,
     LOG_ADC_TEMP0,
-    LOG_ADC_TEMP1,
-    LOG_ADC_TEMP2,
     LOG_ADC_VIN,
     LOG_ADC_MAG_SIGN,
     LOG_UKF_Q1,

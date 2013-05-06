@@ -33,6 +33,7 @@
 #include "supervisor.h"
 #include "radio.h"
 #include "util.h"
+#include "analog.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -86,8 +87,6 @@ loggerFields_t loggerFields[] = {
 	{LOG_ADC_PRESSURE1, LOG_TYPE_FLOAT},
 	{LOG_ADC_PRESSURE2, LOG_TYPE_FLOAT},
 	{LOG_ADC_TEMP0, LOG_TYPE_FLOAT},
-	{LOG_ADC_TEMP1, LOG_TYPE_FLOAT},
-	{LOG_ADC_TEMP2, LOG_TYPE_FLOAT},
 	{LOG_ADC_VIN, LOG_TYPE_FLOAT},
 	{LOG_ADC_MAG_SIGN, LOG_TYPE_S8},
 	{LOG_UKF_Q1, LOG_TYPE_FLOAT},
@@ -287,10 +286,16 @@ void loggerSetup(void) {
 #endif
 		break;
 	    case LOG_VOLTAGE6:
+#ifdef HAS_AIMU
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[6];
+#endif
 		break;
 	    case LOG_VOLTAGE7:
+#ifdef HAS_AIMU
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[7];
+#else
+		loggerData.fp[i].fieldPointer = (void *)&analogData.voltages[ANALOG_VOLTS_VIN];
+#endif
 		break;
 	    case LOG_VOLTAGE8:
 #ifdef USE_DIGITAL_IMU
@@ -313,6 +318,7 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[10];
 #endif
 		break;
+#ifdef HAS_AIMU
 	    case LOG_VOLTAGE11:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[11];
 		break;
@@ -325,6 +331,7 @@ void loggerSetup(void) {
 	    case LOG_VOLTAGE14:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[14];
 		break;
+#endif
 	    case LOG_IMU_RATEX:
 		loggerData.fp[i].fieldPointer = (void *)&IMU_RATEX;
 		break;
@@ -407,26 +414,24 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&gpsData.sAcc;
 		break;
 	    case LOG_ADC_PRESSURE1:
-		loggerData.fp[i].fieldPointer = (void *)&adcData.pressure1;
+		loggerData.fp[i].fieldPointer = (void *)&AQ_PRESSURE;
 		break;
+#ifdef HAS_AIMU
 	    case LOG_ADC_PRESSURE2:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.pressure2;
 		break;
+#endif
 	    case LOG_ADC_TEMP0:
 		loggerData.fp[i].fieldPointer = (void *)&IMU_TEMP;
 		break;
-	    case LOG_ADC_TEMP1:
-		loggerData.fp[i].fieldPointer = (void *)&adcData.temp1;
-		break;
-	    case LOG_ADC_TEMP2:
-		loggerData.fp[i].fieldPointer = (void *)&adcData.temp2;
-		break;
 	    case LOG_ADC_VIN:
-		loggerData.fp[i].fieldPointer = (void *)&adcData.vIn;
+		loggerData.fp[i].fieldPointer = (void *)&analogData.vIn;
 		break;
+#ifdef HAS_AIMU
 	    case LOG_ADC_MAG_SIGN:
 		loggerData.fp[i].fieldPointer = (void *)&adcData.magSign;
 		break;
+#endif
 	    case LOG_UKF_Q1:
 		loggerData.fp[i].fieldPointer = (void *)&UKF_Q1;
 		break;

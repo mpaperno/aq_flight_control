@@ -46,6 +46,7 @@
 #include "gimbal.h"
 #include "sdio.h"
 #include "can.h"
+#include "analog.h"
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -75,6 +76,7 @@ void aqInit(void *pdata) {
     motorsInit();
     gimbalInit();
     imuInit();
+    analogInit();
     navUkfInit();
     radioInit();
     controlInit();

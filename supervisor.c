@@ -24,7 +24,7 @@
 #include "digital.h"
 #include "radio.h"
 #include "nav.h"
-#include "adc.h"
+#include "analog.h"
 #include "aq_timer.h"
 #include "util.h"
 #ifdef USE_SIGNALING
@@ -86,12 +86,12 @@ void supervisorTaskCode(void *unused) {
     AQ_NOTICE("Supervisor task started\n");
 
     // wait for ADC vIn data
-    while (adcData.batCellCount == 0)
+    while (analogData.batCellCount == 0)
 	yield(100);
 
     supervisorCreateSOCTable();
 
-    supervisorData.vInLPF = adcData.vIn;
+    supervisorData.vInLPF = analogData.vIn;
     supervisorData.soc = 100.0f;
 
     while (1) {
@@ -172,7 +172,7 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	// smooth vIn readings
-	supervisorData.vInLPF += (adcData.vIn - supervisorData.vInLPF) * 0.05f;
+	supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * 0.05f;
 
 	// determine battery state of charge
 	supervisorData.soc = supervisorSOCTableLookup(supervisorData.vInLPF);
@@ -193,13 +193,13 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	// low battery
-	if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*adcData.batCellCount)) {
+	if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*analogData.batCellCount)) {
 	    supervisorData.state |= STATE_LOW_BATTERY1;
 	    AQ_NOTICE("Warning: Low battery stage 1\n");
 
 	    // TODO: something
 	}
-	else if (!(supervisorData.state & STATE_LOW_BATTERY2) && supervisorData.vInLPF < (p[SPVR_LOW_BAT2]*adcData.batCellCount)) {
+	else if (!(supervisorData.state & STATE_LOW_BATTERY2) && supervisorData.vInLPF < (p[SPVR_LOW_BAT2]*analogData.batCellCount)) {
 	    supervisorData.state |= STATE_LOW_BATTERY2;
 	    AQ_NOTICE("Warning: Low battery stage 2\n");
 

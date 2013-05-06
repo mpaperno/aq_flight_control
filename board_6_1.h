@@ -282,8 +282,6 @@ enum pwmPorts {
 #define GPS_TP_EXTI_LINE	EXTI_Line1
 
 
-#define ADC_VIN_RTOP            4.7f   // first run beta boards were 4.7K, second run are 8.45K
-#define ADC_VIN_RBOT            1.33f
 #define ADC_PRESSURE_3V3
 
 #define ADC_DMA_STREAM	    DMA2_Stream4
@@ -534,5 +532,10 @@ enum pwmPorts {
 #define SERIAL_UART6_TX_TE_FLAG	DMA_FLAG_TEIF6
 #define SERIAL_UART6_TX_DM_FLAG	DMA_FLAG_DMEIF6
 #define SERIAL_UART6_TX_FE_FLAG	DMA_FLAG_FEIF6
+
+#define HAS_AIMU
+
+#define ANALOG_VIN_RTOP            4.7f   // first run beta boards were 4.7K, second run are 8.45K
+#define ANALOG_VIN_RBOT            1.33f
 
 #endif

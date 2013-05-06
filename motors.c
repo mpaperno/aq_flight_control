@@ -24,7 +24,7 @@
 #include "notice.h"
 #include "aq_timer.h"
 #include "rcc.h"
-#include "adc.h"
+#include "analog.h"
 #include "aq_mavlink.h"
 #include <math.h>
 #include <string.h>
@@ -76,8 +76,8 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     ruddCommand += (ruddCommand * expFactor);
 
     // calculate voltage factor
-    nominalBatVolts = MOTORS_CELL_VOLTS*adcData.batCellCount;
-    voltageFactor = 1.0f + (nominalBatVolts - adcData.vIn) / nominalBatVolts;
+    nominalBatVolts = MOTORS_CELL_VOLTS*analogData.batCellCount;
+    voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
 
     // calculate and set each motor value
     for (i = 0; i < MOTORS_NUM; i++) {

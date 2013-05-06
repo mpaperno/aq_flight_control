@@ -17,7 +17,7 @@
 */
 
 #include "signaling.h"
-#include "adc.h"
+#include "analog.h"
 #include "config.h"
 #include "nav.h"
 #include "supervisor.h"
@@ -136,7 +136,7 @@ void signalingInit(void) {
     /* beep the cell count */
     if (sigData.beep) {
 	int i;
-	for (i = 0; i < adcData.batCellCount; i++) {
+	for (i = 0; i < analogData.batCellCount; i++) {
 	    signalingBeep(2000, 50, 0);
 	    delay(150);
 	}
@@ -218,7 +218,7 @@ void signalingEvent() {
 	signalingWriteLeds(SIG_EVENT_LOWBATT);
 	signalingWriteBeep(SIG_EVENT_LOWBATT);
 	break;
-	
+
     case STATE_DISARMED | STATE_LOW_BATTERY1:
 	signalingWriteLeds(SIG_EVENT_LOWBATT);
 	signalingWriteBeep(SIG_EVENT_LOWBATT);
@@ -229,7 +229,7 @@ void signalingEvent() {
 	signalingWriteLeds(SIG_EVENT_RADIOLOSS);
 	signalingWriteBeep(SIG_EVENT_RADIOLOSS);
 	break;
-	
+
     case STATE_DISARMED | STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2:
 	signalingWriteLeds(SIG_EVENT_RADIOLOSS);
 	signalingWriteBeep(SIG_EVENT_RADIOLOSS);
