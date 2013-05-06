@@ -23,6 +23,7 @@
 #include "spektrum.h"
 #include "futaba.h"
 #include "ppm.h"
+#include "digital.h"
 #include "util.h"
 
 #define RADIO_STACK_SIZE	64
@@ -61,11 +62,10 @@ typedef struct {
 
     int16_t channels[18];	// holds channel values received from radio handler
     unsigned int errorCount;	// cumulative error/lost frame counter
-//    unsigned int frameCount;  // currently unused
     float quality;		// running measure of radio data stability, in range of 0-100
     int8_t radioType;		// stores the radio type defined in parameters to avoid runtime changes
+    digitalPin *select[2];
     unsigned long lastUpdate;	// time of last valid data received from radio handler
-
 } radioStruct_t;
 
 extern radioStruct_t radioData;

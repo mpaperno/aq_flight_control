@@ -72,6 +72,28 @@ void radioTaskCode(void *unused) {
     }
 }
 
+void radioRCSelect(uint8_t level) {
+#ifdef RADIO_RC1_SELECT_PORT
+    radioData.select[0] = digitalInit(RADIO_RC1_SELECT_PORT, RADIO_RC1_SELECT_PIN);
+    if (level) {
+	digitalHi(radioData.select[0]);
+    }
+    else {
+	digitalLo(radioData.select[0]);
+    }
+#endif
+
+#ifdef RADIO_RC2_SELECT_PORT
+    radioData.select[1] = digitalInit(RADIO_RC2_SELECT_PORT, RADIO_RC2_SELECT_PIN);
+    if (level) {
+	digitalHi(radioData.select[1]);
+    }
+    else {
+	digitalLo(radioData.select[1]);
+    }
+#endif
+}
+
 void radioInit(void) {
     AQ_NOTICE("Radio init\n");
 
@@ -84,14 +106,18 @@ void radioInit(void) {
     switch (radioData.radioType) {
     case RADIO_TYPE_SPEKTRUM11:
     case RADIO_TYPE_SPEKTRUM10:
-        spektrumInit();
-        break;
+	spektrumInit();
+	radioRCSelect(0);
+	break;
+
     case RADIO_TYPE_SBUS:
-        futabaInit();
-        break;
+	futabaInit();
+	radioRCSelect(1);
+	break;
+
     case RADIO_TYPE_PPM:
-        ppmInit();
-        break;
+	ppmInit();
+	break;
 
     default:
 	AQ_NOTICE("WARNING: Invalid radio type!");
