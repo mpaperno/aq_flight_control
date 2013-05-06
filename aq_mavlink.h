@@ -30,7 +30,7 @@
 #define MAVLINK_PRIORITY		    40
 
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6	    //  1Hz
-#define MAVLINK_PARAM_INTERVAL		    2e4	    // 50Hz
+#define MAVLINK_PARAM_INTERVAL		    1e4	    // 100Hz
 #define MAVLINK_WP_TIMEOUT		    1e6	    // 1 second
 #define MAVLINK_NOTICE_DEPTH		    20
 #define MAVLINK_PARAMID_LEN		    16
