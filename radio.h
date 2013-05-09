@@ -23,6 +23,7 @@
 #include "spektrum.h"
 #include "futaba.h"
 #include "ppm.h"
+#include "grhott.h"
 #include "digital.h"
 #include "util.h"
 
@@ -44,7 +45,6 @@
 #define RADIO_AUX6		radioData.channels[(int)p[RADIO_AUX6_CH]]
 #define RADIO_AUX7		radioData.channels[(int)p[RADIO_AUX7_CH]]
 
-// #define RADIO_FRAME_COUNT       radioData.frameCount
 #define RADIO_ERROR_COUNT       radioData.errorCount
 #define RADIO_QUALITY           radioData.quality
 
@@ -52,7 +52,8 @@ enum {
     RADIO_TYPE_SPEKTRUM11 = 0,
     RADIO_TYPE_SPEKTRUM10,
     RADIO_TYPE_SBUS,
-    RADIO_TYPE_PPM
+    RADIO_TYPE_PPM,
+    RADIO_TYPE_SUMD
 };
 
 typedef struct {

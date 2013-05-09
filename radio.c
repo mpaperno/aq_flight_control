@@ -51,6 +51,7 @@ void radioTaskCode(void *unused) {
 		    radioReceptionQuality(1);
 		}
 	    break;
+
 	case RADIO_TYPE_SBUS:
 	    while (serialAvailable(s))
 		if (futabaCharIn(serialRead(s))) {
@@ -58,10 +59,19 @@ void radioTaskCode(void *unused) {
 		    radioReceptionQuality(1);
 		}
 	    break;
+
 	case RADIO_TYPE_PPM:
 	    if (ppmDataAvailable())
                 radioData.lastUpdate = timerMicros();
             break;
+
+	case RADIO_TYPE_SUMD:
+	    while (serialAvailable(s))
+		if (grhottCharIn(serialRead(s))) {
+		    radioData.lastUpdate = timerMicros();
+		    radioReceptionQuality(1);
+		}
+	    break;
 	}
 
 	// no radio?
@@ -118,6 +128,11 @@ void radioInit(void) {
     case RADIO_TYPE_PPM:
 	ppmInit();
 	break;
+
+    case RADIO_TYPE_SUMD:
+        grhottInit();
+	radioRCSelect(0);
+        break;
 
     default:
 	AQ_NOTICE("WARNING: Invalid radio type!");

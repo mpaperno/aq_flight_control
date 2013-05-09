@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -83,21 +83,21 @@ int futabaCharIn(unsigned char c) {
 }
 
 void futabaInit(void) {
-    USART_InitTypeDef USART_InitStructure;
+//    USART_InitTypeDef USART_InitStructure;
 
     memset((void *)&futabaData, 0, sizeof(futabaData));
 
     radioData.serialPort = serialOpen(FUTABA_UART, FUTABA_BAUD, USART_HardwareFlowControl_None, FUTABA_RXBUF_SIZE, 0);
 
     // modify default serial configuration
-    USART_StructInit(&USART_InitStructure);
-    USART_InitStructure.USART_BaudRate = FUTABA_BAUD;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_2;
-    USART_InitStructure.USART_Parity = USART_Parity_Even;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Rx;
-    USART_Init(FUTABA_UART, &USART_InitStructure);
-
-    USART_Cmd(FUTABA_UART, ENABLE);
+//    USART_StructInit(&USART_InitStructure);
+//    USART_InitStructure.USART_BaudRate = FUTABA_BAUD;
+//    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+//    USART_InitStructure.USART_StopBits = USART_StopBits_2;
+//    USART_InitStructure.USART_Parity = USART_Parity_Even;
+//    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//    USART_InitStructure.USART_Mode = USART_Mode_Rx;
+//    USART_Init(RC1_UART, &USART_InitStructure);
+//
+//    USART_Cmd(RC1_UART, ENABLE);
 }

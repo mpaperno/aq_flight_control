@@ -13,33 +13,38 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2013  Bill Nesbitt
 */
 
-#ifndef _spektrum_h
-#define _spektrum_h
+#ifndef grhott_h
+#define grhott_h
 
-#define SPEKTRUM_UART		RC1_UART
-#define SPEKTRUM_BAUD		115200
-#define SPEKTRUM_RXBUF_SIZE	64
+#define GROTT_UART		RC1_UART
+#define GRHOTT_BAUD             115200
+#define GRHOTT_RXBUF_SIZE       40
 
-#define SPEKTRUM_WAIT_SYNC1	0x00
-#define SPEKTRUM_WAIT_SYNC2	0x01
-#define SPEKTRUM_ERR_COUNT1	0x02
-#define SPEKTRUM_ERR_COUNT2	0x03
-#define SPEKTRUM_CHANNEL1	0x04
-#define SPEKTRUM_CHANNEL2	0x05
+#define GRHOTT_START_CHAR1      0xa8
+#define GRHOTT_START_CHAR2      0x01
+
+#define GRHOTT_WAIT_SYNC1       0x00
+#define GRHOTT_WAIT_SYNC2       0x01
+#define GRHOTT_WAIT_NB_CHANNEL  0x02
+#define GRHOTT_WAIT_DATA        0x03
+
+#define GRHOTT_MIN              8000
+#define GRHOTT_MID              12000
+#define POLYNOM                 0x11021
 
 typedef struct {
-    unsigned long lastCharReceived;
     unsigned char state;
-    unsigned char channelCount;
-    unsigned char rawBuf[2];
-} spektrumStruct_t;
+    unsigned char nb_channel;
+    unsigned char dataCount;
+    unsigned char rawBuf[32];
+} grhottStruct_t;
 
-extern void spektrumInit(void);
-extern unsigned char spektrumCharIn(int c);
+extern grhottStruct_t grhottData;
 
-extern spektrumStruct_t spektrumData;
+extern void grhottInit(void);
+extern int grhottCharIn(unsigned char c);
 
 #endif
