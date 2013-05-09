@@ -181,7 +181,7 @@ void mavlinkDo(void) {
             mavlinkData.indexTelemetry++;
             if ( mavlinkData.indexTelemetry == 1 ) {
                 mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,0,AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
-                	navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, adcData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
+                	navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, analogData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
             }
             else if ( mavlinkData.indexTelemetry == 6 ) {
                 mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,1,gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,

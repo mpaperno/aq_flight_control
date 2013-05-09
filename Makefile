@@ -182,7 +182,7 @@ EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 
 
 # AQ code objects to create (correspond to .c source to compile)
-AQV6_OBJS := 1wire.o adc.o algebra.o aq_init.o aq_mavlink.o aq_timer.o \
+AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
 	command.o compass.o config.o control.o can.o \
 	digital.o downlink.o esc32.o \
 	filer.o flash.o fpu.o futaba.o \
