@@ -139,7 +139,7 @@ void grhottInit(void) {
 
     memset((void *) &grhottData, 0, sizeof(grhottData));
 
-    radioData.serialPort = serialOpen(GROTT_UART, GRHOTT_BAUD, USART_HardwareFlowControl_None, GRHOTT_RXBUF_SIZE, 0);
+    radioData.serialPort = serialOpen(GRHOTT_UART, GRHOTT_BAUD, USART_HardwareFlowControl_None, GRHOTT_RXBUF_SIZE, 0);
 
     // modify default serial configuration
 //    USART_StructInit(&USART_InitStructure);

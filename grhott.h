@@ -19,7 +19,7 @@
 #ifndef grhott_h
 #define grhott_h
 
-#define GROTT_UART		RC1_UART
+#define GRHOTT_UART		RC1_UART
 #define GRHOTT_BAUD             115200
 #define GRHOTT_RXBUF_SIZE       40
 

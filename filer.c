@@ -229,7 +229,6 @@ int32_t filerInitFS(void) {
 
 void filerTaskCode(void *p) {
     int firstTime = 1;
-    int initialized;
     uint32_t res;
     int i;
 
@@ -237,7 +236,7 @@ void filerTaskCode(void *p) {
 
     filerRestart:
 
-    initialized = 0;
+    filerData.initialized = 0;
     supervisorDiskWait(0);
 
     memset(&filerData.fs, 0, sizeof(FIL));
@@ -265,11 +264,11 @@ void filerTaskCode(void *p) {
 	CoWaitForSingleFlag(filerData.filerFlag, 5);	// run at least every 5ms if possible
 	filerData.loops++;
 
-	if (!initialized) {
+	if (!filerData.initialized) {
 	    if (filerInitFS() < 0)
 		goto filerRestart;
 	    else {
-		initialized = 1;
+		filerData.initialized = 1;
 		supervisorDiskWait(1);
 	    }
 	}
@@ -323,7 +322,7 @@ int8_t filerGetHandle(char *fileName) {
 
 int32_t filerReadWrite(filerFileStruct_t *f, void *buf, int32_t seek, uint32_t length, uint8_t function) {
     // handle allocated yet?
-    if (!f->allocated)
+    if (!f->allocated || !filerData.initialized)
 	    return -1;
 
     f->buf = buf;

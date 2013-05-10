@@ -62,6 +62,7 @@ typedef struct {
     char buf[64];
     uint32_t session;
     uint32_t loops;
+    int initialized;
 } filerStruct_t;
 
 extern void filerInit(void);
