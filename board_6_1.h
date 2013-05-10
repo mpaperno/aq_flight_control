@@ -19,6 +19,8 @@
 #ifndef _board_h
 #define _board_h
 
+#define SD_SDIO_DMA_IRQHANDLER		DMA2_Stream3_IRQHandler
+#define SD_SDIO_DMA_IRQn		DMA2_Stream3_IRQn
 #define SD_POWER_PORT			GPIOC
 #define SD_POWER_PIN			GPIO_Pin_14
 #define SD_DETECT_GPIO_PORT		GPIOC

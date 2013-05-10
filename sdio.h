@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _sdio_h
@@ -23,15 +23,15 @@
 
 #define SDIO_FIFO_ADDRESS                ((uint32_t)0x40012c80)
 #define SDIO_INIT_CLK_DIV                ((uint8_t)0xB2)	// SDIO Intialization Frequency (400KHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x00)	// SDIO Data Transfer Frequency (25MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x02)	// SDIO Data Transfer Frequency (12.5MHz max)
-#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6.25MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3.125MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5625MHz max)
-#define SDIO_RETRIES			5
+//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x00)	// SDIO Data Transfer Frequency (24MHz max)
+//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x02)	// SDIO Data Transfer Frequency (12MHz max)
+#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6MHz max)
+//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3MHz max)
+//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5MHz max)SystemInit
+
+#define SDIO_RETRIES			3
 
 #define SD_SDIO_DMA                   DMA2
-#define SD_SDIO_DMA_STREAM3	      3
 
 #define SD_SDIO_DMA_STREAM            DMA2_Stream3
 #define SD_SDIO_DMA_CHANNEL           DMA_Channel_4
@@ -344,7 +344,7 @@ typedef struct {
 
 typedef struct {
     volatile unsigned char initialized;
-    volatile unsigned char errorDetected;
+//    volatile unsigned char errorDetected;
     unsigned long cardRemovalMicros;
     digitalPin *sdEnable;
     uint32_t CardType;
@@ -352,9 +352,10 @@ typedef struct {
     uint8_t SDSTATUS_Tab[16];
     __IO uint32_t StopCondition;
     __IO SD_Error TransferError;
-    __IO uint32_t TransferEnd;
+    __IO uint32_t TransferEnd, DMAEndOfTransfer;
     SD_CardInfo SDCardInfo;
     SD_CardStatus SDCardStatus;
+    uint32_t errCount;
 } sdioStruct_t;
 
 extern void sdioLowLevelInit();
