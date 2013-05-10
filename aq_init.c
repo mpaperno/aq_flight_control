@@ -23,6 +23,7 @@
 #include "filer.h"
 #include "config.h"
 #include "serial.h"
+#include "comm.h"
 #ifdef MAVLINK
     #include "mavlink.h"
 #else
@@ -66,13 +67,13 @@ void aqInit(void *pdata) {
     filerInit();
     supervisorInit();
     configInit();
+    commInit();
 #ifdef USE_MAVLINK
     mavlinkInit();
-#else
+#endif
     downlinkInit();
     noticeInit();
     telemetryInit();
-#endif
     motorsInit();
     gimbalInit();
     imuInit();
@@ -82,9 +83,7 @@ void aqInit(void *pdata) {
     controlInit();
     gpsInit();
     navInit();
-#ifndef USE_MAVLINK
     commandInit();
-#endif
 #ifdef USE_CAN
     canInit();
 #endif
@@ -100,15 +99,12 @@ void aqInit(void *pdata) {
 
     AQ_NOTICE("Initialization complete, READY.\n");
 
-#ifndef USE_MAVLINK
     // startup complete, reduce notice task priority
-    CoSetPriority(noticeData.noticeTask, NOTICE_PRIORITY);
-#endif
+    if (noticeData.noticeTask)
+	CoSetPriority(noticeData.noticeTask, NOTICE_PRIORITY);
 
-// start telemetry
-#ifndef USE_MAVLINK
+    // start telemetry
     telemetryEnable();
-#endif
 
     // reset idle loop calibration now that everything is running
     minCycles = 999999999;

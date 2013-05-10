@@ -24,9 +24,6 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define DOWNLINK_RX_BUF_SIZE	256
-#define DOWNLINK_TX_BUF_SIZE	1024
-
 typedef struct {
     serialPort_t *serialPort;
     OS_MutexID serialPortMutex;

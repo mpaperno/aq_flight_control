@@ -21,7 +21,7 @@
 #include "aq_timer.h"
 #include "flash.h"
 #include "rcc.h"
-#include "notice.h"
+#include "comm.h"
 #include "aq_mavlink.h"
 #include "aq_timer.h"
 #include "getbuildnum.h"
@@ -164,7 +164,7 @@ float constrainFloat(float i, float lo, float hi) {
 }
 
 void utilVersionString(char *s) {
-    sprintf(s, "AutoQuad FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
+    sprintf(s, "AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
 }
 
 void info(void) {

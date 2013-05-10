@@ -21,7 +21,7 @@
 #include "radio.h"
 #include "util.h"
 #include "config.h"
-#include "notice.h"
+#include "comm.h"
 #include "aq_timer.h"
 #include "rcc.h"
 #include "analog.h"

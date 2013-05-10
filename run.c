@@ -13,24 +13,23 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "run.h"
-#include "notice.h"
+#include "comm.h"
 #include "nav_ukf.h"
 #include "imu.h"
 #include "gps.h"
 #include "nav.h"
 #include "control.h"
-#include "telemetry.h"
-#include "aq_mavlink.h"
 #include "logger.h"
 #include "supervisor.h"
 #include "gimbal.h"
 #include "analog.h"
 #include "can.h"
+#include "config.h"
 #include <CoOS.h>
 #include <intrinsics.h>
 
@@ -38,7 +37,7 @@ OS_STK *runTaskStack;
 
 runStruct_t runData __attribute__((section(".ccm")));
 
-void runTaskCode(void *p) {
+void runTaskCode(void *unused) {
     uint32_t loops = 0;
 
     AQ_NOTICE("Run task started\n");
@@ -134,11 +133,8 @@ void runTaskCode(void *p) {
 	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();
-#ifdef USE_MAVLINK
-	mavlinkDo();
-#else
-	telemetryDo();
-#endif
+	commDoTelem();
+
 #ifdef USE_CAN
 	canCheckMessage();
     #if CAN_OUTPUT_IMU_FREQ > 0

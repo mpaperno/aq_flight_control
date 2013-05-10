@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _config_h
@@ -21,7 +21,7 @@
 
 #include "aq.h"
 
-#define CONFIG_HEADER	    "config_default.h"
+#include "config_default.h"
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -153,7 +153,9 @@ enum configParameters {
     MOT_PWRD_14_P,
     MOT_PWRD_14_R,
     MOT_PWRD_14_Y,
-    DOWNLINK_BAUD,
+    COMM_BAUD1,
+    COMM_BAUD2,
+    COMM_BAUD3,
     TELEMETRY_RATE,
     NAV_MAX_SPEED,
     NAV_MAX_DECENT,
@@ -276,6 +278,8 @@ enum configParameters {
     GMBL_SCAL_ROLL,
     GMBL_SLEW_RATE,
     GMBL_ROLL_EXPO,
+    MAVLINK_COMM,
+    TELEMETRY_COMM,
     SPVR_LOW_BAT1,
     SPVR_LOW_BAT2,
     SPVR_BAT_CRV1,
@@ -417,6 +421,5 @@ extern int8_t configWriteFile(char *fname);
 extern void configSetParamByID(int id, float value);
 extern int8_t configFormatParam(char *buf, int n);
 extern int configParseParams(char *fileBuf, int size, int p1);
-
 
 #endif

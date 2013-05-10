@@ -31,10 +31,12 @@
 //#define USE_VN100
 //#define HAS_DIGITAL_IMU
 //#define USE_DIGITAL_IMU
+
 //#define USE_CAN
 
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
-#define USE_SIGNALING           	// uncomment to use external signaling events and ports
+#define USE_SIGNALING			// uncomment to use external signaling events and ports
+
 
 //#define USE_L1_ATTITUDE
 
@@ -64,11 +66,7 @@
 
 #define GRAVITY			9.80665f	// m/s^2
 
-#ifdef USE_MAVLINK
-    #define AQ_NOTICE		mavlinkNotice
-#else
-    #define AQ_NOTICE		noticeSend
-#endif
+#define AQ_NOTICE		commSendNotice
 
 #define AQ_US_PER_SEC		1001567		// originally calibrated by GPS timepulse
 

@@ -20,7 +20,7 @@
 #include "rcc.h"
 #include "rtc.h"
 #include "aq_timer.h"
-#include "notice.h"
+#include "comm.h"
 #include <stdio.h>
 #include <string.h>
 

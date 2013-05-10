@@ -19,7 +19,7 @@
 #include "aq.h"
 #include "filer.h"
 #include "diskio.h"
-#include "notice.h"
+#include "comm.h"
 #include "aq_mavlink.h"
 #include "util.h"
 #include "supervisor.h"
@@ -254,6 +254,7 @@ void filerTaskCode(void *p) {
     firstTime = 0;
 
     // setup fatfs
+    f_mount(0, 0);
     if ((res = f_mount(0, &filerData.fs)) != RES_OK) {
 	filerDebug("cannot register work area, aborting", res);
 	CoExitTask();

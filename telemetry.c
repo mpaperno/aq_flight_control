@@ -36,6 +36,7 @@
 #include "nav_ukf.h"
 #include "supervisor.h"
 #include "analog.h"
+#include "comm.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -135,4 +136,7 @@ void telemetryDisable(void) {
 
 void telemetryInit(void) {
     memset((void *)&telemetryData, 0, sizeof(telemetryData));
+
+    if (downlinkData.serialPort)
+	commRegisterTelemFunc(telemetryDo);
 }

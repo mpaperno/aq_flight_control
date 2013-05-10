@@ -25,7 +25,7 @@
 #define NOTICE_STACK_SIZE	64
 #define NOTICE_PRIORITY		50
 
-#define NOTICE_QUEUE_DEPTH	20
+#define NOTICE_QUEUE_DEPTH	25
 
 typedef struct {
     OS_TID noticeTask;

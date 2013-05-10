@@ -21,6 +21,8 @@
 #include "notice.h"
 #include "aq_mavlink.h"
 #include "util.h"
+#include "config.h"
+#include "comm.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -39,8 +41,6 @@ void noticeTaskCode(void *unused) {
     char *c;
 
     AQ_NOTICE("Notice task started\n");
-
-    memset((void *)&noticeData, 0, sizeof(noticeData));
 
     while (1) {
 	c = (char *)CoPendQueueMail(noticeData.notices, 0, &result);
@@ -67,11 +67,19 @@ void noticeTaskCode(void *unused) {
 }
 
 void noticeInit(void) {
+    memset((void *)&noticeData, 0, sizeof(noticeData));
+
+    if (p[TELEMETRY_COMM] == 0.0f)
+	return;
+
     noticeData.notices = CoCreateQueue(noticeData.noticeQueue, NOTICE_QUEUE_DEPTH, EVENT_SORT_TYPE_FIFO);
     noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE, "NOTICE");
 
     // start notice thread with high priority so that it can process startup notices - will drop priority later
     noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[NOTICE_STACK_SIZE-1], NOTICE_STACK_SIZE);
+
+    // register notice function with comm module
+    commRegisterNoticeFunc(noticeSend);
 
     noticeData.initialized = 1;
 }

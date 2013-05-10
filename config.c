@@ -13,17 +13,17 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "config.h"
 #include "flash.h"
 #include "filer.h"
-#include "notice.h"
+#include "comm.h"
 #include "supervisor.h"
 #include "util.h"
-#include CONFIG_HEADER
+//#include CONFIG_HEADER
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -156,7 +156,9 @@ const char *configParameterStrings[] = {
     "MOT_PWRD_14_P",
     "MOT_PWRD_14_R",
     "MOT_PWRD_14_Y",
-    "DOWNLINK_BAUD",
+    "COMM_BAUD1",
+    "COMM_BAUD2",
+    "COMM_BAUD3",
     "TELEMETRY_RATE",
     "NAV_MAX_SPEED",
     "NAV_MAX_DECENT",
@@ -279,6 +281,8 @@ const char *configParameterStrings[] = {
     "GMBL_SCAL_ROLL",
     "GMBL_SLEW_RATE",
     "GMBL_ROLL_EXPO",
+    "MAVLINK_COMM",
+    "TELEMETRY_COMM",
     "SPVR_LOW_BAT1",
     "SPVR_LOW_BAT2",
     "SPVR_BAT_CRV1",
@@ -525,7 +529,9 @@ void configLoadDefault(void) {
     p[MOT_PWRD_14_P] = DEFAULT_MOT_PWRD_14_P;
     p[MOT_PWRD_14_R] = DEFAULT_MOT_PWRD_14_R;
     p[MOT_PWRD_14_Y] = DEFAULT_MOT_PWRD_14_Y;
-    p[DOWNLINK_BAUD] = DEFAULT_DOWNLINK_BAUD;
+    p[COMM_BAUD1] = DEFAULT_COMM_BAUD1;
+    p[COMM_BAUD2] = DEFAULT_COMM_BAUD2;
+    p[COMM_BAUD3] = DEFAULT_COMM_BAUD3;
     p[TELEMETRY_RATE] = DEFAULT_TELEMETRY_RATE;
     p[NAV_MAX_SPEED] = DEFAULT_NAV_MAX_SPEED;
     p[NAV_MAX_DECENT] = DEFAULT_NAV_MAX_DECENT;
@@ -648,6 +654,8 @@ void configLoadDefault(void) {
     p[GMBL_SCAL_ROLL] = DEFAULT_GMBL_SCAL_ROLL;
     p[GMBL_SLEW_RATE] = DEFAULT_GMBL_SLEW_RATE;
     p[GMBL_ROLL_EXPO] = DEFAULT_GMBL_ROLL_EXPO;
+    p[MAVLINK_COMM] = DEFAULT_MAVLINK_COMM;
+    p[TELEMETRY_COMM] = DEFAULT_TELEMETRY_COMM;
     p[SPVR_LOW_BAT1] = DEFAULT_SPVR_LOW_BAT1;
     p[SPVR_LOW_BAT2] = DEFAULT_SPVR_LOW_BAT2;
     p[SPVR_BAT_CRV1] = DEFAULT_SPVR_BAT_CRV1;

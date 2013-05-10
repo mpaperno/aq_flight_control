@@ -20,7 +20,7 @@
 #include "nav_ukf.h"
 #include "aq.h"
 #include "util.h"
-#include "notice.h"
+#include "comm.h"
 #include "aq_timer.h"
 #include "control.h"
 #include "pid.h"

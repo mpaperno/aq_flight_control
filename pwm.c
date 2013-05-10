@@ -19,7 +19,7 @@
 #include "aq.h"
 #include "pwm.h"
 #include "esc32.h"
-#include "notice.h"
+#include "comm.h"
 #include "util.h"
 #include <stdio.h>
 

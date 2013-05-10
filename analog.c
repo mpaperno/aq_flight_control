@@ -17,7 +17,7 @@
 */
 
 #include "analog.h"
-#include "notice.h"
+#include "comm.h"
 #include "util.h"
 #include <stdio.h>
 

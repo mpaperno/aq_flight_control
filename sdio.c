@@ -21,7 +21,7 @@
 #include "diskio.h"
 #include "util.h"
 #include "aq_timer.h"
-#include "notice.h"
+#include "comm.h"
 #include "rtc.h"
 #include <CoOS.h>
 #include <stdio.h>

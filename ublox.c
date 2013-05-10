@@ -256,7 +256,6 @@ unsigned char ubloxPublish(void) {
 
     CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
 
-#ifndef USE_MAVLINK
     if (0) {
 	int i;
 
@@ -289,7 +288,6 @@ unsigned char ubloxPublish(void) {
 	// release serial port
 	CoLeaveMutexSection(downlinkData.serialPortMutex);
     }
-#endif
 
     return ret;
 }

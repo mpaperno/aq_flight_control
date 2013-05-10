@@ -21,7 +21,7 @@
 #include "util.h"
 #include "aq_timer.h"
 #include "config.h"
-#include "notice.h"
+#include "comm.h"
 
 OS_STK *dIMUTaskStack;
 

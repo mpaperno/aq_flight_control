@@ -19,7 +19,7 @@
 #include "aq.h"
 #include "esc32.h"
 #include "1wire.h"
-#include "notice.h"
+#include "comm.h"
 #include "filer.h"
 #include "util.h"
 #include <stdio.h>

@@ -33,6 +33,8 @@
       <file file_name="adc.h"/>
       <file file_name="control.c"/>
       <file file_name="control.h"/>
+      <file file_name="comm.c"/>
+      <file file_name="comm.h"/>
       <file file_name="nav.c"/>
       <file file_name="nav.h"/>
       <file file_name="telemetry.c"/>

@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    103
+#define DEFAULT_CONFIG_VERSION	    105
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -38,7 +38,7 @@
 
 #define DEFAULT_SIG_LED_1_PRT       0.0f        // External Led(1) port, 0.0f to disable
 #define DEFAULT_SIG_LED_2_PRT       0.0f        // External Led(2) port, 0.0f to disable
-#define DEFAULT_SIG_BEEP_PRT        0.0f        // negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer 
+#define DEFAULT_SIG_BEEP_PRT        0.0f        // negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer
 
 #define DEFAULT_CTRL_PID_TYPE	    0		// 0 == parallel TILT/RATE PIDs, 1 == cascading TILT/RATE PIDs
 
@@ -162,9 +162,15 @@
 #define DEFAULT_MOT_PWRD_14_Y	    0.0
 
 
-#define DEFAULT_DOWNLINK_BAUD	    115200
+#define DEFAULT_COMM_BAUD1	    115200
+#define DEFAULT_COMM_BAUD2	    230400
+#define DEFAULT_COMM_BAUD3	    0
 
+#define DEFAULT_MAVLINK_COMM	    1		// port number (0 == disable)
+
+#define DEFAULT_TELEMETRY_COMM	    0		// port number
 #define DEFAULT_TELEMETRY_RATE	    20		// loops between reports
+
 
 #define DEFAULT_NAV_MAX_SPEED	    5.0f	// m/s
 #define DEFAULT_NAV_MAX_DECENT	    1.5f	// m/s

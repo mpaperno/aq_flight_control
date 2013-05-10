@@ -380,11 +380,10 @@ enum pwmPorts {
 #define DIMU_MPU6000_INT_EXTI_IRQ   EXTI9_5_IRQn
 #define DIMU_MPU6000_INT_ISR	    EXTI9_5_IRQHandler
 
-#define MAVLINK_LED_PORT	    GPIOD
-#define MAVLINK_LED_PIN		    GPIO_Pin_11
-#define MAVLINK_USART		    USART1
 
-#define DOWNLINK_USART		    USART1
+#define COMM_PORT1		    USART1	    // front FTDI interface
+#define COMM_PORT2		    USART2	    // expansion header
+
 
 #define SERIAL_UART1_PORT	GPIOA
 #define SERIAL_UART1_RX_PIN	GPIO_Pin_10

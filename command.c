@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -21,11 +21,10 @@
 #include "serial.h"
 #include "telemetry.h"
 #include "downlink.h"
-#include "notice.h"
+#include "comm.h"
 #include "control.h"
 #include "config.h"
 #include "gps.h"
-#include "adc.h"
 #include "aq_mavlink.h"
 #include "util.h"
 #include "imu.h"
@@ -351,6 +350,9 @@ void commandTaskCode(void *unused) {
 }
 
 void commandInit(void) {
+    if (p[TELEMETRY_COMM] == 0.0f)
+	return;
+
     AQ_NOTICE("Command interface init\n");
 
     memset((void *)&commandData, 0, sizeof(commandData));

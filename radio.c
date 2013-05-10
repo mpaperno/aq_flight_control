@@ -21,7 +21,7 @@
 #include "radio.h"
 #include "util.h"
 #include "aq_timer.h"
-#include "notice.h"
+#include "comm.h"
 #include <string.h>
 
 radioStruct_t radioData __attribute__((section(".ccm")));

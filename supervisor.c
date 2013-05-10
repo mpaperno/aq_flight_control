@@ -13,14 +13,14 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "config.h"
 #include "supervisor.h"
 #include "aq_mavlink.h"
-#include "notice.h"
+#include "comm.h"
 #include "digital.h"
 #include "radio.h"
 #include "nav.h"

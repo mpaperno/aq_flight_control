@@ -35,6 +35,7 @@
 #include "supervisor.h"
 #include "nav_ukf.h"
 #include "analog.h"
+#include "comm.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -50,15 +51,18 @@ void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
 
 void mavlinkNotice(const char *s) {
     // queue message, notify and leave
-    CoPostQueueMail(mavlinkData.notices, (void *)s);
+    if (mavlinkData.serialPort)
+	CoPostQueueMail(mavlinkData.notices, (void *)s);
 }
 
 void mavlinkWpReached(uint16_t seqId) {
-    mavlink_msg_mission_item_reached_send(MAVLINK_COMM_0, seqId);
+    if (mavlinkData.serialPort)
+	mavlink_msg_mission_item_reached_send(MAVLINK_COMM_0, seqId);
 }
 
 void mavlinkWpAnnounceCurrent(uint16_t seqId) {
-    mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
+    if (mavlinkData.serialPort)
+	mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
 }
 
 void mavlinkDo(void) {
@@ -157,7 +161,7 @@ void mavlinkDo(void) {
 
     // send pending notices
     msg = CoAcceptQueueMail(mavlinkData.notices, &result);
-    if (result == E_OK)
+    if (msg)
 	    mavlink_msg_statustext_send(MAVLINK_COMM_0, 0, (const char *)msg);
 
     // list all parameters
@@ -612,11 +616,18 @@ void mavlinkInit(void) {
 
     memset((void *)&mavlinkData, 0, sizeof(mavlinkData));
 
-#ifdef MAVLINK_SERIAL_PORT_FLOW_NONE
-    mavlinkData.serialPort = serialOpen(MAVLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_None, 0, 0);
-#else
-    mavlinkData.serialPort = serialOpen(MAVLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_RTS_CTS, 0, 0);
-#endif
+    if (p[MAVLINK_COMM] == 0.0f)
+	return;
+
+    mavlinkData.serialPort = commAcquirePort(p[MAVLINK_COMM]);
+
+    // unable to acquire port
+    if (mavlinkData.serialPort == 0)
+	return;
+
+    // register notice function with comm module
+    commRegisterNoticeFunc(mavlinkNotice);
+    commRegisterTelemFunc(mavlinkDo);
 
     // setup mutex for serial port access
     mavlinkData.serialPortMutex = CoCreateMutex();

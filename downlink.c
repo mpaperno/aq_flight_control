@@ -13,24 +13,30 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "digital.h"
+#include "comm.h"
 #include "downlink.h"
 #include "config.h"
 #include "supervisor.h"
+#include <string.h>
 
-downlinkStruct_t downlinkData;
+downlinkStruct_t downlinkData __attribute__((section(".ccm")));
 
 unsigned char downlinkCkA, downlinkCkB;
 
 void downlinkInit(void) {
-    downlinkData.serialPort = serialOpen(DOWNLINK_USART, p[DOWNLINK_BAUD], USART_HardwareFlowControl_RTS_CTS, DOWNLINK_RX_BUF_SIZE, DOWNLINK_TX_BUF_SIZE);
+    memset((void *)&downlinkData, 0, sizeof(downlinkData));
 
-    // setup mutex for serial port access
-    downlinkData.serialPortMutex = CoCreateMutex();
+    if (p[TELEMETRY_COMM] != 0.0f) {
+	downlinkData.serialPort = commAcquirePort(p[TELEMETRY_COMM]);
+
+	// setup mutex for serial port access
+	downlinkData.serialPortMutex = CoCreateMutex();
+    }
 }
 
 void downlinkChecksum(unsigned char c) {

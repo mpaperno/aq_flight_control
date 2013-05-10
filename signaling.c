@@ -22,7 +22,7 @@
 #include "nav.h"
 #include "supervisor.h"
 #include "util.h"
-#include "notice.h"
+#include "comm.h"
 #include <string.h>
 
 /* Led patterns, 0=Off, 1=On, every 0.1s (10Hz) the position in the array is chosen and use to control the led's.
