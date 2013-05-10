@@ -111,7 +111,8 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
         // Ignore invalid pulses (but count them as errors). If pulse was actually a channel, this will be caught later,
         // when the frame is validated. If it was not a channel, then we should do well to just ignore it.
         else
-            ppmData.signalQuality = 0; // non-critical error
+            ppmData.inputValid = 0;
+            //ppmData.signalQuality = 0; // non-critical error
 
     }
 }

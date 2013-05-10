@@ -186,7 +186,7 @@ AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o 
 	command.o compass.o config.o control.o can.o \
 	digital.o downlink.o esc32.o \
 	filer.o flash.o fpu.o futaba.o \
-	gimbal.o gps.o getbuildnum.o imu.o util.o logger.o \
+	gimbal.o gps.o getbuildnum.o grhott.o imu.o util.o logger.o \
 	main_ctl.o motors.o \
 	nav.o nav_ukf.o notice.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
