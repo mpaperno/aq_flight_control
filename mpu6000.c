@@ -21,6 +21,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#include <intrinsics.h>
 
 mpu6000Struct_t mpu6000Data;
 
@@ -87,15 +88,15 @@ void mpu6000Decode(void) {
 	    divisor -= 1.0f;
 	}
 	else {
-	    acc[0] += (int16_t)((uint16_t)d[j+1]<<8 | d[j+2]);
-	    acc[1] += (int16_t)((uint16_t)d[j+3]<<8 | d[j+4]);
-	    acc[2] += (int16_t)((uint16_t)d[j+5]<<8 | d[j+6]);
+	    acc[0] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
+	    acc[1] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
+	    acc[2] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
 
-	    temp += (int16_t)((uint16_t)d[j+7]<<8 | d[j+8]);
+	    temp += (int16_t)__rev16(*(uint16_t *)&d[j+7]);
 
-	    gyo[0] += (int16_t)((uint16_t)d[j+9]<<8 | d[j+10]);
-	    gyo[1] += (int16_t)((uint16_t)d[j+11]<<8 | d[j+12]);
-	    gyo[2] += (int16_t)((uint16_t)d[j+13]<<8 | d[j+14]);
+	    gyo[0] += (int16_t)__rev16(*(uint16_t *)&d[j+9]);
+	    gyo[1] += (int16_t)__rev16(*(uint16_t *)&d[j+11]);
+	    gyo[2] += (int16_t)__rev16(*(uint16_t *)&d[j+13]);
 	}
     }
 

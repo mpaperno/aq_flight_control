@@ -21,6 +21,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#include <intrinsics.h>
 
 hmc5983Struct_t hmc5983Data;
 
@@ -49,9 +50,9 @@ void hmc5983Decode(void) {
 	    divisor -= 1.0f;
 	}
 	else {
-	    mag[1] += (int16_t)((uint16_t)d[j+1]<<8 | d[j+2]);
-	    mag[2] += (int16_t)((uint16_t)d[j+3]<<8 | d[j+4]);
-	    mag[0] += (int16_t)((uint16_t)d[j+5]<<8 | d[j+6]);
+	    mag[1] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
+	    mag[2] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
+	    mag[0] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
 	}
     }
 
