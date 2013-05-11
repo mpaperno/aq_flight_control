@@ -113,14 +113,18 @@ void pwmGPIOInit(const GPIO_TypeDef *gpio, uint32_t pin, GPIOMode_TypeDef mode) 
 int pwmValidatePort(uint8_t pwmPort, uint32_t period) {
     int ret = 0;
 
-    if (pwmPort >= PWM_NUM_PORTS)
+    if (pwmPort >= PWM_NUM_PORTS) {
 	AQ_NOTICE("pwm: faliure: invalid pwm port number!\n");
-    else if (pwmData[pwmPort].direction != 0)
+    }
+    else if (pwmData[pwmPort].direction != 0) {
 	AQ_NOTICE("pwm: faliure: cannot re-allocate port!\n");
-    else if (period && pwmData[pwmPort].period && pwmData[pwmPort].period != period)
+    }
+    else if (period && pwmData[pwmPort].period && pwmData[pwmPort].period != period) {
 	AQ_NOTICE("pwm: faliure: pwm frequency mis-match!\n");
-    else
+    }
+    else {
 	 ret = 1;
+    }
 
     return ret;
 }

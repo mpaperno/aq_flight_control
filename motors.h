@@ -22,7 +22,6 @@
 #include "aq.h"
 #include "pwm.h"
 
-#define MOTORS_NUM		    14
 #define MOTORS_CELL_VOLTS	    3.7f
 #define MOTORS_THROTTLE_LIMITER	    0.3f
 
@@ -35,13 +34,13 @@ typedef struct {
 
 typedef struct {
     motorsPowerStruct_t *distribution;
-    pwmPortStruct_t *pwm[MOTORS_NUM];
-    int16_t value[MOTORS_NUM];	    // in us
-    float thrust[MOTORS_NUM];
+    pwmPortStruct_t *pwm[PWM_NUM_PORTS];
+    int16_t value[PWM_NUM_PORTS];	    // in us
+    float thrust[PWM_NUM_PORTS];
     float pitch, roll, yaw;
     float throttle;
     float throttleLimiter;
-    uint8_t active[MOTORS_NUM];
+    uint8_t active[PWM_NUM_PORTS];
 } motorsStruct_t;
 
 extern motorsStruct_t motorsData;

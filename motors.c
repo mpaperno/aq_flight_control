@@ -35,7 +35,7 @@ motorsStruct_t motorsData __attribute__((section(".ccm")));
 void motorsSendValues(void) {
     int i;
 
-    for (i = 0; i < MOTORS_NUM; i++)
+    for (i = 0; i < PWM_NUM_PORTS; i++)
 	if (motorsData.active[i]) {
 	    // ensure motor output is constrained
 	    motorsData.value[i] = constrainInt(motorsData.value[i], p[MOT_START], p[MOT_MAX]);
@@ -47,7 +47,7 @@ void motorsSendValues(void) {
 void motorsOff(void) {
     int i;
 
-    for (i = 0; i < MOTORS_NUM; i++)
+    for (i = 0; i < PWM_NUM_PORTS; i++)
 	if (motorsData.active[i]) {
 	    motorsData.value[i] = p[MOT_MIN];
 	    if (motorsData.pwm[i])
@@ -80,7 +80,7 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
 
     // calculate and set each motor value
-    for (i = 0; i < MOTORS_NUM; i++) {
+    for (i = 0; i < PWM_NUM_PORTS; i++) {
 	if (motorsData.active[i]) {
 	    motorsPowerStruct_t *d = &motorsData.distribution[i];
 
@@ -128,7 +128,7 @@ void motorsInit(void) {
     sumRoll = 0.0f;
     sumYaw = 0.0f;
 
-    for (i = 0; i < MOTORS_NUM; i++) {
+    for (i = 0; i < PWM_NUM_PORTS; i++) {
 	motorsPowerStruct_t *d = &motorsData.distribution[i];
 
 	if (d->throttle != 0.0 || d->pitch != 0.0 || d->roll != 0.0 || d->yaw != 0.0) {
