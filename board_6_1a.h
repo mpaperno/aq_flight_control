@@ -19,17 +19,31 @@
 #ifndef _board_h
 #define _board_h
 
-#define SD_SDIO_DMA_IRQHANDLER		DMA2_Stream3_IRQHandler
-#define SD_SDIO_DMA_IRQn		DMA2_Stream3_IRQn
-#define SD_POWER_PORT			GPIOC
-#define SD_POWER_PIN			GPIO_Pin_14
-#define SD_DETECT_GPIO_PORT		GPIOC
-#define SD_DETECT_PIN			GPIO_Pin_13
-#define SD_DETECT_PORT_SOURCE		EXTI_PortSourceGPIOC
-#define SD_DETECT_PIN_SOURCE		EXTI_PinSource13
-#define SD_DETECT_IRQ			EXTI15_10_IRQn
-#define SD_DETECT_HANDLER		EXTI15_10_IRQHandler
-#define SD_DETECT_EXTI_LINE		EXTI_Line13
+#define SDIO_DMA			DMA2
+#define SDIO_DMA_STREAM			DMA2_Stream3
+#define SDIO_DMA_CHANNEL		DMA_Channel_4
+#define SDIO_DMA_FLAG_FEIF		DMA_FLAG_FEIF3
+#define SDIO_DMA_FLAG_DMEIF		DMA_FLAG_DMEIF3
+#define SDIO_DMA_FLAG_TEIF		DMA_FLAG_TEIF3
+#define SDIO_DMA_FLAG_HTIF		DMA_FLAG_HTIF3
+#define SDIO_DMA_FLAG_TCIF		DMA_FLAG_TCIF3
+#define SDIO_DMA_IRQHANDLER		DMA2_Stream3_IRQHandler
+#define SDIO_DMA_IRQn			DMA2_Stream3_IRQn
+#define SDIO_POWER_PORT			GPIOC
+#define SDIO_POWER_PIN			GPIO_Pin_14
+#define SDIO_DETECT_GPIO_PORT		GPIOC
+#define SDIO_DETECT_PIN			GPIO_Pin_13
+#define SDIO_DETECT_PORT_SOURCE		EXTI_PortSourceGPIOC
+#define SDIO_DETECT_PIN_SOURCE		EXTI_PinSource13
+#define SDIO_DETECT_IRQ			EXTI15_10_IRQn
+#define SDIO_DETECT_HANDLER		EXTI15_10_IRQHandler
+#define SDIO_DETECT_EXTI_LINE		EXTI_Line13
+//#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x00)	// SDIO Data Transfer Frequency (24MHz max)
+//#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x02)	// SDIO Data Transfer Frequency (12MHz max)
+#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6MHz max)
+//#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3MHz max)
+//#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5MHz max)
+
 
 enum pwmPorts {
     PWM_1 = 0,

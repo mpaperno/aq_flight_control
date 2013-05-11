@@ -23,23 +23,8 @@
 
 #define SDIO_FIFO_ADDRESS                ((uint32_t)0x40012c80)
 #define SDIO_INIT_CLK_DIV                ((uint8_t)0xB2)	// SDIO Intialization Frequency (400KHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x00)	// SDIO Data Transfer Frequency (24MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x02)	// SDIO Data Transfer Frequency (12MHz max)
-#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x04)	// SDIO Data Transfer Frequency (6MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3MHz max)
-//#define SDIO_TRANSFER_CLK_DIV            ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5MHz max)SystemInit
 
 #define SDIO_RETRIES			3
-
-#define SD_SDIO_DMA                   DMA2
-
-#define SD_SDIO_DMA_STREAM            DMA2_Stream3
-#define SD_SDIO_DMA_CHANNEL           DMA_Channel_4
-#define SD_SDIO_DMA_FLAG_FEIF         DMA_FLAG_FEIF3
-#define SD_SDIO_DMA_FLAG_DMEIF        DMA_FLAG_DMEIF3
-#define SD_SDIO_DMA_FLAG_TEIF         DMA_FLAG_TEIF3
-#define SD_SDIO_DMA_FLAG_HTIF         DMA_FLAG_HTIF3
-#define SD_SDIO_DMA_FLAG_TCIF         DMA_FLAG_TCIF3
 
 // SDIO Commands  Index
 #define SD_CMD_GO_IDLE_STATE                       ((uint8_t)0)

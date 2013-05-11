@@ -34,7 +34,7 @@ uint8_t SD_DetectLowLevel(void) {
     __IO uint8_t status = SD_PRESENT;
 
     // Check GPIO to detect SD
-    if (GPIO_ReadInputDataBit(SD_DETECT_GPIO_PORT, SD_DETECT_PIN) != Bit_RESET) {
+    if (GPIO_ReadInputDataBit(SDIO_DETECT_GPIO_PORT, SDIO_DETECT_PIN) != Bit_RESET) {
 	status = SD_NOT_PRESENT;
 	sdioData.initialized = 0;
     }
@@ -1040,7 +1040,7 @@ void sdioLowLevelInit(void) {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDIO, ENABLE);
 
     // turn off SDIO power supply
-    sdioData.sdEnable = digitalInit(SD_POWER_PORT, SD_POWER_PIN);
+    sdioData.sdEnable = digitalInit(SDIO_POWER_PORT, SDIO_POWER_PIN);
     digitalLo(sdioData.sdEnable);
 
     // SDIO Interrupt ENABLE
@@ -1051,27 +1051,27 @@ void sdioLowLevelInit(void) {
     NVIC_Init(&NVIC_InitStructure);
 
     // DMA2 STREAMx Interrupt ENABLE
-    NVIC_InitStructure.NVIC_IRQChannel = SD_SDIO_DMA_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = SDIO_DMA_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_Init(&NVIC_InitStructure);
 
     // Configure SD Card detect pin
     GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = SD_DETECT_PIN;
+    GPIO_InitStructure.GPIO_Pin = SDIO_DETECT_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_Init(SDIO_DETECT_GPIO_PORT, &GPIO_InitStructure);
 
     // card detect interrupt
-    NVIC_InitStructure.NVIC_IRQChannel = SD_DETECT_IRQ;
+    NVIC_InitStructure.NVIC_IRQChannel = SDIO_DETECT_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
-    SYSCFG_EXTILineConfig(SD_DETECT_PORT_SOURCE, SD_DETECT_PIN_SOURCE);
+    SYSCFG_EXTILineConfig(SDIO_DETECT_PORT_SOURCE, SDIO_DETECT_PIN_SOURCE);
 
-    EXTI_InitStructure.EXTI_Line = SD_DETECT_EXTI_LINE;
+    EXTI_InitStructure.EXTI_Line = SDIO_DETECT_EXTI_LINE;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
     EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -1089,14 +1089,14 @@ void sdioLowLevelInit(void) {
 void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
     DMA_InitTypeDef SDDMA_InitStructure;
 
-    DMA_ClearFlag(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF | SD_SDIO_DMA_FLAG_TCIF);
+    DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
 
     // DMA2 Stream3 disable
-    DMA_Cmd(SD_SDIO_DMA_STREAM, DISABLE);
+    DMA_Cmd(SDIO_DMA_STREAM, DISABLE);
 
     // DMA2 Stream3 Config
-    DMA_DeInit(SD_SDIO_DMA_STREAM);
-    SDDMA_InitStructure.DMA_Channel = SD_SDIO_DMA_CHANNEL;
+    DMA_DeInit(SDIO_DMA_STREAM);
+    SDDMA_InitStructure.DMA_Channel = SDIO_DMA_CHANNEL;
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferSRC;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
@@ -1111,26 +1111,26 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
     SDDMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
     SDDMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
     SDDMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_INC4;
-    DMA_Init(SD_SDIO_DMA_STREAM, &SDDMA_InitStructure);
+    DMA_Init(SDIO_DMA_STREAM, &SDDMA_InitStructure);
 
-    DMA_FlowControllerConfig(SD_SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
+    DMA_FlowControllerConfig(SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
 
     // DMA2 Stream3 enable
-    DMA_Cmd(SD_SDIO_DMA_STREAM, ENABLE);
+    DMA_Cmd(SDIO_DMA_STREAM, ENABLE);
 }
 
 void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     DMA_InitTypeDef SDDMA_InitStructure;
 
-    DMA_ClearFlag(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF | SD_SDIO_DMA_FLAG_TCIF);
+    DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
 
     // DMA2 Stream3 disable
-    DMA_Cmd(SD_SDIO_DMA_STREAM, DISABLE);
+    DMA_Cmd(SDIO_DMA_STREAM, DISABLE);
 
     // DMA2 Stream3 Config
-    DMA_DeInit(SD_SDIO_DMA_STREAM);
+    DMA_DeInit(SDIO_DMA_STREAM);
 
-    SDDMA_InitStructure.DMA_Channel = SD_SDIO_DMA_CHANNEL;
+    SDDMA_InitStructure.DMA_Channel = SDIO_DMA_CHANNEL;
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferDST;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
@@ -1145,12 +1145,12 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     SDDMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
     SDDMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
     SDDMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_INC4;
-    DMA_Init(SD_SDIO_DMA_STREAM, &SDDMA_InitStructure);
+    DMA_Init(SDIO_DMA_STREAM, &SDDMA_InitStructure);
 
-    DMA_FlowControllerConfig(SD_SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
+    DMA_FlowControllerConfig(SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
 
     // DMA2 Stream3 enable
-    DMA_Cmd(SD_SDIO_DMA_STREAM, ENABLE);
+    DMA_Cmd(SDIO_DMA_STREAM, ENABLE);
 }
 
 SD_Error sdioInit(void) {
@@ -1583,7 +1583,7 @@ SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t Bl
 
 // Returns the DMA End Of Transfer Status.
 uint32_t SD_DMAEndOfTransferStatus(void) {
-    return (uint32_t)DMA_GetFlagStatus(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_TCIF);
+    return (uint32_t)DMA_GetFlagStatus(SDIO_DMA_STREAM, SDIO_DMA_FLAG_TCIF);
 }
 
 // This function waits until the SDIO DMA data transfer is finished.
@@ -2076,9 +2076,9 @@ DRESULT disk_ioctl (
 }
 
 void SD_ProcessDMAIRQ(void) {
-    if(DMA2->LISR & SD_SDIO_DMA_FLAG_TCIF) {
+    if(DMA2->LISR & SDIO_DMA_FLAG_TCIF) {
 	sdioData.DMAEndOfTransfer = 0x01;
-	DMA_ClearFlag(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_TCIF|SD_SDIO_DMA_FLAG_FEIF);
+	DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_TCIF | SDIO_DMA_FLAG_FEIF);
     }
 }
 
@@ -2128,7 +2128,7 @@ void SD_DETECT_HANDLER(void) {
 	sdioData.cardRemovalMicros = timerMicros();
     else
 	sdioData.cardRemovalMicros = 0;
-    EXTI_ClearITPendingBit(SD_DETECT_EXTI_LINE);
+    EXTI_ClearITPendingBit(SDIO_DETECT_EXTI_LINE);
 }
 
 void SD_SDIO_DMA_IRQHANDLER(void) {
