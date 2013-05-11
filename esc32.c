@@ -69,7 +69,12 @@ const char *esc32ParameterStrings[] = {
     "START_STEPS_PERIOD",
     "START_STEPS_ACCEL",
     "PWM_LOWPASS",
-    "RPM_MEAS_LP"
+    "RPM_MEAS_LP",
+    "SERVO_DUTY",
+    "SERVO_P",
+    "SERVO_D",
+    "SERVO_MAX_RATE",
+    "SERVO_SCALE"
 };
 
 float esc32ReadParamTransaction(uint8_t paramId) {
