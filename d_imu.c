@@ -22,6 +22,7 @@
 #include "aq_timer.h"
 #include "config.h"
 #include "comm.h"
+#include "aq_init.h"
 
 OS_STK *dIMUTaskStack;
 
@@ -137,6 +138,8 @@ void dIMUTaskCode(void *unused) {
 	// wait for work
 	CoWaitForSingleFlag(dImuData.flag, 0);
 
+	digitalTogg(tp);
+
 	dIMUCalcTempDiff();
 
 	// double rate gyo loop
@@ -173,8 +176,9 @@ void dIMUReadCalib(void) {
 
     buf = eepromOpenRead();
 
-    if (buf == 0)
+    if (buf == 0) {
 	AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
+    }
     else {
 	while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
 	    p1 = configParseParams((char *)buf, size, p1);
@@ -235,8 +239,8 @@ void dIMUInit(void) {
 #endif
 #ifdef DIMU_HAVE_EEPROM
     eepromInit();
-    if (eepromOpenRead() == 0)
-	dIMUWriteCalib();
+//    if (eepromOpenRead() == 0)
+//	dIMUWriteCalib();
     dIMUReadCalib();
 #endif
 #ifdef DIMU_HAVE_HMC5983
@@ -283,7 +287,7 @@ void dIMUInit(void) {
 
     // Enable the global Interrupt
     NVIC_InitStructure.NVIC_IRQChannel = DIMU_IRQ_CH;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);

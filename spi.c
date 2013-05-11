@@ -58,7 +58,7 @@ void spi1Init(uint16_t baud) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 
 	// SPI SCK / MOSI / MISO pin configuration
 	GPIO_InitStructure.GPIO_Pin = SPI_SPI1_SCK_PIN;
@@ -103,9 +103,9 @@ void spi1Init(uint16_t baud) {
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
 	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI1_DMA_RX, &DMA_InitStructure);
@@ -115,7 +115,7 @@ void spi1Init(uint16_t baud) {
 
 	// Enable RX DMA global Interrupt
 	NVIC_InitStructure.NVIC_IRQChannel = SPI_SPI1_DMA_RX_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -132,10 +132,10 @@ void spi1Init(uint16_t baud) {
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
-	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI1_DMA_TX, &DMA_InitStructure);
 
@@ -171,7 +171,7 @@ void spi2Init(uint16_t baud) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 
 	// SPI SCK / MOSI / MISO pin configuration
 	GPIO_InitStructure.GPIO_Pin = SPI_SPI2_SCK_PIN;
@@ -228,7 +228,7 @@ void spi2Init(uint16_t baud) {
 
 	// Enable RX DMA global Interrupt
 	NVIC_InitStructure.NVIC_IRQChannel = SPI_SPI2_DMA_RX_IRQ;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
@@ -246,9 +246,9 @@ void spi2Init(uint16_t baud) {
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
-	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI2_DMA_TX, &DMA_InitStructure);
 
@@ -286,11 +286,25 @@ void spiNotify(spiClient_t *client) {
 }
 
 void spiStartTxn(spiStruct_t *interface) {
+    spiSlot_t *slot = &interface->slots[interface->tail];
+    spiClient_t *client = slot->client;
     uint32_t tmp;
 
+    // is the current txn taking too long?
+    if (interface->txRunning != 0 && (timerMicros() - interface->txnStart) > SPI_MAX_TXN_TIME) {
+	spiDeselect(client);
+
+	DMA_Cmd(interface->txDMAStream, DISABLE);
+	DMA_Cmd(interface->rxDMAStream, DISABLE);
+
+	SPI_Cmd(interface->spi, DISABLE);
+
+	interface->txnTimeouts++;
+    }
+
     if (interface->txRunning == 0 && interface->tail != interface->head) {
-	spiSlot_t *slot = &interface->slots[interface->tail];
-	spiClient_t *client = slot->client;
+	interface->txRunning = 1;
+	interface->txnStart = timerMicros();
 
 	// set baud rate
 	tmp = interface->spi->CR1 & SPI_BAUD_MASK;
@@ -298,7 +312,6 @@ void spiStartTxn(spiStruct_t *interface) {
 	interface->spi->CR1 = tmp;
 
 	spiSelect(client);
-	SPI_Cmd(interface->spi, ENABLE);
 
 	// specify "in transaction"
 	if (client->flag)
@@ -312,7 +325,7 @@ void spiStartTxn(spiStruct_t *interface) {
 	interface->txDMAStream->NDTR = slot->size;
 	DMA_Cmd(interface->txDMAStream, ENABLE);
 
-	interface->txRunning = 1;
+	SPI_Cmd(interface->spi, ENABLE);
     }
 }
 

@@ -24,6 +24,7 @@
 #define SPI_BAUD_MASK		    (~((int16_t)0b111<<3))
 
 #define SPI_SLOTS		    5
+#define SPI_MAX_TXN_TIME	    25	    // us
 
 typedef void spiCallback_t(int);
 
@@ -49,6 +50,8 @@ typedef struct {
     spiSlot_t slots[SPI_SLOTS];
     volatile uint8_t head, tail;
     volatile uint8_t txRunning;
+    uint32_t txnStart;
+    uint32_t txnTimeouts;
     uint8_t initialized;
 } spiStruct_t;
 
