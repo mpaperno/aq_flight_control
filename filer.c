@@ -262,17 +262,15 @@ void filerTaskCode(void *p) {
     }
 
     while (1) {
-	CoWaitForSingleFlag(filerData.filerFlag, 5);	// run at least every 5ms if possible
-	filerData.loops++;
-
 	if (!filerData.initialized) {
 	    if (filerInitFS() < 0)
 		goto filerRestart;
 	    else {
 		filerData.initialized = 1;
-		supervisorDiskWait(1);
 	    }
 	}
+
+	supervisorDiskWait(1);
 
 	for (i = 0; i < FILER_MAX_FILES; i++) {
 	    if (filerData.files[i].function > FILER_FUNC_NONE) {
@@ -290,7 +288,10 @@ void filerTaskCode(void *p) {
 	    }
 	}
 
+	filerData.loops++;
+
 	CoClearFlag(filerData.filerFlag);
+	CoWaitForSingleFlag(filerData.filerFlag, 5);	// run at least every 5ms if possible
     }
 }
 
@@ -301,6 +302,9 @@ void filerInit(void) {
     filerTaskStack = aqStackInit(FILER_STACK_SIZE, "FILER");
 
     filerData.filerTask = CoCreateTask(filerTaskCode, (void *)0, FILER_PRIORITY, &filerTaskStack[FILER_STACK_SIZE-1], FILER_STACK_SIZE);
+
+    // wait for card to startup
+    yield(500);
 }
 
 // returns file handle or -1 upon failure
@@ -324,7 +328,7 @@ int8_t filerGetHandle(char *fileName) {
 int32_t filerReadWrite(filerFileStruct_t *f, void *buf, int32_t seek, uint32_t length, uint8_t function) {
     // handle allocated yet?
     if (!f->allocated || !filerData.initialized)
-	    return -1;
+	return -1;
 
     f->buf = buf;
     f->function = function;

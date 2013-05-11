@@ -2123,7 +2123,7 @@ void SDIO_IRQHandler(void) {
 }
 
 // card detect interrupt
-void SD_DETECT_HANDLER(void) {
+void SDIO_DETECT_HANDLER(void) {
     if (SD_DetectLowLevel() == SD_NOT_PRESENT)
 	sdioData.cardRemovalMicros = timerMicros();
     else
@@ -2131,6 +2131,6 @@ void SD_DETECT_HANDLER(void) {
     EXTI_ClearITPendingBit(SDIO_DETECT_EXTI_LINE);
 }
 
-void SD_SDIO_DMA_IRQHANDLER(void) {
+void SDIO_SDIO_DMA_IRQHANDLER(void) {
     SD_ProcessDMAIRQ();
 }
