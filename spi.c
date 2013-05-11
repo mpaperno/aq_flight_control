@@ -44,7 +44,7 @@ inline void spiTriggerSchedule(uint8_t interface) {
 }
 
 #ifdef SPI_SPI1_CLOCK
-void spi1Init(uint16_t baud) {
+void spi1Init(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -84,7 +84,7 @@ void spi1Init(uint16_t baud) {
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_BaudRatePrescaler = baud;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI1, &SPI_InitStructure);
 
@@ -157,7 +157,7 @@ void spi1Init(uint16_t baud) {
 #endif
 
 #ifdef SPI_SPI2_CLOCK
-void spi2Init(uint16_t baud) {
+void spi2Init(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -197,7 +197,7 @@ void spi2Init(uint16_t baud) {
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_BaudRatePrescaler = baud;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI2, &SPI_InitStructure);
 
@@ -351,6 +351,24 @@ void spiEndTxn(spiStruct_t *interface) {
 }
 
 void spiChangeBaud(spiClient_t *client, uint16_t baud) {
+    // SPI1 runs at twice the speed of SPI2
+    if (client->interface == 0) {
+	if (baud == SPI_BaudRatePrescaler_2)
+	    baud = SPI_BaudRatePrescaler_4;
+	else if (baud == SPI_BaudRatePrescaler_4)
+	    baud = SPI_BaudRatePrescaler_8;
+	else if (baud == SPI_BaudRatePrescaler_8)
+	    baud = SPI_BaudRatePrescaler_16;
+	else if (baud == SPI_BaudRatePrescaler_16)
+	    baud = SPI_BaudRatePrescaler_32;
+	else if (baud == SPI_BaudRatePrescaler_32)
+	    baud = SPI_BaudRatePrescaler_64;
+	else if (baud == SPI_BaudRatePrescaler_64)
+	    baud = SPI_BaudRatePrescaler_128;
+	else if (baud == SPI_BaudRatePrescaler_128)
+	    baud = SPI_BaudRatePrescaler_256;
+    }
+
     client->baud = baud;
 }
 
@@ -382,20 +400,20 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
 #ifdef SPI_SPI1_CLOCK
     if (spi == SPI1) {
 	client->interface = 0;
-	spi1Init(baud);
+	spi1Init();
     }
 #endif
 #ifdef SPI_SPI2_CLOCK
     if (spi == SPI2) {
 	client->interface = 1;
-	spi2Init(baud);
+	spi2Init();
     }
 #endif
 
     client->cs = digitalInit(csPort, csPin);
     spiDeselect(client);
 
-    client->baud = baud;
+    spiChangeBaud(client, baud);
     client->flag = flag;
     client->callback = callback;
 

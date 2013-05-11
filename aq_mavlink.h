@@ -29,7 +29,6 @@
 #define MAVLINK_STACK_SIZE		    280
 #define MAVLINK_PRIORITY		    40
 
-#define MAVLINK_DOWNLINK_PORT		    1
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    //  1Hz
 #define MAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
 #define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second
