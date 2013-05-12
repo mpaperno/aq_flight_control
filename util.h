@@ -30,7 +30,7 @@
 #define UTIL_ISR_DISABLE	__asm volatile ( "CPSID   F\n")
 #define UTIL_ISR_ENABLE		__asm volatile ( "CPSIE   F\n")
 
-#define yield(n)    CoTickDelay(n);
+#define yield(n) CoTickDelay(n);
 
 // first order filter
 typedef struct {

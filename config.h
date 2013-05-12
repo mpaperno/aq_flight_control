@@ -87,8 +87,6 @@ enum configParameters {
     CTRL_YAW_ANG_IM,
     CTRL_YAW_ANG_DM,
     CTRL_YAW_ANG_OM,
-    GPS_BAUD_RATE,
-    GPS_RATE,
     MOT_FRAME,
     MOT_START,
     MOT_MIN,

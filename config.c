@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -90,8 +90,6 @@ const char *configParameterStrings[] = {
     "CTRL_YAW_ANG_IM",
     "CTRL_YAW_ANG_DM",
     "CTRL_YAW_ANG_OM",
-    "GPS_BAUD_RATE",
-    "GPS_RATE",
     "MOT_FRAME",
     "MOT_START",
     "MOT_MIN",
@@ -463,8 +461,6 @@ void configLoadDefault(void) {
     p[CTRL_YAW_ANG_IM] = DEFAULT_CTRL_YAW_ANG_IM;
     p[CTRL_YAW_ANG_DM] = DEFAULT_CTRL_YAW_ANG_DM;
     p[CTRL_YAW_ANG_OM] = DEFAULT_CTRL_YAW_ANG_OM;
-    p[GPS_BAUD_RATE] = DEFAULT_GPS_BAUD_RATE;
-    p[GPS_RATE] = DEFAULT_GPS_RATE;
     p[MOT_FRAME] = DEFAULT_MOT_FRAME;
     p[MOT_START] = DEFAULT_MOT_START;
     p[MOT_MIN] = DEFAULT_MOT_MIN;

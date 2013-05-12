@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    105
+#define DEFAULT_CONFIG_VERSION	    106
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -91,9 +91,6 @@
 #define DEFAULT_CTRL_YAW_ANG_IM	    0.04f
 #define DEFAULT_CTRL_YAW_ANG_DM	    0.0f
 #define DEFAULT_CTRL_YAW_ANG_OM	    1.25f
-
-#define DEFAULT_GPS_BAUD_RATE	    230400
-#define DEFAULT_GPS_RATE	    200		// ms per cycle (5Hz)
 
 #define DEFAULT_MOT_FRAME	    0		// 0 == custom, 1 == '+' configuration, 2 == 'x', 3 == hex
 #define DEFAULT_MOT_START	    1125

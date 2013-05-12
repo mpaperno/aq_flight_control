@@ -39,10 +39,6 @@ OS_STK *gpsTaskStack;
 char gpsLog[GPS_LOG_BUF];
 #endif
 
-void gpsInitGps(void) {
-    ubloxInitGps();
-}
-
 void gpsSendSetup(void) {
     ubloxSendSetup();
 }
@@ -54,7 +50,7 @@ void gpsCheckBaud(serialPort_t *s) {
 	AQ_NOTICE("GPS: trying new baud rate\n");
 	serialChangeBaud(s, gpsData.baudCycle[gpsData.baudSlot]);
 	ubloxInitGps();
-	serialChangeBaud(s, p[GPS_BAUD_RATE]);
+	serialChangeBaud(s, GPS_BAUD_RATE);
 	gpsSendSetup();
 	gpsData.lastMessage = IMU_LASTUPD;
     }
@@ -124,7 +120,7 @@ void gpsInit(void) {
 
     memset((void *)&gpsData, 0, sizeof(gpsData));
 
-    gpsData.baudCycle[0] = p[GPS_BAUD_RATE];
+    gpsData.baudCycle[0] = GPS_BAUD_RATE;
     gpsData.baudCycle[1] = 9600;
     gpsData.baudCycle[2] = 230400;
     gpsData.baudCycle[3] = 115200;
@@ -137,7 +133,7 @@ void gpsInit(void) {
     gpsData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN);
     digitalLo(gpsData.gpsLed);
 
-    gpsData.gpsPort = serialOpen(GPS_USART, p[GPS_BAUD_RATE], USART_HardwareFlowControl_None, 512, 512);
+    gpsData.gpsPort = serialOpen(GPS_USART, GPS_BAUD_RATE, USART_HardwareFlowControl_None, 512, 512);
 
     // manual reset flags
     gpsData.gpsVelFlag = CoCreateFlag(0, 0);

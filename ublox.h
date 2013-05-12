@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef ublox_h
@@ -24,6 +24,7 @@
 
 #define UBLOX_NAV_CLASS	    0x01
 #define UBLOX_RXM_CLASS	    0x02
+#define UBLOX_MON_CLASS	    0x0a
 #define UBLOX_AID_CLASS	    0x0b
 #define UBLOX_TIM_CLASS	    0x0d
 
@@ -39,12 +40,14 @@
 
 #define UBLOX_POSLLH	    0x02
 #define UBLOX_DOP	    0x04
+#define UBLOX_PVT	    0x07
 #define UBLOX_VALNED	    0x12
 #define UBLOX_TP	    0x01
 #define UBLOX_TIMEUTC	    0x21
 #define UBLOX_AID_REQ	    0x00
 #define UBLOX_RAW	    0x10
 #define UBLOX_SFRB	    0x11
+#define UBLOX_VER	    0x04
 
 #define UBLOX_MAX_PAYLOAD   384
 
@@ -108,7 +111,50 @@ typedef struct {
     unsigned char valid;    // Validity Flags
 } __attribute__((packed)) ubloxStructTIMEUTC_t;
 
+// Receiver/Software Version
 typedef struct {
+    char swVersion[30];
+    char hwVersion[10];
+    char extension[30][7];
+} __attribute__((packed)) ubloxStructVER_t;
+
+// Position Velocity Time Solution
+typedef struct {
+    uint32_t iTOW;
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t hour;
+    uint8_t min;
+    uint8_t sec;
+    uint8_t valid;
+    uint32_t tAcc;
+    int32_t nano;
+    uint8_t fixType;
+    uint8_t flags;
+    uint8_t reserved1;
+    uint8_t numSV;
+    int32_t lon;
+    int32_t lat;
+    int32_t height;
+    int32_t hMSL;
+    uint32_t hAcc;
+    uint32_t vAcc;
+    int32_t velN;
+    int32_t velE;
+    int32_t velD;
+    int32_t gSpeed;
+    int32_t heading;
+    uint32_t sAcc;
+    uint32_t headingAcc;
+    uint16_t pDOP;
+    uint16_t reserved2;
+    uint32_t reserved3;
+} __attribute__((packed)) ubloxStructPVT_t;
+
+typedef struct {
+    int hwVer;
+
     signed long lastLat, lastLon;
     union {
 	ubloxStructPOSLLH_t posllh;
@@ -116,6 +162,8 @@ typedef struct {
 	ubloxStructDOP_t dop;
 	ubloxStructTP_t tp;
 	ubloxStructTIMEUTC_t timeutc;
+	ubloxStructVER_t ver;
+	ubloxStructPVT_t pvt;
 	char other[UBLOX_MAX_PAYLOAD];
     } payload;
 

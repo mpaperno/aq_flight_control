@@ -157,6 +157,20 @@ void ubloxSetTimepulse(void) {
     yield(50);
 }
 
+void ubloxPollVersion(void) {
+    ubloxSendPreamble();
+
+    ubloxWriteU1(0x0A);		// MON
+    ubloxWriteU1(0x04);		// VER
+
+    ubloxWriteU1(0x00);		// length lsb
+    ubloxWriteU1(0x00);		// length msb
+
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    yield(50);
+}
+
 void ubloxSendSetup(void) {
     yield(50);
     ubloxSetTimepulse();
@@ -165,20 +179,27 @@ void ubloxSendSetup(void) {
     ubloxEnableMessage(UBLOX_TIM_CLASS, UBLOX_TP, 1);		// TIM TP
     ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_DOP, 5);		// NAV DOP
     ubloxEnableMessage(UBLOX_AID_CLASS, UBLOX_AID_REQ, 1);	// AID REQ
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 5);    // TIME UTC
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 5);	// TIME UTC
 #ifdef GPS_DO_RTK
     ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_RAW, 1);		// RXM RAW
     ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_SFRB, 1);		// RXM SFRB
 #endif
     ubloxSetMode();						// 3D, airborne
-    ubloxSetRate((unsigned short int)p[GPS_RATE]);	// ms
+    ubloxPollVersion();
+    if (ubloxData.hwVer > 6)
+	// 10Hz
+	ubloxSetRate((uint16_t)100);
+    else
+	// 5Hz
+	ubloxSetRate((uint16_t)200);
 }
 
 void ubloxInit(void) {
     memset((void *)&ubloxData, 0, sizeof(ubloxData));
 
-    ubloxSendSetup();
     ubloxData.state = UBLOX_WAIT_SYNC1;
+
+    ubloxSendSetup();
 }
 
 void ubloxInitGps(void) {
@@ -251,12 +272,18 @@ unsigned char ubloxPublish(void) {
 		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec))
 	    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);
     }
+    else if (ubloxData.class == UBLOX_MON_CLASS && ubloxData.id == UBLOX_VER) {
+	ubloxData.hwVer = atoi(ubloxData.payload.ver.hwVersion) / 10000;
+	// version 7 modules are capable of 10Hz output
+	if (ubloxData.hwVer > 6)
+	    ubloxSetRate((uint16_t)100);
+    }
 
     gpsData.lastMessage = IMU_LASTUPD;
 
     CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
 
-    if (0) {
+    if (1) {
 	int i;
 
 	// grab port lock
