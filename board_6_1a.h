@@ -44,7 +44,6 @@
 //#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x08)	// SDIO Data Transfer Frequency (3MHz max)
 //#define SDIO_TRANSFER_CLK_DIV           ((uint8_t)0x10)	// SDIO Data Transfer Frequency (1.5MHz max)
 
-
 enum pwmPorts {
     PWM_1 = 0,
     PWM_2,
@@ -62,6 +61,8 @@ enum pwmPorts {
     PWM_14,
     PWM_NUM_PORTS
 };
+
+#define PWM_HIGH_PORT	14
 
 #define PWM_TIMERS  const TIM_TypeDef *pwmTimers[] = { \
     TIM1, \
