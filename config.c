@@ -831,7 +831,7 @@ unsigned int configParameterWrite(void *data) {
 
 int configParseParams(char *fileBuf, int size, int p1) {
     static char lineBuf[CONFIG_LINE_BUF_SIZE];
-    char param[16];
+    char param[17];
     float value;
     char c;
     int p2;
@@ -844,11 +844,11 @@ int configParseParams(char *fileBuf, int size, int p1) {
 	if (c == '\n' || p1 == (CONFIG_LINE_BUF_SIZE-1)) {
 	    lineBuf[p1] = 0;
 
-	    n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
+	    n = sscanf(lineBuf, "#define DEFAULT_%17s %f", param, &value);
 	    if (n != 2) {
-		n = sscanf(lineBuf, "%15s %f", param, &value);
+		n = sscanf(lineBuf, "%17s %f", param, &value);
 		if (n != 2) {
-		    n = sscanf(lineBuf, "#define %15s %f", param, &value);
+		    n = sscanf(lineBuf, "#define %17s %f", param, &value);
 		}
 	    }
 
@@ -898,7 +898,7 @@ int8_t configReadFile(char *fname) {
 }
 
 int8_t configFormatParam(char *buf, int n) {
-    return sprintf(buf, "%-15s\t\t%+.10e\n", configParameterStrings[n], p[n]);
+    return sprintf(buf, "%-17s\t\t%+.10e\n", configParameterStrings[n], p[n]);
 }
 
 // write config to uSD
