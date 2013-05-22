@@ -283,7 +283,7 @@ unsigned char ubloxPublish(void) {
 
     CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
 
-    if (1) {
+    if (0) {
 	int i;
 
 	// grab port lock
