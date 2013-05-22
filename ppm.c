@@ -25,6 +25,8 @@
 #include "radio.h"
 #include "ppm.h"
 #include "aq_timer.h"
+#include "config.h"
+#include "util.h"
 #include <string.h>
 
 ppmStruct_t ppmData __attribute__((section(".ccm")));
@@ -108,8 +110,9 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
         else if (diff >= PPM_MIN_PULSE_WIDTH && diff <= PPM_MAX_PULSE_WIDTH)
             ppmData.tmp_channels[(ppmData.lastChannel)++] = diff;
 
-        // Ignore invalid pulses (but count them as errors). If pulse was actually a channel, this will be caught later,
-        // when the frame is validated. If it was not a channel, then we should do well to just ignore it.
+        // Invalid pulse invalidates the whole frame.
+        // (also tried ignoring them because "If pulse was actually a channel, this will be caught later when the frame is validated."
+        //  but in practice this seems to cause random channel value drops. )
         else
             ppmData.inputValid = 0;
             //ppmData.signalQuality = 0; // non-critical error
@@ -126,23 +129,17 @@ int ppmDataAvailable(void) {
 
     if (ppmData.frameParsed) {
         ppmData.frameParsed = 0;
-        RADIO_THROT       = ppmLimitRangeThrottle((PPM_THROT-p[PPM_THROT_LOW])*5 / p[PPM_SCALER]);
-        RADIO_ROLL        = ppmLimitRange((PPM_ROLL-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_PITCH       = ppmLimitRange((PPM_PITCH-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_RUDD        = ppmLimitRange((PPM_RUDD-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_GEAR        = ppmLimitRange((PPM_GEAR-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_FLAPS       = ppmLimitRange((PPM_FLAPS-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX2        = ppmLimitRange((PPM_AUX2-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX3        = ppmLimitRange((PPM_AUX3-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX4        = ppmLimitRange((PPM_AUX4-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX5        = ppmLimitRange((PPM_AUX5-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX6        = ppmLimitRange((PPM_AUX6-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]);
-        RADIO_AUX7        = ppmLimitRange((PPM_AUX7-p[PPM_CHAN_MID])*5 / p[PPM_SCALER]); 
+        for (int i=0; i < ppmData.numberChannels; ++i) {
+            if (i == (int)p[RADIO_THRO_CH])
+                radioData.channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_THROT_LOW])*5 / p[PPM_SCALER]), PPM_THROT_MIN, PPM_THROT_MAX);
+            else
+        	radioData.channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_CHAN_MID])*5 / p[PPM_SCALER]), PPM_CHAN_MIN, PPM_CHAN_MAX);
+        }
         return 1;
     }
-    else {
+    else
         return 0;
-    }
+
 }
 
 int8_t ppmGetSignalQuality(void) {

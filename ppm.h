@@ -19,43 +19,30 @@
 
 /*
     PPM module written by TC
-    Heavily modified by Menno de Gans
+    Heavily modified by Menno de Gans & Maxim Paperno
 */
 
 #ifndef _ppm_h
 #define _ppm_h
 
-#include "radio.h"
 #include "pwm.h"
-#include "config.h"
 
-#define PPM_PWM_CHANNEL		    13    // which PWM channel to use for PPM capture
-#define PPM_MAX_CHANNELS	    12    // can't be > 18
+#define PPM_MAX_CHANNELS		12	// can't be > RADIO_MAX_CHANNELS
 #define PPM_GUARD_PULSE_LENGTH	    2700
 #define PPM_MIN_PULSE_WIDTH	    750
 #define PPM_MAX_PULSE_WIDTH	    2250
 #define PPM_STAB_CHANNEL_FRAMES     20    // number of consecutive frames with the same number of channels after which we assume that number of channels is stable ;)
 #define PPM_CAPTURE_EDGE	    1	  // "polarity" value for passing to pwmInitIn(); -1 for falling edge, 1 for rising edge
 
-#define PPM_THROT           ppmData.channels[(int)p[RADIO_THRO_CH]]
-#define PPM_ROLL            ppmData.channels[(int)p[RADIO_ROLL_CH]]
-#define PPM_PITCH           ppmData.channels[(int)p[RADIO_PITC_CH]]
-#define PPM_RUDD            ppmData.channels[(int)p[RADIO_RUDD_CH]]
-#define PPM_GEAR            ppmData.channels[(int)p[RADIO_GEAR_CH]]
-#define PPM_FLAPS           ppmData.channels[(int)p[RADIO_FLAP_CH]]
-#define PPM_AUX2            ppmData.channels[(int)p[RADIO_AUX2_CH]]
-#define PPM_AUX3            ppmData.channels[(int)p[RADIO_AUX3_CH]]
-#define PPM_AUX4            ppmData.channels[(int)p[RADIO_AUX4_CH]]
-#define PPM_AUX5            ppmData.channels[(int)p[RADIO_AUX5_CH]]
-#define PPM_AUX6            ppmData.channels[(int)p[RADIO_AUX6_CH]]
-#define PPM_AUX7            ppmData.channels[(int)p[RADIO_AUX7_CH]]
-
-#define ppmLimitRange( v ) ( ( v < -1024 ) ? -1024 : ( ( v > 1023 ) ? 1023 : v ) )
-#define ppmLimitRangeThrottle( v ) ( ( v < -338 ) ? -338 : ( ( v > 1709 ) ? 1709 : v ) )
+#define PPM_THROT_MIN			-338	// final value constraints
+#define PPM_THROT_MAX			1709
+#define PPM_CHAN_MIN			-1024
+#define PPM_CHAN_MAX			1023
 
 typedef struct {
     pwmPortStruct_t *ppmPort;
     volatile uint8_t frameParsed;
+
     uint32_t lastCaptureValue;
     uint8_t  lastChannel;		    // index into channels[]
     uint8_t  previousChannels;		    // number of channels seen in previous frame;
@@ -68,9 +55,9 @@ typedef struct {
     uint8_t  inputValid;		    // 1 valid
 					    // 0 current frame is invalid
 
-    int16_t  channels[PPM_MAX_CHANNELS];    // channel values are stored here after successful
-					    // capture of the whole frame
+    int16_t  channels[PPM_MAX_CHANNELS];    // channel values are stored here after successful capture of the whole frame
     int16_t tmp_channels[PPM_MAX_CHANNELS]; // temporary channel values while capturing the frame
+
 } ppmStruct_t;
 
 extern void ppmInit( void );

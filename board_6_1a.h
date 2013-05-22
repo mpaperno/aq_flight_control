@@ -63,6 +63,7 @@ enum pwmPorts {
 };
 
 #define PWM_HIGH_PORT	14
+#define PPM_PWM_CHANNEL		13	// which PWM channel to use for PPM capture
 
 #define PWM_TIMERS  const TIM_TypeDef *pwmTimers[] = { \
     TIM1, \
