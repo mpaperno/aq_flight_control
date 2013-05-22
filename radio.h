@@ -30,16 +30,17 @@
 #define RADIO_STACK_SIZE	64
 #define RADIO_PRIORITY		25
 
+#define RADIO_MAX_CHANNELS	18
 #define RADIO_UPDATE_TIMEOUT	60000	// maximum time in micros between valid radio updates before signal is considered unstable;
 
 #define RADIO_THROT             radioData.channels[(int)p[RADIO_THRO_CH]]
 #define RADIO_ROLL		radioData.channels[(int)p[RADIO_ROLL_CH]]
 #define RADIO_PITCH		radioData.channels[(int)p[RADIO_PITC_CH]]
 #define RADIO_RUDD		radioData.channels[(int)p[RADIO_RUDD_CH]]
-#define RADIO_GEAR		radioData.channels[(int)p[RADIO_GEAR_CH]]
-#define RADIO_FLAPS		radioData.channels[(int)p[RADIO_FLAP_CH]]
-#define RADIO_AUX2		radioData.channels[(int)p[RADIO_AUX2_CH]]
-#define RADIO_AUX3		radioData.channels[(int)p[RADIO_AUX3_CH]]
+#define RADIO_GEAR		radioData.channels[(int)p[RADIO_GEAR_CH]]	// camera trigger
+#define RADIO_FLAPS		radioData.channels[(int)p[RADIO_FLAP_CH]]	// flight mode
+#define RADIO_AUX2		radioData.channels[(int)p[RADIO_AUX2_CH]]	// home functions
+#define RADIO_AUX3		radioData.channels[(int)p[RADIO_AUX3_CH]]	// gimbal tilt
 #define RADIO_AUX4		radioData.channels[(int)p[RADIO_AUX4_CH]]
 #define RADIO_AUX5		radioData.channels[(int)p[RADIO_AUX5_CH]]
 #define RADIO_AUX6		radioData.channels[(int)p[RADIO_AUX6_CH]]
@@ -48,7 +49,7 @@
 #define RADIO_ERROR_COUNT       radioData.errorCount
 #define RADIO_QUALITY           radioData.quality
 
-enum {
+enum radioTypes {
     RADIO_TYPE_SPEKTRUM11 = 0,
     RADIO_TYPE_SPEKTRUM10,
     RADIO_TYPE_SBUS,
@@ -61,7 +62,7 @@ typedef struct {
     serialPort_t *serialPort;
     utilFilter_t qualityFilter;
 
-    int16_t channels[18];	// holds channel values received from radio handler
+    int16_t channels[RADIO_MAX_CHANNELS];	// holds channel values received from radio handler
     unsigned int errorCount;	// cumulative error/lost frame counter
     float quality;		// running measure of radio data stability, in range of 0-100
     int8_t radioType;		// stores the radio type defined in parameters to avoid runtime changes

@@ -35,6 +35,7 @@ void radioReceptionQuality(int8_t q) {
 
 void radioTaskCode(void *unused) {
     serialPort_t *s = radioData.serialPort;
+    int8_t q;
 
     AQ_NOTICE("Radio task started\n");
 
@@ -54,9 +55,9 @@ void radioTaskCode(void *unused) {
 
 	case RADIO_TYPE_SBUS:
 	    while (serialAvailable(s))
-		if (futabaCharIn(serialRead(s))) {
+		if ((q = futabaCharIn(serialRead(s)))) {
 		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(1);
+		    radioReceptionQuality(q);
 		}
 	    break;
 
@@ -67,9 +68,9 @@ void radioTaskCode(void *unused) {
 
 	case RADIO_TYPE_SUMD:
 	    while (serialAvailable(s))
-		if (grhottCharIn(serialRead(s))) {
+		if ((q = grhottCharIn(serialRead(s)))) {
 		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(1);
+		    radioReceptionQuality(q);
 		}
 	    break;
 	}
@@ -112,6 +113,9 @@ void radioInit(void) {
     utilFilterInit(&radioData.qualityFilter, (1.0f / 50.0f), 0.75f, 0.0f);
 
     radioData.radioType = (int8_t)p[RADIO_TYPE];
+
+    for (int i=0; i < RADIO_MAX_CHANNELS; ++i)
+	radioData.channels[i] = (i == (int)p[RADIO_FLAP_CH]) ? -700 : 0;
 
     switch (radioData.radioType) {
     case RADIO_TYPE_SPEKTRUM11:
