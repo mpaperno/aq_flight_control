@@ -239,7 +239,6 @@ void dIMUInit(void) {
 #endif
 #ifdef DIMU_HAVE_EEPROM
     eepromInit();
-//    if (eepromOpenRead() == 0)
 //	dIMUWriteCalib();
     dIMUReadCalib();
 #endif
