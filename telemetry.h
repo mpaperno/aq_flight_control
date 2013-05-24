@@ -31,6 +31,8 @@ typedef struct {
     unsigned char telemetryEnable;
     unsigned long lastAqCounter;
     float idlePercent;
+
+    uint8_t ckA, ckB;
 } telemetryStruct_t;
 
 extern telemetryStruct_t telemetryData;

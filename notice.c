@@ -13,16 +13,16 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
-#include "downlink.h"
 #include "notice.h"
 #include "aq_mavlink.h"
 #include "util.h"
 #include "config.h"
 #include "comm.h"
+#include "supervisor.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -38,48 +38,58 @@ void noticeSend(const char *s) {
 
 void noticeTaskCode(void *unused) {
     StatusType result;
+    commTxBuf_t *txBuf;
+    uint8_t ckA, ckB;
     char *c;
+    uint8_t *ptr;
 
     AQ_NOTICE("Notice task started\n");
 
     while (1) {
 	c = (char *)CoPendQueueMail(noticeData.notices, 0, &result);
 
-	// grab port lock
-	CoEnterMutexSection(downlinkData.serialPortMutex);
+	// wait until a txn buffer is available
+	txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, 64);
+	while (txBuf == 0) {
+	    yield(1);
+	    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, 64);
+	}
+	ptr = &txBuf->buf;
 
-	downlinkSendString("AqI"); // info header
+	supervisorSendDataStart();
 
-	downlinkResetChecksum();
+	*ptr++ = 'A';
+	*ptr++ = 'q';
+	*ptr++ = 'I';
+
+	ckA = ckB = 0;
 	do {
-	    downlinkSendChar(*c);
+	    *ptr++ = *c;
+	    ckA += *c;
+	    ckB += ckA;
 	} while (*(c++));
 
-	// terminate with NL & NULL
-//	downlinkSendChar('\n');
-//	downlinkSendChar(0);
+	*ptr++ = ckA;
+	*ptr++ = ckB;
 
-	downlinkSendChecksum();
-
-	// release serial port
-	CoLeaveMutexSection(downlinkData.serialPortMutex);
+	commSendTxBuf(txBuf, ptr - &txBuf->buf);
+	supervisorSendDataStop();
     }
 }
 
 void noticeInit(void) {
     memset((void *)&noticeData, 0, sizeof(noticeData));
 
-    if (p[TELEMETRY_COMM] == 0.0f)
-	return;
+    if (commStreamUsed(COMM_TYPE_TELEMETRY)) {
+	noticeData.notices = CoCreateQueue(noticeData.noticeQueue, NOTICE_QUEUE_DEPTH, EVENT_SORT_TYPE_FIFO);
+	noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE, "NOTICE");
 
-    noticeData.notices = CoCreateQueue(noticeData.noticeQueue, NOTICE_QUEUE_DEPTH, EVENT_SORT_TYPE_FIFO);
-    noticeTaskStack = aqStackInit(NOTICE_STACK_SIZE, "NOTICE");
+	// start notice thread with high priority so that it can process startup notices - will drop priority later
+	noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[NOTICE_STACK_SIZE-1], NOTICE_STACK_SIZE);
 
-    // start notice thread with high priority so that it can process startup notices - will drop priority later
-    noticeData.noticeTask = CoCreateTask(noticeTaskCode, (void *)0, 5, &noticeTaskStack[NOTICE_STACK_SIZE-1], NOTICE_STACK_SIZE);
+	// register notice function with comm module
+	commRegisterNoticeFunc(noticeSend);
 
-    // register notice function with comm module
-    commRegisterNoticeFunc(noticeSend);
-
-    noticeData.initialized = 1;
+	noticeData.initialized = 1;
+    }
 }

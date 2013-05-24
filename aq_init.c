@@ -27,7 +27,6 @@
 #ifdef MAVLINK
     #include "mavlink.h"
 #else
-    #include "downlink.h"
     #include "notice.h"
     #include "telemetry.h"
     #include "command.h"
@@ -71,7 +70,6 @@ void aqInit(void *pdata) {
 #ifdef USE_MAVLINK
     mavlinkInit();
 #endif
-    downlinkInit();
     noticeInit();
     telemetryInit();
     motorsInit();

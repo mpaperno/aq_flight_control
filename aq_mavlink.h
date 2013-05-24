@@ -35,15 +35,14 @@
 #define MAVLINK_NOTICE_DEPTH		    25
 #define MAVLINK_PARAMID_LEN		    16
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
+#define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
 
 typedef struct {
     OS_TID sendTask;
     OS_TID recvTask;
-    OS_MutexID serialPortMutex;
     OS_EventID notices;
     void *noticeQueue[MAVLINK_NOTICE_DEPTH];
 
-    serialPort_t *serialPort;
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;
@@ -85,6 +84,7 @@ extern void mavlinkWpReached(uint16_t seqId);
 extern void mavlinkWpAnnounceCurrent(uint16_t seqId);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 extern void mavlinkDo(void);
+extern void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len);
 
 #endif
 #endif	// USE_MAVLINK

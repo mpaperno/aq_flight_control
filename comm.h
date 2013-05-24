@@ -21,56 +21,99 @@
 
 #include "serial.h"
 
-#define COMM_NUM_PORTS		3
+#define COMM_NUM_PORTS		4
 
 //#define COMM_DISABLE_FLOW_CONTROL1
-//#define COMM_DISABLE_FLOW_CONTROL2
+#define COMM_DISABLE_FLOW_CONTROL2
 //#define COMM_DISABLE_FLOW_CONTROL3
+#define COMM_DISABLE_FLOW_CONTROL4
 
-#define COMM_RX_BUF_SIZE1	256
-#define COMM_TX_BUF_SIZE1	1024
+#define COMM_RX_BUF_SIZE	512			// maximum rx payload
 
-#define COMM_RX_BUF_SIZE2	256
-#define COMM_TX_BUF_SIZE2	1024
-
-#define COMM_RX_BUF_SIZE3	256
-#define COMM_TX_BUF_SIZE3	1024
+#define COMM_STACK_DEPTH	16			// number of outstanding requests allowed (per port)
+#define COMM_TX_NUM_SIZES	6
 
 #define COMM_MAX_PROTOCOLS	2
 
-enum commModes {
-    COMM_UNUSED = 0,
-    COMM_SINGLEPLEX,
-    COMM_MULTIPLEX
+enum commStreamTypes {
+    COMM_TYPE_NONE	    = 0,
+    COMM_TYPE_MULTIPLEX	    = (1<<0),
+    COMM_TYPE_MAVLINK	    = (1<<1),
+    COMM_TYPE_TELEMETRY	    = (1<<2),
+    COMM_TYPE_GPS	    = (1<<3),
+    COMM_TYPE_FILEIO	    = (1<<4),
+    COMM_TYPE_CLI	    = (1<<5),
+    COMM_TYPE_OMAP_CONSOLE  = (1<<6),
+    COMM_TYPE_OMAP_PPP	    = (1<<7)
 };
 
-enum commStreamTypes {
-    COMM_TYPE_MAVLINK,
-    COMM_TYPE_TELEMETRY,
-    COMM_TYPE_UBLOX,
-    COMM_TYPE_FILEIO,
-    COMM_TYPE_CLI,
-    COMM_TYPE_OMAP_CONSOLE,
-    COMM_TYPE_OMAP_PPP
+enum commTxBufferStatus {
+    COMM_TX_BUF_FREE	    = 0,
+    COMM_TX_BUF_ALLOCATED,
+    COMM_TX_BUF_SENDING
 };
 
 typedef void commNoticeCallback_t(const char *s);
 typedef void commTelemCallback_t(void);
 
 typedef struct {
-    serialPort_t *serialPorts[COMM_NUM_PORTS];
-    uint8_t portMode[COMM_NUM_PORTS];
-    commNoticeCallback_t *noticeFuncs[COMM_MAX_PROTOCOLS];
-    commTelemCallback_t *telemFuncs[COMM_MAX_PROTOCOLS];
+    volatile uint8_t status;				    // this packet's status
+    uint8_t sync[2];					    // sync bytes for multiplex
+    uint8_t ck[2];					    // packet checksum
+    uint8_t seq;					    // seq id
+    uint8_t type;					    // protocol type
+    uint16_t len;					    // payload length
+    uint8_t buf;
+} __attribute__((packed)) commTxBuf_t;
+
+#define COMM_HEADER_SIZE	8			    // TODO: hard-coded for now
+
+typedef struct {
+    commTxBuf_t *txBuf;					    // pointer to tx packet
+    uint8_t *memory;					    // actual memory address to send
+    uint16_t size;					    // number of bytes to send
+    uint8_t port;					    // port this stack element belongs to
+} commTxStack_t;
+
+typedef struct {
+    OS_MutexID txBufferMutex;
+
+    serialPort_t *serialPorts[COMM_NUM_PORTS];		    // serial port handles
+
+    commNoticeCallback_t *noticeFuncs[COMM_MAX_PROTOCOLS];  // notice callbacks
+    commTelemCallback_t *telemFuncs[COMM_MAX_PROTOCOLS];    // telemetry callbacks
+
+    commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
+
+    uint8_t portStreams[COMM_NUM_PORTS];		    // stream assignments for each port
+
+    uint8_t txStackHeads[COMM_NUM_PORTS];		    // stack heads
+    volatile uint8_t txStackTails[COMM_NUM_PORTS];	    // stack tails
+
+    uint32_t txStackOverruns[COMM_NUM_PORTS];		    // overflow counter
+    uint32_t txBufStarved;				    // number of times we ran out of tx packets buffers
+    uint32_t txBufUpgrades[COMM_TX_NUM_SIZES];		    // number of times we needed to up size
+
+    uint16_t txPacketBufSizes[COMM_TX_NUM_SIZES];	    // list of packet sizes
+    uint8_t txPacketBufNum[COMM_TX_NUM_SIZES];		    // list of number of buffers per size
+    void *txPacketBufs[COMM_TX_NUM_SIZES];		    // pointers to start of block for each buffer size
+    uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
+
+    uint8_t typesUsed;					    // types configured
 } commStruct_t;
 
 extern commStruct_t commData;
 
 extern void commInit(void);
-extern serialPort_t *commAcquirePort(int port);
 extern void commRegisterNoticeFunc(commNoticeCallback_t *func);
 extern void commRegisterTelemFunc(commTelemCallback_t *func);
 extern void commSendNotice(const char *s);
 extern void commDoTelem(void);
+extern commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize);
+extern void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size);
+extern uint8_t commReadChar(uint8_t streamType);
+extern uint8_t commStreamUsed(uint8_t streamType);
+extern void commTxDMAFinished(void *param);
+extern uint8_t commAvailable(uint8_t streamType);
 
 #endif

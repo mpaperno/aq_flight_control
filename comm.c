@@ -19,21 +19,17 @@
 #include "aq.h"
 #include "config.h"
 #include "comm.h"
+#include "util.h"
 #include <string.h>
 
 commStruct_t commData __attribute__((section(".ccm")));
 
-serialPort_t *commAcquirePort(int port) {
-    serialPort_t *ret = 0;
+static void commTriggerSchedule(void) {
+    NVIC->STIR = OTG_FS_IRQn;
+}
 
-    if (port > 0 && port <= COMM_NUM_PORTS) {
-	if (commData.portMode[port-1] == COMM_UNUSED) {
-	    ret = commData.serialPorts[port-1];
-	    commData.portMode[port-1] = COMM_SINGLEPLEX;
-	}
-    }
-
-    return ret;
+uint8_t commStreamUsed(uint8_t streamType) {
+    return (commData.typesUsed & streamType);
 }
 
 void commRegisterNoticeFunc(commNoticeCallback_t *func) {
@@ -61,44 +57,266 @@ void commRegisterTelemFunc(commTelemCallback_t *func) {
 void commSendNotice(const char *s) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+    for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
 	if (commData.noticeFuncs[i])
 	    commData.noticeFuncs[i](s);
-    }
 }
 
 void commDoTelem(void) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+    for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
 	if (commData.telemFuncs[i])
 	    commData.telemFuncs[i]();
+}
+
+uint8_t commReadChar(uint8_t streamType) {
+    int i;
+
+    for (i = 0; i < COMM_NUM_PORTS; i++)
+	if (commData.portStreams[i] == streamType && serialAvailable(commData.serialPorts[i]))
+	    return serialRead(commData.serialPorts[i]);
+
+    return 0;
+}
+
+uint8_t commAvailable(uint8_t streamType) {
+    int i;
+
+    for (i = 0; i < COMM_NUM_PORTS; i++)
+	if (commData.portStreams[i] == streamType && serialAvailable(commData.serialPorts[i]))
+	    return 1;
+
+    return 0;
+}
+
+// return 0 if none are available
+commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize) {
+    commTxBuf_t *txBuf = 0;
+    commTxBuf_t *tmp;
+    int i, j;
+
+    // is this stream type even active?
+    if (commData.typesUsed & streamType) {
+	// look for smallest size that request will fit in
+	for (i = 0; i < COMM_TX_NUM_SIZES; i++)
+	    if (commData.txPacketBufSizes[i] >= maxSize)
+		break;
+
+	CoEnterMutexSection(commData.txBufferMutex);
+
+	commTopOfSearch:
+
+	// not too big?
+	if (i < COMM_TX_NUM_SIZES) {
+	    // look for free buffer in this block
+	    for (j = 0; j < commData.txPacketBufNum[i]; j++) {
+		tmp = (commTxBuf_t *)(commData.txPacketBufs[i] + (commData.txPacketBufSizes[i] + COMM_HEADER_SIZE) * j);
+
+		if (tmp->status == COMM_TX_BUF_FREE) {
+		    txBuf = tmp;
+		    txBuf->status = COMM_TX_BUF_ALLOCATED;
+		    txBuf->type = streamType;
+		    break;
+		}
+	    }
+
+	    // need an upgrade?
+	    if (j == commData.txPacketBufNum[i]) {
+		// make a note of this
+		commData.txBufUpgrades[i]++;
+		// next larger size
+		i++;
+
+		// try again
+		goto commTopOfSearch;
+	    }
+	}
+
+	CoLeaveMutexSection(commData.txBufferMutex);
+
+	if (txBuf == 0)
+	    commData.txBufStarved++;
+	else
+	    commData.txPacketSizeHits[i]++;
+    }
+
+    return txBuf;
+}
+
+static void _commSchedule(uint8_t port) {
+    uint8_t tail = commData.txStackTails[port];
+
+    if (commData.txStackHeads[port] != tail)
+	if (_serialStartTxDMA(commData.serialPorts[port], commData.txStack[port][tail].memory, commData.txStack[port][tail].size, commTxDMAFinished, &commData.txStack[port][tail]))
+	    commData.txStackTails[port] = (tail + 1) % COMM_STACK_DEPTH;
+}
+
+static void commSchedule(void) {
+    int i;
+
+    for (i = 0; i < COMM_NUM_PORTS; i++) {
+	if (!commData.serialPorts[i]->txDmaRunning)
+	    _commSchedule(i);
+    }
+}
+
+void commTxDMAFinished(void *param) {
+    commTxStack_t *txStackPtr = (commTxStack_t *)param;
+    commTxBuf_t *txBuf = (commTxBuf_t *)txStackPtr->txBuf;
+
+    txBuf->status--;
+    // if no pending tx's for this buffer, free it
+    if (txBuf->status == COMM_TX_BUF_SENDING)
+	txBuf->status = COMM_TX_BUF_FREE;
+
+    // re-schedule
+    _commSchedule(txStackPtr->port);
+}
+
+void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
+    uint8_t head;
+    uint8_t toBeScheduled[COMM_NUM_PORTS];
+    uint8_t newHeads[COMM_NUM_PORTS];
+    uint8_t sent = 0;
+    int i;
+
+    if (txBuf) {
+	// reset status to sending
+	txBuf->status = COMM_TX_BUF_SENDING;
+
+	CoEnterMutexSection(commData.txBufferMutex);
+
+	// look for any ports that want this stream
+	for (i = 0; i < COMM_NUM_PORTS; i++) {
+	    toBeScheduled[i] = 0;
+
+	    // singleplex case
+	    if (commData.portStreams[i] == txBuf->type) {
+		head = commData.txStackHeads[i];
+		newHeads[i] = (head + 1) % COMM_STACK_DEPTH;
+
+		// check for stack overruns
+		if (newHeads[i] == commData.txStackTails[i]) {
+		    // record incident
+		    commData.txStackOverruns[i]++;
+		}
+		else {
+		    txBuf->status++;
+
+		    // prepare to send
+		    commData.txStack[i][head].port = i;
+		    commData.txStack[i][head].txBuf = txBuf;
+		    commData.txStack[i][head].memory = &txBuf->buf;
+		    commData.txStack[i][head].size = size;
+
+		    toBeScheduled[i] = 1;
+		    sent = 1;
+		}
+	    }
+	    // multiplex case
+	    else if (commData.portStreams[i] & txBuf->type) {
+		// TODO
+	    }
+	}
+
+	if (!sent) {
+	    // release buffer
+	    txBuf->status = COMM_TX_BUF_FREE;
+	}
+	else {
+	    for (i = 0; i < COMM_NUM_PORTS; i++) {
+		if (toBeScheduled[i])
+		    commData.txStackHeads[i] = newHeads[i];
+		commTriggerSchedule();
+	    }
+	}
+
+	CoLeaveMutexSection(commData.txBufferMutex);
     }
 }
 
 void commInit(void) {
-    uint16_t flowControl = USART_HardwareFlowControl_RTS_CTS;
+    NVIC_InitTypeDef NVIC_InitStructure;
+    uint16_t flowControl;
+    int i;
 
     memset((void *)&commData, 0, sizeof(commData));
 
 #ifdef COMM_PORT1
 #ifdef COMM_DISABLE_FLOW_CONTROL1
     flowControl = USART_HardwareFlowControl_None;
+#else
+    flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE1, COMM_TX_BUF_SIZE1);
+    commData.serialPorts[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYPE1];
 #endif
 
 #ifdef COMM_PORT2
 #ifdef COMM_DISABLE_FLOW_CONTROL2
     flowControl = USART_HardwareFlowControl_None;
+#else
+    flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE2, COMM_TX_BUF_SIZE2);
+    commData.serialPorts[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYPE2];
 #endif
 
 #ifdef COMM_PORT3
 #ifdef COMM_DISABLE_FLOW_CONTROL3
     flowControl = USART_HardwareFlowControl_None;
+#else
+    flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE3, COMM_TX_BUF_SIZE3);
+    commData.serialPorts[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYPE3];
 #endif
+
+#ifdef COMM_PORT4
+#ifdef COMM_DISABLE_FLOW_CONTROL4
+    flowControl = USART_HardwareFlowControl_None;
+#else
+    flowControl = USART_HardwareFlowControl_RTS_CTS;
+#endif
+    commData.serialPorts[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYPE4];
+#endif
+
+    // record which stream types that we are working with
+    commData.typesUsed = (uint8_t)p[COMM_STREAM_TYPE1] | (uint8_t)p[COMM_STREAM_TYPE2] | (uint8_t)p[COMM_STREAM_TYPE3] | (uint8_t)p[COMM_STREAM_TYPE4];
+
+    // perhaps make this dynamic later
+    commData.txPacketBufSizes[0] = 16;
+    commData.txPacketBufSizes[1] = 32;
+    commData.txPacketBufSizes[2] = 64;
+    commData.txPacketBufSizes[3] = 128;
+    commData.txPacketBufSizes[4] = 256;
+    commData.txPacketBufSizes[5] = 512;
+
+    commData.txPacketBufNum[0] = 16;
+    commData.txPacketBufNum[1] = 16;
+    commData.txPacketBufNum[2] = 8;
+    commData.txPacketBufNum[3] = 4;
+    commData.txPacketBufNum[4] = 6;
+    commData.txPacketBufNum[5] = 4;
+
+    // allocate transmission buffers' memory
+    for (i = 0; i < COMM_TX_NUM_SIZES; i++)
+	commData.txPacketBufs[i] = aqCalloc(commData.txPacketBufNum[i], commData.txPacketBufSizes[i] + COMM_HEADER_SIZE);
+
+    // setup mutex
+    commData.txBufferMutex = CoCreateMutex();
+
+    // Enable OTG FS interrupt (for our stack management)
+    NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
+void OTG_FS_IRQHandler(void) {
+    AQ_NOP;
+    commSchedule();
 }

@@ -45,24 +45,34 @@ mavlink_system_t mavlink_system;
 
 OS_STK *mavlinkRecvTaskStack;
 
-void comm_send_ch(mavlink_channel_t chan, uint8_t ch) {
-    serialWrite(mavlinkData.serialPort, ch);
+void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len) {
+    commTxBuf_t *txBuf;
+    uint8_t *ptr;
+    int i;
+
+    txBuf = commGetTxBuf(COMM_TYPE_MAVLINK, len);
+    // cannot block, must fail
+    if (txBuf != 0) {
+	ptr = &txBuf->buf;
+
+	for (i = 0; i < len; i++)
+	    *ptr++ = *buf++;
+
+	commSendTxBuf(txBuf, len);
+    }
 }
 
 void mavlinkNotice(const char *s) {
     // queue message, notify and leave
-    if (mavlinkData.serialPort)
-	CoPostQueueMail(mavlinkData.notices, (void *)s);
+    CoPostQueueMail(mavlinkData.notices, (void *)s);
 }
 
 void mavlinkWpReached(uint16_t seqId) {
-    if (mavlinkData.serialPort)
-	mavlink_msg_mission_item_reached_send(MAVLINK_COMM_0, seqId);
+    mavlink_msg_mission_item_reached_send(MAVLINK_COMM_0, seqId);
 }
 
 void mavlinkWpAnnounceCurrent(uint16_t seqId) {
-    if (mavlinkData.serialPort)
-	mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
+    mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
 }
 
 void mavlinkDo(void) {
@@ -87,7 +97,6 @@ void mavlinkDo(void) {
     }
 
     supervisorSendDataStart();
-    CoEnterMutexSection(mavlinkData.serialPortMutex);
 
     mavlinkData.status = MAV_STATE_STANDBY;
     mavlinkData.mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
@@ -204,7 +213,6 @@ void mavlinkDo(void) {
 #endif
 
     supervisorSendDataStop();
-    CoLeaveMutexSection(mavlinkData.serialPortMutex);
 
     lastMicros = micros;
 }
@@ -276,7 +284,6 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 }
 
 void mavlinkRecvTaskCode(void *unused) {
-    serialPort_t *s = mavlinkData.serialPort;
     mavlink_message_t msg;
     mavlink_status_t status;
     char paramId[16];
@@ -288,12 +295,10 @@ void mavlinkRecvTaskCode(void *unused) {
 	yield(5);
 
 	// process incoming data
-	while (serialAvailable(s)) {
-	    c = serialRead(s);
+	while (commAvailable(COMM_TYPE_MAVLINK)) {
+	    c = commReadChar(COMM_TYPE_MAVLINK);
 	    // Try to get a new message
 	    if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
-		CoEnterMutexSection(mavlinkData.serialPortMutex);
-
 		// Handle message
 		switch(msg.msgid) {
 		    // TODO: finish this block
@@ -600,8 +605,6 @@ void mavlinkRecvTaskCode(void *unused) {
 			// Do nothing
 			break;
 		}
-
-		CoLeaveMutexSection(mavlinkData.serialPortMutex);
 	    }
 
 	    // Update global packet drops counter
@@ -616,50 +619,40 @@ void mavlinkInit(void) {
 
     memset((void *)&mavlinkData, 0, sizeof(mavlinkData));
 
-    if (p[MAVLINK_COMM] == 0.0f)
-	return;
+    if (commStreamUsed(COMM_TYPE_MAVLINK)) {
+	// register notice function with comm module
+	commRegisterNoticeFunc(mavlinkNotice);
+	commRegisterTelemFunc(mavlinkDo);
 
-    mavlinkData.serialPort = commAcquirePort(p[MAVLINK_COMM]);
+	mavlinkData.notices = CoCreateQueue(mavlinkData.noticeQueue, MAVLINK_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
 
-    // unable to acquire port
-    if (mavlinkData.serialPort == 0)
-	return;
+	AQ_NOTICE("Mavlink init\n");
 
-    // register notice function with comm module
-    commRegisterNoticeFunc(mavlinkNotice);
-    commRegisterTelemFunc(mavlinkDo);
+	mavlinkData.numParams = CONFIG_NUM_PARAMS;
+	mavlinkData.currentParam = mavlinkData.numParams;
+	mavlinkData.wpCount = navGetWaypointCount();
+	mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
 
-    // setup mutex for serial port access
-    mavlinkData.serialPortMutex = CoCreateMutex();
+	mavlinkRecvTaskStack = aqStackInit(MAVLINK_STACK_SIZE, "MAVLINK");
 
-    mavlinkData.notices = CoCreateQueue(mavlinkData.noticeQueue, MAVLINK_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
+	mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, MAVLINK_PRIORITY, &mavlinkRecvTaskStack[MAVLINK_STACK_SIZE-1], MAVLINK_STACK_SIZE);
 
-    AQ_NOTICE("Mavlink init\n");
+	mavlink_system.sysid = flashSerno(0) % 250;
+	mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
+	mavlink_system.type = MAV_TYPE_QUADROTOR;
 
-    mavlinkData.numParams = CONFIG_NUM_PARAMS;
-    mavlinkData.currentParam = mavlinkData.numParams;
-    mavlinkData.wpCount = navGetWaypointCount();
-    mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
+	mavlinkData.mode = MAV_MODE_PREFLIGHT;
+	mavlinkData.nav_mode = MAV_STATE_STANDBY;
+	mavlinkData.status = MAV_STATE_BOOT;
 
-    mavlinkRecvTaskStack = aqStackInit(MAVLINK_STACK_SIZE, "MAVLINK");
-
-    mavlinkData.recvTask = CoCreateTask(mavlinkRecvTaskCode, (void *)0, MAVLINK_PRIORITY, &mavlinkRecvTaskStack[MAVLINK_STACK_SIZE-1], MAVLINK_STACK_SIZE);
-
-    mavlink_system.sysid = flashSerno(0) % 250;
-    mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
-    mavlink_system.type = MAV_TYPE_QUADROTOR;
-
-    mavlinkData.mode = MAV_MODE_PREFLIGHT;
-    mavlinkData.nav_mode = MAV_STATE_STANDBY;
-    mavlinkData.status = MAV_STATE_BOOT;
-
-    // turn on all streams at 1Hz & spread them out
-    micros = timerMicros();
-    for (i = 1; i < MAV_DATA_STREAM_ENUM_END; i++) {
-	mavlinkData.streamInterval[i] = 1e6;
-	mavlinkData.streamNext[i] = micros + 5e6 + i * 5e3;
+	// turn on all streams at 1Hz & spread them out
+	micros = timerMicros();
+	for (i = 1; i < MAV_DATA_STREAM_ENUM_END; i++) {
+	    mavlinkData.streamInterval[i] = 1e6;
+	    mavlinkData.streamNext[i] = micros + 5e6 + i * 5e3;
+	}
+	// send IMU data at an initial rate of 10Hz
+	mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER] = 1e6/10.0;
     }
-    // send IMU data at an initial rate of 10Hz
-    mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER] = 1e6/10.0;
 }
 #endif	// USE_MAVLINK

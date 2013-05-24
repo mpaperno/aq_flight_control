@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    106
+#define DEFAULT_CONFIG_VERSION	    107
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == Futaba, 3 == PPM, 4 == PWM
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -161,11 +161,14 @@
 
 #define DEFAULT_COMM_BAUD1	    115200
 #define DEFAULT_COMM_BAUD2	    230400
-#define DEFAULT_COMM_BAUD3	    0
+#define DEFAULT_COMM_BAUD3	    3000000
+#define DEFAULT_COMM_BAUD4	    460800
+#define DEFAULT_COMM_STREAM_TYPE1   COMM_TYPE_MAVLINK
+#define DEFAULT_COMM_STREAM_TYPE2   0
+#define DEFAULT_COMM_STREAM_TYPE3   0
+#define DEFAULT_COMM_STREAM_TYPE4   0
 
-#define DEFAULT_MAVLINK_COMM	    1		// port number (0 == disable)
 
-#define DEFAULT_TELEMETRY_COMM	    0		// port number
 #define DEFAULT_TELEMETRY_RATE	    20		// loops between reports
 
 

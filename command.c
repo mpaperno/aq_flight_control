@@ -18,9 +18,8 @@
 
 #include "aq.h"
 #include "command.h"
-#include "serial.h"
+#include "comm.h"
 #include "telemetry.h"
-#include "downlink.h"
 #include "comm.h"
 #include "control.h"
 #include "config.h"
@@ -36,33 +35,54 @@ commandStruct_t commandData __attribute__((section(".ccm")));
 
 OS_STK *commandTaskStack;
 
-void commandChecksum(unsigned char c) {
+static void commandChecksum(uint8_t c) {
     commandData.checkA += c;
     commandData.checkB += commandData.checkA;
 }
 
-void commandResponseSend(commandBufStruct_t *r, unsigned char len) {
+static uint8_t *commandSendChar(uint8_t *ptr, uint8_t c) {
+    *ptr++ = c;
+    commandChecksum(c);
+
+    return ptr;
+}
+
+void commandResponseSend(commandBufStruct_t *r, uint8_t len) {
+    commTxBuf_t *txBuf;
+    uint8_t *ptr;
     char *c = (char *)r;
 
-    // grab port lock
-    CoEnterMutexSection(downlinkData.serialPortMutex);
+    // wait until a txn buffer is available
+    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, len + 3 + 5 + 2);
+    while (txBuf == 0) {
+	yield(1);
+	txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, len + 3 + 5 + 2);
+    }
+    ptr = &txBuf->buf;
 
-    downlinkSendString("AqR");	// response header
+    supervisorSendDataStart();
 
-    downlinkResetChecksum();
-    downlinkSendChar(commandData.requestId[0]);
-    downlinkSendChar(commandData.requestId[1]);
-    downlinkSendChar(commandData.requestId[2]);
-    downlinkSendChar(commandData.requestId[3]);
-    downlinkSendChar(len);
+    *ptr++ = 'A';
+    *ptr++ = 'q';
+    *ptr++ = 'R';
+
+    commandData.checkA = commandData.checkB = 0;
+
+    ptr = commandSendChar(ptr, commandData.requestId[0]);
+    ptr = commandSendChar(ptr, commandData.requestId[1]);
+    ptr = commandSendChar(ptr, commandData.requestId[2]);
+    ptr = commandSendChar(ptr, commandData.requestId[3]);
+    ptr = commandSendChar(ptr, len);
     do {
-	downlinkSendChar(*c++);
+	ptr = commandSendChar(ptr, *c++);
     } while (--len);
 
-    downlinkSendChecksum();
+    *ptr++ = commandData.checkA;
+    *ptr++ = commandData.checkB;
 
-    // release serial port
-    CoLeaveMutexSection(downlinkData.serialPortMutex);
+    commSendTxBuf(txBuf, ptr - &txBuf->buf);
+
+    supervisorSendDataStop();
 }
 
 void commandRespond(unsigned char c, char *reply, unsigned char len) {
@@ -119,16 +139,17 @@ void commandExecute(commandBufStruct_t *b) {
 	    commandAck(NULL, 0);
 	    break;
 
-    case COMMAND_ID_GPS_PASSTHROUGH:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		    telemetryDisable();
-		    commandAck(NULL, 0);
-		    gpsPassthrough(gpsData.gpsPort, downlinkData.serialPort);
-	    }
-	    else {
-		    commandNack(NULL, 0);
-	    }
-	    break;
+//    case COMMAND_ID_GPS_PASSTHROUGH:
+//	    if (!(supervisorData.state & STATE_FLYING)) {
+//		    telemetryDisable();
+//		    commandAck(NULL, 0);
+//		    gpsPassthrough(gpsData.gpsPort, downlinkData.serialPort);
+//	    }
+//	    else {
+//		    commandNack(NULL, 0);
+//	    }
+//	    break;
+
     case COMMAND_CONFIG_PARAM_READ:
 	    {
 		    unsigned int replyLength = configParameterRead(b->data);
@@ -335,7 +356,7 @@ void commandCharIn(unsigned char ch) {
 }
 
 void commandTaskCode(void *unused) {
-    serialPort_t *s = downlinkData.serialPort;
+//    serialPort_t *s = downlinkData.serialPort;
 
     AQ_NOTICE("Command task started\n");
 
@@ -343,16 +364,17 @@ void commandTaskCode(void *unused) {
 	// wait for data
 	yield(5);
 
+	if (commAvailable(COMM_TYPE_TELEMETRY))
+	    commandCharIn(commReadChar(COMM_TYPE_TELEMETRY));
+
 	// process incoming data
-	while (serialAvailable(s))
-	    commandCharIn(downlinkReadChar());
+//	while (serialAvailable(s))
+//	    commandCharIn(downlinkReadChar());
+
     }
 }
 
 void commandInit(void) {
-    if (p[TELEMETRY_COMM] == 0.0f)
-	return;
-
     AQ_NOTICE("Command interface init\n");
 
     memset((void *)&commandData, 0, sizeof(commandData));

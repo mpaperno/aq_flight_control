@@ -13,12 +13,11 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "pid.h"
 #include "aq.h"
-#include "downlink.h"
 #include "util.h"
 #include "control.h"
 #include "config.h"

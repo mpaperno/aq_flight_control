@@ -42,20 +42,49 @@ serialPort_t *serialPort6;
 
 serialPort_t *serialSTDIO;
 
+int _serialStartTxDMA(serialPort_t *s, void *buf, int size, serialTxDMACallback_t *txDMACallback, void *txDMACallbackParam) {
+    if (!s->txDmaRunning) {
+	s->txDmaRunning = 1;
+
+	s->txDMACallback = txDMACallback;
+	s->txDMACallbackParam = txDMACallbackParam;
+
+	s->txDMAStream->M0AR = (uint32_t)buf;
+	s->txDMAStream->NDTR = size;
+
+	DMA_Cmd(s->txDMAStream, ENABLE);
+
+	return 1;
+    }
+    else {
+	return 0;
+    }
+}
+
+void serialStartTxDMA(void *param) {
+    serialPort_t *s = (serialPort_t *)param;
+    uint32_t tail = s->txTail;
+    int size;
+
+    if (!s->txDmaRunning && s->txHead != tail) {
+	if (s->txHead > tail) {
+	    size = s->txHead - tail;
+	    s->txTail = s->txHead;
+	}
+	else {
+	    size = s->txBufSize - tail;
+	    s->txTail = 0;
+	}
+
+	_serialStartTxDMA(s, (void *)&s->txBuf[tail], size, serialStartTxDMA, s);
+    }
+}
+
 void serialOpenUART(serialPort_t *s) {
     USART_InitTypeDef USART_InitStructure;
 
     // reduce oversampling to allow for higher baud rates
     USART_OverSampling8Cmd(s->USARTx, ENABLE);
-
-    /* USART configured as follow:
-    - BaudRate = baud
-    - Word Length = 8 Bits
-    - One Stop Bit
-    - No parity
-    - Hardware flow control disabled (RTS and CTS signals)
-    - Receive and transmit enabled
-    */
 
     USART_StructInit(&USART_InitStructure);
     USART_InitStructure.USART_BaudRate = s->baudRate;
@@ -87,7 +116,7 @@ serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
 #ifdef SERIAL_UART1_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART1_PORT, SERIAL_UART1_RX_SOURCE, GPIO_AF_USART1);
@@ -110,7 +139,7 @@ serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, uns
 #endif	// SERIAL_UART1_RX_PIN
 
 #ifdef SERIAL_UART1_TX_PIN
-    s->txBufSize = (txBufSize) ? txBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->txBufSize = txBufSize;
     s->txBuf = (volatile unsigned char*)aqCalloc(1, s->txBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART1_PORT, SERIAL_UART1_TX_SOURCE, GPIO_AF_USART1);
@@ -145,7 +174,7 @@ serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, uns
 	GPIO_PinAFConfig(SERIAL_UART1_PORT, SERIAL_UART1_CTS_SOURCE, GPIO_AF_USART1);
 
 	GPIO_InitStructure.GPIO_Pin = SERIAL_UART1_CTS_PIN | SERIAL_UART1_RTS_PIN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_Init(SERIAL_UART1_PORT, &GPIO_InitStructure);
     }
 #endif	// SERIAL_UART1_CTS_PIN
@@ -172,7 +201,7 @@ serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
 
 #ifdef SERIAL_UART2_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART2_PORT, SERIAL_UART2_RX_SOURCE, GPIO_AF_USART2);
@@ -195,7 +224,7 @@ serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, uns
 #endif	// SERIAL_UART2_RX_PIN
 
 #ifdef SERIAL_UART2_TX_PIN
-    s->txBufSize = (txBufSize) ? txBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->txBufSize = txBufSize;
     s->txBuf = (volatile unsigned char*)aqCalloc(1, s->txBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART2_PORT, SERIAL_UART2_TX_SOURCE, GPIO_AF_USART2);
@@ -230,7 +259,7 @@ serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, uns
 	GPIO_PinAFConfig(SERIAL_UART2_PORT, SERIAL_UART2_CTS_SOURCE, GPIO_AF_USART2);
 
 	GPIO_InitStructure.GPIO_Pin = SERIAL_UART2_CTS_PIN | SERIAL_UART2_RTS_PIN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_Init(SERIAL_UART2_PORT, &GPIO_InitStructure);
     }
 #endif	// SERIAL_UART2_CTS_PIN
@@ -257,7 +286,7 @@ serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 
 #ifdef SERIAL_UART3_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART3_PORT, SERIAL_UART3_RX_SOURCE, GPIO_AF_USART3);
@@ -280,7 +309,7 @@ serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, uns
 #endif	// SERIAL_UART3_RX_PIN
 
 #ifdef SERIAL_UART3_TX_PIN
-    s->txBufSize = (txBufSize) ? txBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->txBufSize = txBufSize;
     s->txBuf = (volatile unsigned char*)aqCalloc(1, s->txBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART3_PORT, SERIAL_UART3_TX_SOURCE, GPIO_AF_USART3);
@@ -315,8 +344,8 @@ serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, uns
 	GPIO_PinAFConfig(SERIAL_UART3_PORT, SERIAL_UART3_CTS_SOURCE, GPIO_AF_USART3);
 
 	GPIO_InitStructure.GPIO_Pin = SERIAL_UART3_CTS_PIN | SERIAL_UART3_RTS_PIN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(SERIAL_UART2_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_Init(SERIAL_UART3_PORT, &GPIO_InitStructure);
     }
 #endif	// SERIAL_UART3_CTS_PIN
 
@@ -331,6 +360,7 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
     serialPort_t *s;
 
     s = serialPort4 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
+
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -341,7 +371,7 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
 
 #ifdef SERIAL_UART4_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART4_PORT, SERIAL_UART4_RX_SOURCE, GPIO_AF_UART4);
@@ -392,6 +422,7 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
     NVIC_Init(&NVIC_InitStructure);
 #endif	// SERIAL_UART4_TX_DMA_ST
 #endif	// SERIAL_UART4_TX_PIN
+
     return s;
 }
 #endif
@@ -414,7 +445,7 @@ serialPort_t *serialUSART5(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
 
 #ifdef SERIAL_UART5_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART5_PORT, SERIAL_UART5_RX_SOURCE, GPIO_AF_UART5);
@@ -488,7 +519,7 @@ serialPort_t *serialUSART6(unsigned int flowControl, unsigned int rxBufSize, uns
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
 
 #ifdef SERIAL_UART6_RX_PIN
-    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->rxBufSize = (rxBufSize) ? rxBufSize : SERIAL_DEFAULT_RX_BUFSIZE;
     s->rxBuf = (volatile unsigned char*)aqCalloc(1, s->rxBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART6_PORT, SERIAL_UART6_RX_SOURCE, GPIO_AF_USART6);
@@ -511,7 +542,7 @@ serialPort_t *serialUSART6(unsigned int flowControl, unsigned int rxBufSize, uns
 #endif	// SERIAL_UART6_RX_PIN
 
 #ifdef SERIAL_UART6_TX_PIN
-    s->txBufSize = (txBufSize) ? txBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->txBufSize = txBufSize;
     s->txBuf = (volatile unsigned char*)aqCalloc(1, s->txBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART6_PORT, SERIAL_UART6_TX_SOURCE, GPIO_AF_USART6);
@@ -546,7 +577,7 @@ serialPort_t *serialUSART6(unsigned int flowControl, unsigned int rxBufSize, uns
 	GPIO_PinAFConfig(SERIAL_UART6_PORT, SERIAL_UART6_CTS_SOURCE, GPIO_AF_USART6);
 
 	GPIO_InitStructure.GPIO_Pin = SERIAL_UART6_CTS_PIN | SERIAL_UART6_RTS_PIN;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_Init(SERIAL_UART6_PORT, &GPIO_InitStructure);
     }
 #endif	// SERIAL_UART6_CTS_PIN
@@ -555,9 +586,8 @@ serialPort_t *serialUSART6(unsigned int flowControl, unsigned int rxBufSize, uns
 }
 #endif
 
-serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
+serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, uint16_t flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     DMA_InitTypeDef DMA_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
     serialPort_t *s = 0;
 
     // Enable USART clocks/ports
@@ -645,7 +675,7 @@ serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, unsigned int 
 	DMA_DeInit(s->txDMAStream);
 	DMA_InitStructure.DMA_Channel = s->txDMAChannel;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-	DMA_InitStructure.DMA_BufferSize = s->txBufSize;
+	DMA_InitStructure.DMA_BufferSize = (s->txBufSize != 0) ? s->txBufSize : 16;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
@@ -669,33 +699,14 @@ serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, unsigned int 
     return s;
 }
 
-void serialStartTxDMA(serialPort_t *s) {
-    if (!s->txDmaRunning) {
-	s->txDMAStream->M0AR = (uint32_t)&s->txBuf[s->txTail];
-	if (s->txHead > s->txTail) {
-	    s->txDMAStream->NDTR = s->txHead - s->txTail;
-	    s->txTail = s->txHead;
-	}
-	else {
-	    s->txDMAStream->NDTR = s->txBufSize - s->txTail;
-	    s->txTail = 0;
-	}
-
-	s->txDmaRunning = 1;
-	DMA_Cmd(s->txDMAStream, ENABLE);
-    }
-}
-
 void serialWrite(serialPort_t *s, unsigned char ch) {
     s->txBuf[s->txHead] = ch;
     s->txHead = (s->txHead + 1) % s->txBufSize;
 
-    if (s->txDMAStream) {
-	    serialStartTxDMA(s);
-    }
-    else {
+    if (s->txDMAStream)
+	serialStartTxDMA(s);
+    else
 	USART_ITConfig(s->USARTx, USART_IT_TXE, ENABLE);
-    }
 }
 
 unsigned char serialAvailable(serialPort_t *s) {
@@ -708,9 +719,6 @@ unsigned char serialAvailable(serialPort_t *s) {
 int serialRead(serialPort_t *s) {
     int ch;
 
-//    while (!serialAvailable(s))
-//	yield(0);
-
     if (s->rxDMAStream) {
 	ch = s->rxBuf[s->rxBufSize - s->rxPos];
 	if (--s->rxPos == 0)
@@ -722,6 +730,13 @@ int serialRead(serialPort_t *s) {
     }
 
     return ch;
+}
+
+int serialReadBlock(serialPort_t *s) {
+    while (!serialAvailable(s))
+	yield(1);
+
+    return serialRead(s);
 }
 
 void serialPrint(serialPort_t *s, const char *str) {
@@ -795,8 +810,7 @@ void SERIAL_UART1_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 
@@ -837,8 +851,7 @@ void SERIAL_UART2_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 
@@ -879,8 +892,7 @@ void SERIAL_UART3_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 
@@ -921,8 +933,7 @@ void SERIAL_UART4_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 
@@ -963,8 +974,7 @@ void SERIAL_UART5_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 
@@ -1005,8 +1015,7 @@ void SERIAL_UART6_TX_DMA_IT(void) {
 
     s->txDmaRunning = 0;
 
-    if (s->txHead != s->txTail)
-	serialStartTxDMA(s);
+    s->txDMACallback(s->txDMACallbackParam);
 }
 #endif
 

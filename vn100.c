@@ -26,7 +26,6 @@
 #include "digital.h"
 #include "util.h"
 #include "aq_mavlink.h"
-#include "downlink.h"
 #include "filer.h"
 #include "util.h"
 #include "fpu.h"

@@ -74,16 +74,18 @@ uint16_t utilGetStackFree(const char *stackName) {
 #endif
 
 void *aqCalloc(size_t count, size_t size) {
-    char *addr;
+    char *addr = 0;
 
-    addr = calloc(count, size);
+    if (count * size) {
+	addr = calloc(count, size);
 
-    heapUsed += count * size;
-    if (heapUsed > heapHighWater)
-	heapHighWater = heapUsed;
+	heapUsed += count * size;
+	if (heapUsed > heapHighWater)
+	    heapHighWater = heapUsed;
 
-    if (addr == 0)
-	AQ_NOTICE("Out of heap memory!\n");
+	if (addr == 0)
+	    AQ_NOTICE("Out of heap memory!\n");
+    }
 
     return addr;
 }

@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _serial_h
@@ -22,11 +22,13 @@
 #include "stm32f4xx.h"
 #include <CoOS.h>
 
-#define SERIAL_DEFAULT_BUFSIZE	128
+#define SERIAL_DEFAULT_RX_BUFSIZE	128
+
+typedef void serialTxDMACallback_t(void *s);
 
 typedef struct {
     unsigned int baudRate;
-    unsigned int flowControl;
+    uint16_t flowControl;
 
     unsigned int txBufSize;
     volatile unsigned char *txBuf;
@@ -44,18 +46,22 @@ typedef struct {
     uint32_t txDMAChannel;
     uint32_t rxDmaFlags, txDmaFlags;
     volatile unsigned char txDmaRunning;
+    serialTxDMACallback_t *txDMACallback;
+    void *txDMACallbackParam;
 
     OS_FlagID waitFlag;
 } serialPort_t;
 
-extern serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize);
+extern serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, uint16_t flowControl, unsigned int rxBufSize, unsigned int txBufSize);
 extern void serialChangeBaud(serialPort_t *s, unsigned int baud);
 extern void serialSetSTDIO(serialPort_t *s);
 extern void serialWrite(serialPort_t *s, unsigned char ch);
 extern void serialWatch(void);
 extern unsigned char serialAvailable(serialPort_t *s);
 extern int serialRead(serialPort_t *s);
+extern int serialReadBlock(serialPort_t *s);
 extern void serialPrint(serialPort_t *s, const char *str);
+extern int _serialStartTxDMA(serialPort_t *s, void *buf, int size, serialTxDMACallback_t *txDMACallback, void *txDMACallbackParam);
 extern int __putchar(int ch);
 extern int __getchar(void);
 
