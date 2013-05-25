@@ -122,11 +122,13 @@ void gpsInit(void) {
 
     gpsData.baudCycle[0] = GPS_BAUD_RATE;
     gpsData.baudCycle[1] = 9600;
-    gpsData.baudCycle[2] = 230400;
-    gpsData.baudCycle[3] = 115200;
-    gpsData.baudCycle[4] = 19200;
-    gpsData.baudCycle[5] = 38400;
-    gpsData.baudCycle[6] = 0;
+    gpsData.baudCycle[2] = 0;
+
+//    gpsData.baudCycle[2] = 230400;
+//    gpsData.baudCycle[3] = 115200;
+//    gpsData.baudCycle[4] = 19200;
+//    gpsData.baudCycle[5] = 38400;
+//    gpsData.baudCycle[6] = 0;
 
     gpsData.baudSlot = 0;
 
