@@ -38,6 +38,7 @@ OS_STK *runTaskStack;
 runStruct_t runData __attribute__((section(".ccm")));
 
 void runTaskCode(void *unused) {
+    uint32_t axis = 0;
     uint32_t loops = 0;
 
     AQ_NOTICE("Run task started\n");
@@ -113,15 +114,21 @@ void runTaskCode(void *unused) {
 	}
 	// observe that the rates are exactly 0 if not flying or moving
 	else if (!(supervisorData.state & STATE_FLYING)) {
-	    static uint32_t axis = 0;
 	    float stdX, stdY, stdZ;
 
 	    arm_std_f32(runData.accHist[0], RUN_SENSOR_HIST, &stdX);
 	    arm_std_f32(runData.accHist[1], RUN_SENSOR_HIST, &stdY);
 	    arm_std_f32(runData.accHist[2], RUN_SENSOR_HIST, &stdZ);
 
-	    if ((stdX + stdY + stdZ) < (IMU_STATIC_STD*2))
-		navUkfZeroRate(IMU_RATEZ, (axis++) % 3);
+	    if ((stdX + stdY + stdZ) < (IMU_STATIC_STD*2)) {
+		if (!((axis + 0) % 3))
+		    navUkfZeroRate(IMU_RATEX, 0);
+		else if (!((axis + 1) % 3))
+		    navUkfZeroRate(IMU_RATEY, 1);
+		else
+		    navUkfZeroRate(IMU_RATEZ, 2);
+		axis++;
+	    }
 	}
 
 	navUkfFinish();
