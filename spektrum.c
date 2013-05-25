@@ -19,7 +19,6 @@
 #include "aq.h"
 #include "radio.h"
 #include "spektrum.h"
-#include "notice.h"
 #include "aq_timer.h"
 #include "imu.h"
 #include "aq_mavlink.h"
@@ -103,4 +102,3 @@ void spektrumInit(void) {
 
     radioData.serialPort = serialOpen(SPEKTRUM_UART, SPEKTRUM_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
 }
-

@@ -19,12 +19,23 @@
 #include "aq.h"
 #include "config.h"
 #include "comm.h"
+#include "run.h"
 #include "util.h"
+#include <CoOS.h>
 #include <string.h>
+
+OS_STK *commTaskStack;
 
 commStruct_t commData __attribute__((section(".ccm")));
 
+void commNotice(const char *s) {
+    // post message and leave
+    if (commData.initialized)
+	CoPostQueueMail(commData.notices, (void *)s);
+}
+
 static void commTriggerSchedule(void) {
+    // another stolen interrupt
     NVIC->STIR = OTG_FS_IRQn;
 }
 
@@ -54,40 +65,24 @@ void commRegisterTelemFunc(commTelemCallback_t *func) {
     }
 }
 
-void commSendNotice(const char *s) {
+void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
-	if (commData.noticeFuncs[i])
-	    commData.noticeFuncs[i](s);
+    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+	if (commData.streamRcvrs[i] == 0) {
+	    commData.streamRcvrs[i] = streamType;
+	    commData.rcvrFuncs[i] = func;
+	    break;
+	}
+    }
 }
 
-void commDoTelem(void) {
-    int i;
-
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
-	if (commData.telemFuncs[i])
-	    commData.telemFuncs[i]();
+uint8_t commReadChar(commRcvrStruct_t *r) {
+    return serialRead(r->s);
 }
 
-uint8_t commReadChar(uint8_t streamType) {
-    int i;
-
-    for (i = 0; i < COMM_NUM_PORTS; i++)
-	if (commData.portStreams[i] == streamType && serialAvailable(commData.serialPorts[i]))
-	    return serialRead(commData.serialPorts[i]);
-
-    return 0;
-}
-
-uint8_t commAvailable(uint8_t streamType) {
-    int i;
-
-    for (i = 0; i < COMM_NUM_PORTS; i++)
-	if (commData.portStreams[i] == streamType && serialAvailable(commData.serialPorts[i]))
-	    return 1;
-
-    return 0;
+uint8_t commAvailable(commRcvrStruct_t *r) {
+    return serialAvailable(r->s);
 }
 
 // return 0 if none are available
@@ -236,6 +231,55 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
     }
 }
 
+static void commCheckNotices(void) {
+    StatusType result;
+    char *s;
+    int i;
+
+    s = (char *)CoAcceptQueueMail(commData.notices, &result);
+
+    if (s) {
+	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
+	    if (commData.noticeFuncs[i])
+		commData.noticeFuncs[i](s);
+    }
+}
+
+static void commCheckTelem(void) {
+    int i;
+
+    if (CoAcceptSingleFlag(runData.runFlag) == E_OK)
+	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
+	    if (commData.telemFuncs[i])
+		commData.telemFuncs[i]();
+}
+
+static void commCheckRcvr(void) {
+    commRcvrStruct_t r;
+    int i, j;
+
+    for (i = 0; i < COMM_NUM_PORTS; i++) {
+	if (commData.portStreams[i] && serialAvailable(commData.serialPorts[i])) {
+	    for (j = 0; j < COMM_MAX_PROTOCOLS; j++) {
+		if (commData.streamRcvrs[j] == commData.portStreams[i]) {
+		    r.s = commData.serialPorts[i];
+		    commData.rcvrFuncs[j](&r);
+		}
+	    }
+	}
+    }
+}
+
+void commTaskCode(void *unused) {
+    while (1) {
+	yield(1);
+
+	commCheckNotices();
+	commCheckTelem();
+	commCheckRcvr();
+    }
+}
+
 void commInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     uint16_t flowControl;
@@ -305,18 +349,26 @@ void commInit(void) {
     for (i = 0; i < COMM_TX_NUM_SIZES; i++)
 	commData.txPacketBufs[i] = aqCalloc(commData.txPacketBufNum[i], commData.txPacketBufSizes[i] + COMM_HEADER_SIZE);
 
-    // setup mutex
-    commData.txBufferMutex = CoCreateMutex();
-
     // Enable OTG FS interrupt (for our stack management)
     NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+
+    // setup mutex
+    commData.txBufferMutex = CoCreateMutex();
+
+    // notice queue
+    commData.notices = CoCreateQueue(commData.noticeQueue, COMM_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
+
+    commTaskStack = aqStackInit(COMM_STACK_SIZE, "COMM");
+
+    commData.commTask = CoCreateTask(commTaskCode, (void *)0, 5, &commTaskStack[COMM_STACK_SIZE-1], COMM_STACK_SIZE);
+
+    commData.initialized = 1;
 }
 
 void OTG_FS_IRQHandler(void) {
-    AQ_NOP;
     commSchedule();
 }

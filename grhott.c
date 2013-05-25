@@ -20,7 +20,6 @@
 
 #include "radio.h"
 #include "grhott.h"
-#include "notice.h"
 #include "util.h"
 #include <string.h>
 

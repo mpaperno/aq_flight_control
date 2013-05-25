@@ -21,6 +21,10 @@
 
 #include "serial.h"
 
+#define COMM_STACK_SIZE		280
+#define COMM_PRIORITY		40
+#define COMM_NOTICE_DEPTH	25
+
 #define COMM_NUM_PORTS		4
 
 //#define COMM_DISABLE_FLOW_CONTROL1
@@ -53,9 +57,6 @@ enum commTxBufferStatus {
     COMM_TX_BUF_SENDING
 };
 
-typedef void commNoticeCallback_t(const char *s);
-typedef void commTelemCallback_t(void);
-
 typedef struct {
     volatile uint8_t status;				    // this packet's status
     uint8_t sync[2];					    // sync bytes for multiplex
@@ -76,12 +77,25 @@ typedef struct {
 } commTxStack_t;
 
 typedef struct {
+    serialPort_t *s;
+} commRcvrStruct_t;
+
+typedef void commNoticeCallback_t(const char *s);
+typedef void commTelemCallback_t(void);
+typedef void commRcvrCallback_t(commRcvrStruct_t *r);
+
+typedef struct {
+    OS_TID commTask;
     OS_MutexID txBufferMutex;
+    OS_EventID notices;
+    void *noticeQueue[COMM_NOTICE_DEPTH];
 
     serialPort_t *serialPorts[COMM_NUM_PORTS];		    // serial port handles
 
     commNoticeCallback_t *noticeFuncs[COMM_MAX_PROTOCOLS];  // notice callbacks
     commTelemCallback_t *telemFuncs[COMM_MAX_PROTOCOLS];    // telemetry callbacks
+    uint8_t streamRcvrs[COMM_MAX_PROTOCOLS];
+    commRcvrCallback_t *rcvrFuncs[COMM_MAX_PROTOCOLS];
 
     commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
 
@@ -100,6 +114,7 @@ typedef struct {
     uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
 
     uint8_t typesUsed;					    // types configured
+    int8_t initialized;
 } commStruct_t;
 
 extern commStruct_t commData;
@@ -107,13 +122,13 @@ extern commStruct_t commData;
 extern void commInit(void);
 extern void commRegisterNoticeFunc(commNoticeCallback_t *func);
 extern void commRegisterTelemFunc(commTelemCallback_t *func);
-extern void commSendNotice(const char *s);
-extern void commDoTelem(void);
+extern void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func);
+extern void commNotice(const char *s);
 extern commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize);
 extern void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size);
-extern uint8_t commReadChar(uint8_t streamType);
+extern uint8_t commAvailable(commRcvrStruct_t *r);
+extern uint8_t commReadChar(commRcvrStruct_t *r);
 extern uint8_t commStreamUsed(uint8_t streamType);
 extern void commTxDMAFinished(void *param);
-extern uint8_t commAvailable(uint8_t streamType);
 
 #endif

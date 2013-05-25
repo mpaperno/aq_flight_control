@@ -66,7 +66,7 @@
 
 #define GRAVITY			9.80665f	// m/s^2
 
-#define AQ_NOTICE		commSendNotice
+#define AQ_NOTICE		commNotice
 
 #define AQ_US_PER_SEC		1001567		// originally calibrated by GPS timepulse
 

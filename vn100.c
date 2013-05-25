@@ -20,7 +20,6 @@
 #include "config.h"
 #include "vn100.h"
 #include "imu.h"
-#include "notice.h"
 #include "aq_timer.h"
 #include "serial.h"
 #include "digital.h"

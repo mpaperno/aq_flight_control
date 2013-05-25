@@ -17,7 +17,6 @@
 */
 
 #include "aq.h"
-#include "notice.h"
 #include "telemetry.h"
 #include "util.h"
 #include "aq_timer.h"
@@ -168,6 +167,37 @@ void telemetryDo(void) {
     lastAqUpdate = IMU_LASTUPD;
 }
 
+void telemetrySendNotice(const char *s) {
+    commTxBuf_t *txBuf;
+    uint8_t ckA, ckB;
+    uint8_t *ptr;
+
+    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, 64);
+
+    if (txBuf > 0) {
+	ptr = &txBuf->buf;
+
+	supervisorSendDataStart();
+
+	*ptr++ = 'A';
+	*ptr++ = 'q';
+	*ptr++ = 'I';
+
+	ckA = ckB = 0;
+	do {
+	    *ptr++ = *s;
+	    ckA += *s;
+	    ckB += ckA;
+	} while (*(s++));
+
+	*ptr++ = ckA;
+	*ptr++ = ckB;
+
+	commSendTxBuf(txBuf, ptr - &txBuf->buf);
+	supervisorSendDataStop();
+    }
+}
+
 void telemetryEnable(void) {
     telemetryData.telemetryEnable = 1;
 }
@@ -179,6 +209,6 @@ void telemetryDisable(void) {
 void telemetryInit(void) {
     memset((void *)&telemetryData, 0, sizeof(telemetryData));
 
-    if (commStreamUsed(COMM_TYPE_TELEMETRY))
-	commRegisterTelemFunc(telemetryDo);
+    commRegisterTelemFunc(telemetryDo);
+    commRegisterNoticeFunc(telemetrySendNotice);
 }

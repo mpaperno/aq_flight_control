@@ -20,7 +20,6 @@
 #include "logger.h"
 #include "sdio.h"
 #include "filer.h"
-#include "notice.h"
 #include "imu.h"
 #include "nav_ukf.h"
 #include "gps.h"

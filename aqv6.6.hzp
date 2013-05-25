@@ -19,8 +19,6 @@
       <file file_name="config.h"/>
       <file file_name="flash.c"/>
       <file file_name="flash.h"/>
-      <file file_name="notice.c"/>
-      <file file_name="notice.h"/>
       <file file_name="motors.c"/>
       <file file_name="motors.h"/>
       <file file_name="spektrum.c"/>

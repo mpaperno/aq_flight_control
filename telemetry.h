@@ -39,6 +39,7 @@ extern telemetryStruct_t telemetryData;
 
 extern void telemetryInit(void);
 extern void telemetryDo(void);
+extern void telemetrySendNotice(const char *s);
 extern void telemetryEnable(void);
 extern void telemetryDisable(void);
 

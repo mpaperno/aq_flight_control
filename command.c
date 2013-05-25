@@ -33,8 +33,6 @@
 
 commandStruct_t commandData __attribute__((section(".ccm")));
 
-OS_STK *commandTaskStack;
-
 static void commandChecksum(uint8_t c) {
     commandData.checkA += c;
     commandData.checkB += commandData.checkA;
@@ -47,45 +45,42 @@ static uint8_t *commandSendChar(uint8_t *ptr, uint8_t c) {
     return ptr;
 }
 
-void commandResponseSend(commandBufStruct_t *r, uint8_t len) {
+static void commandResponseSend(commandBufStruct_t *r, uint8_t len) {
     commTxBuf_t *txBuf;
     uint8_t *ptr;
     char *c = (char *)r;
 
-    // wait until a txn buffer is available
     txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, len + 3 + 5 + 2);
-    while (txBuf == 0) {
-	yield(1);
-	txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, len + 3 + 5 + 2);
+    if (txBuf != 0) {
+	ptr = &txBuf->buf;
+
+	supervisorSendDataStart();
+
+	*ptr++ = 'A';
+	*ptr++ = 'q';
+	*ptr++ = 'R';
+
+	commandData.checkA = commandData.checkB = 0;
+
+	ptr = commandSendChar(ptr, commandData.requestId[0]);
+	ptr = commandSendChar(ptr, commandData.requestId[1]);
+	ptr = commandSendChar(ptr, commandData.requestId[2]);
+	ptr = commandSendChar(ptr, commandData.requestId[3]);
+	ptr = commandSendChar(ptr, len);
+	do {
+	    ptr = commandSendChar(ptr, *c++);
+	} while (--len);
+
+	*ptr++ = commandData.checkA;
+	*ptr++ = commandData.checkB;
+
+	commSendTxBuf(txBuf, ptr - &txBuf->buf);
+
+	supervisorSendDataStop();
     }
-    ptr = &txBuf->buf;
-
-    supervisorSendDataStart();
-
-    *ptr++ = 'A';
-    *ptr++ = 'q';
-    *ptr++ = 'R';
-
-    commandData.checkA = commandData.checkB = 0;
-
-    ptr = commandSendChar(ptr, commandData.requestId[0]);
-    ptr = commandSendChar(ptr, commandData.requestId[1]);
-    ptr = commandSendChar(ptr, commandData.requestId[2]);
-    ptr = commandSendChar(ptr, commandData.requestId[3]);
-    ptr = commandSendChar(ptr, len);
-    do {
-	ptr = commandSendChar(ptr, *c++);
-    } while (--len);
-
-    *ptr++ = commandData.checkA;
-    *ptr++ = commandData.checkB;
-
-    commSendTxBuf(txBuf, ptr - &txBuf->buf);
-
-    supervisorSendDataStop();
 }
 
-void commandRespond(unsigned char c, char *reply, unsigned char len) {
+static void commandRespond(unsigned char c, char *reply, unsigned char len) {
     commandBufStruct_t resp;
 
     resp.commandId = c;
@@ -98,16 +93,16 @@ void commandRespond(unsigned char c, char *reply, unsigned char len) {
     }
 }
 
-void commandAck(char *reply, unsigned char len) {
+static void commandAck(char *reply, unsigned char len) {
     commandRespond(COMMAND_ID_ACK, reply, len);
 }
 
-void commandNack(char *reply, unsigned char len) {
+static void commandNack(char *reply, unsigned char len) {
     commandRespond(COMMAND_ID_NACK, reply, len);
 }
 
 // temporary to receive external acc from serial port
-void commandAccIn(commandBufStruct_t *b) {
+static void commandAccIn(commandBufStruct_t *b) {
     typedef struct {
 	unsigned char command;
 	unsigned char rows;
@@ -131,7 +126,7 @@ void commandAccIn(commandBufStruct_t *b) {
     commandData.floatDump[9] = dump->values[9];
 }
 
-void commandExecute(commandBufStruct_t *b) {
+static void commandExecute(commandBufStruct_t *b) {
     switch (b->commandId) {
     case COMMAND_GPS_PACKET:
 	    // first character is length
@@ -254,7 +249,7 @@ void commandExecute(commandBufStruct_t *b) {
     }
 }
 
-void commandCharIn(unsigned char ch) {
+static void commandCharIn(unsigned char ch) {
     switch (commandData.state) {
     case COMMAND_WAIT_SYNC1:
 	if (ch == COMMAND_SYNC1)
@@ -355,23 +350,9 @@ void commandCharIn(unsigned char ch) {
     }
 }
 
-void commandTaskCode(void *unused) {
-//    serialPort_t *s = downlinkData.serialPort;
-
-    AQ_NOTICE("Command task started\n");
-
-    while (1) {
-	// wait for data
-	yield(5);
-
-	if (commAvailable(COMM_TYPE_TELEMETRY))
-	    commandCharIn(commReadChar(COMM_TYPE_TELEMETRY));
-
-	// process incoming data
-//	while (serialAvailable(s))
-//	    commandCharIn(downlinkReadChar());
-
-    }
+void commandTaskCode(commRcvrStruct_t *r) {
+    while (commAvailable(r))
+	commandCharIn(commReadChar(r));
 }
 
 void commandInit(void) {
@@ -379,9 +360,7 @@ void commandInit(void) {
 
     memset((void *)&commandData, 0, sizeof(commandData));
 
-    commandTaskStack = aqStackInit(COMMAND_STACK_SIZE, "COMMAND");
-
-    commandData.commandTask = CoCreateTask(commandTaskCode, (void *)0, COMMAND_PRIORITY, &commandTaskStack[COMMAND_STACK_SIZE-1], COMMAND_STACK_SIZE);
+    commRegisterRcvrFunc(COMM_TYPE_TELEMETRY, commandTaskCode);
 
     commandData.state = COMMAND_WAIT_SYNC1;
 }

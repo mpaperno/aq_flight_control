@@ -44,7 +44,7 @@ void analogDecode(void) {
 #endif
 
 void analogInit(void) {
-    char s[32];
+    static char s[32];	// TODO
 
 #ifdef ANALOG_DMA_STREAM
     DMA_InitTypeDef DMA_InitStructure;

@@ -132,6 +132,9 @@ void runTaskCode(void *unused) {
 	}
 
 	navUkfFinish();
+
+	CoSetFlag(runData.runFlag);	// new state data
+
 	navNavigate();
 #ifndef HAS_AIMU
 	analogDecode();
@@ -140,7 +143,6 @@ void runTaskCode(void *unused) {
 	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();
-	commDoTelem();
 
 #ifdef USE_CAN
 	canCheckMessage();
@@ -161,6 +163,7 @@ void runInit(void) {
 
     memset((void *)&runData, 0, sizeof(runData));
 
+    runData.runFlag = CoCreateFlag(1, 0);	    // auto reset
     runTaskStack = aqStackInit(RUN_TASK_SIZE, "RUN");
 
     runData.runTask = CoCreateTask(runTaskCode, (void *)0, RUN_PRIORITY, &runTaskStack[RUN_TASK_SIZE-1], RUN_TASK_SIZE);

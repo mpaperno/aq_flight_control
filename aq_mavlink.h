@@ -26,9 +26,6 @@
 #include "config.h"
 #include "../mavlink_types.h"
 
-#define MAVLINK_STACK_SIZE		    280
-#define MAVLINK_PRIORITY		    40
-
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    //  1Hz
 #define MAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
 #define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second
@@ -38,11 +35,6 @@
 #define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
 
 typedef struct {
-    OS_TID sendTask;
-    OS_TID recvTask;
-    OS_EventID notices;
-    void *noticeQueue[MAVLINK_NOTICE_DEPTH];
-
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;
@@ -79,7 +71,7 @@ extern mavlinkStruct_t mavlinkData;
 extern mavlink_system_t mavlink_system;
 
 extern void mavlinkInit(void);
-extern void mavlinkNotice(const char *s);
+extern void mavlinkSendNotice(const char *s);
 extern void mavlinkWpReached(uint16_t seqId);
 extern void mavlinkWpAnnounceCurrent(uint16_t seqId);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);

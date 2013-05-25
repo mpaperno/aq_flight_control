@@ -27,7 +27,6 @@
 #ifdef MAVLINK
     #include "mavlink.h"
 #else
-    #include "notice.h"
     #include "telemetry.h"
     #include "command.h"
 #endif
@@ -70,7 +69,6 @@ void aqInit(void *pdata) {
 #ifdef USE_MAVLINK
     mavlinkInit();
 #endif
-    noticeInit();
     telemetryInit();
     motorsInit();
     gimbalInit();
@@ -97,9 +95,9 @@ void aqInit(void *pdata) {
 
     AQ_NOTICE("Initialization complete, READY.\n");
 
-    // startup complete, reduce notice task priority
-    if (noticeData.noticeTask)
-	CoSetPriority(noticeData.noticeTask, NOTICE_PRIORITY);
+    // startup complete, reduce comm task priority
+    if (commData.commTask)
+	CoSetPriority(commData.commTask, COMM_PRIORITY);
 
     // start telemetry
     telemetryEnable();

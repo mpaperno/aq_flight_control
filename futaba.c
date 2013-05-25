@@ -19,7 +19,6 @@
 #include "aq.h"
 #include "radio.h"
 #include "futaba.h"
-#include "notice.h"
 #include "aq_mavlink.h"
 #include "imu.h"
 #include "util.h"
