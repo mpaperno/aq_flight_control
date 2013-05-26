@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _filer_h
@@ -27,7 +27,7 @@
 
 #define FILER_SESS_FNAME	"session.txt"
 #define FILER_MAX_FILES		4
-#define FILER_STREAM_SYNC	1000		// ~ 5s
+#define FILER_STREAM_SYNC	200		// ~ 1s
 
 #define FILER_FUNC_NONE		0x00
 #define FILER_FUNC_READ		0x01

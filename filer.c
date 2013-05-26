@@ -30,7 +30,7 @@ filerStruct_t filerData;
 
 OS_STK *filerTaskStack;
 
-int32_t filerProcessWrite(filerFileStruct_t *f) {
+static int32_t filerProcessWrite(filerFileStruct_t *f) {
     uint32_t res;
     UINT bytes;
 
@@ -59,7 +59,7 @@ int32_t filerProcessWrite(filerFileStruct_t *f) {
     return bytes;
 }
 
-int32_t filerProcessRead(filerFileStruct_t *f) {
+static int32_t filerProcessRead(filerFileStruct_t *f) {
     uint32_t res;
     UINT bytes;
 
@@ -88,7 +88,7 @@ int32_t filerProcessRead(filerFileStruct_t *f) {
     return bytes;
 }
 
-int32_t filerProcessSync(filerFileStruct_t *f) {
+static int32_t filerProcessSync(filerFileStruct_t *f) {
     uint32_t res;
 
     if (!f->open) {
@@ -104,7 +104,7 @@ int32_t filerProcessSync(filerFileStruct_t *f) {
     return 0;
 }
 
-int32_t filerProcessStream(filerFileStruct_t *f) {
+static int32_t filerProcessStream(filerFileStruct_t *f) {
     uint32_t res;
     UINT bytes = 0;
     uint32_t size;
@@ -118,16 +118,12 @@ int32_t filerProcessStream(filerFileStruct_t *f) {
 	f->open = 1;
     }
 
-    // anything new to write?
-    if (abs(f->head - f->tail) >= 512) {
+    // enough new to write?
+    while (f->tail > f->head || (f->head - f->tail) >= f->length/4) {
 	if (f->head > f->tail)
 	    size = f->head - f->tail;
 	else
 	    size = f->length - f->tail;
-
-	// try to write 512 byte or more blocks
-	if (size > 512)
-	    size = size / 512 * 512;
 
 	res = f_write(&f->fp, f->buf + f->tail, size, &bytes);
 	f->tail = (f->tail + bytes) % f->length;
@@ -139,7 +135,7 @@ int32_t filerProcessStream(filerFileStruct_t *f) {
     return bytes;
 }
 
-int32_t filerProcessClose(filerFileStruct_t *f) {
+static int32_t filerProcessClose(filerFileStruct_t *f) {
     uint32_t res = 0;;
 
     if (f->open) {
@@ -153,7 +149,7 @@ int32_t filerProcessClose(filerFileStruct_t *f) {
 	return 0;
 }
 
-void filerProcessRequest(filerFileStruct_t *f) {
+static void filerProcessRequest(filerFileStruct_t *f) {
     if (f->function == FILER_FUNC_STREAM)
 	f->status = filerProcessStream(f);
     else if (f->function == FILER_FUNC_READ)
@@ -172,8 +168,10 @@ void filerProcessRequest(filerFileStruct_t *f) {
 }
 
 void filerDebug(char *s, int r) {
-    sprintf(filerData.buf, "filer: %s [%d]\n", s, r);
-    AQ_NOTICE(filerData.buf);
+    static char buf[48];
+
+    sprintf(buf, "filer: %s [%d]\n", s, r);
+    AQ_NOTICE(buf);
 }
 
 // open filesystem, format if necessary, update session file
@@ -390,11 +388,11 @@ int32_t filerClose(int8_t handle) {
     return f->status;
 }
 
-inline int32_t filerGetHead(int8_t handle) {
+int32_t filerGetHead(int8_t handle) {
     return filerData.files[handle].head;
 }
 
-inline void filerSetHead(int8_t handle, int32_t head) {
+void filerSetHead(int8_t handle, int32_t head) {
     filerData.files[handle].head = head;
 }
 

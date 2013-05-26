@@ -24,7 +24,7 @@
 
 #define LOGGER_FNAME			"AQL"
 #define LOGGER_ERRORS			3
-#define LOGGER_BUF_SIZE			200
+#define LOGGER_BUF_SIZE			150
 
 enum {
     LOG_LASTUPDATE = 0,
