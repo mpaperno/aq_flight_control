@@ -294,7 +294,7 @@ void commInit(void) {
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
     commData.serialPorts[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYPE1];
+    commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYP1];
 #endif
 
 #ifdef COMM_PORT2
@@ -304,7 +304,7 @@ void commInit(void) {
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
     commData.serialPorts[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYPE2];
+    commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYP2];
 #endif
 
 #ifdef COMM_PORT3
@@ -314,7 +314,7 @@ void commInit(void) {
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
     commData.serialPorts[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYPE3];
+    commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYP3];
 #endif
 
 #ifdef COMM_PORT4
@@ -324,11 +324,11 @@ void commInit(void) {
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
     commData.serialPorts[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYPE4];
+    commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYP4];
 #endif
 
     // record which stream types that we are working with
-    commData.typesUsed = (uint8_t)p[COMM_STREAM_TYPE1] | (uint8_t)p[COMM_STREAM_TYPE2] | (uint8_t)p[COMM_STREAM_TYPE3] | (uint8_t)p[COMM_STREAM_TYPE4];
+    commData.typesUsed = (uint8_t)p[COMM_STREAM_TYP1] | (uint8_t)p[COMM_STREAM_TYP2] | (uint8_t)p[COMM_STREAM_TYP3] | (uint8_t)p[COMM_STREAM_TYP4];
 
     // perhaps make this dynamic later
     commData.txPacketBufSizes[0] = 16;

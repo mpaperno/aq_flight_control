@@ -8,7 +8,7 @@
 # Usage examples:
 # 		make all											# default Release type builds .hex and .elf binaries
 #		make all BUILD_TYPE=Debug					# build with compiler debugging flags/options enabled
-#		make all BOARD_REV=2 INCR_BUILDNUM=0	# build for rev 2 hardware, don't increment the buildnumber
+#		make all BOARD_REV=1 INCR_BUILDNUM=0	# build for rev 1 hardware, don't increment the buildnumber
 
 # Defaults - modify here or on command line
 #
@@ -134,7 +134,7 @@ endif
 CC_INCLUDES :=  $(addprefix -I, $(AQINC_PATHS)) -I$(STMLIB_PATH)/include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
 
 # compiler flags
-CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -fno-gcse -Wall -std=c99 \
+CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -fno-gcse -Wall -finline-functions -std=c99 \
 	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet -MD $(basename $@).d -MQ $@
 
 # macro definitions to pass via compiler command line
@@ -184,7 +184,7 @@ EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 # AQ code objects to create (correspond to .c source to compile)
 AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
 	comm.o command.o compass.o config.o control.o can.o \
-	digital.o esc32.o \
+	digital.o esc32.o eeprom.o \
 	filer.o flash.o fpu.o futaba.o \
 	gimbal.o gps.o getbuildnum.o grhott.o imu.o util.o logger.o \
 	main_ctl.o motors.o \
@@ -198,24 +198,47 @@ AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o 
 # STM32 related including preprocessor and startup 
 STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o \
 	stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o system_stm32f4xx.o STM32_Startup.o thumb_crt0.o
-STM32_SYS_OBJS := $(addprefix $(STM32SYS_PATH)/, $(STM32_SYS_OBJ_FILES))
+ifeq ($(STM32SYS_PATH),$(SRC_PATH))
+	STM32_SYS_OBJS := $(STM32_SYS_OBJ_FILES)
+	STM32_OBJ_TARGET := $(OBJ_PATH)
+else
+	STM32_SYS_OBJS := $(addprefix $(STM32SYS_PATH)/, $(STM32_SYS_OBJ_FILES))
+	STM32_OBJ_TARGET := $(OBJ_PATH)/$(STM32SYS_PATH)
+endif
 
 # CoOS
 COOS_OBJ_FILES = arch.o core.o event.o flag.o kernelHeap.o mbox.o mm.o mutex.o port.o queue.o sem.o serviceReq.o task.o time.o timer.o utility.o
-COOS_OBJS := $(addprefix $(COOS_PATH)/, $(COOS_OBJ_FILES))
+ifeq ($(COOS_PATH),$(SRC_PATH))
+	COOS_OBJS := $(COOS_OBJ_FILES)
+else
+	COOS_OBJS := $(addprefix $(COOS_PATH)/, $(COOS_OBJ_FILES))
+endif
 
 # ARM
 DSPLIB_OBJ_FILES = arm_fill_f32.o arm_copy_f32.o arm_mat_init_f32.o arm_mat_inverse_f32.o arm_mat_trans_f32.o arm_mat_mult_f32.o \
 	arm_mat_add_f32.o arm_mat_sub_f32.o arm_mean_f32.o arm_scale_f32.o arm_std_f32.o
-DSPLIB_OBJS := $(addprefix $(DSP_PATH)/, $(DSPLIB_OBJ_FILES))
+ifeq ($(DSP_PATH),$(SRC_PATH))
+	DSPLIB_OBJS := $(DSPLIB_OBJ_FILES)
+else
+	DSPLIB_OBJS := $(addprefix $(DSP_PATH)/, $(DSPLIB_OBJ_FILES))
+endif
 
 # FATfs
 FATFS_OBJ_FILES = ff.o
-FATFS_OBJS := $(addprefix $(FATFS_PATH)/, $(FATFS_OBJ_FILES))
+ifeq ($(FATFS_PATH),$(SRC_PATH))
+	FATFS_OBJS := $(FATFS_OBJ_FILES)
+else
+	FATFS_OBJS := $(addprefix $(FATFS_PATH)/, $(FATFS_OBJ_FILES))
+endif
 
 # Digital IMU
 DIGI_OBJ_FILES = d_imu.o hmc5983.o mpu6000.o ms5611.o
-DIGI_OBJS := $(addprefix $(DIGI_PATH)/, $(DIGI_OBJ_FILES))
+ifeq ($(DIGI_PATH),$(SRC_PATH))
+	DIGI_OBJS := $(DIGI_OBJ_FILES)
+else
+	DIGI_OBJS := $(addprefix $(DIGI_PATH)/, $(DIGI_OBJ_FILES))
+endif
+
 
 ## all objects
 C_OBJECTS := $(addprefix $(OBJ_PATH)/, $(AQV6_OBJS) $(STM32_SYS_OBJS) $(COOS_OBJS) $(DSPLIB_OBJS) $(FATFS_OBJS) $(DIGI_OBJS))
@@ -247,7 +270,7 @@ $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	$(AS) $(AS_OPTS) $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
-$(OBJ_PATH)/$(STM32SYS_PATH)/STM32_Startup.o: $(STMLIB_PATH)/STM32_Startup.s
+$(STM32_OBJ_TARGET)/STM32_Startup.o: $(STMLIB_PATH)/STM32_Startup.s
 	@echo ""
 	@echo "## Compiling $< -> $@ ##"
 	$(CC) $(CFLAGS) -E -lang-asm $< -o $(basename $@).lst
@@ -255,7 +278,7 @@ $(OBJ_PATH)/$(STM32SYS_PATH)/STM32_Startup.o: $(STMLIB_PATH)/STM32_Startup.s
 	$(AS) $(AS_OPTS) -gdwarf-2 $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
-$(OBJ_PATH)/$(STM32SYS_PATH)/thumb_crt0.o: $(STM32SYS_PATH)/thumb_crt0.s
+$(STM32_OBJ_TARGET)/thumb_crt0.o: $(STM32SYS_PATH)/thumb_crt0.s
 	@echo ""
 	@echo "## Compiling $< -> $@ ##"
 	$(CC) $(CFLAGS) -E -lang-asm $< -o $(basename $@).lst

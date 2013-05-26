@@ -27,6 +27,7 @@
 #define CONFIG_FILE_BUF_SIZE	    512
 #define CONFIG_LINE_BUF_SIZE	    128
 
+// param names must be kept <= 16 chars for mavlink
 enum configParameters {
     CONFIG_VERSION = 0,
     RADIO_TYPE,
@@ -155,10 +156,10 @@ enum configParameters {
     COMM_BAUD2,
     COMM_BAUD3,
     COMM_BAUD4,
-    COMM_STREAM_TYPE1,
-    COMM_STREAM_TYPE2,
-    COMM_STREAM_TYPE3,
-    COMM_STREAM_TYPE4,
+    COMM_STREAM_TYP1,
+    COMM_STREAM_TYP2,
+    COMM_STREAM_TYP3,
+    COMM_STREAM_TYP4,
     TELEMETRY_RATE,
     NAV_MAX_SPEED,
     NAV_MAX_DECENT,
