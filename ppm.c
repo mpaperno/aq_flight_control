@@ -106,7 +106,6 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
 	else {
             ppmData.inputValid    = 0;
             ppmData.signalQuality = 0;
-            ppmData.channels[(ppmData.lastChannel)++] = 0;
 	}
     }
 }

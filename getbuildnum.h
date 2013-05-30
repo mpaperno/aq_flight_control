@@ -21,7 +21,7 @@
 
 #include "buildnum.h"
 
-#define VERSION "6.6.0"
+#define VERSION "6.6.1"
 
 extern unsigned long  getBuildNumber(void);
 extern unsigned long  getRevisionNumber(void);
