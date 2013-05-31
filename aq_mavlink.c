@@ -276,7 +276,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
     mavlink_message_t msg;
     mavlink_status_t status;
-    char paramId[16];
+    char paramId[17];
     uint8_t c;
 
     // process incoming data
@@ -547,14 +547,11 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 		    if (mavlink_msg_param_set_get_target_system(&msg) == mavlink_system.sysid) {
 			int paramIndex = -1;
 			float paramValue;
-			int i, j;
+			int i;
 
 			mavlink_msg_param_set_get_param_id(&msg, paramId);
 			for (i = 0; i < mavlinkData.numParams; i++) {
-			    for (j = 0; j < MAVLINK_PARAMID_LEN; j++)
-				if (paramId[j] != configParameterStrings[i][j] || paramId[j] == 0)
-				    break;
-			    if (paramId[j] == 0) {
+			    if (!strncmp(paramId, configParameterStrings[i], MAVLINK_PARAMID_LEN)) {
 				paramIndex = i;
 				break;
 			    }
