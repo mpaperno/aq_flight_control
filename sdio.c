@@ -1052,7 +1052,9 @@ void sdioLowLevelInit(void) {
 
     // DMA2 STREAMx Interrupt ENABLE
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_DMA_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
     // Configure SD Card detect pin
@@ -1207,7 +1209,7 @@ SD_Error sdioInit(void) {
 
 // Allows to read one block from a specified address in a card. The Data
 // transfer can be managed by DMA mode or Polling mode.
-SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize) {
+SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadSector, uint16_t BlockSize) {
     SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
     SDIO_DataInitTypeDef SDIO_DataInitStructure;
     SD_Error errorstatus = SD_OK;
@@ -1229,7 +1231,7 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize) 
 
     if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
 	BlockSize = 512;
-	ReadAddr /= 512;
+//	ReadAddr /= 512;
     }
 
     // Set Block Size for Card
@@ -1254,7 +1256,7 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize) 
     SDIO_DataConfig(&SDIO_DataInitStructure);
 
     // Send CMD17 READ_SINGLE_BLOCK
-    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)ReadAddr;
+    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)ReadSector;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_READ_SINGLE_BLOCK;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
     SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
@@ -1323,7 +1325,7 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize) 
 //  ReadAddr: Address from where data are to be read.
 //  BlockSize: the SD card Data block size. The Block size should be 512.
 //  NumberOfBlocks: number of blocks to be read.
-SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t BlockSize, uint32_t NumberOfBlocks) {
+SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadSector, uint16_t BlockSize, uint32_t NumberOfBlocks) {
     SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
     SDIO_DataInitTypeDef SDIO_DataInitStructure;
     SD_Error errorstatus = SD_OK;
@@ -1339,7 +1341,7 @@ SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Block
 
     if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
 	BlockSize = 512;
-	ReadAddr /= 512;
+//	ReadAddr /= 512;
     }
 
     // Set Block Size for Card
@@ -1364,7 +1366,7 @@ SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Block
     SDIO_DataConfig(&SDIO_DataInitStructure);
 
     // Send CMD18 READ_MULT_BLOCK with argument data address
-    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)ReadAddr;
+    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)ReadSector;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_READ_MULT_BLOCK;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
     SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
@@ -1381,7 +1383,7 @@ SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadAddr, uint16_t Block
 
 // Allows to write one block starting from a specified address in a card.
 // The Data transfer can be managed by DMA mode or Polling mode.
-SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize) {
+SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteSector, uint16_t BlockSize) {
     SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
     SDIO_DataInitTypeDef SDIO_DataInitStructure;
     SD_Error errorstatus = SD_OK;
@@ -1405,7 +1407,7 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
 
     if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
 	BlockSize = 512;
-	WriteAddr /= 512;
+//	WriteAddr /= 512;
     }
 
     // Set Block Size for Card
@@ -1422,7 +1424,7 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
 	return(errorstatus);
 
     // Send CMD24 WRITE_SINGLE_BLOCK
-    SDIO_CmdInitStructure.SDIO_Argument = WriteAddr;
+    SDIO_CmdInitStructure.SDIO_Argument = WriteSector;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_WRITE_SINGLE_BLOCK;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
     SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
@@ -1498,7 +1500,7 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSiz
 // writebuff: pointer to the buffer that contain the data to be transferred.
 //  BlockSize: the SD card Data block size. The Block size should be 512.
 // NumberOfBlocks: number of blocks to be written.
-SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t BlockSize, uint32_t NumberOfBlocks) {
+SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteSector, uint16_t BlockSize, uint32_t NumberOfBlocks) {
     SDIO_CmdInitTypeDef SDIO_CmdInitStructure;
     SDIO_DataInitTypeDef SDIO_DataInitStructure;
     SD_Error errorstatus = SD_OK;
@@ -1515,7 +1517,7 @@ SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t Bl
 
     if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
 	BlockSize = 512;
-	WriteAddr /= 512;
+//	WriteAddr /= 512;
     }
 
     // Set Block Size for Card
@@ -1558,7 +1560,7 @@ SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteAddr, uint16_t Bl
 	return(errorstatus);
 
     // Send CMD25 WRITE_MULT_BLOCK with argument data address
-    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)WriteAddr;
+    SDIO_CmdInitStructure.SDIO_Argument = (uint32_t)WriteSector;
     SDIO_CmdInitStructure.SDIO_CmdIndex = SD_CMD_WRITE_MULT_BLOCK;
     SDIO_CmdInitStructure.SDIO_Response = SDIO_Response_Short;
     SDIO_CmdInitStructure.SDIO_Wait = SDIO_Wait_No;
@@ -1959,9 +1961,9 @@ DRESULT disk_read (
 	}
 
 	if (count > 1)
-	    error = SD_ReadMultiBlocks(buff, sector*512, 512, count);
+	    error = SD_ReadMultiBlocks(buff, sector, 512, count);
 	else
-	    error = SD_ReadBlock(buff, sector*512, 512);
+	    error = SD_ReadBlock(buff, sector, 512);
 
 	if (error == SD_OK)
 	    error = SD_WaitReadOperation();
@@ -2004,9 +2006,9 @@ DRESULT disk_write (
 	}
 
 	if (count > 1)
-	    error = SD_WriteMultiBlocks((uint8_t *)buff, sector*512, 512, count);
+	    error = SD_WriteMultiBlocks((uint8_t *)buff, sector, 512, count);
 	else
-	    error = SD_WriteBlock((uint8_t *)buff, sector*512, 512);
+	    error = SD_WriteBlock((uint8_t *)buff, sector, 512);
 
 	if (error == SD_OK)
 	    error = SD_WaitWriteOperation();
@@ -2076,10 +2078,11 @@ DRESULT disk_ioctl (
 }
 
 void SD_ProcessDMAIRQ(void) {
-    if(DMA2->LISR & SDIO_DMA_FLAG_TCIF) {
+    if (DMA2->LISR & SDIO_DMA_FLAG_TCIF) {
 	sdioData.DMAEndOfTransfer = 0x01;
-	DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_TCIF | SDIO_DMA_FLAG_FEIF);
     }
+
+    DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
 }
 
 // Allows to process all the interrupts that are high.

@@ -329,12 +329,11 @@ typedef struct {
 
 typedef struct {
     volatile unsigned char initialized;
-//    volatile unsigned char errorDetected;
     unsigned long cardRemovalMicros;
     digitalPin *sdEnable;
     uint32_t CardType;
     uint32_t CSD_Tab[4], CID_Tab[4], RCA;
-    uint8_t SDSTATUS_Tab[16];
+    uint8_t SDSTATUS_Tab[64];
     __IO uint32_t StopCondition;
     __IO SD_Error TransferError;
     __IO uint32_t TransferEnd, DMAEndOfTransfer;
