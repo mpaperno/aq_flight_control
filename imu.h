@@ -56,9 +56,9 @@
 
 #ifdef USE_DIGITAL_IMU
 // using the Digital IMU as IMU
-#define IMU_DRATEX		mpu6000Data.gyo[0]
-#define IMU_DRATEY		mpu6000Data.gyo[1]
-#define IMU_DRATEZ		mpu6000Data.gyo[2]
+#define IMU_DRATEX		mpu6000Data.dRateGyo[0]
+#define IMU_DRATEY		mpu6000Data.dRateGyo[1]
+#define IMU_DRATEZ		mpu6000Data.dRateGyo[2]
 #define IMU_RATEX		mpu6000Data.gyo[0]
 #define IMU_RATEY		mpu6000Data.gyo[1]
 #define IMU_RATEZ		mpu6000Data.gyo[2]

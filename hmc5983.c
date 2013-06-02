@@ -25,7 +25,7 @@
 
 hmc5983Struct_t hmc5983Data;
 
-void hmc5983TransferComplete(int unused) {
+static void hmc5983TransferComplete(int unused) {
     hmc5983Data.slot = (hmc5983Data.slot + 1) % HMC5983_SLOTS;
 }
 

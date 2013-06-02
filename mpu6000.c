@@ -65,12 +65,123 @@ void mpu6600InitialBias(void) {
 //    mpu6000Data.gyoOffset[2] = -(gyoSum[2] / 50.0f + p[IMU_GYO_BIAS_Z] + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3);
 }
 
+static void mpu6000CalibAcc(float *in, float *out) {
+    float a, b, c;
+    float x, y, z;
+
+    // bias
+    a = -(in[0] + p[IMU_ACC_BIAS_X] + p[IMU_ACC_BIAS1_X]*dImuData.dTemp + p[IMU_ACC_BIAS2_X]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
+    b = +(in[1] + p[IMU_ACC_BIAS_Y] + p[IMU_ACC_BIAS1_Y]*dImuData.dTemp + p[IMU_ACC_BIAS2_Y]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
+    c = -(in[2] + p[IMU_ACC_BIAS_Z] + p[IMU_ACC_BIAS1_Z]*dImuData.dTemp + p[IMU_ACC_BIAS2_Z]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
+
+    // misalignment
+    x = a + b*p[IMU_ACC_ALGN_XY] + c*p[IMU_ACC_ALGN_XZ];
+    y = a*p[IMU_ACC_ALGN_YX] + b + c*p[IMU_ACC_ALGN_YZ];
+    z = a*p[IMU_ACC_ALGN_ZX] + b*p[IMU_ACC_ALGN_ZY] + c;
+
+    // scale
+    x /= (p[IMU_ACC_SCAL_X] + p[IMU_ACC_SCAL1_X]*dImuData.dTemp + p[IMU_ACC_SCAL2_X]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_X]*dImuData.dTemp3);
+    y /= (p[IMU_ACC_SCAL_Y] + p[IMU_ACC_SCAL1_Y]*dImuData.dTemp + p[IMU_ACC_SCAL2_Y]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_Y]*dImuData.dTemp3);
+    z /= (p[IMU_ACC_SCAL_Z] + p[IMU_ACC_SCAL1_Z]*dImuData.dTemp + p[IMU_ACC_SCAL2_Z]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_Z]*dImuData.dTemp3);
+
+    // IMU rotation
+    out[0] = x * imuData.cosRot - y * imuData.sinRot;
+    out[1] = y * imuData.cosRot + x * imuData.sinRot;
+    out[2] = z;
+}
+
+static void mpu6000ScaleGyo(int32_t *in, float *out, float divisor) {
+    // 500 deg/s
+#ifdef DIUM_IMUV1
+    out[0] = -in[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[1] = -in[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[2] = +in[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+#else
+    out[0] = -in[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[1] = +in[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[2] = -in[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+#endif
+}
+
+static void mpu6000ScaleAcc(int32_t *in, float *out, float divisor) {
+    // 4g
+#ifdef DIUM_IMUV1
+    out[0] = +in[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[1] = +in[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[2] = +in[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
+#else
+    out[0] = +in[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[1] = -in[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[2] = -in[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
+#endif
+}
+
+static void mpu6000CalibGyo(float *in, float *out) {
+    float a, b, c;
+    float x, y, z;
+
+    // bias
+    a = +(in[0] + mpu6000Data.gyoOffset[0] + p[IMU_GYO_BIAS_X] + p[IMU_GYO_BIAS1_X]*dImuData.dTemp + p[IMU_GYO_BIAS2_X]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_X]*dImuData.dTemp3);
+    b = -(in[1] + mpu6000Data.gyoOffset[1] + p[IMU_GYO_BIAS_Y] + p[IMU_GYO_BIAS1_Y]*dImuData.dTemp + p[IMU_GYO_BIAS2_Y]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_Y]*dImuData.dTemp3);
+    c = -(in[2] + mpu6000Data.gyoOffset[2] + p[IMU_GYO_BIAS_Z] + p[IMU_GYO_BIAS1_Z]*dImuData.dTemp + p[IMU_GYO_BIAS2_Z]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_Z]*dImuData.dTemp3);
+
+    // misalignment
+    x = a + b*p[IMU_GYO_ALGN_XY] + c*p[IMU_GYO_ALGN_XZ];
+    y = a*p[IMU_GYO_ALGN_YX] + b + c*p[IMU_GYO_ALGN_YZ];
+    z = a*p[IMU_GYO_ALGN_ZX] + b*p[IMU_GYO_ALGN_ZY] + c;
+
+    // scale
+    x /= p[IMU_GYO_SCAL_X];
+    y /= p[IMU_GYO_SCAL_Y];
+    z /= p[IMU_GYO_SCAL_Z];
+
+    // IMU rotation
+    out[0] = x * imuData.cosRot - y * imuData.sinRot;
+    out[1] = y * imuData.cosRot + x * imuData.sinRot;
+    out[2] = z;
+}
+
+void mpu6000DrateDecode(void) {
+    volatile uint8_t *d = mpu6000Data.rxBuf;
+    int32_t gyo[3];
+    float divisor;
+    int s, i;
+
+    for (i = 0; i < 3; i++)
+	gyo[i] = 0;
+
+    divisor = (float)MPU6000_DRATE_SLOTS;
+    s = mpu6000Data.slot - 1;
+    if (s < 0)
+	s = MPU6000_SLOTS - 1;
+
+    for (i = 0; i < MPU6000_DRATE_SLOTS; i++) {
+	int j = s*MPU6000_SLOT_SIZE;
+
+	// check if we are in the middle of a transaction for this slot
+	if (s == mpu6000Data.slot && mpu6000Data.spiFlag == 0)	{
+	    divisor -= 1.0f;
+	}
+	else {
+	    gyo[0] += (int16_t)__rev16(*(uint16_t *)&d[j+9]);
+	    gyo[1] += (int16_t)__rev16(*(uint16_t *)&d[j+11]);
+	    gyo[2] += (int16_t)__rev16(*(uint16_t *)&d[j+13]);
+	}
+
+	if (--s < 0)
+	    s = MPU6000_SLOTS - 1;
+    }
+
+    divisor = 1.0f / divisor;
+
+    mpu6000ScaleGyo(gyo, mpu6000Data.dRateRawGyo, divisor);
+    mpu6000CalibGyo(mpu6000Data.dRateRawGyo, mpu6000Data.dRateGyo);
+}
+
 void mpu6000Decode(void) {
     volatile uint8_t *d = mpu6000Data.rxBuf;
     int32_t acc[3], temp, gyo[3];
     float divisor;
-    float x, y, z;
-    float a, b, c;
     int i;
 
     for (i = 0; i < 3; i++) {
@@ -103,70 +214,13 @@ void mpu6000Decode(void) {
     divisor = 1.0f / divisor;
 
     mpu6000Data.rawTemp = temp * divisor * (1.0f / 340.0f) + 36.53f;
-
     mpu6000Data.temp = utilFilter(&mpu6000Data.tempFilter, mpu6000Data.rawTemp);
 
-    // 4g
-#ifdef DIUM_IMUV1
-    mpu6000Data.rawAcc[0] = +acc[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    mpu6000Data.rawAcc[1] = +acc[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    mpu6000Data.rawAcc[2] = +acc[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
-#else
-    mpu6000Data.rawAcc[0] = +acc[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    mpu6000Data.rawAcc[1] = -acc[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    mpu6000Data.rawAcc[2] = -acc[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
-#endif
+    mpu6000ScaleAcc(acc, mpu6000Data.rawAcc, divisor);
+    mpu6000CalibAcc(mpu6000Data.rawAcc, mpu6000Data.acc);
 
-    // bias
-    a = -(mpu6000Data.rawAcc[0] + p[IMU_ACC_BIAS_X] + p[IMU_ACC_BIAS1_X]*dImuData.dTemp + p[IMU_ACC_BIAS2_X]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
-    b = +(mpu6000Data.rawAcc[1] + p[IMU_ACC_BIAS_Y] + p[IMU_ACC_BIAS1_Y]*dImuData.dTemp + p[IMU_ACC_BIAS2_Y]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
-    c = -(mpu6000Data.rawAcc[2] + p[IMU_ACC_BIAS_Z] + p[IMU_ACC_BIAS1_Z]*dImuData.dTemp + p[IMU_ACC_BIAS2_Z]*dImuData.dTemp2 + p[IMU_ACC_BIAS3_X]*dImuData.dTemp3);
-
-    // misalignment
-    x = a + b*p[IMU_ACC_ALGN_XY] + c*p[IMU_ACC_ALGN_XZ];
-    y = a*p[IMU_ACC_ALGN_YX] + b + c*p[IMU_ACC_ALGN_YZ];
-    z = a*p[IMU_ACC_ALGN_ZX] + b*p[IMU_ACC_ALGN_ZY] + c;
-
-    // scale
-    x /= (p[IMU_ACC_SCAL_X] + p[IMU_ACC_SCAL1_X]*dImuData.dTemp + p[IMU_ACC_SCAL2_X]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_X]*dImuData.dTemp3);
-    y /= (p[IMU_ACC_SCAL_Y] + p[IMU_ACC_SCAL1_Y]*dImuData.dTemp + p[IMU_ACC_SCAL2_Y]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_Y]*dImuData.dTemp3);
-    z /= (p[IMU_ACC_SCAL_Z] + p[IMU_ACC_SCAL1_Z]*dImuData.dTemp + p[IMU_ACC_SCAL2_Z]*dImuData.dTemp2 + p[IMU_ACC_SCAL3_Z]*dImuData.dTemp3);
-
-    // IMU rotation
-    mpu6000Data.acc[0] = x * imuData.cosRot - y * imuData.sinRot;
-    mpu6000Data.acc[1] = y * imuData.cosRot + x * imuData.sinRot;
-    mpu6000Data.acc[2] = z;
-
-    // 500 deg/s
-#ifdef DIUM_IMUV1
-    mpu6000Data.rawGyo[0] = -gyo[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    mpu6000Data.rawGyo[1] = -gyo[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    mpu6000Data.rawGyo[2] = +gyo[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-#else
-    mpu6000Data.rawGyo[0] = -gyo[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    mpu6000Data.rawGyo[1] = +gyo[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    mpu6000Data.rawGyo[2] = -gyo[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-#endif
-
-    // bias
-    a = +(mpu6000Data.rawGyo[0] + mpu6000Data.gyoOffset[0] + p[IMU_GYO_BIAS_X] + p[IMU_GYO_BIAS1_X]*dImuData.dTemp + p[IMU_GYO_BIAS2_X]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_X]*dImuData.dTemp3);
-    b = -(mpu6000Data.rawGyo[1] + mpu6000Data.gyoOffset[1] + p[IMU_GYO_BIAS_Y] + p[IMU_GYO_BIAS1_Y]*dImuData.dTemp + p[IMU_GYO_BIAS2_Y]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_Y]*dImuData.dTemp3);
-    c = -(mpu6000Data.rawGyo[2] + mpu6000Data.gyoOffset[2] + p[IMU_GYO_BIAS_Z] + p[IMU_GYO_BIAS1_Z]*dImuData.dTemp + p[IMU_GYO_BIAS2_Z]*dImuData.dTemp2 + p[IMU_GYO_BIAS3_Z]*dImuData.dTemp3);
-
-    // misalignment
-    x = a + b*p[IMU_GYO_ALGN_XY] + c*p[IMU_GYO_ALGN_XZ];
-    y = a*p[IMU_GYO_ALGN_YX] + b + c*p[IMU_GYO_ALGN_YZ];
-    z = a*p[IMU_GYO_ALGN_ZX] + b*p[IMU_GYO_ALGN_ZY] + c;
-
-    // scale
-    x /= p[IMU_GYO_SCAL_X];
-    y /= p[IMU_GYO_SCAL_Y];
-    z /= p[IMU_GYO_SCAL_Z];
-
-    // IMU rotation
-    mpu6000Data.gyo[0] = x * imuData.cosRot - y * imuData.sinRot;
-    mpu6000Data.gyo[1] = y * imuData.cosRot + x * imuData.sinRot;
-    mpu6000Data.gyo[2] = z;
+    mpu6000ScaleGyo(gyo, mpu6000Data.rawGyo, divisor);
+    mpu6000CalibGyo(mpu6000Data.rawGyo, mpu6000Data.gyo);
 
     mpu6000Data.lastUpdate = timerMicros();
 }

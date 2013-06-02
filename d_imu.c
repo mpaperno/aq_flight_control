@@ -140,17 +140,18 @@ void dIMUTaskCode(void *unused) {
 
 	digitalTogg(tp);
 
-	dIMUCalcTempDiff();
-
 	// double rate gyo loop
 #ifdef DIMU_HAVE_MPU6000
-	mpu6000Decode();
+	mpu6000DrateDecode();
 #endif
 
 	imuDImuDRateReady();
 
 	// full sensor loop
 	if ((loops & 0b1) == 0) {
+#ifdef DIMU_HAVE_MPU6000
+	    mpu6000Decode();
+#endif
 #ifdef DIMU_HAVE_ADXL362
 	    adxl362Decode();
 #endif
@@ -162,6 +163,8 @@ void dIMUTaskCode(void *unused) {
 #endif
 	    dImuData.lastUpdate = timerMicros();
 	    imuDImuSensorReady();
+
+	    dIMUCalcTempDiff();
 	}
 
 	loops++;

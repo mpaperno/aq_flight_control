@@ -30,9 +30,12 @@
 
 #define MPU6000_BYTES		    15
 #define MPU6000_SLOT_SIZE	    ((MPU6000_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
+
 //#define MPU6000_SLOTS		    40	    // 200Hz bandwidth
 #define MPU6000_SLOTS		    80	    // 100Hz bandwidth
 //#define MPU6000_SLOTS		    160	    // 50Hz bandwidth
+
+#define MPU6000_DRATE_SLOTS	    20	    // 400Hz
 
 typedef struct {
     utilFilter_t tempFilter;
@@ -43,10 +46,12 @@ typedef struct {
     float rawTemp;
     float rawAcc[3];
     float rawGyo[3];
+    float dRateRawGyo[3];
     float gyoOffset[3];
     float acc[3];
     float temp;
     float gyo[3];
+    float dRateGyo[3];
     volatile uint32_t lastUpdate;
     uint8_t readReg;
     uint8_t enabled;
@@ -58,6 +63,7 @@ extern void mpu6000PreInit(void);
 extern void mpu6000Init(void);
 extern void mpu6600InitialBias(void);
 extern void mpu6000Decode(void);
+extern void mpu6000DrateDecode(void);
 extern void mpu6000Enable(void);
 extern void mpu6000Disable(void);
 
