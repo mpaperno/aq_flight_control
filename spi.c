@@ -36,7 +36,7 @@
 
 spiStruct_t spiData[2];
 
-inline void spiTriggerSchedule(uint8_t interface) {
+static void spiTriggerSchedule(uint8_t interface) {
     if (interface)
 	NVIC->STIR = ETH_WKUP_IRQn;
     else
@@ -101,16 +101,19 @@ void spi1Init(void) {
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
 	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
-	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI1_DMA_RX, &DMA_InitStructure);
 
-	DMA_ClearITPendingBit(SPI_SPI1_DMA_RX, SPI_SPI1_DMA_RX_FLAGS);
+	// store flags for later use
+	spiData[0].intRxFlags = SPI_SPI1_DMA_RX_FLAGS;
+
+	DMA_ClearITPendingBit(SPI_SPI1_DMA_RX, spiData[0].intRxFlags);
 	DMA_ITConfig(SPI_SPI1_DMA_RX, DMA_IT_TC, ENABLE);
 
 	// Enable RX DMA global Interrupt
@@ -133,13 +136,16 @@ void spi1Init(void) {
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI1_DMA_TX, &DMA_InitStructure);
 
-	DMA_ClearITPendingBit(SPI_SPI1_DMA_TX, SPI_SPI1_DMA_TX_FLAGS);
+	// store flags for later use
+	spiData[0].intTxFlags = SPI_SPI1_DMA_TX_FLAGS;
+
+	DMA_ClearITPendingBit(SPI_SPI1_DMA_TX, spiData[0].intTxFlags);
 
 	spiData[0].spi = SPI1;
 	spiData[0].rxDMAStream = SPI_SPI1_DMA_RX;
@@ -216,14 +222,17 @@ void spi2Init(void) {
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
-	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI2_DMA_RX, &DMA_InitStructure);
 
-	DMA_ClearITPendingBit(SPI_SPI2_DMA_RX, SPI_SPI2_DMA_RX_FLAGS);
+	// store flags for later use
+	spiData[1].intRxFlags = SPI_SPI2_DMA_RX_FLAGS;
+
+	DMA_ClearITPendingBit(SPI_SPI2_DMA_RX, spiData[1].intRxFlags);
 	DMA_ITConfig(SPI_SPI2_DMA_RX, DMA_IT_TC, ENABLE);
 
 	// Enable RX DMA global Interrupt
@@ -245,14 +254,16 @@ void spi2Init(void) {
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
-	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
 	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
 	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	DMA_Init(SPI_SPI2_DMA_TX, &DMA_InitStructure);
 
-	DMA_ClearITPendingBit(SPI_SPI2_DMA_TX, SPI_SPI2_DMA_TX_FLAGS);
+	// store flags for later use
+	spiData[1].intTxFlags = SPI_SPI2_DMA_TX_FLAGS;
+	DMA_ClearITPendingBit(SPI_SPI2_DMA_TX, spiData[1].intTxFlags);
 
 	spiData[1].spi = SPI2;
 	spiData[1].rxDMAStream = SPI_SPI2_DMA_RX;
@@ -269,15 +280,15 @@ void spi2Init(void) {
 }
 #endif
 
-void spiDeselect(spiClient_t *client) {
+static void spiDeselect(spiClient_t *client) {
     digitalHi(client->cs);
 }
 
-void spiSelect(spiClient_t *client) {
+static void spiSelect(spiClient_t *client) {
     digitalLo(client->cs);
 }
 
-void spiNotify(spiClient_t *client) {
+static void spiNotify(spiClient_t *client) {
     if (client->flag)
 	*client->flag = timerMicros();
 
@@ -285,24 +296,44 @@ void spiNotify(spiClient_t *client) {
 	client->callback(0);
 }
 
-void spiStartTxn(spiStruct_t *interface) {
+static void spiDisableSPI(spiStruct_t *interface) {
+    while (!(interface->spi->SR & SPI_I2S_FLAG_TXE))
+	;
+    while (interface->spi->SR & SPI_I2S_FLAG_BSY)
+	;
+
+    SPI_Cmd(interface->spi, DISABLE);
+}
+
+static void spiDisableDMA(spiStruct_t *interface) {
+    DMA_Cmd(interface->txDMAStream, DISABLE);
+    DMA_Cmd(interface->rxDMAStream, DISABLE);
+
+    DMA_ClearITPendingBit(interface->rxDMAStream, interface->intRxFlags);
+    DMA_ClearITPendingBit(interface->txDMAStream, interface->intTxFlags);
+}
+
+static void spiStartTxn(spiStruct_t *interface) {
     spiSlot_t *slot = &interface->slots[interface->tail];
     spiClient_t *client = slot->client;
     uint32_t tmp;
 
     // is the current txn taking too long?
     if (interface->txRunning != 0 && (timerMicros() - interface->txnStart) > SPI_MAX_TXN_TIME) {
+	spiDisableDMA(interface);
+	spiDisableSPI(interface);
 	spiDeselect(client);
 
-	DMA_Cmd(interface->txDMAStream, DISABLE);
-	DMA_Cmd(interface->rxDMAStream, DISABLE);
+	interface->tail = (interface->tail + 1) % SPI_SLOTS;
 
-	SPI_Cmd(interface->spi, DISABLE);
+	slot = &interface->slots[interface->tail];
+	client = slot->client;
 
+	interface->txRunning = 0;
 	interface->txnTimeouts++;
     }
 
-    if (interface->txRunning == 0 && interface->tail != interface->head) {
+    if (interface->tail != interface->head && interface->txRunning == 0) {
 	interface->txRunning = 1;
 	interface->txnStart = timerMicros();
 
@@ -310,6 +341,9 @@ void spiStartTxn(spiStruct_t *interface) {
 	tmp = interface->spi->CR1 & SPI_BAUD_MASK;
 	tmp |= client->baud;
 	interface->spi->CR1 = tmp;
+
+	// clear DR
+	SPI_I2S_ReceiveData(interface->spi);
 
 	spiSelect(client);
 
@@ -329,21 +363,25 @@ void spiStartTxn(spiStruct_t *interface) {
     }
 }
 
-void spiEndTxn(spiStruct_t *interface) {
+static void spiEndTxn(spiStruct_t *interface) {
     uint8_t tail = interface->tail;
     spiClient_t *client = interface->slots[tail].client;
+    uint32_t tmp;
 
-    // shutdown DMA
-    DMA_Cmd(interface->txDMAStream, DISABLE);
-    DMA_Cmd(interface->rxDMAStream, DISABLE);
+    spiDisableSPI(interface);
+    spiDisableDMA(interface);
 
-    spiDeselect(client);
-    SPI_Cmd(interface->spi, DISABLE);
+    // record longest txn
+    tmp = timerMicros() - interface->txnStart;
+    if (tmp > interface->txnMaxTime)
+	interface->txnMaxTime = tmp;
 
     spiNotify(client);
 
     tail = (tail + 1) % SPI_SLOTS;
     interface->tail = tail;
+
+    spiDeselect(client);
 
     interface->txRunning = 0;
 
@@ -422,9 +460,6 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
 
 #ifdef SPI_SPI2_CLOCK
 void SPI_SPI2_DMA_RX_HANDLER(void) {
-    DMA_ClearITPendingBit(SPI_SPI2_DMA_RX, SPI_SPI2_DMA_RX_FLAGS);
-    DMA_ClearITPendingBit(SPI_SPI2_DMA_TX, SPI_SPI2_DMA_TX_FLAGS);
-
     // finish transaction
     spiEndTxn(&spiData[1]);
 }
@@ -432,9 +467,6 @@ void SPI_SPI2_DMA_RX_HANDLER(void) {
 
 #ifdef SPI_SPI1_CLOCK
 void SPI_SPI1_DMA_RX_HANDLER(void) {
-    DMA_ClearITPendingBit(SPI_SPI1_DMA_RX, SPI_SPI1_DMA_RX_FLAGS);
-    DMA_ClearITPendingBit(SPI_SPI1_DMA_TX, SPI_SPI1_DMA_TX_FLAGS);
-
     // finish transaction
     spiEndTxn(&spiData[0]);
 }

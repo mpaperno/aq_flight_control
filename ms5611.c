@@ -23,35 +23,33 @@
 
 ms5611Struct_t ms5611Data;
 
-void ms5611SendCommand(uint8_t cmd) {
-    static uint8_t txBuf[1];
-    static uint8_t rxBuf[1];
+static uint32_t ms5611RxBuf;
+static uint32_t ms5611TxBuf;
 
-    txBuf[0] = cmd;
+static void ms5611SendCommand(uint8_t cmd) {
+    ((uint8_t *)&ms5611TxBuf)[0] = cmd;
     ms5611Data.spiFlag = 0;
-    spiTransaction(ms5611Data.spi, rxBuf, txBuf, 1);
+    spiTransaction(ms5611Data.spi, &ms5611RxBuf, &ms5611TxBuf, 1);
 
     while (!ms5611Data.spiFlag)
 	;
 }
 
-uint32_t ms5611Read(uint8_t reg, uint8_t n) {
-    static uint8_t rxBuf[4];
-    static uint8_t txBuf[4];
+static uint32_t ms5611Read(uint8_t reg, uint8_t n) {
     uint32_t val;
     int i;
 
-    txBuf[0] = reg;
+    ((uint8_t *)&ms5611TxBuf)[0] = reg;
 
     ms5611Data.spiFlag = 0;
-    spiTransaction(ms5611Data.spi, rxBuf, txBuf, n+1);
+    spiTransaction(ms5611Data.spi, &ms5611RxBuf, &ms5611TxBuf, n+1);
 
     while (!ms5611Data.spiFlag)
 	;
 
     val = 0;
     for (i = 0; i < n; i++)
-	val = (val<<8) | rxBuf[1+i];
+	val = (val<<8) | ((uint8_t *)&ms5611RxBuf)[1+i];
 
     return val;
 }
@@ -75,7 +73,7 @@ void ms5611InitialBias(void) {
     utilFilterReset(&ms5611Data.tempFilter, ms5611Data.temp);
 }
 
-void ms5611Callback(int unused) {
+static void ms5611Callback(int unused) {
     static uint8_t rxBuf[1];
 
     if (ms5611Data.enabled) {
@@ -116,9 +114,9 @@ void ms5611Callback(int unused) {
     }
 }
 
-float ms5611PresToAlt(float pressure) {
-    return (1.0f -  powf(pressure / 101325.0f, 0.19f)) * (1.0f / 22.558e-6f);
-}
+//static float ms5611PresToAlt(float pressure) {
+//    return (1.0f -  powf(pressure / 101325.0f, 0.19f)) * (1.0f / 22.558e-6f);
+//}
 
 void ms5611Decode(void) {
     uint32_t rawTemp, rawPres;
@@ -176,7 +174,7 @@ void ms5611Decode(void) {
     ms5611Data.lastUpdate = timerMicros();
 }
 
-inline void ms5611Enable(void) {
+void ms5611Enable(void) {
     if (!ms5611Data.enabled) {
 	ms5611Data.enabled = 1;
 	ms5611Data.step = 0;
@@ -184,7 +182,7 @@ inline void ms5611Enable(void) {
     }
 }
 
-inline void ms5611Disable(void) {
+void ms5611Disable(void) {
     ms5611Data.enabled = 0;
 }
 
@@ -193,7 +191,7 @@ void ms5611PreInit(void) {
 }
 
 // code from MS's AN520
-uint8_t ms5611CheckSum(void) {
+static uint8_t ms5611CheckSum(void) {
     uint16_t crc_read;
     uint16_t n_rem;
     uint8_t n_bit;

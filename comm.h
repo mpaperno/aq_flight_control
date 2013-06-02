@@ -34,7 +34,7 @@
 
 #define COMM_RX_BUF_SIZE	512			// maximum rx payload
 
-#define COMM_STACK_DEPTH	16			// number of outstanding requests allowed (per port)
+#define COMM_STACK_DEPTH	8			// number of outstanding requests allowed (per port)
 #define COMM_TX_NUM_SIZES	6
 
 #define COMM_MAX_PROTOCOLS	2

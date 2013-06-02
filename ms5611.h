@@ -31,6 +31,8 @@ typedef struct {
     utilFilter_t tempFilter;
     spiClient_t *spi;
     volatile uint32_t spiFlag;
+    volatile uint32_t d1[MS5611_SLOTS];
+    volatile uint32_t d2[MS5611_SLOTS];
     uint16_t p[8];
     volatile uint8_t slot;
     uint8_t step;
@@ -38,8 +40,6 @@ typedef struct {
     uint8_t startTempConv;
     uint8_t startPresConv;
     uint8_t adcRead;
-    volatile uint32_t d1[MS5611_SLOTS];
-    volatile uint32_t d2[MS5611_SLOTS];
     float rawTemp;
     float temp;
     float pres;

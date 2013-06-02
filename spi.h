@@ -23,8 +23,8 @@
 
 #define SPI_BAUD_MASK		    (~((int16_t)0b111<<3))
 
-#define SPI_SLOTS		    5
-#define SPI_MAX_TXN_TIME	    25	    // us
+#define SPI_SLOTS		    4
+#define SPI_MAX_TXN_TIME	    30	    // us
 
 typedef void spiCallback_t(int);
 
@@ -45,6 +45,8 @@ typedef struct {
 
 typedef struct {
     SPI_TypeDef *spi;
+    uint32_t intRxFlags;
+    uint32_t intTxFlags;
     DMA_Stream_TypeDef *rxDMAStream;
     DMA_Stream_TypeDef *txDMAStream;
     spiSlot_t slots[SPI_SLOTS];
@@ -52,6 +54,7 @@ typedef struct {
     volatile uint8_t txRunning;
     uint32_t txnStart;
     uint32_t txnTimeouts;
+    uint32_t txnMaxTime;
     uint8_t initialized;
 } spiStruct_t;
 

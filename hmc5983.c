@@ -43,7 +43,7 @@ void hmc5983Decode(void) {
 
     divisor = (float)HMC5983_SLOTS;
     for (i = 0; i < HMC5983_SLOTS; i++) {
-	int j = i*HMC5983_BYTES;
+	int j = i*HMC5983_SLOT_SIZE;
 
 	// check if we are in the middle of a transaction for this slot
 	if (i == hmc5983Data.slot && hmc5983Data.spiFlag == 0)	{
@@ -90,7 +90,7 @@ void hmc5983Decode(void) {
     hmc5983Data.lastUpdate = timerMicros();
 }
 
-uint8_t hmc5983GetReg(uint8_t reg) {
+static uint8_t hmc5983GetReg(uint8_t reg) {
     static uint8_t rxBuf[2];
     static uint8_t txBuf[2];
 
@@ -105,7 +105,7 @@ uint8_t hmc5983GetReg(uint8_t reg) {
     return rxBuf[1];
 }
 
-void hmc5983SetReg(uint8_t reg, uint8_t val) {
+static void hmc5983SetReg(uint8_t reg, uint8_t val) {
     static uint8_t rxBuf[2];
     static uint8_t txBuf[2];
 
@@ -119,7 +119,7 @@ void hmc5983SetReg(uint8_t reg, uint8_t val) {
 	;
 }
 
-void hmc5983ReliablySetReg(uint8_t reg, uint8_t val) {
+static void hmc5983ReliablySetReg(uint8_t reg, uint8_t val) {
     uint8_t ret;
 
     do {
@@ -130,9 +130,9 @@ void hmc5983ReliablySetReg(uint8_t reg, uint8_t val) {
     } while (ret != val);
 }
 
-void hmc5983StartTransfer(void) {
+static void hmc5983StartTransfer(void) {
     if (hmc5983Data.enabled)
-	spiTransaction(hmc5983Data.spi, &hmc5983Data.rxBuf[hmc5983Data.slot*HMC5983_BYTES], &hmc5983Data.readCmd, HMC5983_BYTES);
+	spiTransaction(hmc5983Data.spi, &hmc5983Data.rxBuf[hmc5983Data.slot*HMC5983_SLOT_SIZE], &hmc5983Data.readCmd, HMC5983_BYTES);
 }
 
 inline void hmc5983Enable(void) {

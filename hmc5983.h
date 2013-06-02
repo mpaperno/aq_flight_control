@@ -24,6 +24,7 @@
 #define HMC5983_SPI_BAUD	    SPI_BaudRatePrescaler_8	// 5.25 Mhz
 
 #define HMC5983_BYTES		    (1+6)
+#define HMC5983_SLOT_SIZE	    ((HMC5983_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 #define HMC5983_SLOTS		    2				// 37.5Hz bandwidth
 
 #define HMC5983_READ_BIT	    (0b10000000)
@@ -33,13 +34,13 @@
 typedef struct {
     spiClient_t *spi;
     volatile uint32_t spiFlag;
-    volatile uint8_t rxBuf[HMC5983_BYTES*HMC5983_SLOTS];
+    volatile uint8_t rxBuf[HMC5983_SLOT_SIZE*HMC5983_SLOTS];
     volatile uint8_t slot;
-    uint8_t readCmd;
-    uint8_t enabled;
     float rawMag[3];
     float mag[3];
     volatile uint32_t lastUpdate;
+    uint8_t readCmd;
+    uint8_t enabled;
 } hmc5983Struct_t;
 
 extern hmc5983Struct_t hmc5983Data;

@@ -21,9 +21,6 @@
 
 #include <CoOS.h>
 
-#define COMMAND_STACK_SIZE	    128
-#define COMMAND_PRIORITY	    45
-
 #define COMMAND_SYNC1		    'A'
 #define COMMAND_SYNC2		    'q'
 #define COMMAND_COMMAND		    'C'
@@ -68,7 +65,6 @@ typedef struct {
 } __attribute__((packed)) commandBufStruct_t;
 
 typedef struct {
-    OS_TID commandTask;
     commandBufStruct_t buf;
     float floatDump[10];
 

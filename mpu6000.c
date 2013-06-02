@@ -25,7 +25,7 @@
 
 mpu6000Struct_t mpu6000Data;
 
-void mpu6000TransferComplete(int unused) {
+static void mpu6000TransferComplete(int unused) {
     mpu6000Data.slot = (mpu6000Data.slot + 1) % MPU6000_SLOTS;
 }
 
@@ -81,7 +81,7 @@ void mpu6000Decode(void) {
 
     divisor = (float)MPU6000_SLOTS;
     for (i = 0; i < MPU6000_SLOTS; i++) {
-	int j = i*MPU6000_BYTES;
+	int j = i*MPU6000_SLOT_SIZE;
 
 	// check if we are in the middle of a transaction for this slot
 	if (i == mpu6000Data.slot && mpu6000Data.spiFlag == 0)	{
@@ -171,36 +171,33 @@ void mpu6000Decode(void) {
     mpu6000Data.lastUpdate = timerMicros();
 }
 
-uint8_t mpu6000GetReg(uint8_t reg) {
-    static uint8_t rxBuf[2];
-    static uint8_t txBuf[2];
+static uint32_t mpu6000RxBuf;
+static uint32_t mpu6000TxBuf;
 
-    txBuf[0] = MPU6000_READ_BIT | reg;
+static uint8_t mpu6000GetReg(uint8_t reg) {
+    ((uint8_t *)&mpu6000TxBuf)[0] = MPU6000_READ_BIT | reg;
 
     mpu6000Data.spiFlag = 0;
-    spiTransaction(mpu6000Data.spi, rxBuf, txBuf, 2);
+    spiTransaction(mpu6000Data.spi, &mpu6000RxBuf, &mpu6000TxBuf, 2);
 
     while (!mpu6000Data.spiFlag)
 	;
 
-    return rxBuf[1];
+    return ((uint8_t *)&mpu6000RxBuf)[1];
 }
 
-void mpu6000SetReg(uint8_t reg, uint8_t val) {
-    static uint8_t rxBuf[2];
-    static uint8_t txBuf[2];
-
-    txBuf[0] = MPU6000_WRITE_BIT | reg;
-    txBuf[1] = val;
+static void mpu6000SetReg(uint8_t reg, uint8_t val) {
+    ((uint8_t *)&mpu6000TxBuf)[0] = MPU6000_WRITE_BIT | reg;
+    ((uint8_t *)&mpu6000TxBuf)[1] = val;
 
     mpu6000Data.spiFlag = 0;
-    spiTransaction(mpu6000Data.spi, rxBuf, txBuf, 2);
+    spiTransaction(mpu6000Data.spi, &mpu6000RxBuf, &mpu6000TxBuf, 2);
 
     while (!mpu6000Data.spiFlag)
 	;
 }
 
-void mpu6000ReliablySetReg(uint8_t reg, uint8_t val) {
+static void mpu6000ReliablySetReg(uint8_t reg, uint8_t val) {
     do {
 	delay(10);
 	mpu6000SetReg(reg, val);
@@ -208,9 +205,9 @@ void mpu6000ReliablySetReg(uint8_t reg, uint8_t val) {
     } while (mpu6000GetReg(reg) != val);
 }
 
-void mpu6000StartTransfer(void) {
+static void mpu6000StartTransfer(void) {
     if (mpu6000Data.enabled)
-	spiTransaction(mpu6000Data.spi, &mpu6000Data.rxBuf[mpu6000Data.slot*MPU6000_BYTES], &mpu6000Data.readReg, MPU6000_BYTES);
+	spiTransaction(mpu6000Data.spi, &mpu6000Data.rxBuf[mpu6000Data.slot*MPU6000_SLOT_SIZE], &mpu6000Data.readReg, MPU6000_BYTES);
 }
 
 inline void mpu6000Enable(void) {
@@ -236,8 +233,8 @@ void mpu6000Init(void) {
     mpu6000SetReg(107, 0b10000000);
     delay(100);
 
-    // wake up
-    mpu6000ReliablySetReg(107, 0x01);
+    // wake up w/ Z axis clock reg
+    mpu6000ReliablySetReg(107, 0x03);
 
     // disable I2C interface
     mpu6000ReliablySetReg(106, 0b010000);

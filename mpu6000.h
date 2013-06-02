@@ -23,12 +23,13 @@
 #include "util.h"
 
 #define MPU6000_SPI_REG_BAUD	    SPI_BaudRatePrescaler_64	// initial setup only
-#define MPU6000_SPI_RUN_BAUD	    SPI_BaudRatePrescaler_2	// 21 MHz
+#define MPU6000_SPI_RUN_BAUD	    SPI_BaudRatePrescaler_4	// 10.5 MHz
 
 #define MPU6000_READ_BIT	    (0x01<<7)
 #define MPU6000_WRITE_BIT	    (0x00<<7)
 
 #define MPU6000_BYTES		    15
+#define MPU6000_SLOT_SIZE	    ((MPU6000_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 //#define MPU6000_SLOTS		    40	    // 200Hz bandwidth
 #define MPU6000_SLOTS		    80	    // 100Hz bandwidth
 //#define MPU6000_SLOTS		    160	    // 50Hz bandwidth
@@ -37,10 +38,8 @@ typedef struct {
     utilFilter_t tempFilter;
     spiClient_t *spi;
     volatile uint32_t spiFlag;
-    volatile uint8_t rxBuf[MPU6000_BYTES*MPU6000_SLOTS];
+    volatile uint8_t rxBuf[MPU6000_SLOT_SIZE*MPU6000_SLOTS];
     volatile uint8_t slot;
-    uint8_t readReg;
-    uint8_t enabled;
     float rawTemp;
     float rawAcc[3];
     float rawGyo[3];
@@ -49,6 +48,8 @@ typedef struct {
     float temp;
     float gyo[3];
     volatile uint32_t lastUpdate;
+    uint8_t readReg;
+    uint8_t enabled;
 } mpu6000Struct_t;
 
 extern mpu6000Struct_t mpu6000Data;
