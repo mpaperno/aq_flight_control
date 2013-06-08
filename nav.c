@@ -73,6 +73,8 @@ void navSetHomeCurrent(void) {
     navData.homeLeg.poiHeading = AQ_YAW;
     if (p[NAV_CEILING])
 	navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
+
+    AQ_NOTICE("Home position set\n");
 }
 
 void navRecallHome(void) {
@@ -182,7 +184,7 @@ void navNavigate(void) {
     }
 
     // Can we navigate && do we want to be in mission mode?
-    if (navData.navCapable && RADIO_FLAPS > 250) {
+    if (supervisorData.state > STATE_DISARMED && navData.navCapable && RADIO_FLAPS > 250) {
 	//  are we currently in position hold mode && do we have a clear mission ahead of us?
 	if (navData.mode == NAV_STATUS_POSHOLD && leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
 	    navLoadLeg(leg);
@@ -190,7 +192,7 @@ void navNavigate(void) {
 	}
     }
     // do we want to be in position hold mode?
-    else if (RADIO_FLAPS > -250) {
+    else if (supervisorData.state > STATE_DISARMED && RADIO_FLAPS > -250) {
 	// always allow alt hold
 	if (navData.mode < NAV_STATUS_ALTHOLD) {
 	    // record this altitude as the hold altitude
@@ -285,12 +287,23 @@ void navNavigate(void) {
     }
 
     // home set
-    if (RADIO_AUX2 > 250) {
-	navSetHomeCurrent();
+    if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 > 250) {
+	if (!navData.homeActionFlag) {
+	    navSetHomeCurrent();
+	    navData.homeActionFlag = 1;
+	}
     }
     // recall home
-    else if (RADIO_AUX2 < -250) {
-	navRecallHome();
+    else if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 < -250) {
+	if (!navData.homeActionFlag) {
+	    navRecallHome();
+	    AQ_NOTICE("Returning to home position\n");
+	    navData.homeActionFlag = 1;
+	}
+    }
+    // switch to middle, clear action flag
+    else {
+	navData.homeActionFlag = 0;
     }
 
     if (UKF_POSN != 0.0f || UKF_POSE != 0.0f) {
@@ -467,11 +480,13 @@ void navInit(void) {
     navData.distanceEPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
     navData.altSpeedPID = pidInit(&p[NAV_ATL_SPED_P], &p[NAV_ATL_SPED_I], 0, 0, &p[NAV_ATL_SPED_PM], &p[NAV_ATL_SPED_IM], 0, &p[NAV_ATL_SPED_OM], 0, 0, 0, 0);
     navData.altPosPID = pidInit(&p[NAV_ALT_POS_P], &p[NAV_ALT_POS_I], 0, 0, &p[NAV_ALT_POS_PM], &p[NAV_ALT_POS_IM], 0, &p[NAV_ALT_POS_OM], 0, 0, 0, 0);
+
+    navData.mode = NAV_STATUS_MANUAL;
     navData.ceilingAlt = 0.0f;
     navData.setCeilingFlag = 0;
     navData.setCeilingReached = 0;
+    navData.homeActionFlag = 0;
 
-    navData.mode = NAV_STATUS_MANUAL;
     navSetHoldHeading(AQ_YAW);
     navSetHoldAlt(UKF_ALTITUDE, 0);
 
