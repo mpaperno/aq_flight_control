@@ -95,29 +95,66 @@ void mavlinkDo(void) {
 
     mavlinkData.status = MAV_STATE_STANDBY;
     mavlinkData.mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+    mavlinkData.nav_mode = AQ_NAV_STATUS_STANDBY;
+#else
+    mavlinkData.nav_mode = MAV_STATE_STANDBY;
+#endif
 
-    if ((supervisorData.state & STATE_RADIO_LOSS1) || (supervisorData.state & STATE_LOW_BATTERY2))
+    if ((supervisorData.state & STATE_RADIO_LOSS1) || (supervisorData.state & STATE_LOW_BATTERY2)) {
 	mavlinkData.status =  MAV_STATE_CRITICAL;
-    else if (supervisorData.state & STATE_FLYING)
+    }
+    else if (supervisorData.state & STATE_FLYING) {
 	mavlinkData.status = MAV_STATE_ACTIVE;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+	mavlinkData.nav_mode = AQ_NAV_STATUS_MANUAL;
+#endif
+    }
 
     switch(navData.mode) {
+
     case NAV_STATUS_ALTHOLD:
-	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED;
+	mavlinkData.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+	mavlinkData.nav_mode = AQ_NAV_STATUS_ALTHOLD;
+#endif
 	break;
+
     case NAV_STATUS_POSHOLD:
-	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
+	mavlinkData.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+	mavlinkData.nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD;
+#endif
 	break;
-    case NAV_STATUS_MISSION:
-	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_AUTO_ENABLED;
-	break;
+
     case NAV_STATUS_DVH:
-	mavlinkData.mode= mavlinkData.mode | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_GUIDED_ENABLED;
+	mavlinkData.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_GUIDED_ENABLED;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+	mavlinkData.nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD | AQ_NAV_STATUS_DVH;
+#endif
+	break;
+
+    case NAV_STATUS_MISSION:
+	mavlinkData.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_AUTO_ENABLED;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+	mavlinkData.nav_mode = AQ_NAV_STATUS_MISSION;
+#endif
 	break;
     }
 
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+    if ((supervisorData.state & STATE_RADIO_LOSS2))
+	mavlinkData.nav_mode |= AQ_NAV_STATUS_FAILSAFE;
+
+    if (navData.ceilingAlt) {
+	mavlinkData.nav_mode |= AQ_NAV_STATUS_CEILING;
+	if (navData.setCeilingReached)
+	    mavlinkData.nav_mode |= AQ_NAV_STATUS_CEILING_REACHED;
+    }
+#endif
+
     if (supervisorData.state & STATE_ARMED)
-	mavlinkData.mode = mavlinkData.mode | MAV_MODE_FLAG_SAFETY_ARMED;
+	mavlinkData.mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 
 #ifdef MAVLINK_MSG_ID_AQ_TELEMETRY_F
     if ( !mavlinkData.sendTelemetry ) {
@@ -150,16 +187,19 @@ void mavlinkDo(void) {
 //	else if ((mavlinkData.streamInterval[MAV_DATA_STREAM_ALL] || mavlinkData.streamInterval[MAV_DATA_STREAM_EXTENDED_STATUS]) && mavlinkData.streamNext[MAV_DATA_STREAM_EXTENDED_STATUS] < micros) {
 //	    mavlinkData.streamNext[MAV_DATA_STREAM_EXTENDED_STATUS] = micros + mavlinkData.streamInterval[MAV_DATA_STREAM_EXTENDED_STATUS];
 //	}
-    // rc channels
+    // rc channels and pwm outputs
     else if ((mavlinkData.streamInterval[MAV_DATA_STREAM_ALL] || mavlinkData.streamInterval[MAV_DATA_STREAM_RC_CHANNELS]) && mavlinkData.streamNext[MAV_DATA_STREAM_RC_CHANNELS] < micros) {
-	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024, RADIO_GEAR+1024, RADIO_FLAPS+1024, RADIO_AUX2+1024, RADIO_AUX3+1024, RADIO_QUALITY);
-	mavlink_msg_rc_channels_scaled_send(MAVLINK_COMM_0, micros, 0, (RADIO_THROT-750)*13, RADIO_ROLL*13, RADIO_PITCH*13, RADIO_RUDD*13, RADIO_GEAR*13, RADIO_FLAPS*13, RADIO_AUX2*13, RADIO_AUX3*13, RADIO_QUALITY);
+	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024, \
+		RADIO_GEAR+1024, RADIO_FLAPS+1024, RADIO_AUX2+1024, RADIO_AUX3+1024, RADIO_QUALITY);
+//	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, RADIO_AUX4+1024, RADIO_AUX5+1024, RADIO_AUX6+1024, RADIO_AUX7+1024, \
+//		radioData.channels[12]+1024, radioData.channels[13]+1024, radioData.channels[14]+1024, radioData.channels[15]+1024, RADIO_QUALITY);
+//	mavlink_msg_rc_channels_scaled_send(MAVLINK_COMM_0, micros, 0, (RADIO_THROT-750)*13, RADIO_ROLL*13, RADIO_PITCH*13, RADIO_RUDD*13, RADIO_GEAR*13, RADIO_FLAPS*13, RADIO_AUX2*13, RADIO_AUX3*13, RADIO_QUALITY);
+	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
 	mavlinkData.streamNext[MAV_DATA_STREAM_RC_CHANNELS] = micros + mavlinkData.streamInterval[MAV_DATA_STREAM_RC_CHANNELS];
     }
     // raw controller
     else if ((mavlinkData.streamInterval[MAV_DATA_STREAM_ALL] || mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER]) && mavlinkData.streamNext[MAV_DATA_STREAM_RAW_CONTROLLER] < micros) {
 	mavlink_msg_attitude_send(MAVLINK_COMM_0, micros, AQ_ROLL*DEG_TO_RAD, AQ_PITCH*DEG_TO_RAD, AQ_YAW*DEG_TO_RAD, -(IMU_RATEX - UKF_GYO_BIAS_X)*DEG_TO_RAD, (IMU_RATEY - UKF_GYO_BIAS_Y)*DEG_TO_RAD, (IMU_RATEZ - UKF_GYO_BIAS_Z)*DEG_TO_RAD);
-	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
 	mavlinkData.streamNext[MAV_DATA_STREAM_RAW_CONTROLLER] = micros + mavlinkData.streamInterval[MAV_DATA_STREAM_RAW_CONTROLLER];
     }
 
@@ -260,11 +300,13 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
             break;
 #endif
 
-	case 4: // send firmware version number; should = MAV_CMD_AQ_REQUEST_VERSION
+#ifdef MAVLINK_ENABLED_AUTOQUAD
+	case MAV_CMD_AQ_REQUEST_VERSION: // send firmware version number;
 	    utilVersionString(s);
 	    AQ_NOTICE(s);
 	    ack = MAV_CMD_ACK_OK;
 	    break;
+#endif
 
 	default:
 	    break;
@@ -483,7 +525,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 				wp->poiHeading = mavlink_msg_mission_item_get_param3(&msg);
 				wp->maxVertSpeed = mavlink_msg_mission_item_get_param4(&msg);
 			    }
-			    else if (command == 1) {
+			    else if (command == 1) { // TODO: stop using hard-coded values, use enums like intended
 				wp = navGetWaypoint(seqId);
 				if (frame == MAV_FRAME_GLOBAL_RELATIVE_ALT)
 				    wp->relativeAlt = 1;
@@ -594,6 +636,34 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
     }
 }
 
+void mavlinkSetSystemType(void) {
+    uint8_t motCount = 0;
+
+    // get motor count
+    motorsPowerStruct_t *d = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
+    for (uint8_t i = 0; i < PWM_NUM_PORTS; ++i)
+	if (d[i].throttle != 0.0)
+	    motCount++;
+
+    switch (motCount) {
+    case 3:
+	mavlink_system.type = MAV_TYPE_TRICOPTER;
+	break;
+    case 4:
+	mavlink_system.type = MAV_TYPE_QUADROTOR;
+	break;
+    case 6:
+	mavlink_system.type = MAV_TYPE_HEXAROTOR;
+	break;
+    case 8:
+	mavlink_system.type = MAV_TYPE_OCTOROTOR;
+	break;
+    default:
+	mavlink_system.type = MAV_TYPE_GENERIC;
+	break;
+    }
+}
+
 void mavlinkInit(void) {
     unsigned long micros;
     int i;
@@ -611,16 +681,20 @@ void mavlinkInit(void) {
     mavlinkData.currentParam = mavlinkData.numParams;
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
+    mavlinkData.mode = MAV_MODE_PREFLIGHT;
+    mavlinkData.status = MAV_STATE_BOOT;
+#ifdef HAVE_ENUM_AUTOQUAD_NAV_STATUS
+    mavlinkData.nav_mode = AQ_NAV_STATUS_INIT;
+#else
+    mavlinkData.nav_mode = MAV_STATE_BOOT;
+#endif
 
     mavlink_system.sysid = flashSerno(0) % 250;
     mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
-    mavlink_system.type = MAV_TYPE_QUADROTOR;
-
-    mavlinkData.mode = MAV_MODE_PREFLIGHT;
-    mavlinkData.nav_mode = MAV_STATE_STANDBY;
-    mavlinkData.status = MAV_STATE_BOOT;
+    mavlinkSetSystemType();
 
     // turn on all streams at 1Hz & spread them out
+    // TODO: don't turn on some streams until requested
     micros = timerMicros();
     for (i = 1; i < MAV_DATA_STREAM_ENUM_END; i++) {
 	mavlinkData.streamInterval[i] = 1e6f;

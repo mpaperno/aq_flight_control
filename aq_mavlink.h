@@ -50,7 +50,7 @@ typedef struct {
     uint16_t packetDrops;
     uint16_t idlePercent;
     uint8_t mode;
-    uint8_t nav_mode;
+    uint32_t nav_mode;
     uint8_t status;
     uint8_t wpTargetSysId;
     uint8_t wpTargetCompId;
