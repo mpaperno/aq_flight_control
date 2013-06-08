@@ -25,75 +25,80 @@
 #include "comm.h"
 #include <string.h>
 
-/* Led patterns, 0=Off, 1=On, every 0.1s (10Hz) the position in the array is chosen and use to control the led's.
- * Beeper patterns specify how long to beep per position, maximum of 100ms per position. Any positive number after a value
- * of 100 will produce a continuous beep (eg. 100,50 will produce one beep 150ms long).
- *
- * Set the patterns to your liking
- */
-const uint8_t sig_pattern[12][30] = {
-/*         led 1                 led 2               Beeper                          				 */
-/*  0 1 2 3 4 5 6 7 8 9   0 1 2 3 4 5 6 7 8 9     0   1   2   3   4   5   6   7   8   9 	counter position */
 
-  { 0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 0 (All-Off)                 Led 1: Off, Led 2: off */
-  { 1,1,0,0,1,1,0,0,1,1  ,0,0,0,0,0,0,0,0,0,0  ,  0,  0,100,  0,100,  0,  0,  0,  0,  0 }, 	/* 1 (Disarmed - no GPS fix)   Led 1: fast flashing, Led 2: off */
-  { 1,1,1,1,1,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0  ,  0,  0,100,  0,100,  0,  0,  0,  0,  0 }, 	/* 2 (Disarmed - GPS fix)      Led 1: slow flashing (1Hz), Led 2: off */
-  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,0,0,0,0,0  ,  0,  0,100,  0,  0,  0,  0,  0,  0,  0 }, 	/* 3 (Armed)                   Led 1: On, Led 2: Off */
-  { 1,1,1,1,1,1,1,1,0,0  ,0,0,0,0,0,0,0,0,0,0  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 4 (Flying)                  Led 1: long on, Led 2: off */
-  { 1,1,1,1,1,1,1,1,1,1  ,1,0,0,0,0,1,0,0,0,0  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 5 (Alt hold)                Led1: On, Led 2: slow flashing (2Hz) */
-  { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,1,1,1,1,1  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 6 (Pos hold)                Led1: On, Led 2: On */
-  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,0,0,0,0  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 7 (Mission)                 Led1: On, Led 2: slow flashing (1Hz) */
-  { 1,1,1,1,1,1,1,1,1,1  ,0,1,0,1,0,1,0,1,0,1  ,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, 	/* 8 (DVH)	              Led1: On, Led 2: fast flashing (5Hz) */
-  { 1,1,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,1,1  , 50,  0,  0, 50,  0,  0,  0,  0,  0,  0 }, 	/* 9 (lowBatt 1)               Led 1 & Led 2 alternating slow flashing (1Hz) */
-  { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,100,100,  0,  0,  0,  0,100,100,  0,  0 },	/* 10 (Radio loss/ lowBatt 2)  Led 1 & Led 2 alternating fast flashing (5Hz) */
-  { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,100,100,  0, 50,  0,100,100,  0, 50,  0 }	/* 11 (Radio loss 2)           Led 1 & Led 2 alternating fast flashing (5Hz) */
+// Led/Beeper patterns: 0=Off, 1=On, every 0.1s (10Hz) the position in the array is chosen and used to control the LED/beeper.
+// Last column is PWM pulse width to output for given event.
+
+const uint16_t sig_pattern[SIG_EVENT_ENUM_END][31] = {
+//         led 1                 led 2               Beeper           pwm
+//  0 1 2 3 4 5 6 7 8 9   0 1 2 3 4 5 6 7 8 9   0 1 2 3 4 5 6 7 8 9  		   counter position
+// ongoing events
+  { 0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1000 }, 	// 0 (All-Off)			L1: Off, L2: Off
+  { 1,1,0,0,1,1,0,0,1,1  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1025 }, 	// 1 (Disarmed - no GPS fix)	L1: 3 200ms flashes, L2: Off;
+  { 1,1,1,1,1,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1075 }, 	// 2 (Disarmed - GPS fix)	L1: slow flashing (1Hz), L2: off;
+  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1125 }, 	// 3 (Armed)			L1: On, L2: Off;
+  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1175 }, 	// 4 (Flying)			L1: On, L2: Off
+  { 1,1,1,1,1,1,1,1,0,0  ,0,0,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1575 }, 	// 5 (Flying HeadingFree)	L1: .8s on/.2s off, L2: off;
+  { 1,1,1,1,1,1,1,1,1,1  ,1,0,0,0,0,1,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1225 }, 	// 6 (Alt hold)			L1: On, L2: slow flashing (2Hz)
+  { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,0,0,0,0,0 ,1275 }, 	// 7 (Pos hold)			L1: On, L2: On
+  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,0,0,0,0  ,0,0,0,0,0,0,0,0,0,0 ,1325 }, 	// 8 (Mission)			L1: On, L2: slow flashing (1Hz)
+  { 1,1,1,1,1,1,1,1,1,1  ,0,1,0,1,0,1,0,1,0,1  ,0,0,0,0,0,0,0,0,0,0 ,1375 }, 	// 9 (DVH)			L1: On, L2: fast flashing (5Hz)
+  { 1,1,0,0,0,0,0,0,0,0  ,0,0,0,0,0,0,0,0,1,1  ,1,0,0,1,0,0,0,0,0,0 ,1425 }, 	// 10 (Low batt 1)		L1 & L2 alternating slow flashing (1Hz); 2x100ms beeps per sec
+  { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,1,1,0,0,0,0,1,1,0,0 ,1475 },	// 11 (Radio loss 1/Low batt 2)	L1 & L2 alternating fast flashing (5Hz); 2x200ms beeps per sec
+  { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,1,1,0,1,0,1,1,0,1,0 ,1525 },	// 12 (Radio loss 2)		L1 & L2 alternating fast flashing (5Hz); 2x200ms 1x100ms beep per sec
+// one-time events
+  { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,0,0,0,0,0  ,0,0,1,0,0,0,0,0,0,0 ,1025 }, 	// 13 (Arming)			L1: On, L2: 500ms; 1x100ms beep
+  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,1,1,1,1  ,0,0,1,0,1,0,0,0,0,0 ,1125 }, 	// 14 (Disarming)		L1: On, L2: 500ms; 2x100ms beeps
 };
 
 sigStruct_t sigData __attribute__((section(".ccm")));
 
-void signalingBeep(unsigned long hz, unsigned long ms, uint8_t stayOn) {
-    if (sigData.beep) {
-	if (p[SIG_BEEP_PRT] < 0) { /* negative sign before port number indicates using a piezo speaker */
-	    unsigned long us = 500 / (hz / 1000); /* reference: 1000hz = 500 usec/cycle, 2000hz = 250 usec/cycle */
-	    unsigned long rep = ((ms * 1000) / us) / 2; /* input = ms in miliseconds, us is in microseconds, delay loop runs twice for dutycycle */
-	    for (long i = 0; i < rep; i++) { /* create a square wave for driving the piezo speaker.. */
-		pwmDigitalHi(sigData.beep);
-		if (i+1 < rep || !stayOn) {
-		    delayMicros(us);
-		    pwmDigitalLo(sigData.beep);
-		    delayMicros(us);
+// warning: this is a blocking event, only call it when not flying or from a non-critical process
+void signalingBeep(unsigned long hz, unsigned long ms) {
+    if (sigData.beeperPort && ms) {
+	// using a piezo speaker
+	if (sigData.beeperType) {
+	    *sigData.beeperPort->ccr = SIG_SPEAKER_PULSE_LEN;
+	    delay(ms);
+	    *sigData.beeperPort->ccr = 0;
 		}
-	    }
-	}
-	else { /* positive port number is used for a piezo buzzer with its own oscillator or LED */
-	    pwmDigitalHi(sigData.beep);
-	    if (!stayOn) {
+	// piezo buzzer with its own oscillator, or LED
+	else {
+	    pwmDigitalHi(sigData.beeperPort);
 		delay(ms);
-		pwmDigitalLo(sigData.beep);
+	    pwmDigitalLo(sigData.beeperPort);
 	    }
 	}
-    }
 }
 
-void signalingWriteLeds(int statusId) {
-    if (sigData.Led_1) {
-	if (sig_pattern[statusId][sigData.countPos])
-	    pwmDigitalHi(sigData.Led_1)
-	else
-	    pwmDigitalLo(sigData.Led_1)
+void signalingWriteOutput(int eventType) {
+    if (sigData.ledPort1) {
+	if (sig_pattern[eventType][sigData.patPos]) {
+	    pwmDigitalHi(sigData.ledPort1);
+	} else {
+	    pwmDigitalLo(sigData.ledPort1);
+	}
     }
-    if (sigData.Led_2) {
-	if (sig_pattern[statusId][sigData.countPos+sigData.patNo])
-	    pwmDigitalHi(sigData.Led_2)
-	else
-	    pwmDigitalLo(sigData.Led_2)
+    if (sigData.ledPort2) {
+	if (sig_pattern[eventType][sigData.patPos + sigData.patLen]) {
+	    pwmDigitalHi(sigData.ledPort2);
+	} else {
+	    pwmDigitalLo(sigData.ledPort2);
+	}
     }
-}
-
-void signalingWriteBeep(int statusId) {
-    if (sigData.beep && sig_pattern[statusId][sigData.countPos + sigData.patNo * 2]) {
-	uint8_t stayOn = (sigData.countPos + 1 < sigData.patNo && sig_pattern[statusId][sigData.countPos+1 + sigData.patNo * 2] == 100);
-	signalingBeep(2000, sig_pattern[statusId][sigData.countPos + sigData.patNo * 2], stayOn);
+    if (sigData.beeperPort) {
+	if (sigData.beeperType) {  // speaker
+	    *sigData.beeperPort->ccr = sig_pattern[eventType][sigData.patPos + sigData.patLen * 2] * SIG_SPEAKER_PULSE_LEN;
+	}
+	else {  // buzzer
+	    if (sig_pattern[eventType][sigData.patPos + sigData.patLen * 2]) {
+		pwmDigitalHi(sigData.beeperPort); }
+	    else {
+		pwmDigitalLo(sigData.beeperPort); }
+	}
+    }
+    if (sigData.pwmPort) {
+	*sigData.pwmPort->ccr = sig_pattern[eventType][sigData.patLen * 3];
     }
 }
 
@@ -101,48 +106,76 @@ void signalingInit(void) {
 
     memset((void *)&sigData, 0, sizeof(sigData));
 
-    sigData.countPos = 0;
-    sigData.countMax = 10; /* 10 = 1Hz. Changing it will! affect the led pattern event */
-    sigData.armStat = 0;
-    sigData.patNo = 10;    /* number of positions in pattern per output device (3 x number is total) */
+    sigData.patPos = 0;
+    sigData.patLen = 10;  // 10 = 1Hz. Changing it will! affect the led pattern event
 
     if (p[SIG_LED_1_PRT]) {
-	sigData.Led_1 = pwmInitDigitalOut(p[SIG_LED_1_PRT]-1);
+	sigData.ledPort1 = pwmInitDigitalOut(p[SIG_LED_1_PRT]-1);
 
-	if (sigData.Led_1)
+	if (sigData.ledPort1)
 	    sigData.enabled = 1;
 	else
-	    AQ_NOTICE("Warning: Led 1 port already in use!\n");
+	    AQ_NOTICE("Warning: Could not open LED 1 signaling port!\n");
     }
     if (p[SIG_LED_2_PRT]) {
-	sigData.Led_2 = pwmInitDigitalOut(p[SIG_LED_2_PRT]-1);
+	sigData.ledPort2 = pwmInitDigitalOut(p[SIG_LED_2_PRT]-1);
 
-	if (sigData.Led_2)
+	if (sigData.ledPort2)
 	    sigData.enabled = 1;
 	else
-	    AQ_NOTICE("Warning: Led 2 port already in use!\n");
+	    AQ_NOTICE("Warning: Could not open LED 2 signaling port!\n");
     }
     if (p[SIG_BEEP_PRT]) {
-	sigData.beep = pwmInitDigitalOut(abs(p[SIG_BEEP_PRT])-1);
+	if (p[SIG_BEEP_PRT] > 0) {  // piezo buzzer
+	    sigData.beeperPort = pwmInitDigitalOut(abs(p[SIG_BEEP_PRT])-1);
+	    sigData.beeperType = 0;
+	}
+	else {	// piezo speaker
+	    sigData.beeperPort = pwmInitOut(abs(p[SIG_BEEP_PRT])-1, 200.0f / SIG_SPEAKER_FREQ * 5000, 0, 0);
+	    sigData.beeperType = 1;
+	}
 
-	if (sigData.beep)
+	if (sigData.beeperPort)
 	    sigData.enabled = 1;
 	else
-	    AQ_NOTICE("Warning: Beeper port already in use!\n");
+	    AQ_NOTICE("Warning: Could not open Beeper signaling port!\n");
+    }
+    if (p[SIG_PWM_PRT]) {
+	sigData.pwmPort = pwmInitOut(p[SIG_PWM_PRT]-1, 2500, 950, 0);
+
+	if (sigData.pwmPort)
+	    sigData.enabled = 1;
+	else
+	    AQ_NOTICE("Warning: Could not open PWM signaling port!\n");
     }
 
-    signalingWriteLeds(SIG_EVENT_NONE);
+    signalingWriteOutput(SIG_EVENT_NONE);
 
-    /* beep the cell count */
-    if (sigData.beep) {
+    // beep the cell count
+    if (sigData.beeperPort) {
 	int i;
 	for (i = 0; i < analogData.batCellCount; i++) {
-	    signalingBeep(2000, 50, 0);
+	    signalingBeep(2000, 50);
 	    delay(150);
 	}
 	delay(300);
-	signalingBeep(2000, 250, 0) /* ready beep */;
+	signalingBeep(2000, 250);  // ready beep
     }
+}
+
+// initiate a one-time event, eg. arming/disarming
+// eventTyp should be one of signalingEventTypes
+void signalingOnetimeEvent(int eventType) {
+    if (eventType < 0 || eventType > SIG_EVENT_ENUM_END)
+	return;
+
+    // shut down any current event signals
+    // TODO: set up a signaling event queue
+    if (sigData.oneTimeEvtTyp) {
+	signalingWriteOutput(SIG_EVENT_NONE);
+    }
+    sigData.oneTimeEvtStat = 0;
+    sigData.oneTimeEvtTyp = eventType;
 }
 
 void signalingEvent() {
@@ -150,99 +183,95 @@ void signalingEvent() {
     if (!sigData.enabled)
 	return;
 
+    // watch for one-time event being triggered
+    if (sigData.oneTimeEvtTyp) {
+	switch (sigData.oneTimeEvtStat) {
+	case 0:	// start the event
+	    sigData.oneTimeEvtStat = 2;
+	    sigData.patPos = 0;
+	    break;
+	case 1: // event has finished
+	    sigData.oneTimeEvtStat = 0;
+	    sigData.oneTimeEvtTyp = SIG_EVENT_NONE;
+	    sigData.patPos = 0;
+	    // make sure everything is off
+	    signalingWriteOutput(SIG_EVENT_NONE);
+	    break;
+	case 2: // event is in progress
+	    signalingWriteOutput(sigData.oneTimeEvtTyp);
+	    // see if we're done  TODO: allow events longer than one pattern length
+	    if (sigData.patPos++ == sigData.patLen)
+		sigData.oneTimeEvtStat = 1;
+	    break;
+	}
+	return;
+    }
+
     switch (supervisorData.state) {
     case STATE_DISARMED:
 	if (navData.fixType == 3)
-	    signalingWriteLeds(SIG_EVENT_DISARMED_GPS);
+	    signalingWriteOutput(SIG_EVENT_DISARMED_GPS);
 	else
-	    signalingWriteLeds(SIG_EVENT_DISARMED_NOGPS);
-
-	if (sigData.armStat == 2 || sigData.armStat == 3) {
-	    sigData.armStat = 1; // disarming
-	    sigData.countPos = 0; // reset the counter
-	}
-	if (sigData.armStat == 1) { /* this section may only run once during 1 full pattern cycle */
-	    signalingWriteBeep(SIG_EVENT_DISARMED_NOGPS);
-	    if (sigData.countPos + 1 == sigData.patNo)
-		sigData.armStat = 0; // disarmed
-	}
+	    signalingWriteOutput(SIG_EVENT_DISARMED_NOGPS);
 	break;
 
     case STATE_ARMED:
-	signalingWriteLeds(SIG_EVENT_ARMED);
-
-	if (sigData.armStat == 0 || sigData.armStat == 1) {
-	    sigData.armStat = 3; // arming
-	    sigData.countPos = 0; // reset the counter
-	}
-	if (sigData.armStat == 3) { /* this section may only run once during 1 full pattern cycle */
-	    signalingWriteBeep(SIG_EVENT_ARMED);
-	    if (sigData.countPos + 1 == sigData.patNo)
-		sigData.armStat = 2; //armed
-	}
+	signalingWriteOutput(SIG_EVENT_ARMED);
 	break;
 
     case STATE_FLYING:
     case STATE_ARMED | STATE_FLYING:
 	switch (navData.mode) {
 	case NAV_STATUS_ALTHOLD:
-	    signalingWriteLeds(SIG_EVENT_ALTHOLD);
+	    signalingWriteOutput(SIG_EVENT_ALTHOLD);
 	    break;
 	case NAV_STATUS_POSHOLD:
-	    signalingWriteLeds(SIG_EVENT_POSHOLD);
+	    signalingWriteOutput(SIG_EVENT_POSHOLD);
 	    break;
 	case NAV_STATUS_MISSION:
-	    signalingWriteLeds(SIG_EVENT_MISSION);
+	    signalingWriteOutput(SIG_EVENT_MISSION);
 	    break;
 	case NAV_STATUS_DVH:
-	    signalingWriteLeds(SIG_EVENT_DVH);
+	    signalingWriteOutput(SIG_EVENT_DVH);
 	    break;
 	default:
-	    signalingWriteLeds(SIG_EVENT_FLYING);
+	    signalingWriteOutput(SIG_EVENT_FLYING);
 	    break;
 	}
 	break;
 
     case STATE_ARMED | STATE_FLYING | STATE_RADIO_LOSS1:
-	signalingWriteLeds(SIG_EVENT_RADIOLOSS);
-	signalingWriteBeep(SIG_EVENT_RADIOLOSS);
+	signalingWriteOutput(SIG_EVENT_RADIOLOSS);
 	break;
 
     case STATE_ARMED | STATE_FLYING | STATE_RADIO_LOSS1 | STATE_RADIO_LOSS2:
-	signalingWriteLeds(SIG_EVENT_RADIOLOSS2);
-	signalingWriteBeep(SIG_EVENT_RADIOLOSS2);
+	signalingWriteOutput(SIG_EVENT_RADIOLOSS2);
 	break;
 
     case STATE_ARMED | STATE_LOW_BATTERY1:
     case STATE_ARMED | STATE_FLYING | STATE_LOW_BATTERY1:
-	signalingWriteLeds(SIG_EVENT_LOWBATT);
-	signalingWriteBeep(SIG_EVENT_LOWBATT);
+	signalingWriteOutput(SIG_EVENT_LOWBATT);
 	break;
 
     case STATE_DISARMED | STATE_LOW_BATTERY1:
-	signalingWriteLeds(SIG_EVENT_LOWBATT);
-	signalingWriteBeep(SIG_EVENT_LOWBATT);
+	signalingWriteOutput(SIG_EVENT_LOWBATT);
 	break;
 
     case STATE_ARMED | STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2:
     case STATE_ARMED | STATE_FLYING | STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2:
-	signalingWriteLeds(SIG_EVENT_RADIOLOSS);
-	signalingWriteBeep(SIG_EVENT_RADIOLOSS);
+	signalingWriteOutput(SIG_EVENT_RADIOLOSS);
 	break;
 
     case STATE_DISARMED | STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2:
-	signalingWriteLeds(SIG_EVENT_RADIOLOSS);
-	signalingWriteBeep(SIG_EVENT_RADIOLOSS);
+	signalingWriteOutput(SIG_EVENT_RADIOLOSS);
 	break;
 
     default:
-	signalingWriteLeds(SIG_EVENT_NONE);
+	signalingWriteOutput(SIG_EVENT_NONE);
 	break;
     }
 
-    sigData.countPos++;
+    if (sigData.patLen == ++sigData.patPos)
+	sigData.patPos = 0;
 
-    if (sigData.countPos == sigData.countMax)
-	sigData.countPos = 0;
-
-} /* end signaling event */
+}

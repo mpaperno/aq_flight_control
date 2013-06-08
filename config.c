@@ -401,7 +401,8 @@ const char *configParameterStrings[] = {
     "L1_ATT_MM_Y14",
     "SIG_LED_1_PRT",
     "SIG_LED_2_PRT",
-    "SIG_BEEP_PRT"
+    "SIG_BEEP_PRT",
+    "SIG_PWM_PRT"
 };
 
 void configLoadDefault(void) {
@@ -773,9 +774,10 @@ void configLoadDefault(void) {
     p[L1_ATT_MM_R14] = DEFAULT_L1_ATT_MM_R14;
     p[L1_ATT_MM_P14] = DEFAULT_L1_ATT_MM_P14;
     p[L1_ATT_MM_Y14] = DEFAULT_L1_ATT_MM_Y14;
-    p[SIG_LED_1_PRT]= DEFAULT_SIG_LED_1_PRT;
-    p[SIG_LED_2_PRT]= DEFAULT_SIG_LED_2_PRT;
-    p[SIG_BEEP_PRT]= DEFAULT_SIG_BEEP_PRT;
+    p[SIG_LED_1_PRT] = DEFAULT_SIG_LED_1_PRT;
+    p[SIG_LED_2_PRT] = DEFAULT_SIG_LED_2_PRT;
+    p[SIG_BEEP_PRT] = DEFAULT_SIG_BEEP_PRT;
+    p[SIG_PWM_PRT] = DEFAULT_SIG_PWM_PRT;
 }
 
 void configFlashRead(void) {

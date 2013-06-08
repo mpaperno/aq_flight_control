@@ -21,12 +21,17 @@
 
 #include "pwm.h"
 
+#define SIG_SPEAKER_FREQ	2000	// frequency for piezo speaker in Hz
+#define SIG_SPEAKER_PULSE_LEN	(500 / (SIG_SPEAKER_FREQ / 1000))  // pwm pulse length to achieve ~50% duty cycle. reference: 1000hz = 500 usec/cycle, 2000hz = 250 usec/cycle
+
 enum signalingEventTypes {
     SIG_EVENT_NONE = 0,
+    // ongoing events
     SIG_EVENT_DISARMED_NOGPS,
     SIG_EVENT_DISARMED_GPS,
     SIG_EVENT_ARMED,
     SIG_EVENT_FLYING,
+    SIG_EVENT_FLYING_HF,
     SIG_EVENT_ALTHOLD,
     SIG_EVENT_POSHOLD,
     SIG_EVENT_MISSION,
@@ -34,23 +39,29 @@ enum signalingEventTypes {
     SIG_EVENT_LOWBATT,
     SIG_EVENT_RADIOLOSS,
     SIG_EVENT_RADIOLOSS2,
+    // one-time events
+    SIG_EVENT_OT_ARMING,
+    SIG_EVENT_OT_DISARMING,
+    SIG_EVENT_ENUM_END
 };
 
 typedef struct {
-  pwmPortStruct_t *beep;
-  pwmPortStruct_t *Led_1;
-  pwmPortStruct_t *Led_2;
+  pwmPortStruct_t *beeperPort;
+  pwmPortStruct_t *ledPort1;
+  pwmPortStruct_t *ledPort2;
+  pwmPortStruct_t *pwmPort;
   uint8_t enabled;	// flag indicating if any signaling is used (any ports are enabled)
-  uint8_t countPos;	// loop counter used in Led patterns
-  uint8_t countMax;	// Maximum number loop counter, default on 10 = 1Hz. Changing it will! affect the led pattern event
-  uint8_t armStat;	// detect status change disarmed-armed and armed-disarmed. 0=disarmed, 1=disarming, 2=armed, 3=arming
-  uint8_t patNo;    	// number of positions in pattern per output device (3 x number is total)
+  uint8_t patPos;	    // loop counter used in Led patterns
+  uint8_t patLen;	    // number of positions in pattern per output device; 10 = 1Hz. Changing it will! affect the led pattern event
+  uint8_t oneTimeEvtTyp;    // if set, a one-time event is signaled, overriding any other current events
+  uint8_t oneTimeEvtStat;   // current one-time event stage: 0=not active; 1=event is done; 2=event is in progress
+  uint8_t beeperType;	    // 0 = buzzer, 1 = speaker
 } sigStruct_t;
 
 extern sigStruct_t sigData;
-extern void signalingBeep (unsigned long hz, unsigned long ms, uint8_t stayOn);
-extern void signalingWriteLeds(int statusId);
+
 extern void signalingInit(void);
 extern void signalingEvent(void);
+extern void signalingOnetimeEvent(int eventTyp);
 
 #endif

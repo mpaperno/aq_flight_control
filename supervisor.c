@@ -73,11 +73,17 @@ void supervisorCreateSOCTable(void) {
 void supervisorArm(void) {
     supervisorData.state = STATE_ARMED;
     AQ_NOTICE("Armed\n");
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
+#endif
 }
 
 void supervisorDisarm(void) {
     supervisorData.state = STATE_DISARMED;
     AQ_NOTICE("Disarmed\n");
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
+#endif
 }
 
 void supervisorTaskCode(void *unused) {

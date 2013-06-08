@@ -36,9 +36,10 @@
 #define DEFAULT_PPM_THROT_LOW	    1090	// throttle value at low stick
 #define DEFAULT_PPM_CHAN_MID	    1512	// middle of the stick range
 
-#define DEFAULT_SIG_LED_1_PRT       0.0f        // External Led(1) port, 0.0f to disable
-#define DEFAULT_SIG_LED_2_PRT       0.0f        // External Led(2) port, 0.0f to disable
-#define DEFAULT_SIG_BEEP_PRT        0.0f        // negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer
+#define DEFAULT_SIG_LED_1_PRT       0		// External Led(1) port, 0 to disable
+#define DEFAULT_SIG_LED_2_PRT       0		// External Led(2) port, 0 to disable
+#define DEFAULT_SIG_BEEP_PRT        0		// negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer
+#define DEFAULT_SIG_PWM_PRT         0		// External PWM-controlled signaling port, 0 to disable
 
 #define DEFAULT_CTRL_PID_TYPE	    0		// 0 == parallel TILT/RATE PIDs, 1 == cascading TILT/RATE PIDs
 
@@ -92,7 +93,7 @@
 #define DEFAULT_CTRL_YAW_ANG_DM	    0.0f
 #define DEFAULT_CTRL_YAW_ANG_OM	    1.25f
 
-#define DEFAULT_MOT_FRAME	    0		// 0 == custom, 1 == '+' configuration, 2 == 'x', 3 == hex
+#define DEFAULT_MOT_FRAME	    0		// used as hint for frame config GUI
 #define DEFAULT_MOT_START	    1125
 #define DEFAULT_MOT_MIN		    975
 #define DEFAULT_MOT_MAX		    1950

@@ -400,6 +400,7 @@ enum configParameters {
     SIG_LED_1_PRT,
     SIG_LED_2_PRT,
     SIG_BEEP_PRT,
+    SIG_PWM_PRT,
     CONFIG_NUM_PARAMS
 };
 
