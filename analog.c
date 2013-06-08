@@ -109,7 +109,9 @@ void analogInit(void) {
 #endif
 
     // determine LiPo battery cell count
-    if (analogData.vIn < 8.5)
+    if (analogData.vIn < 5.0f)
+	analogData.batCellCount = 1;
+    else if (analogData.vIn < 8.5f)
 	analogData.batCellCount = 2;
     else if (analogData.vIn < 12.8f)
 	analogData.batCellCount = 3;
@@ -117,6 +119,8 @@ void analogInit(void) {
 	analogData.batCellCount = 4;
     else if (analogData.vIn < 21.3f)
 	analogData.batCellCount = 5;
+    else if (analogData.vIn < 25.8f)
+	analogData.batCellCount = 6;
 
     sprintf(s, "Battery cells: %d\n", analogData.batCellCount);
     AQ_NOTICE(s);
