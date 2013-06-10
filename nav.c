@@ -130,7 +130,7 @@ void navLoadLeg(uint8_t leg) {
 	navData.targetHeading = AQ_YAW;
 
 	if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
-	    navData.holdMaxVertSpeed = NAV_LANDING_VEL;
+	    navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
 	else
 	    navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
 
@@ -141,7 +141,7 @@ void navLoadLeg(uint8_t leg) {
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_LAND) {
 	if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
-	    navData.holdMaxVertSpeed = NAV_LANDING_VEL;
+	    navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
 	else
 	    navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
     }
@@ -533,4 +533,11 @@ navMission_t *navGetWaypoint(int seqId) {
 
 navMission_t *navGetHomeWaypoint(void) {
     return &navData.homeLeg;
+}
+
+// input lat/lon in degrees, returns distance in meters
+float navCalcDistance(double lat1, double lon1, double lat2, double lon2) {
+    float n = (lat1 - lat2) * navUkfData.r1;
+    float e = (lon1 - lon2) * navUkfData.r2;
+    return __sqrtf(n*n + e*e);
 }

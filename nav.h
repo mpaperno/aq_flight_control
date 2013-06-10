@@ -25,7 +25,7 @@
 #define NAV_MIN_GPS_ACC		3.0f
 #define NAV_MAX_FIX_AGE		((int)1e6f)				    // 1 second
 
-#define NAV_LANDING_VEL		0.33f					    // default landing/takeoff vertical velocity
+//#define NAV_LANDING_VEL		0.33f					    // default landing/takeoff vertical velocity
 #define NAV_LANDING_DECEL	(-1.5f * GRAVITY)			    // deceleration needed to indicate a landing (1.5g)
 
 #define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
@@ -120,5 +120,6 @@ extern void navSetHomeCurrent(void);
 extern void navLoadLeg(unsigned char leg);
 extern void navNavigate(void);
 extern void navResetHoldAlt(float delta);
+extern float navCalcDistance(double lat1, double lon1, double lat2, double lon2);
 
 #endif

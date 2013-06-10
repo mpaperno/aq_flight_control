@@ -166,6 +166,7 @@ const char *configParameterStrings[] = {
     "NAV_MAX_SPEED",
     "NAV_MAX_DECENT",
     "NAV_CEILING",
+    "NAV_LANDING_VEL",
     "NAV_SPEED_P",
     "NAV_SPEED_I",
     "NAV_SPEED_PM",
@@ -294,6 +295,7 @@ const char *configParameterStrings[] = {
     "SPVR_BAT_CRV6",
     "SPVR_FS_RAD_ST1",
     "SPVR_FS_RAD_ST2",
+    "SPVR_FS_ADD_ALT",
     "UKF_VEL_Q",
     "UKF_VEL_ALT_Q",
     "UKF_POS_Q",
@@ -541,6 +543,7 @@ void configLoadDefault(void) {
     p[NAV_MAX_SPEED] = DEFAULT_NAV_MAX_SPEED;
     p[NAV_MAX_DECENT] = DEFAULT_NAV_MAX_DECENT;
     p[NAV_CEILING] = DEFAULT_NAV_CEILING;
+    p[NAV_LANDING_VEL] = DEFAULT_NAV_LANDING_VEL;
     p[NAV_SPEED_P] = DEFAULT_NAV_SPEED_P;
     p[NAV_SPEED_I] = DEFAULT_NAV_SPEED_I;
     p[NAV_SPEED_PM] = DEFAULT_NAV_SPEED_PM;
@@ -669,6 +672,7 @@ void configLoadDefault(void) {
     p[SPVR_BAT_CRV6] = DEFAULT_SPVR_BAT_CRV6;
     p[SPVR_FS_RAD_ST1] = DEFAULT_SPVR_FS_RAD_ST1;
     p[SPVR_FS_RAD_ST2] = DEFAULT_SPVR_FS_RAD_ST2;
+    p[SPVR_FS_ADD_ALT] = DEFAULT_SPVR_FS_ADD_ALT;
     p[UKF_VEL_Q] = DEFAULT_UKF_VEL_Q;
     p[UKF_VEL_ALT_Q] = DEFAULT_UKF_VEL_ALT_Q;
     p[UKF_POS_Q] = DEFAULT_UKF_POS_Q;

@@ -30,6 +30,10 @@
 #define SUPERVISOR_RADIO_LOSS1	    ((int)1e6)	    // 1 second
 #define SUPERVISOR_RADIO_LOSS2	    ((int)15e6)	    // 15 seconds
 
+// Radio loss stage 2 failsafe settings:
+#define SUPERVISOR_HOME_POS_DETECT_RADIUS	2.0f 	// start descending when within this radius of home position in meters
+#define SUPERVISOR_HOME_ALT_DETECT_MARGIN	2.0f	// start moving to home lat/lon when within this altitude of home position in meters
+
 #define SUPERVISOR_SOC_TABLE_SIZE   100
 
 enum supervisorStates {
@@ -41,6 +45,12 @@ enum supervisorStates {
     STATE_RADIO_LOSS2	= 0x10,
     STATE_LOW_BATTERY1	= 0x20,
     STATE_LOW_BATTERY2	= 0x40
+};
+
+enum supervisorFailsafeStg2Options {
+    SPVR_OPT_FS_RAD_ST2_LAND = 0,
+    SPVR_OPT_FS_RAD_ST2_RTH,
+    SPVR_OPT_FS_RAD_ST2_ASCEND
 };
 
 typedef struct {
