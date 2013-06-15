@@ -183,10 +183,10 @@ void supervisorTaskCode(void *unused) {
 			// wp = navGetHomeWaypoint();
 			wp->type = NAV_LEG_GOTO;
 			wp->relativeAlt = navData.homeLeg.relativeAlt;
-			wp->targetAlt = navData.homeLeg.targetAlt;
+			wp->targetAlt = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT];
 			wp->targetLat = gpsData.lat;
 			wp->targetLon = gpsData.lon;
-			wp->targetRadius = SUPERVISOR_HOME_ALT_DETECT_MARGIN + p[SPVR_FS_ADD_ALT];
+			wp->targetRadius = SUPERVISOR_HOME_ALT_DETECT_MARGIN;
 			wp->maxHorizSpeed = navData.homeLeg.maxHorizSpeed;
 			wp->maxVertSpeed = navData.homeLeg.maxVertSpeed;
 			wp->poiHeading = navData.homeLeg.poiHeading;
