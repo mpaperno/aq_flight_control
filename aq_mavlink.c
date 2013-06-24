@@ -148,6 +148,11 @@ void mavlinkDo(void) {
     if ((supervisorData.state & STATE_RADIO_LOSS2))
 	mavlinkData.nav_mode |= AQ_NAV_STATUS_FAILSAFE;
 
+    if (navData.headFreeMode == NAV_HEADFREE_DYNAMIC)
+	mavlinkData.nav_mode |= AQ_NAV_STATUS_HF_DYNAMIC;
+    else if (navData.headFreeMode == NAV_HEADFREE_LOCKED)
+	mavlinkData.nav_mode |= AQ_NAV_STATUS_HF_LOCKED;
+
     if (navData.ceilingAlt) {
 	mavlinkData.nav_mode |= AQ_NAV_STATUS_CEILING;
 	if (navData.setCeilingReached)

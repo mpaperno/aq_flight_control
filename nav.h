@@ -32,6 +32,11 @@
 #define NAV_FLATTENING		(1.0 / 298.257223563)			    // WGS-84
 #define NAV_E_2			(NAV_FLATTENING * (2.0 - NAV_FLATTENING))
 
+#define NAV_HF_HOME_DIST_D_MIN	2.0f						// do not compute dynamic bearing when closer than this to home position (zero to never compute)
+#define NAV_HF_HOME_DIST_FREQ	4						// update distance to home at this Hz, should be > 0 and <= 400
+#define NAV_HF_HOME_BRG_D_MAX	1.0f * DEG_TO_RAD				// re-compute headfree reference angles when bearing to home changes by this many degrees (zero to always re-compute)
+#define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch it toggled high
+
 #define NAV_STATUS_MANUAL	0x00					    // full manual control
 #define NAV_STATUS_ALTHOLD	0x01					    // altitude hold only
 #define NAV_STATUS_POSHOLD	0x02					    // altitude & position hold
@@ -45,6 +50,14 @@ enum navLegTypes {
     NAV_LEG_ORBIT,
     NAV_LEG_LAND,
     NAV_NUM_LEG_TYPES
+};
+
+enum headFreeActiveModes {
+    NAV_HEADFREE_OFF = 0,	// not active
+    NAV_HEADFREE_SETTING,	// active, setting reference point
+    NAV_HEADFREE_DYN_DELAY,	// active, waiting for timer to enable dynamic mode
+    NAV_HEADFREE_LOCKED,	// active with locked frame reference
+    NAV_HEADFREE_DYNAMIC	// active with continually adjusting frame reference
 };
 
 #define NAV_MAX_MISSION_LEGS	25
@@ -97,6 +110,16 @@ typedef struct {
     uint8_t missionLeg;
     uint8_t fixType;                    // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)
     uint8_t homeActionFlag;		// flag to avoid repeating set/recall home actions until switch is moved back to midpoint
+    float distanceToHome;		// current distance to home position in m, if set (only updated when in headfree mode)
+    float bearingToHome;		// current bearing to home position in rad, if set (only updated when in headfree mode)
+    uint32_t homeDistanceLastUpdate;	// timestamp of last home position update (only updated when in headfree mode)
+
+    uint8_t headFreeMode;		// headfree/carefree mode status
+    uint32_t hfDynamicModeTimer;	// track how long switch is active before entering dynamic HF mode
+    float hfReferenceCos;		// stored reference heading for HF mode
+    float hfReferenceSin;
+    uint8_t hfUseStoredReference;	// set to true to use stored reference in HF mode instead of N/E
+
     uint8_t setCeilingFlag;
     uint8_t setCeilingReached;
     uint8_t ceilingTimer;
@@ -121,5 +144,6 @@ extern void navLoadLeg(unsigned char leg);
 extern void navNavigate(void);
 extern void navResetHoldAlt(float delta);
 extern float navCalcDistance(double lat1, double lon1, double lat2, double lon2);
+extern float navCalcBearing(double lat1, double lon1, double lat2, double lon2);
 
 #endif

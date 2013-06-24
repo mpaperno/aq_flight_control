@@ -49,6 +49,7 @@ const uint16_t sig_pattern[SIG_EVENT_ENUM_END][31] = {
 // one-time events
   { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,0,0,0,0,0  ,0,0,1,0,0,0,0,0,0,0 ,1025 }, 	// 13 (Arming)			L1: On, L2: 500ms; 1x100ms beep
   { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,1,1,1,1  ,0,0,1,0,1,0,0,0,0,0 ,1125 }, 	// 14 (Disarming)		L1: On, L2: 500ms; 2x100ms beeps
+  { 1,1,0,0,1,1,0,0,1,1  ,0,0,1,1,0,0,1,1,0,0  ,1,1,1,1,1,1,1,1,1,1 ,1525 }, 	// 15 (HeadingFree ref. set)	L1 & L2 alternating 200ms flashes; 1s beep
 };
 
 sigStruct_t sigData __attribute__((section(".ccm")));
@@ -235,6 +236,9 @@ void signalingEvent() {
 	    signalingWriteOutput(SIG_EVENT_DVH);
 	    break;
 	default:
+	    if (navData.headFreeMode > NAV_HEADFREE_OFF)
+		signalingWriteOutput(SIG_EVENT_FLYING_HF);
+	    else
 	    signalingWriteOutput(SIG_EVENT_FLYING);
 	    break;
 	}

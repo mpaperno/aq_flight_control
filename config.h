@@ -164,6 +164,7 @@ enum configParameters {
     NAV_MAX_SPEED,
     NAV_MAX_DECENT,
     NAV_CEILING,
+    NAV_HDFRE_CHAN,
     NAV_LANDING_VEL,
     NAV_SPEED_P,
     NAV_SPEED_I,

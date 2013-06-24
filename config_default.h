@@ -176,6 +176,7 @@
 #define DEFAULT_NAV_MAX_SPEED	    5.0f	// m/s
 #define DEFAULT_NAV_MAX_DECENT	    1.5f	// m/s
 #define DEFAULT_NAV_CEILING         0.0f	// m relative to home alt. Maximum altitude in alt/pos/mission/dvh modes
+#define DEFAULT_NAV_HDFRE_CHAN      0	// radio channel for heading-free mode; set to zero to disable
 #define DEFAULT_NAV_LANDING_VEL	    1.5f	// m/s
 
 // speed => tilt PID

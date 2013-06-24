@@ -115,7 +115,7 @@ void supervisorTaskCode(void *unused) {
 		digitalTogg(supervisorData.readyLed);
 
 	    // Arm if all the switches are in default (startup positions) - flaps down, aux2 centered
-	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500 && RADIO_FLAPS < -250 && RADIO_AUX2 > -250 && RADIO_AUX2 < 250) {
+	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500 && RADIO_FLAPS < -250 && !navData.homeActionFlag && navData.headFreeMode == NAV_HEADFREE_OFF) {
 		if (!supervisorData.armTime) {
 		    supervisorData.armTime = timerMicros();
 		}

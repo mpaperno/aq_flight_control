@@ -42,6 +42,7 @@ enum signalingEventTypes {
     // one-time events
     SIG_EVENT_OT_ARMING,
     SIG_EVENT_OT_DISARMING,
+    SIG_EVENT_OT_HF_SET,
     SIG_EVENT_ENUM_END
 };
 
