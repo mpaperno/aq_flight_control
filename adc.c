@@ -94,9 +94,9 @@ void adcTaskCode(void *unused) {
 	    adcData.channelSums[i] += adcData.adcSums[i];
 
 	// IDG500 & ISZ500 gyro double rate
-	dRateVoltageX = (double)adcData.adcSums[ADC_VOLTS_RATEX] * ADC_DIVISOR * (1.0 / 4.0);
-	dRateVoltageY = (double)adcData.adcSums[ADC_VOLTS_RATEY] * ADC_DIVISOR * (1.0 / 4.0);
-	dRateVoltageZ = (double)adcData.adcSums[ADC_VOLTS_RATEZ] * ADC_DIVISOR * (1.0 / 4.0);
+	dRateVoltageX = adcData.adcSums[ADC_VOLTS_RATEX] * ADC_DIVISOR * (1.0 / 4.0);
+	dRateVoltageY = adcData.adcSums[ADC_VOLTS_RATEY] * ADC_DIVISOR * (1.0 / 4.0);
+	dRateVoltageZ = adcData.adcSums[ADC_VOLTS_RATEZ] * ADC_DIVISOR * (1.0 / 4.0);
 
 	// rates
 	x = +(dRateVoltageX + adcData.rateBiasX + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3);// / p[IMU_GYO_SCAL_X];
@@ -132,26 +132,26 @@ void adcTaskCode(void *unused) {
 
 	if (!(loops & 0x01)) {
 	    // calculate voltages
-	    adcData.voltages[ADC_VOLTS_RATEX] = (double)adcData.channelSums[ADC_VOLTS_RATEX] * ADC_DIVISOR * (1.0 / 8.0);   // ratex
-	    adcData.voltages[ADC_VOLTS_RATEY] = (double)adcData.channelSums[ADC_VOLTS_RATEY] * ADC_DIVISOR * (1.0 / 8.0);   // ratey
-	    adcData.voltages[ADC_VOLTS_RATEZ] = (double)adcData.channelSums[ADC_VOLTS_RATEZ] * ADC_DIVISOR * (1.0 / 8.0);   // ratez
+	    adcData.voltages[ADC_VOLTS_RATEX] = adcData.channelSums[ADC_VOLTS_RATEX] * ADC_DIVISOR * (1.0f / 8.0f);   // ratex
+	    adcData.voltages[ADC_VOLTS_RATEY] = adcData.channelSums[ADC_VOLTS_RATEY] * ADC_DIVISOR * (1.0f / 8.0f);   // ratey
+	    adcData.voltages[ADC_VOLTS_RATEZ] = adcData.channelSums[ADC_VOLTS_RATEZ] * ADC_DIVISOR * (1.0f / 8.0f);   // ratez
 
-	    adcData.voltages[ADC_VOLTS_MAGX]  = (double)adcData.channelSums[ADC_VOLTS_MAGX] * ADC_DIVISOR * (1.0 / 4.0);   // magx
-	    adcData.voltages[ADC_VOLTS_MAGY]  = (double)adcData.channelSums[ADC_VOLTS_MAGY] * ADC_DIVISOR * (1.0 / 4.0);   // magy
-	    adcData.voltages[ADC_VOLTS_MAGZ]  = (double)adcData.channelSums[ADC_VOLTS_MAGZ] * ADC_DIVISOR * (1.0 / 4.0);   // magz
+	    adcData.voltages[ADC_VOLTS_MAGX]  = adcData.channelSums[ADC_VOLTS_MAGX] * ADC_DIVISOR * (1.0f / 4.0f);   // magx
+	    adcData.voltages[ADC_VOLTS_MAGY]  = adcData.channelSums[ADC_VOLTS_MAGY] * ADC_DIVISOR * (1.0f / 4.0f);   // magy
+	    adcData.voltages[ADC_VOLTS_MAGZ]  = adcData.channelSums[ADC_VOLTS_MAGZ] * ADC_DIVISOR * (1.0f / 4.0f);   // magz
 
-	    adcData.voltages[ADC_VOLTS_TEMP1] = (double)adcData.channelSums[ADC_VOLTS_TEMP1] * ADC_DIVISOR * (1.0 / 2.0);   // temp
-	    adcData.voltages[ADC_VOLTS_VIN]   = (double)adcData.channelSums[ADC_VOLTS_VIN]   * ADC_DIVISOR * (1.0 / 2.0);   // Vin
+	    adcData.voltages[ADC_VOLTS_TEMP1] = adcData.channelSums[ADC_VOLTS_TEMP1] * ADC_DIVISOR * (1.0f / 2.0f);   // temp
+	    adcData.voltages[ADC_VOLTS_VIN]   = adcData.channelSums[ADC_VOLTS_VIN]   * ADC_DIVISOR * (1.0f / 2.0f);   // Vin
 
-	    adcData.voltages[ADC_VOLTS_ACCX] = (double)adcData.channelSums[ADC_VOLTS_ACCX] * ADC_DIVISOR * (1.0 / 8.0);   // accx
-	    adcData.voltages[ADC_VOLTS_ACCY] = (double)adcData.channelSums[ADC_VOLTS_ACCY] * ADC_DIVISOR * (1.0 / 8.0);   // accy
-	    adcData.voltages[ADC_VOLTS_ACCZ] = (double)adcData.channelSums[ADC_VOLTS_ACCZ] * ADC_DIVISOR * (1.0 / 8.0);   // accz
+	    adcData.voltages[ADC_VOLTS_ACCX] = adcData.channelSums[ADC_VOLTS_ACCX] * ADC_DIVISOR * (1.0f / 8.0f);   // accx
+	    adcData.voltages[ADC_VOLTS_ACCY] = adcData.channelSums[ADC_VOLTS_ACCY] * ADC_DIVISOR * (1.0f / 8.0f);   // accy
+	    adcData.voltages[ADC_VOLTS_ACCZ] = adcData.channelSums[ADC_VOLTS_ACCZ] * ADC_DIVISOR * (1.0f / 8.0f);   // accz
 
-	    adcData.voltages[ADC_VOLTS_PRES1] = (double)adcData.channelSums[ADC_VOLTS_PRES1] * ADC_DIVISOR * (1.0 / 8.0);   // press1
-	    adcData.voltages[ADC_VOLTS_PRES2] = (double)adcData.channelSums[ADC_VOLTS_PRES2] * ADC_DIVISOR * (1.0 / 8.0);   // press2
+	    adcData.voltages[ADC_VOLTS_PRES1] = adcData.channelSums[ADC_VOLTS_PRES1] * ADC_DIVISOR * (1.0f / 8.0f);   // press1
+	    adcData.voltages[ADC_VOLTS_PRES2] = adcData.channelSums[ADC_VOLTS_PRES2] * ADC_DIVISOR * (1.0f / 8.0f);   // press2
 
-	    adcData.voltages[ADC_VOLTS_TEMP2] = (double)adcData.channelSums[ADC_VOLTS_TEMP2] * ADC_DIVISOR * (1.0 / 2.0);   // temp2
-	    adcData.voltages[ADC_VOLTS_TEMP3] = (double)adcData.channelSums[ADC_VOLTS_TEMP3] * ADC_DIVISOR * (1.0 / 2.0);   // temp3
+	    adcData.voltages[ADC_VOLTS_TEMP2] = adcData.channelSums[ADC_VOLTS_TEMP2] * ADC_DIVISOR * (1.0f / 2.0f);   // temp2
+	    adcData.voltages[ADC_VOLTS_TEMP3] = adcData.channelSums[ADC_VOLTS_TEMP3] * ADC_DIVISOR * (1.0f / 2.0f);   // temp3
 
 	    for (i = 0; i < ADC_SENSORS; i++)
 		adcData.channelSums[i] = 0;
@@ -250,9 +250,9 @@ void adcTaskCode(void *unused) {
 	    adcData.magY = b * imuData.cosRot + a * imuData.sinRot;
 	    adcData.magZ = c;
 
-	    sumMagX += adcData.voltages[ADC_VOLTS_MAGX];
-	    sumMagY += adcData.voltages[ADC_VOLTS_MAGY];
-	    sumMagZ += adcData.voltages[ADC_VOLTS_MAGZ];
+	    sumMagX += (double)adcData.voltages[ADC_VOLTS_MAGX];
+	    sumMagY += (double)adcData.voltages[ADC_VOLTS_MAGY];
+	    sumMagZ += (double)adcData.voltages[ADC_VOLTS_MAGZ];
 	    countMag++;
 
 	    adcData.dt = (float)(adcData.sampleTime * 2) * (1.0f / (float)AQ_US_PER_SEC);
@@ -271,9 +271,9 @@ void adcTaskCode(void *unused) {
 		adcData.magBridgeBiasZ = sumMagZ / countMag;
 
 		if (countMag > 100) {
-		    sumMagX -= (adcData.magBridgeBiasX * 2.0f);
-		    sumMagY -= (adcData.magBridgeBiasY * 2.0f);
-		    sumMagZ -= (adcData.magBridgeBiasZ * 2.0f);
+		    sumMagX -= (double)(adcData.magBridgeBiasX * 2.0f);
+		    sumMagY -= (double)(adcData.magBridgeBiasY * 2.0f);
+		    sumMagZ -= (double)(adcData.magBridgeBiasZ * 2.0f);
 		    countMag -= 2;
 		}
 	    }
@@ -284,7 +284,7 @@ void adcTaskCode(void *unused) {
 
 void adcCalibOffsets(void) {
     unsigned long lastUpdate;
-    double sumRate[3];
+    float sumRate[3];
     float dTemp, dTemp2, dTemp3;
     int i;
 

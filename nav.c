@@ -114,12 +114,12 @@ void navLoadLeg(uint8_t leg) {
 	navData.holdMaxVertSpeed = navData.homeLeg.maxVertSpeed;
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_GOTO) {
-	if (navData.missionLegs[leg].targetLat != 0.0 && navData.missionLegs[leg].targetLon != 0.0)
+	if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
 	    navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
 	navData.targetHeading = navData.missionLegs[leg].poiHeading;
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_ORBIT) {
-	if (navData.missionLegs[leg].targetLat != 0.0 && navData.missionLegs[leg].targetLon != 0.0)
+	if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
 	    navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
 	navData.targetHeading = navData.missionLegs[leg].poiHeading;
 	navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
@@ -216,7 +216,7 @@ void navNavigate(void) {
 	    navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
 
 	    // set this position as home if we have none
-	    if (navData.homeLeg.targetLat == 0.0 || navData.homeLeg.targetLon == 0.0)
+	    if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
 		navSetHomeCurrent();
 
 	    // only zero bias if coming from lower mode
@@ -457,7 +457,7 @@ void navNavigate(void) {
 	    supervisorDisarm();
     }
 
-    if (gpsData.lat != 0.0 && gpsData.lon != 0.0) {
+    if (gpsData.lat != (double)0.0 && gpsData.lon != (double)0.0) {
 	if (navData.navCapable)
 	    navData.fixType = 3;
 	else

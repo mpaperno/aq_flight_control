@@ -465,7 +465,7 @@ void navUkfGpsPosUpate(uint32_t gpsMicros, double lat, double lon, float alt, fl
     int histIndex;
 
     if (hAcc < 4.0f && gpsData.tDOP != 0.0f) {
-	if (navUkfData.holdLat == 0.0) {
+	if (navUkfData.holdLat == (double)0.0) {
 	    navUkfData.holdLat = lat;
 	    navUkfData.holdLon = lon;
 	    navUkfCalcEarthRadius(lat);
