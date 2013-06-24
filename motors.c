@@ -131,7 +131,7 @@ void motorsInit(void) {
     for (i = 0; i < PWM_NUM_PORTS; i++) {
 	motorsPowerStruct_t *d = &motorsData.distribution[i];
 
-	if (d->throttle != 0.0 || d->pitch != 0.0 || d->roll != 0.0 || d->yaw != 0.0) {
+	if (d->throttle != 0.0f || d->pitch != 0.0f || d->roll != 0.0f || d->yaw != 0.0f) {
 
 #ifdef USE_L1_ATTITUDE
 	    motorsData.pwm[i] = pwmInitOut(i, 2500, p[MOT_START], 1);	    // closed loop RPM mode

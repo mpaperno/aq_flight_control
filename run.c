@@ -84,13 +84,13 @@ void runTaskCode(void *unused) {
 	runData.sensorHistIndex = (runData.sensorHistIndex + 1) % RUN_SENSOR_HIST;
 
 	if (!(loops % 20)) {
-	   simDoAccUpdate(runData.sumAcc[0]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumAcc[1]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumAcc[2]*(1.0 / (float)RUN_SENSOR_HIST));
+	   simDoAccUpdate(runData.sumAcc[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumAcc[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumAcc[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 	else if (!((loops+7) % 20)) {
-	   simDoPresUpdate(runData.sumPres*(1.0 / (float)RUN_SENSOR_HIST));
+	   simDoPresUpdate(runData.sumPres*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 	else if (!((loops+14) % 20)) {
-	   simDoMagUpdate(runData.sumMag[0]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0 / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0 / (float)RUN_SENSOR_HIST));
+	   simDoMagUpdate(runData.sumMag[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK) {
 	    if (runData.accMask > 1.0f && gpsData.hAcc < 5.0f) {

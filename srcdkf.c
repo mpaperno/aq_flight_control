@@ -210,7 +210,7 @@ void srcdkfTimeUpdate(srcdkf_t *f, float32_t *u, float32_t dt) {
 
 		for (j = 0; j < S+V; j++) {
 			qrTempS[rOffset + j] = (Xa[i*L + j + 1] - Xa[i*L + S+V + j + 1]) * f->wic1;
-			qrTempS[rOffset + S+V + j] = (Xa[i*L + j + 1] + Xa[i*L + S+V + j + 1] - 2.0*Xa[i*L + 0]) * f->wic2;
+			qrTempS[rOffset + S+V + j] = (Xa[i*L + j + 1] + Xa[i*L + S+V + j + 1] - 2.0f*Xa[i*L + 0]) * f->wic2;
 		}
 	}
 //matrixDump("qrTempS", &f->qrTempS);
@@ -315,7 +315,7 @@ void srcdkfMeasurementUpdate(srcdkf_t *f, float32_t *u, float32_t *ym, int M, in
 			float32_t c, d;
 
 			c = (Y[i*L + j + 1] - Y[i*L + S+N + j + 1]) * f->wic1;
-			d = (Y[i*L + j + 1] + Y[i*L + S+N + j + 1] - 2.0*Y[i*L]) * f->wic2;
+			d = (Y[i*L + j + 1] + Y[i*L + S+N + j + 1] - 2.0f*Y[i*L]) * f->wic2;
 
 			qrTempM[rOffset + j] = c;
 			qrTempM[rOffset + S+N + j] = d;
@@ -469,7 +469,7 @@ void paramsrcdkfUpdate(srcdkf_t *f, float32_t *u, float32_t *d) {
 		arm_mat_mult_f32(&f->K, &f->KT, &f->Sv);
 
 		for (i = 0; i < S; i++) {
-			rDiag[i] = (1.0 - f->rm)*rDiag[i] + f->rm * Sv[i*S + i];
+			rDiag[i] = (1.0f - f->rm)*rDiag[i] + f->rm * Sv[i*S + i];
 			Sx[i*S + i] = sqrt(Sx[i*S + i] * Sx[i*S + i] + rDiag[i]);
 		}
 	}
