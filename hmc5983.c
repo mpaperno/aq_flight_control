@@ -21,7 +21,9 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#ifndef __CC_ARM
 #include <intrinsics.h>
+#endif
 
 hmc5983Struct_t hmc5983Data;
 

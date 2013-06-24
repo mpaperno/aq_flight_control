@@ -181,7 +181,7 @@ typedef struct {
 } ubloxStruct_t;
 
 extern unsigned char ubloxCharIn(unsigned char c);
-extern void ubloxInit();
+extern void ubloxInit(void);
 extern void ubloxSendSetup(void);
 extern void ubloxInitGps(void);
 

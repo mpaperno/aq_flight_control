@@ -37,8 +37,10 @@
 #include <CoOS.h>
 #include <string.h>
 #include <math.h>
-#include <intrinsics.h>
 #include <stdio.h>
+#ifndef __CC_ARM
+#include <intrinsics.h>
+#endif
 
 navStruct_t navData __attribute__((section(".ccm")));
 

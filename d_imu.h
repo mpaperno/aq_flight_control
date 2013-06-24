@@ -59,6 +59,10 @@
 #define DIMU_IRQ_CH	    TIM3_IRQn
 #define DIMU_ISR	    TIM3_IRQHandler
 
+#ifndef __rev16
+    #define __rev16 __REV16
+#endif
+
 typedef void dIMUCallback_t(int);
 
 typedef struct {

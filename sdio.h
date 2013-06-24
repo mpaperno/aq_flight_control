@@ -342,6 +342,6 @@ typedef struct {
     uint32_t errCount;
 } sdioStruct_t;
 
-extern void sdioLowLevelInit();
+extern void sdioLowLevelInit(void);
 
 #endif

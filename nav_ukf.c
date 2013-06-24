@@ -26,7 +26,9 @@
 #include "gps.h"
 #include "supervisor.h"
 #include "filer.h"
+#ifndef __CC_ARM
 #include <intrinsics.h>
+#endif
 
 navUkfStruct_t navUkfData;
 

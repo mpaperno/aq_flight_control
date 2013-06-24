@@ -18,7 +18,9 @@
 
 #include "aq_math.h"
 #include "util.h"
+#ifndef __CC_ARM
 #include <intrinsics.h>
+#endif
 
 #define MIN(a, b) ((a < b) ? a : b)
 #define MAX(a, b) ((a > b) ? a : b)

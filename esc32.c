@@ -26,6 +26,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifndef NAN
+#define NAN	__float32_nan
+#endif
+
 const char *esc32ParameterStrings[] = {
     "CONFIG_VERSION",
     "STARTUP_MODE",
@@ -96,7 +100,7 @@ float esc32ReadParamTransaction(uint8_t paramId) {
 
 // require parameter to be read twice the same
 float esc32ReadParam(uint8_t paramId) {
-    float value = __float32_nan;
+    float value = NAN;
     float tmp;
     int i;
 
@@ -111,7 +115,7 @@ float esc32ReadParam(uint8_t paramId) {
 	    return value;
     }
 
-    return __float32_nan;
+    return NAN;
 }
 
 float esc32WriteParam(uint8_t paramId, float value) {
@@ -141,7 +145,7 @@ int8_t esc32ParamIdByName(char *param) {
 }
 
 float esc32ReadParamByName(char *param) {
-    float value = __float32_nan;
+    float value = NAN;
     int paramId;
 
     paramId = esc32ParamIdByName(param);

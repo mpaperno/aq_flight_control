@@ -19,7 +19,9 @@
 #include "srcdkf.h"
 #include "aq_math.h"
 #include "util.h"
+#ifndef __CC_ARM
 #include <intrinsics.h>
+#endif
 
 float *srcdkfGetState(srcdkf_t *f) {
     return f->x.pData;

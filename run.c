@@ -31,7 +31,9 @@
 #include "can.h"
 #include "config.h"
 #include <CoOS.h>
+#ifndef __CC_ARM
 #include <intrinsics.h>
+#endif
 
 OS_STK *runTaskStack;
 
