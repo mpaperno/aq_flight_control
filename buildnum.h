@@ -1,2 +1,2 @@
-#define BUILDNUMBER 1317
+#define BUILDNUMBER 1318
 #define REVISION "$Revision$"

@@ -8,7 +8,7 @@
 # Usage examples:
 # 		make all											# default Release type builds .hex and .elf binaries
 #		make all BUILD_TYPE=Debug					# build with compiler debugging flags/options enabled
-#		make all BOARD_REV=1 INCR_BUILDNUM=0	# build for rev 1 hardware, don't increment the buildnumber
+#		make all BOARD_REV=1 INCR_BUILDNUM=0	# build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
 
 # Defaults - modify here or on command line
 #
@@ -18,7 +18,7 @@ BUILD_TYPE ?= Release
 SRC_PATH ?= .
 # Board version to build for (6)
 BOARD_VER ?= 6
-# Board revision to build for (0|1)
+# Board revision to build for (0 = v6 initial release revision, 1 = v6 Oct. 2012 revision)
 BOARD_REV ?= 0
 # Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
@@ -134,7 +134,7 @@ endif
 CC_INCLUDES :=  $(addprefix -I, $(AQINC_PATHS)) -I$(STMLIB_PATH)/include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
 
 # compiler flags
-CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -fno-gcse -Wall -finline-functions -std=c99 \
+CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -fno-gcse -Wall -finline-functions -Wdouble-promotion -std=c99 \
 	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet -MD $(basename $@).d -MQ $@
 
 # macro definitions to pass via compiler command line

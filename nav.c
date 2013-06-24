@@ -379,7 +379,7 @@ void navNavigate(void) {
 	if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
 		(navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
 	    uint8_t dfRefTyp = 0;
-	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != 0.0f && navData.homeLeg.targetLon != 0.0f) {
+	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
 		if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
 		    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
 		    navData.homeDistanceLastUpdate = currentTime;
