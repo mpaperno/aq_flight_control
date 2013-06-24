@@ -24,12 +24,8 @@
 #include "config.h"
 #include "serial.h"
 #include "comm.h"
-#ifdef MAVLINK
-    #include "mavlink.h"
-#else
-    #include "telemetry.h"
-    #include "command.h"
-#endif
+#include "telemetry.h"
+#include "command.h"
 #include "motors.h"
 #include "radio.h"
 #include "imu.h"
@@ -56,6 +52,11 @@ digitalPin *tp;
 OS_STK *aqInitStack;
 
 void aqInit(void *pdata) {
+#ifdef EEPROM_CS_PORT
+    // TODO: clean this up
+    digitalPin *eepromCS = digitalInit(EEPROM_CS_PORT, EEPROM_CS_PIN);
+    digitalHi(eepromCS);
+#endif
 #ifdef DAC_TP_PORT
     tp = digitalInit(DAC_TP_PORT, DAC_TP_PIN);
 #endif
