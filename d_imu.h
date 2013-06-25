@@ -82,6 +82,7 @@ typedef struct {
 extern dImuStruct_t dImuData;
 
 extern void dIMUInit(void);
+extern void dIMUTare(void);
 extern void dIMUCancelAlarm1(void);
 extern void dIMUCancelAlarm2(void);
 extern void dIMUCancelAlarm3(void);

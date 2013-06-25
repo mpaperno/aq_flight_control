@@ -33,14 +33,9 @@ static void mpu6000TransferComplete(int unused) {
 
 void mpu6600InitialBias(void) {
     uint32_t lastUpdate = mpu6000Data.lastUpdate;
-    float gyoSum[3];
     float tempSum;
-//    float dTemp, dTemp2, dTemp3;
     int i;
 
-    gyoSum[0] = 0.0f;
-    gyoSum[1] = 0.0f;
-    gyoSum[2] = 0.0f;
     tempSum = 0.0f;
 
     for (i = 0; i < 50; i++) {
@@ -48,23 +43,11 @@ void mpu6600InitialBias(void) {
 	    delay(1);
 	lastUpdate = mpu6000Data.lastUpdate;
 
-	gyoSum[0] += mpu6000Data.rawGyo[0];
-	gyoSum[1] += mpu6000Data.rawGyo[1];
-	gyoSum[2] += mpu6000Data.rawGyo[2];
-
 	tempSum += mpu6000Data.rawTemp;
     }
 
     mpu6000Data.temp = tempSum / 50.0f;
     utilFilterReset(&mpu6000Data.tempFilter, mpu6000Data.temp);
-
-//    dTemp = mpu6000Data.temp - IMU_ROOM_TEMP;
-//    dTemp2 = dTemp*dTemp;
-//    dTemp3 = dTemp*dTemp2;
-
-//    mpu6000Data.gyoOffset[0] = -(gyoSum[0] / 50.0f + p[IMU_GYO_BIAS_X] + p[IMU_GYO_BIAS1_X]*dTemp + p[IMU_GYO_BIAS2_X]*dTemp2 + p[IMU_GYO_BIAS3_X]*dTemp3);
-//    mpu6000Data.gyoOffset[1] = -(gyoSum[1] / 50.0f + p[IMU_GYO_BIAS_Y] + p[IMU_GYO_BIAS1_Y]*dTemp + p[IMU_GYO_BIAS2_Y]*dTemp2 + p[IMU_GYO_BIAS3_Y]*dTemp3);
-//    mpu6000Data.gyoOffset[2] = -(gyoSum[2] / 50.0f + p[IMU_GYO_BIAS_Z] + p[IMU_GYO_BIAS1_Z]*dTemp + p[IMU_GYO_BIAS2_Z]*dTemp2 + p[IMU_GYO_BIAS3_Z]*dTemp3);
 }
 
 static void mpu6000CalibAcc(float *in, float *out) {

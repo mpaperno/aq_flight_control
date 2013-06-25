@@ -23,6 +23,7 @@
 #include "config.h"
 #include "comm.h"
 #include "aq_init.h"
+#include "nav_ukf.h"
 
 OS_STK *dIMUTaskStack;
 
@@ -111,6 +112,76 @@ uint16_t dImuCalibParameters[] = {
     IMU_GYO_ALGN_ZX,
     IMU_GYO_ALGN_ZY
 };
+
+void dIMUTare(void) {
+    float acc[3], gyo[3], mag[3];
+    uint32_t lastUpdate;
+    float samples = 0.5f / DIMU_DT; // 0.5 second
+    int i;
+
+    // reset all parameters
+    for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++)
+	p[dImuCalibParameters[i]] = 0.0f;
+
+    p[IMU_ACC_SCAL_X] = 1.0f;
+    p[IMU_ACC_SCAL_Y] = 1.0f;
+    p[IMU_ACC_SCAL_Z] = 1.0f;
+
+    p[IMU_GYO_SCAL_X] = 1.0f;
+    p[IMU_GYO_SCAL_Y] = 1.0f;
+    p[IMU_GYO_SCAL_Z] = 1.0f;
+
+    p[IMU_MAG_SCAL_X] = 1.0f;
+    p[IMU_MAG_SCAL_Y] = 1.0f;
+    p[IMU_MAG_SCAL_Z] = 1.0f;
+
+    lastUpdate = dImuData.lastUpdate;
+
+    // let new averages settle
+    for (i = 0; i < (int)samples; i++) {
+	while (lastUpdate == dImuData.lastUpdate)
+	    ;
+	lastUpdate = dImuData.lastUpdate;
+    }
+
+    for (i = 0; i < 3; i++) {
+	acc[i] = 0.0f;
+	gyo[i] = 0.0f;
+	mag[i] = 0.0f;
+    }
+
+    for (i = 0; i < (int)samples; i++) {
+	while (lastUpdate == dImuData.lastUpdate)
+	    ;
+	lastUpdate = dImuData.lastUpdate;
+
+	acc[0] += mpu6000Data.rawAcc[0];
+	acc[1] += mpu6000Data.rawAcc[1];
+	acc[2] += mpu6000Data.rawAcc[2];
+
+	gyo[0] += mpu6000Data.rawGyo[0];
+	gyo[1] += mpu6000Data.rawGyo[1];
+	gyo[2] += mpu6000Data.rawGyo[2];
+
+	mag[0] += hmc5983Data.rawMag[0];
+	mag[1] += hmc5983Data.rawMag[1];
+	mag[2] += hmc5983Data.rawMag[2];
+    }
+
+    p[IMU_ACC_BIAS_X] = -(acc[0] / samples);
+    p[IMU_ACC_BIAS_Y] = -(acc[1] / samples);
+    p[IMU_ACC_BIAS_Z] = (GRAVITY - (acc[2] / samples));
+
+    p[IMU_GYO_BIAS_X] = -(gyo[0] / samples);
+    p[IMU_GYO_BIAS_Y] = -(gyo[1] / samples);
+    p[IMU_GYO_BIAS_Z] = -(gyo[2] / samples);
+
+//    p[IMU_MAG_BIAS_X] = mag[0] / samples;
+//    p[IMU_MAG_BIAS_Y] = mag[1] / samples;
+//    p[IMU_MAG_BIAS_Z] = mag[2] / samples;
+
+    navUkfResetBias();
+}
 
 void dIMUCalcTempDiff(void) {
     float temp = 0.0f;

@@ -29,6 +29,7 @@
 #include "util.h"
 #include "nav_ukf.h"
 #include "gps.h"
+#include "d_imu.h"
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -128,6 +129,21 @@ void supervisorTaskCode(void *unused) {
 	    else {
     		supervisorData.armTime = 0;
 	    }
+
+#ifdef HAS_DIGITAL_IMU
+	    // leveling function
+	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500 && RADIO_ROLL < -500 && RADIO_PITCH > +500) {
+		digitalHi(supervisorData.debugLed);
+		digitalHi(supervisorData.readyLed);
+
+		dIMUTare();
+
+		AQ_NOTICE("Leveled\n");
+
+		digitalLo(supervisorData.debugLed);
+		digitalLo(supervisorData.readyLed);
+	    }
+#endif
 	}
 	else if (supervisorData.state & STATE_ARMED) {
 	    // Disarm only if in manual mode

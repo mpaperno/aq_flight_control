@@ -97,5 +97,6 @@ extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *ro
 extern void navUkfZeroRate(float zRate, int axis);
 extern void navUkfFinish(void);
 extern void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q);
+extern void navUkfResetBias(void);
 
 #endif

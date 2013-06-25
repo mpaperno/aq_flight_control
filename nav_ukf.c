@@ -623,13 +623,25 @@ void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, f
 	    noise[2] = 2.0f;
 	}
 	else {
-	    noise[0] = 1e-7;
-	    noise[1] = 1e-7;
-	    noise[2] = 1e-7;
+	    noise[0] = 1e-7f;
+	    noise[1] = 1e-7f;
+	    noise[2] = 1e-7f;
 	}
 
 	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
     }
+}
+
+void navUkfResetBias(void) {
+    // acc bias
+    UKF_ACC_BIAS_X = 0.0f;
+    UKF_ACC_BIAS_Y = 0.0f;
+    UKF_ACC_BIAS_Z = 0.0f;
+
+    // gyo bias
+    UKF_GYO_BIAS_X = 0.0f;
+    UKF_GYO_BIAS_Y = 0.0f;
+    UKF_GYO_BIAS_Z = 0.0f;
 }
 
 void navUkfInitState(void) {
@@ -644,24 +656,24 @@ void navUkfInitState(void) {
     int i;//, j;
 
     // vel
-    UKF_VELN = 0.0;
-    UKF_VELE = 0.0;
-    UKF_VELD = 0.0;
+    UKF_VELN = 0.0f;
+    UKF_VELE = 0.0f;
+    UKF_VELD = 0.0f;
 
     // pos
-    UKF_POSN = 0.0;
-    UKF_POSE = 0.0;
+    UKF_POSN = 0.0f;
+    UKF_POSE = 0.0f;
     UKF_POSD = navUkfPresToAlt(AQ_PRESSURE);
 
     // acc bias
-    UKF_ACC_BIAS_X = 0.0;
-    UKF_ACC_BIAS_Y = 0.0;
-    UKF_ACC_BIAS_Z = 0.0;
+    UKF_ACC_BIAS_X = 0.0f;
+    UKF_ACC_BIAS_Y = 0.0f;
+    UKF_ACC_BIAS_Z = 0.0f;
 
     // gyo bias
-    UKF_GYO_BIAS_X = 0.0;
-    UKF_GYO_BIAS_Y = 0.0;
-    UKF_GYO_BIAS_Z = 0.0;
+    UKF_GYO_BIAS_X = 0.0f;
+    UKF_GYO_BIAS_Y = 0.0f;
+    UKF_GYO_BIAS_Z = 0.0f;
 
     // quat
     UKF_Q1 =  1.0f;
