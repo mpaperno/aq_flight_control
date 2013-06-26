@@ -259,6 +259,9 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
     uint16_t command;
     float param;
     uint8_t ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
+#ifdef MAVLINK_ENABLED_AUTOQUAD
+    static char s[48];
+#endif
 
     command = mavlink_msg_command_long_get_command(msg);
 
