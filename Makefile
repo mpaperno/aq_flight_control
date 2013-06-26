@@ -10,7 +10,13 @@
 #		make all BUILD_TYPE=Debug					# build with compiler debugging flags/options enabled
 #		make all BOARD_REV=1 INCR_BUILDNUM=0	# build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
 
-# Defaults - modify here or on command line
+
+# Include user-specific settings file, if any, in regular Makefile format.
+# This file can set any default variable values you wish to override (all defaults are listed below).
+# The .user file is not included with the source code distribution, so it will not be overwritten.
+-include Makefile.user
+
+# Defaults - modify here, on command line, or in Makefile.user
 #
 # Output folder name; Use 'Debug' to set debug compiler options;
 BUILD_TYPE ?= Release
@@ -32,7 +38,7 @@ ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 else 
 	DEBUG_BUILD ?= 0
 endif
-# Build with HW flow control disabled? (0|1)
+# Build with HW flow control disabled on COM port1? (0|1)
 HW_FC_NONE ?= 0
 # Flashing interface (Linux only)
 USB_DEVICE ?= /dev/ttyUSB0
@@ -63,6 +69,11 @@ AQLIB_PATH ?= ..
 BUILD_PATH ?= .
 #BUILD_PATH ?= ..
 
+# Add preprocessor definitions here (eg. -DCOMM_DISABLE_FLOW_CONTROL2 to disable flow control on COM port 2)
+CC_VARS ?=
+
+
+# defaults end
 
 #
 ## probably don't need to change anything below here ##
@@ -139,13 +150,13 @@ CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=
 
 # macro definitions to pass via compiler command line
 #
-CC_VARS = -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG -D__TARGET_F4XX= -DSTM32F4XX= -D__FPU_PRESENT \
+CC_VARS += -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG -D__TARGET_F4XX= -DSTM32F4XX= -D__FPU_PRESENT \
 	-DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER 
 
 CC_VARS += -DBOARD_VERSION=$(BOARD_VER) -DBOARD_REVISION=$(BOARD_REV)
 
 ifeq ($(HW_FC_NONE),1)
-	CC_VARS += -DMAVLINK_SERIAL_PORT_FLOW_NONE
+	CC_VARS += -DCOMM_DISABLE_FLOW_CONTROL1
 endif
 
 # Additional target(s) to build based on conditionals
