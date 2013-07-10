@@ -167,7 +167,7 @@ void signalingInit(void) {
 // initiate a one-time event, eg. arming/disarming
 // eventTyp should be one of signalingEventTypes
 void signalingOnetimeEvent(int eventType) {
-    if (eventType < 0 || eventType > SIG_EVENT_ENUM_END)
+    if (eventType < 0 || eventType >= SIG_EVENT_ENUM_END)
 	return;
 
     // shut down any current event signals
@@ -201,7 +201,7 @@ void signalingEvent() {
 	case 2: // event is in progress
 	    signalingWriteOutput(sigData.oneTimeEvtTyp);
 	    // see if we're done  TODO: allow events longer than one pattern length
-	    if (sigData.patPos++ == sigData.patLen)
+	    if (++sigData.patPos == sigData.patLen)
 		sigData.oneTimeEvtStat = 1;
 	    break;
 	}
@@ -275,7 +275,7 @@ void signalingEvent() {
 	break;
     }
 
-    if (sigData.patLen == ++sigData.patPos)
+    if (++sigData.patPos == sigData.patLen)
 	sigData.patPos = 0;
 
 }
