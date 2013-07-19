@@ -72,7 +72,7 @@ int futabaCharIn(unsigned char c) {
 
     case FUTABA_WAIT_END:
 	futabaData.state = FUTABA_WAIT_SYNC;
-	if (c == FUTABA_END_CHAR) {
+	if ((c & FUTABA_END_CHAR) == 0) {
 	    return futabaDecode();
 	}
 	break;
