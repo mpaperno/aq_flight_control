@@ -29,7 +29,8 @@ radioStruct_t radioData __attribute__((section(".ccm")));
 OS_STK *radioTaskStack;
 
 // calculate radio reception quality
-void radioReceptionQuality(int8_t q) {
+#pragma GCC optimize ("-fno-inline")
+static void radioReceptionQuality(int8_t q) {
     radioData.quality = utilFilter(&radioData.qualityFilter, ((float)q + 1)) * 0.5f * 100.0f;
 }
 
