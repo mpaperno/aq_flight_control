@@ -29,7 +29,7 @@ OS_STK *dIMUTaskStack;
 
 dImuStruct_t dImuData __attribute__((section(".ccm")));
 
-uint16_t dImuCalibParameters[] = {
+const uint16_t dImuCalibParameters[] = {
     IMU_ACC_BIAS_X,
     IMU_ACC_BIAS_Y,
     IMU_ACC_BIAS_Z,
@@ -60,6 +60,27 @@ uint16_t dImuCalibParameters[] = {
     IMU_ACC_ALGN_YZ,
     IMU_ACC_ALGN_ZX,
     IMU_ACC_ALGN_ZY,
+    IMU_GYO_BIAS_X,
+    IMU_GYO_BIAS_Y,
+    IMU_GYO_BIAS_Z,
+    IMU_GYO_BIAS1_X,
+    IMU_GYO_BIAS1_Y,
+    IMU_GYO_BIAS1_Z,
+    IMU_GYO_BIAS2_X,
+    IMU_GYO_BIAS2_Y,
+    IMU_GYO_BIAS2_Z,
+    IMU_GYO_BIAS3_X,
+    IMU_GYO_BIAS3_Y,
+    IMU_GYO_BIAS3_Z,
+    IMU_GYO_SCAL_X,
+    IMU_GYO_SCAL_Y,
+    IMU_GYO_SCAL_Z,
+    IMU_GYO_ALGN_XY,
+    IMU_GYO_ALGN_XZ,
+    IMU_GYO_ALGN_YX,
+    IMU_GYO_ALGN_YZ,
+    IMU_GYO_ALGN_ZX,
+    IMU_GYO_ALGN_ZY,
     IMU_MAG_BIAS_X,
     IMU_MAG_BIAS_Y,
     IMU_MAG_BIAS_Z,
@@ -89,38 +110,17 @@ uint16_t dImuCalibParameters[] = {
     IMU_MAG_ALGN_YX,
     IMU_MAG_ALGN_YZ,
     IMU_MAG_ALGN_ZX,
-    IMU_MAG_ALGN_ZY,
-    IMU_GYO_BIAS_X,
-    IMU_GYO_BIAS_Y,
-    IMU_GYO_BIAS_Z,
-    IMU_GYO_BIAS1_X,
-    IMU_GYO_BIAS1_Y,
-    IMU_GYO_BIAS1_Z,
-    IMU_GYO_BIAS2_X,
-    IMU_GYO_BIAS2_Y,
-    IMU_GYO_BIAS2_Z,
-    IMU_GYO_BIAS3_X,
-    IMU_GYO_BIAS3_Y,
-    IMU_GYO_BIAS3_Z,
-    IMU_GYO_SCAL_X,
-    IMU_GYO_SCAL_Y,
-    IMU_GYO_SCAL_Z,
-    IMU_GYO_ALGN_XY,
-    IMU_GYO_ALGN_XZ,
-    IMU_GYO_ALGN_YX,
-    IMU_GYO_ALGN_YZ,
-    IMU_GYO_ALGN_ZX,
-    IMU_GYO_ALGN_ZY
+    IMU_MAG_ALGN_ZY
 };
 
 void dIMUTare(void) {
-    float acc[3], gyo[3], mag[3];
+    float acc[3], gyo[3];
     uint32_t lastUpdate;
     float samples = 0.5f / DIMU_DT; // 0.5 second
     int i;
 
     // reset all parameters
-    for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++)
+    for (i = 0; dImuCalibParameters[i] != IMU_MAG_BIAS_X; i++)
 	p[dImuCalibParameters[i]] = 0.0f;
 
     p[IMU_ACC_SCAL_X] = 1.0f;
@@ -130,10 +130,6 @@ void dIMUTare(void) {
     p[IMU_GYO_SCAL_X] = 1.0f;
     p[IMU_GYO_SCAL_Y] = 1.0f;
     p[IMU_GYO_SCAL_Z] = 1.0f;
-
-    p[IMU_MAG_SCAL_X] = 1.0f;
-    p[IMU_MAG_SCAL_Y] = 1.0f;
-    p[IMU_MAG_SCAL_Z] = 1.0f;
 
     lastUpdate = dImuData.lastUpdate;
 
@@ -147,7 +143,6 @@ void dIMUTare(void) {
     for (i = 0; i < 3; i++) {
 	acc[i] = 0.0f;
 	gyo[i] = 0.0f;
-	mag[i] = 0.0f;
     }
 
     for (i = 0; i < (int)samples; i++) {
@@ -162,10 +157,6 @@ void dIMUTare(void) {
 	gyo[0] += mpu6000Data.rawGyo[0];
 	gyo[1] += mpu6000Data.rawGyo[1];
 	gyo[2] += mpu6000Data.rawGyo[2];
-
-	mag[0] += hmc5983Data.rawMag[0];
-	mag[1] += hmc5983Data.rawMag[1];
-	mag[2] += hmc5983Data.rawMag[2];
     }
 
     p[IMU_ACC_BIAS_X] = -(acc[0] / samples);
@@ -175,10 +166,6 @@ void dIMUTare(void) {
     p[IMU_GYO_BIAS_X] = -(gyo[0] / samples);
     p[IMU_GYO_BIAS_Y] = -(gyo[1] / samples);
     p[IMU_GYO_BIAS_Z] = -(gyo[2] / samples);
-
-//    p[IMU_MAG_BIAS_X] = mag[0] / samples;
-//    p[IMU_MAG_BIAS_Y] = mag[1] / samples;
-//    p[IMU_MAG_BIAS_Z] = mag[2] / samples;
 
     navUkfResetBias();
 }
