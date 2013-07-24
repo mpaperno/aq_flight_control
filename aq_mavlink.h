@@ -24,9 +24,13 @@
 #include "serial.h"
 #include "digital.h"
 #include "config.h"
+// lots of warnings coming from mavlink
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include "../mavlink_types.h"
+#pragma GCC diagnostic pop
 
-#define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    //  1Hz
+#define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    // 1Hz
 #define MAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
 #define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second
 #define MAVLINK_NOTICE_DEPTH		    25

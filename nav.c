@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "nav.h"
@@ -469,7 +469,7 @@ void navNavigate(void) {
 	// rotate to earth frame
 	navData.holdSpeedN = x * navUkfData.yawCos - y * navUkfData.yawSin;
 	navData.holdSpeedE = y * navUkfData.yawCos + x * navUkfData.yawSin;
-    }
+	}
     }
     // orbit POI
     else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_ORBIT) {

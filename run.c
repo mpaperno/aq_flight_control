@@ -102,7 +102,7 @@ void runTaskCode(void *unused) {
 		    runData.accMask = 1.0f;
 	    }
 
-	    navUkfGpsPosUpate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc*runData.accMask, gpsData.vAcc*runData.accMask);
+	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc*runData.accMask, gpsData.vAcc*runData.accMask);
 	    CoClearFlag(gpsData.gpsPosFlag);
 	    // refine static sea level pressure based on better GPS altitude fixes
 	    if (gpsData.hAcc < runData.bestHacc && gpsData.hAcc < NAV_MIN_GPS_ACC) {
@@ -111,7 +111,7 @@ void runTaskCode(void *unused) {
 	    }
 	}
 	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK) {
-	    navUkfGpsVelUpate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc*runData.accMask);
+	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc*runData.accMask);
 	    CoClearFlag(gpsData.gpsVelFlag);
 	}
 	// observe that the rates are exactly 0 if not flying or moving

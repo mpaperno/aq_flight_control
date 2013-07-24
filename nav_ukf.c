@@ -460,7 +460,7 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfMagUpdate);
 }
 
-void navUkfGpsPosUpate(uint32_t gpsMicros, double lat, double lon, float alt, float hAcc, float vAcc) {
+void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, float hAcc, float vAcc) {
     float y[3];
     float noise[3];
     float posDelta[3];
@@ -548,7 +548,7 @@ void navUkfGpsPosUpate(uint32_t gpsMicros, double lat, double lon, float alt, fl
     }
 }
 
-void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, float sAcc) {
+void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, float sAcc) {
     float y[3];
     float noise[3];
     float velDelta[3];
@@ -609,10 +609,6 @@ void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, f
 #endif
     }
     else {
-	// experimental
-//	UKF_ACC_BIAS_X = 0.0f;
-//	UKF_ACC_BIAS_Y = 0.0f;
-
 	y[0] = 0.0f;
 	y[1] = 0.0f;
 	y[2] = 0.0f;
@@ -630,6 +626,9 @@ void navUkfGpsVelUpate(uint32_t gpsMicros, float velN, float velE, float velD, f
 
 	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
     }
+}
+
+void navUkfOpticalFlow(float x, float y, uint8_t quality, float ground) {
 }
 
 void navUkfResetBias(void) {

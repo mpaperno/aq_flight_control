@@ -59,6 +59,7 @@
 
 #ifndef M_PI
 #define M_PI			3.14159265f
+#define M_PI_2			(M_PI / 2.0f)
 #endif
 
 #define RAD_TO_DEG		(180.0f / M_PI)

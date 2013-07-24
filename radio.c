@@ -31,7 +31,7 @@ OS_STK *radioTaskStack;
 // calculate radio reception quality
 #pragma GCC optimize ("-fno-inline")
 static void radioReceptionQuality(int8_t q) {
-    radioData.quality = utilFilter(&radioData.qualityFilter, ((float)q + 1)) * 0.5f * 100.0f;
+    radioData.quality = utilFilter(&radioData.qualityFilter, (float)(q + 1)) * 0.5f * 100.0f;
 }
 
 void radioTaskCode(void *unused) {

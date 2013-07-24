@@ -19,7 +19,11 @@
 #include "aq.h"
 #ifdef USE_MAVLINK
 #include "aq_mavlink.h"
+// lots of warnings coming from mavlink
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include "mavlink.h"
+#pragma GCC diagnostic pop
 #include "config.h"
 #include "aq_timer.h"
 #include "imu.h"
@@ -633,6 +637,16 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 			    mavlinkData.streamInterval[stream_id] = 0;
 			}
 		    }
+		    break;
+
+		case MAVLINK_MSG_ID_OPTICAL_FLOW:
+		    navUkfOpticalFlow(mavlink_msg_optical_flow_get_flow_comp_m_x(&msg),
+					mavlink_msg_optical_flow_get_flow_comp_m_y(&msg),
+					mavlink_msg_optical_flow_get_quality(&msg),
+					mavlink_msg_optical_flow_get_ground_distance(&msg));
+		    break;
+
+		case MAVLINK_MSG_ID_HEARTBEAT:
 		    break;
 
 		default:

@@ -223,11 +223,7 @@ void utilFilterInit3(utilFilter_t *f, float dt, float tau, float setpoint) {
     utilFilterInit(&f[2], dt, tau, setpoint);
 }
 
-inline float utilFilter3(utilFilter_t *f, float signal) {
-    return utilFilter(&f[0], utilFilter(&f[1], utilFilter(&f[2], signal)));
-}
-
-inline float utilFilter(utilFilter_t *f, float signal) {
+float utilFilter(utilFilter_t *f, float signal) {
     register float z1;
 
     z1 = f->z1 + (signal - f->z1) * f->tc;
@@ -235,6 +231,10 @@ inline float utilFilter(utilFilter_t *f, float signal) {
     f->z1 = z1;
 
     return z1;
+}
+
+float utilFilter3(utilFilter_t *f, float signal) {
+    return utilFilter(&f[0], utilFilter(&f[1], utilFilter(&f[2], signal)));
 }
 
 int ftoa(char *buf, float f, unsigned int digits) {
