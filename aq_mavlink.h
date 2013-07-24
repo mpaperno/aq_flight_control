@@ -39,6 +39,7 @@
 #define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
 
 typedef struct {
+    mavlink_status_t mavlinkStatus;
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;

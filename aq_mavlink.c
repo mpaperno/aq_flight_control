@@ -331,7 +331,6 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
     mavlink_message_t msg;
-    mavlink_status_t status;
     char paramId[17];
     uint8_t c;
 
@@ -339,7 +338,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
     while (commAvailable(r)) {
 	c = commReadChar(r);
 	// Try to get a new message
-	if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
+	if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &mavlinkData.mavlinkStatus)) {
 	    // Handle message
 	    switch(msg.msgid) {
 		// TODO: finish this block
@@ -656,7 +655,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 	}
 
 	// Update global packet drops counter
-	mavlinkData.packetDrops += status.packet_rx_drop_count;
+	mavlinkData.packetDrops += mavlinkData.mavlinkStatus.packet_rx_drop_count;
     }
 }
 
