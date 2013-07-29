@@ -23,6 +23,7 @@
 #include "spektrum.h"
 #include "futaba.h"
 #include "ppm.h"
+#include "mlinkrx.h"
 #include "grhott.h"
 #include "digital.h"
 #include "util.h"
@@ -33,7 +34,7 @@
 #define RADIO_MAX_CHANNELS	18
 #define RADIO_UPDATE_TIMEOUT	60000	// maximum time in micros between valid radio updates before signal is considered unstable;
 
-#define RADIO_THROT             radioData.channels[(int)p[RADIO_THRO_CH]]
+#define RADIO_THROT		radioData.channels[(int)p[RADIO_THRO_CH]]
 #define RADIO_ROLL		radioData.channels[(int)p[RADIO_ROLL_CH]]
 #define RADIO_PITCH		radioData.channels[(int)p[RADIO_PITC_CH]]
 #define RADIO_RUDD		radioData.channels[(int)p[RADIO_RUDD_CH]]
@@ -50,11 +51,12 @@
 #define RADIO_QUALITY           radioData.quality
 
 enum radioTypes {
-    RADIO_TYPE_SPEKTRUM11 = 0,
-    RADIO_TYPE_SPEKTRUM10,
-    RADIO_TYPE_SBUS,
-    RADIO_TYPE_PPM,
-    RADIO_TYPE_SUMD
+	RADIO_TYPE_SPEKTRUM11 = 0,
+	RADIO_TYPE_SPEKTRUM10,
+	RADIO_TYPE_SBUS,
+	RADIO_TYPE_PPM,
+	RADIO_TYPE_SUMD,
+	RADIO_TYPE_MLINK
 };
 
 typedef struct {
@@ -75,3 +77,4 @@ extern radioStruct_t radioData;
 extern void radioInit(void);
 
 #endif
+

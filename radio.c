@@ -74,13 +74,21 @@ void radioTaskCode(void *unused) {
 		    radioReceptionQuality(q);
 		}
 	    break;
+
+	case RADIO_TYPE_MLINK:
+		while (serialAvailable(s))
+		if ((q = mlinkrxCharIn(serialRead(s)))) {
+			radioData.lastUpdate = timerMicros();
+			radioReceptionQuality(q);
+		}
+		break;
 	}
 
 	// no radio?
 	if (timerMicros() - radioData.lastUpdate > RADIO_UPDATE_TIMEOUT)
 	    radioReceptionQuality(-1);  // minimum signal quality (0%) if no updates within timeout value
 	else if (radioData.radioType == RADIO_TYPE_PPM)
-            radioReceptionQuality(ppmGetSignalQuality());  // signal quality based on PPM status
+		radioReceptionQuality(ppmGetSignalQuality());  // signal quality based on PPM status
     }
 }
 
@@ -139,6 +147,11 @@ void radioInit(void) {
 	radioRCSelect(0);
         break;
 
+    case RADIO_TYPE_MLINK:
+        mlinkrxInit();
+        radioRCSelect(0);
+        break;
+
     default:
 	AQ_NOTICE("WARNING: Invalid radio type!");
 	return;
@@ -148,3 +161,4 @@ void radioInit(void) {
 
     radioData.radioTask = CoCreateTask(radioTaskCode, (void *)0, RADIO_PRIORITY, &radioTaskStack[RADIO_STACK_SIZE-1], RADIO_STACK_SIZE);
 }
+

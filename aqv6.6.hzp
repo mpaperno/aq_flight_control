@@ -114,6 +114,8 @@
       <file file_name="getbuildnum.h"/>
       <file file_name="grhott.c"/>
       <file file_name="grhott.h"/>
+      <file file_name="mlinkrx.c"/>
+      <file file_name="mlinkrx.h"/>
     </folder>
     <folder Name="System Files">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
