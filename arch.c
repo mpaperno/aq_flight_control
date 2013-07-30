@@ -41,6 +41,9 @@ OS_STK *InitTaskContext(FUNCPtr task,void *param,OS_STK *pstk)
 	*(context)   = (U32)param;            /* R0: argument */
 	context      = context - 8;
 
+    context = context - 32;		// NEZ - FPU registers
+    *(--context) = (U32)0x30000000;	// NEZ - FPU status reg
+
     return (context);                   /* Returns location of new stack top. */
 }
 

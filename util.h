@@ -23,7 +23,7 @@
 #include "CoOS.h"
 #include <stdlib.h>
 
-#define	UTIL_STACK_CHECK	16		// uncomment to allow system to self check for stack overflows
+#define	UTIL_STACK_CHECK	CFG_MAX_USER_TASKS		// uncomment to allow system to self check for stack overflows
 
 #define UTIL_CCM_HEAP_SIZE	(0x2600)	// 38KB
 

@@ -28,7 +28,7 @@
 #include "digital.h"
 #include "util.h"
 
-#define RADIO_STACK_SIZE	64
+#define RADIO_STACK_SIZE	100
 #define RADIO_PRIORITY		25
 
 #define RADIO_MAX_CHANNELS	18

@@ -48,10 +48,10 @@ typedef struct {
     float rawGyo[3];
     float dRateRawGyo[3];
     float gyoOffset[3];
-    float acc[3];
-    float temp;
-    float gyo[3];
-    float dRateGyo[3];
+    volatile float acc[3];
+    volatile float temp;
+    volatile float gyo[3];
+    volatile float dRateGyo[3];
     volatile uint32_t lastUpdate;
     uint8_t readReg;
     uint8_t enabled;

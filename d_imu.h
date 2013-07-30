@@ -46,7 +46,7 @@
 #include "ms5611.h"
 #endif
 
-#define DIMU_STACK_SIZE	    200
+#define DIMU_STACK_SIZE	    250
 #define DIMU_PRIORITY	    11
 
 #define DIMU_PERIOD	    5000			// us

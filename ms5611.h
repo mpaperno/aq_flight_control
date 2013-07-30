@@ -41,8 +41,8 @@ typedef struct {
     uint8_t startPresConv;
     uint8_t adcRead;
     float rawTemp;
-    float temp;
-    float pres;
+    volatile float temp;
+    volatile float pres;
     float alt;
     volatile uint32_t lastUpdate;
 } ms5611Struct_t;

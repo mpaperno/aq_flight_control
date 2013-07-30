@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _supervisor_h
@@ -22,7 +22,7 @@
 #include <CoOS.h>
 #include "digital.h"
 
-#define SUPERVISOR_STACK_SIZE	    72
+#define SUPERVISOR_STACK_SIZE	    105
 #define SUPERVISOR_PRIORITY	    34
 
 #define SUPERVISOR_RATE		    10		    // Hz

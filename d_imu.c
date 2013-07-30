@@ -170,7 +170,7 @@ void dIMUTare(void) {
     navUkfResetBias();
 }
 
-void dIMUCalcTempDiff(void) {
+static void dIMUCalcTempDiff(void) {
     float temp = 0.0f;
     int i = 0;
 
@@ -189,7 +189,7 @@ void dIMUCalcTempDiff(void) {
     dImuData.dTemp3 = dImuData.dTemp2 * dImuData.dTemp;
 }
 
-void dIMUTaskCode(void *unused) {
+static void dIMUTaskCode(void *unused) {
     uint32_t loops = 0;
 
     while (1) {
@@ -230,7 +230,7 @@ void dIMUTaskCode(void *unused) {
 }
 
 #ifdef DIMU_HAVE_EEPROM
-void dIMUReadCalib(void) {
+static void dIMUReadCalib(void) {
     uint8_t *buf;
     int size;
     int p1 = 0;
@@ -248,7 +248,7 @@ void dIMUReadCalib(void) {
     }
 }
 
-void dIMUWriteCalib(void) {
+static void dIMUWriteCalib(void) {
     uint8_t lineBuf[128];
     uint8_t *buf;
     int n;

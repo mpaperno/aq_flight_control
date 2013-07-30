@@ -13,17 +13,12 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "fpu.h"
 #include <CoOS.h>
 #include <OsTask.h>
-
-uint32_t fpuRegisters[CFG_MAX_USER_TASKS*33] __attribute__((section(".ccm")));
-#ifdef FPU_LAZY_SWITCH
-uint8_t fpuCurrentTask;
-#endif
 
 // setup system to do lazy FPU context switching triggered by the NOCP UsageFault exception
 void fpuInit(void) {
@@ -35,19 +30,3 @@ void fpuInit(void) {
     __fpu_disable();					    // disable FPU access
 #endif
 }
-
-#ifdef FPU_LAZY_SWITCH
-void UsageFault_Handler(void) {
-    // test USGFAULTACT flag && Usage Fault Status Register == NOCP
-//    if ((SCB->SHCSR & SCB_SHCSR_USGFAULTACT_Msk) && (SCB->CFSR & SCB_CFSR_USGFAULTSR_Msk) == 0x80000) {
-	__fpu_enable();
-	// only swap FPU context if taskID has changed
-	if (fpuCurrentTask != TCBRunning->taskID) {
-	    __vfp_store(&fpuRegisters[33*fpuCurrentTask]);
-	    fpuCurrentTask = TCBRunning->taskID;
-	    __vfp_restore(&fpuRegisters[33*fpuCurrentTask]);
-	}
-	SCB->CFSR = 0x80000;		// clear NOCP flag
-//    }
-}
-#endif

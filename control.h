@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _control_h
@@ -23,7 +23,7 @@
 #include "util.h"
 #include <CoOS.h>
 
-#define CONTROL_STACK_SIZE	150//80
+#define CONTROL_STACK_SIZE	200
 #define CONTROL_PRIORITY	5
 #define CONTROL_MAX_THROT	(1400 * p[CTRL_FACT_THRO])
 
