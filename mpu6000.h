@@ -31,11 +31,16 @@
 #define MPU6000_BYTES		    15
 #define MPU6000_SLOT_SIZE	    ((MPU6000_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 
-//#define MPU6000_SLOTS		    40	    // 200Hz bandwidth
-#define MPU6000_SLOTS		    80	    // 100Hz bandwidth
-//#define MPU6000_SLOTS		    160	    // 50Hz bandwidth
+#ifdef USE_L1_ATTITUDE
+    #define MPU6000_SLOTS	    80	    // 100Hz bandwidth
+    #define MPU6000_DRATE_SLOTS	    20	    // 400Hz
+#else
+    #define MPU6000_SLOTS	    80	    // 100Hz bandwidth
+    #define MPU6000_DRATE_SLOTS	    80	    // 100Hz
+#endif
 
-#define MPU6000_DRATE_SLOTS	    20	    // 400Hz
+//#define MPU6000_SLOTS		    40	    // 200Hz bandwidth
+//#define MPU6000_SLOTS		    160	    // 50Hz bandwidth
 
 typedef struct {
     utilFilter_t tempFilter;
