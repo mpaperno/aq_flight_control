@@ -81,7 +81,7 @@ const char *esc32ParameterStrings[] = {
     "SERVO_SCALE"
 };
 
-float esc32ReadParamTransaction(uint8_t paramId) {
+static float esc32ReadParamTransaction(uint8_t paramId) {
     uint8_t *p;
     float value;
 
@@ -99,7 +99,7 @@ float esc32ReadParamTransaction(uint8_t paramId) {
 }
 
 // require parameter to be read twice the same
-float esc32ReadParam(uint8_t paramId) {
+static float esc32ReadParam(uint8_t paramId) {
     float value = NAN;
     float tmp;
     int i;
@@ -118,7 +118,7 @@ float esc32ReadParam(uint8_t paramId) {
     return NAN;
 }
 
-float esc32WriteParam(uint8_t paramId, float value) {
+static float esc32WriteParam(uint8_t paramId, float value) {
     uint8_t *p;
 
     owData.buf[0] = OW_PARAM_WRITE;
@@ -134,7 +134,7 @@ float esc32WriteParam(uint8_t paramId, float value) {
     return esc32ReadParam(paramId);
 }
 
-int8_t esc32ParamIdByName(char *param) {
+static int8_t esc32ParamIdByName(char *param) {
     int i;
 
     for (i = 0; i < ESC32_CONFIG_NUM_PARAMS; i++)
@@ -144,19 +144,7 @@ int8_t esc32ParamIdByName(char *param) {
     return -1;
 }
 
-float esc32ReadParamByName(char *param) {
-    float value = NAN;
-    int paramId;
-
-    paramId = esc32ParamIdByName(param);
-
-    if (paramId >= 0)
-	value  = esc32ReadParam(paramId);
-
-    return value;
-}
-
-int8_t esc32WriteParamByName(char *param, float value) {
+static int8_t esc32WriteParamByName(char *param, float value) {
     int paramId;
 
     paramId = esc32ParamIdByName(param);
@@ -173,7 +161,7 @@ int8_t esc32WriteParamByName(char *param, float value) {
 }
 
 // set ESC32 mode
-uint8_t esc32Mode(uint8_t mode) {
+static uint8_t esc32Mode(uint8_t mode) {
     owData.buf[0] = OW_SET_MODE;
     owData.buf[1] = mode;
     owTransaction(2, 2);
@@ -189,13 +177,13 @@ uint8_t esc32Mode(uint8_t mode) {
 }
 
 // read esc32 params from uSD
-int8_t esc32ReadFile(char *fname) {
+static int8_t esc32ReadFile(char *fname) {
     char *fileBuf;
     char *lineBuf;
     char param[16];
     int paramId;
     float value;
-    int8_t needsConfigWrite;
+    int8_t needsConfigWrite = 0;
     int8_t fh;
     char c;
     int ret;
@@ -242,8 +230,7 @@ int8_t esc32ReadFile(char *fname) {
 			    if (esc32ReadParam(paramId) != value) {
 				// successful write?
 				if (esc32WriteParam(paramId, value)) {
-				    AQ_NOTICE("esc32: wrote parameter from file\n");
-				    needsConfigWrite = 1;
+				    needsConfigWrite++;
 				}
 				else {
 				    AQ_NOTICE("esc32: parameter write failed!\n");
@@ -271,6 +258,8 @@ int8_t esc32ReadFile(char *fname) {
 }
 
 void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
+    int i;
+
     owInit((GPIO_TypeDef *)port, pin);
 
     // get ESC32 version
@@ -287,12 +276,13 @@ void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
 	    esc32WriteParamByName("ESC32_STARTUP_MODE", (float)mode);
 	}
 
-	if (esc32ReadFile(0)) {
+	i = esc32ReadFile(0);
+	if (i > 0) {
 	    // write to flash
 	    owData.buf[0] = OW_CONFIG_WRITE;
 	    owTransaction(1, 0);
 
-	    AQ_NOTICE("ESC32: stored config to flash\n");
+	    AQ_PRINTF("ESC32: updated %d params in flash\n", i);
 
 	    // wait for flash to finish
 	    yield(100);

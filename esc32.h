@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _esc32_h
@@ -75,9 +75,6 @@ enum esc32configParameters {
     ESC32_CONFIG_NUM_PARAMS
 };
 
-extern float esc32ReadParam(uint8_t paramId);
-extern float esc32WriteParam(uint8_t paramId, float value);
-extern uint8_t esc32Mode(uint8_t mode);
 extern void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode);
 
 #endif
