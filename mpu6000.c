@@ -50,7 +50,7 @@ void mpu6600InitialBias(void) {
     utilFilterReset(&mpu6000Data.tempFilter, mpu6000Data.temp);
 }
 
-static void mpu6000CalibAcc(float *in, float *out) {
+static void mpu6000CalibAcc(float *in, volatile float *out) {
     float a, b, c;
     float x, y, z;
 
@@ -101,7 +101,7 @@ static void mpu6000ScaleAcc(int32_t *in, float *out, float divisor) {
 #endif
 }
 
-static void mpu6000CalibGyo(float *in, float *out) {
+static void mpu6000CalibGyo(float *in, volatile float *out) {
     float a, b, c;
     float x, y, z;
 
