@@ -168,10 +168,7 @@ static void filerProcessRequest(filerFileStruct_t *f) {
 }
 
 void filerDebug(char *s, int r) {
-    static char buf[48];
-
-    sprintf(buf, "filer: %s [%d]\n", s, r);
-    AQ_NOTICE(buf);
+    AQ_PRINTF("filer: %s [%d]\n", s, r);
 }
 
 // open filesystem, format if necessary, update session file

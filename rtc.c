@@ -59,7 +59,6 @@ int rtcSetDataTime(int year, int month, int day, int hour, int minute, int secon
     }
     // otherwise set the clock
     else {
-	static char s[34];
 	RTC_TimeTypeDef time;
 	RTC_DateTypeDef date;
 	uint32_t tmpreg;
@@ -94,8 +93,7 @@ int rtcSetDataTime(int year, int month, int day, int hour, int minute, int secon
 	RTC_ExitInitMode();
 	RTC_WriteProtectionCmd(ENABLE);
 
-	sprintf(s, "RTC set: %d-%02d-%02d %02d:%02d:%02d UTC\n", date.RTC_Year+2000, date.RTC_Month, date.RTC_Date, time.RTC_Hours, time.RTC_Minutes, time.RTC_Seconds);
-	AQ_NOTICE(s);
+	AQ_PRINTF("RTC set: %d-%02d-%02d %02d:%02d:%02d UTC\n", date.RTC_Year+2000, date.RTC_Month, date.RTC_Date, time.RTC_Hours, time.RTC_Minutes, time.RTC_Seconds);
 
 	// return success
 	return 1;

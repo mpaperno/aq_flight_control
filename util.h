@@ -56,7 +56,7 @@ extern float utilFilter3(utilFilter_t *f, float signal);
 extern void utilFilterReset(utilFilter_t *f, float setpoint);
 extern void utilFilterReset3(utilFilter_t *f, float setpoint);
 extern int ftoa(char *buf, float f, unsigned int digits);
-extern void utilVersionString(char *s);
+extern void utilVersionString(void);
 #ifdef UTIL_STACK_CHECK
 extern void utilStackCheck(void);
 extern uint16_t stackFrees[UTIL_STACK_CHECK];

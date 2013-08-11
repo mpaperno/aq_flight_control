@@ -316,8 +316,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 #ifdef MAVLINK_ENABLED_AUTOQUAD
 	case MAV_CMD_AQ_REQUEST_VERSION: // send firmware version number;
-	    utilVersionString(s);
-	    AQ_NOTICE(s);
+	    utilVersionString();
 	    ack = MAV_CMD_ACK_OK;
 	    break;
 #endif

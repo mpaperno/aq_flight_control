@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -157,7 +157,6 @@ float esc32ReadParamByName(char *param) {
 }
 
 int8_t esc32WriteParamByName(char *param, float value) {
-    static char s[64];
     int paramId;
 
     paramId = esc32ParamIdByName(param);
@@ -168,8 +167,7 @@ int8_t esc32WriteParamByName(char *param, float value) {
 	    return 1;
     }
 
-    sprintf(s, "ESC32: failed to write %s param\n", param);
-    AQ_NOTICE(s);
+    AQ_PRINTF("ESC32: failed to write %s param\n", param);
 
     return -1;
 }
@@ -273,8 +271,6 @@ int8_t esc32ReadFile(char *fname) {
 }
 
 void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
-    static char s[32];
-
     owInit((GPIO_TypeDef *)port, pin);
 
     // get ESC32 version
@@ -282,8 +278,7 @@ void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
     owTransaction(1, 16);
 
     if (owData.status != OW_STATUS_NO_PRESENSE) {
-	sprintf(s, "ESC32 ver: %s\n", owData.buf);
-	AQ_NOTICE(s);
+	AQ_PRINTF("ESC32 ver: %s\n", owData.buf);
 
 	// set parameters
 	if (esc32ReadParam(ESC32_STARTUP_MODE) != (float)mode) {

@@ -94,6 +94,9 @@ void aqInit(void *pdata) {
 
     supervisorInitComplete();
 
+    // allow tasks to startup
+    yield(10);
+
     AQ_NOTICE("Initialization complete, READY.\n");
 
     // startup complete, reduce comm task priority

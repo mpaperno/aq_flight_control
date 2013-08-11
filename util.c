@@ -42,7 +42,6 @@ uint16_t stackFrees[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 char *stackNames[UTIL_STACK_CHECK] __attribute__((section(".ccm")));
 
 void utilStackCheck(void) {
-    static char s[64];
     int i, j;
 
     for (i = 0; i < numStacks; i++) {
@@ -52,8 +51,7 @@ void utilStackCheck(void) {
 	if (stackFrees[i] > j)
 	    stackFrees[i] = j;
 	if (j < 16) {
-	    sprintf(s, "Possible stack overflow [%s]!\n", stackNames[i]);
-	    AQ_NOTICE(s);
+	    AQ_PRINTF("Possible stack overflow [%s]!\n", stackNames[i]);
 	}
     }
 }
@@ -165,40 +163,22 @@ float constrainFloat(float i, float lo, float hi) {
     return i;
 }
 
-void utilVersionString(char *s) {
-    sprintf(s, "AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
+void utilVersionString(void) {
+    AQ_PRINTF("AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
 }
 
 void info(void) {
-    static char s[96];
-
-    yield(100);
-    sprintf(s, "AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
-    AQ_NOTICE(s);
-    yield(100);
+    AQ_PRINTF("AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
 
 #ifdef USE_MAVLINK
-    sprintf(s, "Mavlink SYS ID: %d\n", flashSerno(0) % 250);
-    AQ_NOTICE(s);
-    yield(100);
+    AQ_PRINTF("Mavlink SYS ID: %d\n", flashSerno(0) % 250);
 #endif
 
-    sprintf(s, "SYS Clock: %u MHz\n", rccClocks.SYSCLK_Frequency / 1000000);
-    AQ_NOTICE(s);
-    yield(100);
+    AQ_PRINTF("SYS Clock: %u MHz\n", rccClocks.SYSCLK_Frequency / 1000000);
+    AQ_PRINTF("%u/%u heap used/high water\n", heapUsed, heapHighWater);
+    AQ_PRINTF("%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
 
-    sprintf(s, "%u/%u heap used/high water\n", heapUsed, heapHighWater);
-    AQ_NOTICE(s);
-    yield(100);
-
-    sprintf(s, "%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
-    AQ_NOTICE(s);
-    yield(100);
-
-    utilVersionString(s);
-    AQ_NOTICE(s);
-    yield(100);
-
+    utilVersionString();
 }
 
 void utilFilterReset(utilFilter_t *f, float setpoint) {

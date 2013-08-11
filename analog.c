@@ -44,8 +44,6 @@ void analogDecode(void) {
 #endif
 
 void analogInit(void) {
-    static char s[32];	// TODO
-
 #ifdef ANALOG_DMA_STREAM
     DMA_InitTypeDef DMA_InitStructure;
     ADC_CommonInitTypeDef ADC_CommonInitStructure;
@@ -122,6 +120,5 @@ void analogInit(void) {
     else if (analogData.vIn < 25.8f)
 	analogData.batCellCount = 6;
 
-    sprintf(s, "Battery cells: %d\n", analogData.batCellCount);
-    AQ_NOTICE(s);
+    AQ_PRINTF("Battery cells: %d\n", analogData.batCellCount);
 }
