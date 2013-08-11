@@ -23,7 +23,8 @@
 
 #define COMM_STACK_SIZE		300
 #define COMM_PRIORITY		40
-#define COMM_NOTICE_DEPTH	25
+#define COMM_NOTICE_DEPTH	16  // must be power of 2
+#define COMM_NOTICE_LENGTH	64
 
 #define COMM_NUM_PORTS		4
 
@@ -38,6 +39,9 @@
 #define COMM_TX_NUM_SIZES	6
 
 #define COMM_MAX_PROTOCOLS	2
+
+#define AQ_NOTICE		commNotice
+#define AQ_PRINTF(fmt, args...)	{char *s = commGetNoticeBuf(); snprintf(s, COMM_NOTICE_LENGTH, fmt, args); commNotice(s);}
 
 enum commStreamTypes {
     COMM_TYPE_NONE	    = 0,
@@ -88,7 +92,8 @@ typedef struct {
     OS_TID commTask;
     OS_MutexID txBufferMutex;
     OS_EventID notices;
-    void *noticeQueue[COMM_NOTICE_DEPTH];
+    void *noticeQueue[COMM_NOTICE_DEPTH*2];
+    char noticeStrings[COMM_NOTICE_DEPTH][COMM_NOTICE_LENGTH];
 
     serialPort_t *serialPorts[COMM_NUM_PORTS];		    // serial port handles
 
@@ -114,6 +119,7 @@ typedef struct {
     uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
 
     uint8_t typesUsed;					    // types configured
+    uint8_t noticePointer;
     int8_t initialized;
 } commStruct_t;
 
@@ -124,6 +130,7 @@ extern void commRegisterNoticeFunc(commNoticeCallback_t *func);
 extern void commRegisterTelemFunc(commTelemCallback_t *func);
 extern void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func);
 extern void commNotice(const char *s);
+extern char *commGetNoticeBuf(void);
 extern commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize);
 extern void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size);
 extern uint8_t commAvailable(commRcvrStruct_t *r);

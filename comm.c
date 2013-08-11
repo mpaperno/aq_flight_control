@@ -28,6 +28,16 @@ OS_STK *commTaskStack;
 
 commStruct_t commData __attribute__((section(".ccm")));
 
+char *commGetNoticeBuf(void) {
+    uint8_t p;
+
+    UTIL_ISR_DISABLE;
+    p = (commData.noticePointer++ % COMM_NOTICE_DEPTH);
+    UTIL_ISR_ENABLE;
+
+    return (commData.noticeStrings[p]);
+}
+
 void commNotice(const char *s) {
     // post message and leave
     if (commData.initialized)
