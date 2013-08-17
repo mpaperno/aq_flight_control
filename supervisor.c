@@ -225,7 +225,15 @@ void supervisorTaskCode(void *unused) {
 
 		navData.missionLeg = 0;
 		RADIO_FLAPS = 500;    // mission mode
-
+	    }
+	    // otherwise, slow decent in PH mode
+	    else {
+		RADIO_FLAPS = 0;    // position hold
+		RADIO_AUX2 = 0;     // normal home mode
+		RADIO_PITCH = 0;    // center sticks
+		RADIO_ROLL = 0;
+		RADIO_RUDD = 0;
+		RADIO_THROT = 700 * 3 / 4;  // 1/4 max decent
 	    }
 	}
 
