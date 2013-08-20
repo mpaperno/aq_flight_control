@@ -162,7 +162,8 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	// radio loss
-	if ( (supervisorData.state & STATE_FLYING) && (navData.mode < NAV_STATUS_MISSION || (supervisorData.state & STATE_RADIO_LOSS2)) ) {
+	if ((supervisorData.state & STATE_FLYING) && (navData.mode < NAV_STATUS_MISSION || (supervisorData.state & STATE_RADIO_LOSS2))) {
+	    // regained?
 	    if (RADIO_QUALITY > 1.0f) {
 		supervisorData.lastGoodRadioMicros = timerMicros();
 
@@ -171,6 +172,7 @@ void supervisorTaskCode(void *unused) {
 
 		supervisorData.state &= ~(STATE_RADIO_LOSS1 | STATE_RADIO_LOSS2);
 	    }
+	    // loss 1
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS1) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS1) {
 		supervisorData.state |= STATE_RADIO_LOSS1;
 		AQ_NOTICE("Warning: Radio loss stage 1 detected\n");
@@ -183,57 +185,66 @@ void supervisorTaskCode(void *unused) {
 		RADIO_RUDD = 0;
 		RADIO_THROT = 700;  // center throttle
 	    }
+	    // loss 2
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
 		supervisorData.state |= STATE_RADIO_LOSS2;
 		AQ_NOTICE("Warning: Radio loss stage 2! Initiating recovery mission.\n");
 
-		navMission_t *wp;
-		uint8_t wpi = 0;
-		uint8_t fsOption = (uint8_t)p[SPVR_FS_RAD_ST2];
-		navClearWaypoints();
+		// only available with GPS
+		if (navData.navCapable) {
+		    navMission_t *wp;
+		    uint8_t wpi = 0;
+		    uint8_t fsOption = (uint8_t)p[SPVR_FS_RAD_ST2];
 
-		wp = navGetWaypoint(wpi++);
-		if (fsOption > SPVR_OPT_FS_RAD_ST2_LAND && navData.navCapable &&
-			navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon) > SUPERVISOR_HOME_POS_DETECT_RADIUS) {
-		    if (fsOption == SPVR_OPT_FS_RAD_ST2_ASCEND && UKF_ALTITUDE < navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT]) {
-			// wp = navGetHomeWaypoint();
-			wp->type = NAV_LEG_GOTO;
-			wp->relativeAlt = navData.homeLeg.relativeAlt;
-			wp->targetAlt = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT];
-			wp->targetLat = gpsData.lat;
-			wp->targetLon = gpsData.lon;
-			wp->targetRadius = SUPERVISOR_HOME_ALT_DETECT_MARGIN;
-			wp->maxHorizSpeed = navData.homeLeg.maxHorizSpeed;
-			wp->maxVertSpeed = navData.homeLeg.maxVertSpeed;
-			wp->poiHeading = navData.homeLeg.poiHeading;
+		    navClearWaypoints();
+		    wp = navGetWaypoint(wpi++);
+
+		    if (fsOption > SPVR_OPT_FS_RAD_ST2_LAND && navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon) > SUPERVISOR_HOME_POS_DETECT_RADIUS) {
+			// ascend
+			if (fsOption == SPVR_OPT_FS_RAD_ST2_ASCEND && UKF_ALTITUDE < navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT]) {
+			    wp->type = NAV_LEG_GOTO;
+			    wp->relativeAlt = navData.homeLeg.relativeAlt;
+			    wp->targetAlt = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT];
+			    wp->targetLat = gpsData.lat;
+			    wp->targetLon = gpsData.lon;
+			    wp->targetRadius = SUPERVISOR_HOME_ALT_DETECT_MARGIN;
+			    wp->maxHorizSpeed = navData.homeLeg.maxHorizSpeed;
+			    wp->maxVertSpeed = navData.homeLeg.maxVertSpeed;
+			    wp->poiHeading = navData.homeLeg.poiHeading;
+			    wp->loiterTime = 1e6;
+			    wp->poiAltitude = 0.0f;
+
+			    wp = navGetWaypoint(wpi++);
+			}
+
+			// home
+			wp->type = NAV_LEG_HOME;
+			wp->targetRadius = SUPERVISOR_HOME_POS_DETECT_RADIUS;
 			wp->loiterTime = 1e6;
 			wp->poiAltitude = 0.0f;
 
 			wp = navGetWaypoint(wpi++);
 		    }
-		    wp->type = NAV_LEG_HOME;
-		    wp->targetRadius = SUPERVISOR_HOME_POS_DETECT_RADIUS;
-		    wp->loiterTime = 1e6;
+
+		    // land
+		    wp->type = NAV_LEG_LAND;
+		    wp->maxVertSpeed = p[NAV_LANDING_VEL];
+		    wp->maxHorizSpeed = 0.0f;
 		    wp->poiAltitude = 0.0f;
 
-		    wp = navGetWaypoint(wpi++);
+		    // go
+		    navData.missionLeg = 0;
+		    RADIO_FLAPS = 500;    // mission mode
 		}
-		wp->type = NAV_LEG_LAND;
-		wp->maxVertSpeed = p[NAV_LANDING_VEL];
-		wp->maxHorizSpeed = 0.0f;
-		wp->poiAltitude = 0.0f;
-
-		navData.missionLeg = 0;
-		RADIO_FLAPS = 500;    // mission mode
-	    }
-	    // otherwise, slow decent in PH mode
-	    else {
-		RADIO_FLAPS = 0;    // position hold
-		RADIO_AUX2 = 0;     // normal home mode
-		RADIO_PITCH = 0;    // center sticks
-		RADIO_ROLL = 0;
-		RADIO_RUDD = 0;
-		RADIO_THROT = 700 * 3 / 4;  // 1/4 max decent
+		// no GPS, slow decent in PH mode
+		else {
+		    RADIO_FLAPS = 0;    // position hold
+		    RADIO_AUX2 = 0;     // normal home mode
+		    RADIO_PITCH = 0;    // center sticks
+		    RADIO_ROLL = 0;
+		    RADIO_RUDD = 0;
+		    RADIO_THROT = 700 * 3 / 4;  // 1/4 max decent
+		}
 	    }
 	}
 
