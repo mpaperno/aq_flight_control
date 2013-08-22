@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    108
+#define DEFAULT_CONFIG_VERSION	    109
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -305,19 +305,28 @@
 #define DEFAULT_IMU_PRESS_SENSE	    0.0f		// 0 == sensor #1, 1 == sensor #2, 2 == both
 
 
-#define DEFAULT_GMBL_PITCH_PORT	    0.0f		// 0 == disabled
-#define DEFAULT_GMBL_ROLL_PORT	    0.0f		// 0 == disabled
-#define DEFAULT_GMBL_PWM_MAX_RL    2250
-#define DEFAULT_GMBL_PWM_MIN_RL    750
-#define DEFAULT_GMBL_PWM_MAX_PT    2250
-#define DEFAULT_GMBL_PWM_MIN_PT    750
-#define DEFAULT_GMBL_PWM_FREQ	    200
-#define DEFAULT_GMBL_NTRL_PITCH	    1575
-#define DEFAULT_GMBL_NTRL_ROLL	    1442
-#define DEFAULT_GMBL_SCAL_PITCH	    (1.0f / 91.0f)
-#define DEFAULT_GMBL_SCAL_ROLL	    (1.0f / 70.0f)
-#define DEFAULT_GMBL_SLEW_RATE	    0.005f
-#define DEFAULT_GMBL_ROLL_EXPO      0.0f
+#define DEFAULT_GMBL_PITCH_PORT		0		// Gimbal pitch stabilization output port. 0 == disabled
+#define DEFAULT_GMBL_TILT_PORT		0		// Gimbal manual/PoI tilt control output port (can be same as PITCH_PORT to combine the 2 functions). 0 == disabled
+#define DEFAULT_GMBL_ROLL_PORT		0		// Gimbal roll stabilization output port. 0 == disabled
+#define DEFAULT_GMBL_PWM_MAX_RL		2250
+#define DEFAULT_GMBL_PWM_MIN_RL		750
+#define DEFAULT_GMBL_PWM_MAX_PT		2250
+#define DEFAULT_GMBL_PWM_MIN_PT		750
+#define DEFAULT_GMBL_PWM_FREQ		200
+#define DEFAULT_GMBL_NTRL_PITCH		1575
+#define DEFAULT_GMBL_NTRL_ROLL		1442
+#define DEFAULT_GMBL_SCAL_PITCH		(1.0f / 91.0f)
+#define DEFAULT_GMBL_SCAL_ROLL		(1.0f / 70.0f)
+#define DEFAULT_GMBL_SLEW_RATE		0.005f
+#define DEFAULT_GMBL_ROLL_EXPO		0.0f
+#define DEFAULT_GMBL_TRIG_PORT		0		// Triggering output port. 0 == disabled
+#define DEFAULT_GMBL_TRIG_CH_NEU	0		// Trigger radio channel AQ value at neutral position (to allow automated triggering)
+#define DEFAULT_GMBL_TRIG_ON_PWM	2100		// PWM output of trigger at full-press (on) position (for automated triggering)
+#define DEFAULT_GMBL_TRIG_ON_TIM	1000		// Time to keep shutter at on position, in ms
+#define DEFAULT_GMBL_TRIG_DIST		0.0f		// Activate trigger every this many meters. 0 == disabled
+#define DEFAULT_GMBL_TRIG_TIME		0		// Activate trigger every this many seconds. 0 == disabled
+#define DEFAULT_GMBL_PSTHR_CHAN		0		// Pure passthrough radio channel (eg. camera zoom, pan axis, lights, etc). 0 == disabled
+#define DEFAULT_GMBL_PSTHR_PORT		0		// Pure passthrough output port. 0 == disabled
 
 
 #define DEFAULT_SPVR_LOW_BAT1	    3.5f	    // cell volts

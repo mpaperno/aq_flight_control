@@ -33,6 +33,7 @@
 #include "radio.h"
 #include "util.h"
 #include "analog.h"
+#include "gimbal.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -139,7 +140,8 @@ loggerFields_t loggerFields[] = {
     {LOG_RADIO_CHANNEL15, LOG_TYPE_S16},
     {LOG_RADIO_CHANNEL16, LOG_TYPE_S16},
     {LOG_RADIO_CHANNEL17, LOG_TYPE_S16},
-    {LOG_RADIO_ERRORS, LOG_TYPE_U16}
+    {LOG_RADIO_ERRORS, LOG_TYPE_U16},
+    {LOG_GMBL_TRIGGER, LOG_TYPE_U16}
 };
 
 int loggerCopy8(void *to, void *from) {
@@ -582,6 +584,9 @@ void loggerSetup(void) {
 		break;
 	    case LOG_RADIO_ERRORS:
 		loggerData.fp[i].fieldPointer = (void *)&RADIO_ERROR_COUNT;
+		break;
+	    case LOG_GMBL_TRIGGER:
+		loggerData.fp[i].fieldPointer = (void *)&gimbalData.triggerLogVal;
 		break;
 	}
 
