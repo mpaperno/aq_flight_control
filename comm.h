@@ -26,6 +26,9 @@
 #define COMM_NOTICE_DEPTH	16  // must be power of 2
 #define COMM_NOTICE_LENGTH	64
 
+#define COMM_LOG_BUF_SIZE	512
+#define COMM_LOG_FNAME		"MSG"		// comment out to disable logging
+
 #define COMM_NUM_PORTS		4
 
 //#define COMM_DISABLE_FLOW_CONTROL1
@@ -117,10 +120,12 @@ typedef struct {
     uint8_t txPacketBufNum[COMM_TX_NUM_SIZES];		    // list of number of buffers per size
     void *txPacketBufs[COMM_TX_NUM_SIZES];		    // pointers to start of block for each buffer size
     uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
+    int logPointer;
 
     uint8_t typesUsed;					    // types configured
     uint8_t noticePointer;
     int8_t initialized;
+    uint8_t logHandle;
 } commStruct_t;
 
 extern commStruct_t commData;

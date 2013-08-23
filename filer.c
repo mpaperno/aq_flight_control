@@ -119,7 +119,7 @@ static int32_t filerProcessStream(filerFileStruct_t *f) {
     }
 
     // enough new to write?
-    while (f->tail > f->head || (f->head - f->tail) >= f->length/4) {
+    while (f->tail > f->head || (f->head - f->tail) >= f->length/4 || (f->length <= 512 && f->head != f->tail)) {
 	if (f->head > f->tail)
 	    size = f->head - f->tail;
 	else
@@ -223,7 +223,6 @@ int32_t filerInitFS(void) {
 }
 
 void filerTaskCode(void *p) {
-    int firstTime = 1;
     uint32_t res;
     int i;
 
@@ -237,23 +236,21 @@ void filerTaskCode(void *p) {
     memset(&filerData.fs, 0, sizeof(FIL));
     memset(&filerData.dir, 0, sizeof(DIR));
 
-    if (!firstTime) {
-	for (i = 0; i < FILER_MAX_FILES; i++) {
-	    memset(&filerData.files[i].fp, 0, sizeof(FIL));
-	    filerData.files[i].open = 0;
-	    filerData.files[i].status = -1;
-	    CoSetFlag(filerData.files[i].completeFlag);
-	}
-	yield(1000);
-    }
-    firstTime = 0;
-
     // setup fatfs
     f_mount(0, 0);
     if ((res = f_mount(0, &filerData.fs)) != RES_OK) {
 	filerDebug("cannot register work area, aborting", res);
 	CoExitTask();
 	return;
+    }
+
+    // reset file table
+    for (i = 0; i < FILER_MAX_FILES; i++) {
+	if (filerData.files[i].allocated) {
+	    memset(&filerData.files[i].fp, 0, sizeof(FIL));
+	    filerData.files[i].open = 0;
+	    CoSetFlag(filerData.files[i].completeFlag);
+	}
     }
 
     while (1) {
@@ -403,6 +400,7 @@ int32_t filerStream(int8_t handle, void *buf, uint32_t length) {
     f->function = FILER_FUNC_STREAM;
     f->buf = buf;
     f->length = length;
+    f->status = 0;
 
     return 1;
 }

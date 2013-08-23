@@ -693,7 +693,7 @@ void navUkfInitState(void) {
 
 	lastUpdate = IMU_LASTUPD;
 	while (lastUpdate == IMU_LASTUPD)
-	    ;
+	    yield(1);
 
 //	vX[j] = -IMU_RATEX;
 //	vY[j] = -IMU_RATEY;

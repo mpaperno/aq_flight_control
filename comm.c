@@ -21,12 +21,17 @@
 #include "comm.h"
 #include "run.h"
 #include "util.h"
+#include "filer.h"
 #include <CoOS.h>
 #include <string.h>
 
 OS_STK *commTaskStack;
 
 commStruct_t commData __attribute__((section(".ccm")));
+
+#ifdef COMM_LOG_FNAME
+char commLog[COMM_LOG_BUF_SIZE];
+#endif
 
 char *commGetNoticeBuf(void) {
     uint8_t p;
@@ -244,14 +249,31 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
 static void commCheckNotices(void) {
     StatusType result;
     char *s;
-    int i;
 
     s = (char *)CoAcceptQueueMail(commData.notices, &result);
 
     if (s) {
+	int i;
+#ifdef COMM_LOG_FNAME
+	// write to disk
+	i = 0;
+	while (s[i] != 0) {
+	    if (s[i] != '\n') {
+		commLog[commData.logPointer] = s[i];
+		commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
+	    }
+	    i++;
+	}
+	commLog[commData.logPointer] = '\n';
+	commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
+
+	filerSetHead(commData.logHandle, commData.logPointer);
+#endif
+
 	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
 	    if (commData.noticeFuncs[i])
 		commData.noticeFuncs[i](s);
+
     }
 }
 
@@ -296,6 +318,11 @@ void commInit(void) {
     int i;
 
     memset((void *)&commData, 0, sizeof(commData));
+
+#ifdef COMM_LOG_FNAME
+    commData.logHandle = filerGetHandle(COMM_LOG_FNAME);
+    filerStream(commData.logHandle, commLog, COMM_LOG_BUF_SIZE);
+#endif
 
 #ifdef COMM_PORT1
 #ifdef COMM_DISABLE_FLOW_CONTROL1
