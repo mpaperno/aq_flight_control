@@ -74,7 +74,7 @@ void supervisorCreateSOCTable(void) {
 }
 
 void supervisorArm(void) {
-    supervisorData.state = STATE_ARMED;
+    supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
     AQ_NOTICE("Armed\n");
 #ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
@@ -82,7 +82,7 @@ void supervisorArm(void) {
 }
 
 void supervisorDisarm(void) {
-    supervisorData.state = STATE_DISARMED;
+    supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
     AQ_NOTICE("Disarmed\n");
 #ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
@@ -292,7 +292,7 @@ void supervisorTaskCode(void *unused) {
 }
 
 void supervisorInitComplete(void) {
-    supervisorData.state = STATE_DISARMED;
+    supervisorDisarm();
 }
 
 void supervisorDiskWait(uint8_t waiting) {
