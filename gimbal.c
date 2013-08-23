@@ -161,7 +161,7 @@ void gimbalUpdate(void) {
 			gimbalData.triggerLastTime = timerMicros();
 			AQ_NOTICE("Time trigger activated.\n");
 		    }
-		    else if (p[GMBL_TRIG_DIST] && gimbalData.triggerLastLat != gpsData.lat && gimbalData.triggerLastLon != gpsData.lon &&
+		    else if (p[GMBL_TRIG_DIST] && (gimbalData.triggerLastLat != gpsData.lat || gimbalData.triggerLastLon != gpsData.lon) &&
 			    navCalcDistance(gimbalData.triggerLastLat, gimbalData.triggerLastLon, gpsData.lat, gpsData.lon) >= p[GMBL_TRIG_DIST]) {
 			gimbalData.trigger = 1;
 			gimbalData.triggerLastLat = gpsData.lat;
