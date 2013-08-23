@@ -123,6 +123,7 @@ typedef struct {
     uint8_t setCeilingFlag;
     uint8_t setCeilingReached;
     uint8_t ceilingTimer;
+    uint8_t verticalOverride;
     float ceilingAlt;
 
 } navStruct_t;

@@ -507,21 +507,29 @@ void navNavigate(void) {
 
 	// Throttle controls vertical speed
 	vertStick = RADIO_THROT - 700;
-	if ( (vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO] ) {
+	if ((vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO]) {
 	    // altitude velocity proportional to throttle stick
-	    if (vertStick > 0.0f)
-		navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO]) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
-	    else
-		navData.targetHoldSpeedAlt = (vertStick + p[CTRL_DBAND_THRO]) * p[NAV_MAX_DECENT] * (1.0f / 700.0f);
+	    navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
 
-	    // set new hold altitude to wherever we are during vertical speed overrides
-	    if (navData.mode != NAV_STATUS_MISSION)
-		navSetHoldAlt(UKF_ALTITUDE, 0);
+	    navData.verticalOverride = 1;
 	}
 	// are we trying to land?
 	else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_LAND) {
 	    navData.targetHoldSpeedAlt = -navData.holdMaxVertSpeed;
 	}
+	// coming out of vertical override?
+	else if (navData.verticalOverride) {
+	    navData.targetHoldSpeedAlt = 0.0f;
+
+	    // slow down before trying to hold altitude
+	    if (fabsf(UKF_VELD) < 0.025f)
+		navData.verticalOverride = 0;
+
+	    // set new hold altitude to wherever we are while still in override
+	    if (navData.mode != NAV_STATUS_MISSION)
+		navSetHoldAlt(UKF_ALTITUDE, 0);
+	}
+	// PID has the throttle
 	else {
 	    navData.targetHoldSpeedAlt = pidUpdate(navData.altPosPID, navData.holdAlt, UKF_ALTITUDE);
 	}
@@ -531,6 +539,9 @@ void navNavigate(void) {
 
 	// smooth vertical velocity changes
 	navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.01f;
+    }
+    else {
+	navData.verticalOverride = 0;
     }
 
     // calculate POI angle (used for tilt in gimbal function)
