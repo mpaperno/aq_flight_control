@@ -41,7 +41,7 @@
 #define COMM_MAX_PROTOCOLS	2
 
 #define AQ_NOTICE		commNotice
-#define AQ_PRINTF(fmt, args...)	{char *s = commGetNoticeBuf(); snprintf(s, COMM_NOTICE_LENGTH, fmt, args); commNotice(s);}
+#define AQ_PRINTF(fmt, args...)	{char *sTemp = commGetNoticeBuf(); snprintf(sTemp, COMM_NOTICE_LENGTH, fmt, args); commNotice(sTemp);}
 
 enum commStreamTypes {
     COMM_TYPE_NONE	    = 0,
