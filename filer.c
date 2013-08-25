@@ -255,8 +255,10 @@ void filerTaskCode(void *p) {
 
     while (1) {
 	if (!filerData.initialized) {
-	    if (filerInitFS() < 0)
+	    if (filerInitFS() < 0) {
+		yield(1000);
 		goto filerRestart;
+	    }
 	    else {
 		filerData.initialized = 1;
 	    }
