@@ -635,8 +635,8 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 		    break;
 
 		case MAVLINK_MSG_ID_OPTICAL_FLOW:
-		    navUkfOpticalFlow(mavlink_msg_optical_flow_get_flow_comp_m_x(&msg),
-					mavlink_msg_optical_flow_get_flow_comp_m_y(&msg),
+		    navUkfOpticalFlow(mavlink_msg_optical_flow_get_flow_x(&msg),
+					mavlink_msg_optical_flow_get_flow_y(&msg),
 					mavlink_msg_optical_flow_get_quality(&msg),
 					mavlink_msg_optical_flow_get_ground_distance(&msg));
 		    break;
@@ -681,6 +681,10 @@ void mavlinkSetSystemType(void) {
 	mavlink_system.type = MAV_TYPE_GENERIC;
 	break;
     }
+}
+
+void mavlinkSendParameter(uint8_t sysId, uint8_t compId, const char *paramName, float value) {
+    mavlink_msg_param_set_send(MAVLINK_COMM_0, sysId, compId, paramName, value, MAV_PARAM_TYPE_REAL32);
 }
 
 void mavlinkInit(void) {

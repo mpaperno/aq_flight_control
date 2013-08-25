@@ -190,7 +190,7 @@ void navLoadLeg(uint8_t leg) {
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_TAKEOFF) {
 	// store this position as the takeoff position
-	navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
+	navUkfSetHereAsPositionTarget();
 	navData.targetHeading = AQ_YAW;
 
 	if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
@@ -236,7 +236,7 @@ void navNavigate(void) {
     digitalLo(gpsData.gpsLed);
 
     // do we have a sufficient, recent fix?
-    if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && (gpsData.hAcc/* * runData.accMask*/) < NAV_MIN_GPS_ACC) {
+    if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && gpsData.hAcc < NAV_MIN_GPS_ACC) {
 	// activate GPS LED
 	digitalHi(gpsData.gpsLed);
 	navData.navCapable = 1;
@@ -275,14 +275,7 @@ void navNavigate(void) {
 	}
 
 	// are we not in position hold mode now?
-	if (navData.navCapable && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
-	    // store this position as hold position
-	    navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
-
-	    // set this position as home if we have none
-	    if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
-		navSetHomeCurrent();
-
+	if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
 	    // only zero bias if coming from lower mode
 	    if (navData.mode < NAV_STATUS_POSHOLD) {
 		navData.holdTiltN = 0.0f;
@@ -297,27 +290,39 @@ void navNavigate(void) {
 		pidZeroIntegral(navData.distanceEPID, UKF_POSE, 0.0f);
 	    }
 
-	    navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
-	    navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+	    // store this position as hold position
+	    navUkfSetHereAsPositionTarget();
+
+	    if (navData.navCapable) {
+		// set this position as home if we have none
+		if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
+		    navSetHomeCurrent();
+	    }
 
 	    // activate pos hold
 	    navData.mode = NAV_STATUS_POSHOLD;
+
+	    navData.holdSpeedN = 0.0f;
+	    navData.holdSpeedE = 0.0f;
+
+	    navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+	    navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 
 	    // notify ground
             AQ_NOTICE("Position Hold engaged\n");
 	}
 	// DVH
-	else if (navData.navCapable && (
+	else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && (
 	    RADIO_PITCH > p[CTRL_DEAD_BAND] ||
 	    RADIO_PITCH < -p[CTRL_DEAD_BAND] ||
 	    RADIO_ROLL > p[CTRL_DEAD_BAND] ||
 	    RADIO_ROLL < -p[CTRL_DEAD_BAND])) {
 		    navData.mode = NAV_STATUS_DVH;
 	}
-	else if (navData.navCapable && navData.mode == NAV_STATUS_DVH) {
+	else if (navData.mode == NAV_STATUS_DVH) {
 	    // allow speed to drop before holding position (or if RTH engaged)
 	    if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || RADIO_AUX2 < -250) {
-		navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
+		navUkfSetHereAsPositionTarget();
 
 		navData.mode = NAV_STATUS_POSHOLD;
 	    }
@@ -332,17 +337,21 @@ void navNavigate(void) {
 	navSetHoldAlt(UKF_ALTITUDE, 0);
     }
 
-    // Ceiling
-    if (navData.ceilingAlt) { // ceiling set ?, 0 is disable
-	if ( UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag ) { // ceiling reached 1st time
+    // ceiling set ?, 0 is disable
+    if (navData.ceilingAlt) {
+	// ceiling reached 1st time
+	if (UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag) {
 	    navData.setCeilingFlag = 1;
 	    navData.ceilingTimer = timerMicros();
-	} else if ( navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) { // ceiling still reached for 5 seconds
+	}
+	// ceiling still reached for 5 seconds
+	else if (navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) {
 	    navData.ceilingTimer = timerMicros();
 	    if (!navData.setCeilingReached)
 		AQ_NOTICE("Warning: Altitude ceiling reached.");
 	    navData.setCeilingReached = 1;
-	} else if ( (navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt ) {
+	}
+	else if ((navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt) {
 	    if (navData.setCeilingReached)
 		AQ_NOTICE("Notice: Altitude returned to within ceiling.");
 	    navData.setCeilingFlag = 0;
@@ -466,9 +475,9 @@ void navNavigate(void) {
 	    }
 	}
 	else {
-	// rotate to earth frame
-	navData.holdSpeedN = x * navUkfData.yawCos - y * navUkfData.yawSin;
-	navData.holdSpeedE = y * navUkfData.yawCos + x * navUkfData.yawSin;
+	    // rotate to earth frame
+	    navData.holdSpeedN = x * navUkfData.yawCos - y * navUkfData.yawSin;
+	    navData.holdSpeedE = y * navUkfData.yawCos + x * navUkfData.yawSin;
 	}
     }
     // orbit POI

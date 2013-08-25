@@ -30,6 +30,8 @@
 #include "analog.h"
 #include "can.h"
 #include "config.h"
+#include "aq_timer.h"
+#include "aq_mavlink.h"
 #include <CoOS.h>
 #ifndef __CC_ARM
 #include <intrinsics.h>
@@ -85,24 +87,22 @@ void runTaskCode(void *unused) {
 
 	runData.sensorHistIndex = (runData.sensorHistIndex + 1) % RUN_SENSOR_HIST;
 
-	if (!(loops % 20)) {
+	if (!((loops+1) % 20)) {
 	   simDoAccUpdate(runData.sumAcc[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumAcc[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumAcc[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 	else if (!((loops+7) % 20)) {
 	   simDoPresUpdate(runData.sumPres*(1.0f / (float)RUN_SENSOR_HIST));
 	}
-	else if (!((loops+14) % 20)) {
+	else if (!((loops+13) % 20)) {
 	   simDoMagUpdate(runData.sumMag[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
-	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK) {
-	    if (runData.accMask > 1.0f && gpsData.hAcc < 5.0f) {
-		// 50 readings before mask is completely dropped
-		runData.accMask -= RUN_ACC_MASK / 50.0f;
-		if (runData.accMask < 1.0f)
-		    runData.accMask = 1.0f;
-	    }
-
-	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc*runData.accMask, gpsData.vAcc*runData.accMask);
+	// optical flow update
+	else if (navUkfData.flowCount >= 10 && !navUkfData.flowLock) {
+	    navUkfFlowUpdate();
+	}
+	// only accept GPS updates if there is no optical flow
+	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
+	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc, gpsData.vAcc);
 	    CoClearFlag(gpsData.gpsPosFlag);
 	    // refine static sea level pressure based on better GPS altitude fixes
 	    if (gpsData.hAcc < runData.bestHacc && gpsData.hAcc < NAV_MIN_GPS_ACC) {
@@ -110,8 +110,8 @@ void runTaskCode(void *unused) {
 		runData.bestHacc = gpsData.hAcc;
 	    }
 	}
-	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK) {
-	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc*runData.accMask);
+	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
+	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc);
 	    CoClearFlag(gpsData.gpsVelFlag);
 	}
 	// observe that the rates are exactly 0 if not flying or moving
@@ -201,5 +201,10 @@ void runInit(void) {
     runData.sensorHistIndex = 0;
 
     runData.bestHacc = 99.9f;
-    runData.accMask = RUN_ACC_MASK;
+
+    // configure px4flow sensor
+//    mavlinkSendParameter(81, 50, "BFLOW_V_THLD", 2500.0f);
+//    mavlinkSendParameter(81, 50, "BFLOW_F_THLD", 100.0f);
+    mavlinkSendParameter(81, 50, "BFLOW_GYRO_COM", 0.0f);
+    mavlinkSendParameter(81, 50, "USB_SEND_VIDEO", 0.0f);
 }

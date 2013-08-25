@@ -24,14 +24,12 @@
 #define RUN_TASK_SIZE		250
 #define RUN_PRIORITY		30
 
-#define RUN_SENSOR_HIST		10	    // number of timesteps to average observation sensors' data
-#define RUN_ACC_MASK		1.0f//10.0f	    // allow GPS accuracy to ramp up after startup
+#define RUN_SENSOR_HIST		10				// number of timesteps to average observation sensors' data
 
 typedef struct {
     OS_TID runTask;
     OS_FlagID runFlag;
 
-    float accMask;
     float bestHacc;
     float accHist[3][RUN_SENSOR_HIST];
     float magHist[3][RUN_SENSOR_HIST];

@@ -22,8 +22,9 @@
 #include "aq.h"
 #include "srcdkf.h"
 
-//#define UKF_LOG_BUF		(10*sizeof(float)*100)	// comment out to disable logging
-//#define UKF_FNAME		"UKF"
+//#define UKF_LOG_SIZE		(10*sizeof(float))
+//#define UKF_LOG_BUF_SIZE	(UKF_LOG_SIZE*40)
+//#define UKF_LOG_FNAME		"UKF"		// comment out to disable logging
 
 #define SIM_S                   17		// states
 #define SIM_M                   3		// max measurements
@@ -57,8 +58,11 @@
 #endif
 
 #define UKF_HIST		40
+#define UKF_P0			101325.0f			    // standard static pressure at sea level
 
-#define UKF_P0			101325.0f		    // standard static pressure at sea level
+#define UKF_FLOW_ROT		-90.0f				    // optical flow mounting rotation in degrees
+#define UKF_FOCAL_LENGTH	16.0f				    // 16mm
+#define UKF_FOCAL_PX		((UKF_FOCAL_LENGTH + UKF_FOCAL_LENGTH * RADIO_AUX6 / 1000.0f) / (4.0f * 6.0f) * 1000.0f)   // pixel size: 6um, binning 4 enabled
 
 typedef struct {
     srcdkf_t *kf;
@@ -78,7 +82,18 @@ typedef struct {
     float mat3x3[3*3];
     float *x;			// states
     float presAltOffset;
+    float flowSumX, flowSumY;
+    int32_t flowSumQuality;
+    float flowSumAlt;
+    float flowVelX, flowVelY;
+    float flowPosN, flowPosE;
+    float flowQuality;
+    float flowAlt;
+    float flowRotCos, flowRotSin;
+    uint32_t flowCount, flowAltCount;
     int logPointer;
+    volatile uint8_t flowLock;
+    uint8_t flowInit;
     uint8_t logHandle;
 } navUkfStruct_t;
 
@@ -91,8 +106,10 @@ extern void simDoAccUpdate(float accX, float accY, float accZ);
 extern void simDoMagUpdate(float magX, float magY, float magZ);
 extern void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, float hAcc, float vAcc);
 extern void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, float sAcc);
-extern void navUkfOpticalFlow(float x, float y, uint8_t quality, float ground);
+extern void navUkfFlowUpdate(void);
+extern void navUkfOpticalFlow(int16_t x, int16_t y, uint8_t quality, float ground);
 extern void navUkfSetGlobalPositionTarget(double lat, double lon);
+extern void navUkfSetHereAsPositionTarget(void);
 extern void UKFPressureAdjust(float altitude);
 extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll);
 extern void navUkfZeroRate(float zRate, int axis);

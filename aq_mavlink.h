@@ -82,6 +82,7 @@ extern void mavlinkWpAnnounceCurrent(uint16_t seqId);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 extern void mavlinkDo(void);
 extern void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len);
+extern void mavlinkSendParameter(uint8_t sysId, uint8_t compId, const char *paramName, float value);
 
 #endif
 #endif	// USE_MAVLINK

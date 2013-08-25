@@ -32,8 +32,8 @@
 
 navUkfStruct_t navUkfData;
 
-#ifdef UKF_LOG_BUF
-char ukfLog[UKF_LOG_BUF];
+#ifdef UKF_LOG_FNAME
+char ukfLog[UKF_LOG_BUF_SIZE];
 #endif
 
 float navUkfPresToAlt(float pressure) {
@@ -45,7 +45,7 @@ void UKFPressureAdjust(float altitude) {
     navUkfData.presAltOffset = altitude - UKF_PRES_ALT;
 }
 
-void navUkfCalcEarthRadius(double lat) {
+static void navUkfCalcEarthRadius(double lat) {
     double sinLat2;
 
     sinLat2 = sin(lat * (double)DEG_TO_RAD);
@@ -55,12 +55,12 @@ void navUkfCalcEarthRadius(double lat) {
     navUkfData.r2 = (double)NAV_EQUATORIAL_RADIUS * (double)DEG_TO_RAD / sqrt((double)1.0 - ((double)NAV_E_2 * sinLat2)) * cos(lat * (double)DEG_TO_RAD);
 }
 
-void navUkfCalcDistance(double lat, double lon, float *posNorth, float *posEast) {
+static void navUkfCalcGlobalDistance(double lat, double lon, float *posNorth, float *posEast) {
     *posNorth = (lat - navUkfData.holdLat) * navUkfData.r1;
     *posEast = (lon - navUkfData.holdLon) * navUkfData.r2;
 }
 
-void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
+static void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
     int i;
 
     for (i = 0; i < UKF_HIST; i++) {
@@ -73,8 +73,6 @@ void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
     UKF_POSE += deltaE;
     UKF_POSD += deltaD;
 
-//    UKF_PRES_BIAS += deltaD;
-
     navResetHoldAlt(deltaD);
 }
 
@@ -82,14 +80,40 @@ void navUkfSetGlobalPositionTarget(double lat, double lon) {
     float oldPosN, oldPosE;
     float newPosN, newPosE;
 
-    navUkfCalcDistance(lat, lon, &oldPosN, &oldPosE);
+    navUkfCalcGlobalDistance(lat, lon, &oldPosN, &oldPosE);
 
     navUkfData.holdLat = lat;
     navUkfData.holdLon = lon;
 
-    navUkfCalcDistance(lat, lon, &newPosN, &newPosE);
+    navUkfCalcGlobalDistance(lat, lon, &newPosN, &newPosE);
 
     navUkfResetPosition(newPosN - oldPosN, newPosE - oldPosE, 0.0f);
+}
+
+static void navUkfCalcLocalDistance(float localPosN, float localPosE, float *posN, float *posE) {
+    *posN = localPosN - (float)navUkfData.holdLat;
+    *posE = localPosE - (float)navUkfData.holdLon;
+}
+
+static void navUkfSetLocalPositionTarget(float posN, float posE) {
+    float oldPosN, oldPosE;
+    float newPosN, newPosE;
+
+    navUkfCalcLocalDistance(posN, posE, &oldPosN, &oldPosE);
+
+    navUkfData.holdLat = posN;
+    navUkfData.holdLon = posE;
+
+    navUkfCalcLocalDistance(posN, posE, &newPosN, &newPosE);
+
+    navUkfResetPosition(newPosN - oldPosN, newPosE - oldPosE, 0.0f);
+}
+
+void navUkfSetHereAsPositionTarget(void) {
+    if (navUkfData.flowPosN != 0.0f && navUkfData.flowPosE != 0.0f)
+	navUkfSetLocalPositionTarget(navUkfData.flowPosN, navUkfData.flowPosE);
+    else
+	navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
 }
 
 void navUkfNormalizeVec3(float *vr, float *v) {
@@ -339,6 +363,17 @@ void navUkfVelUpdate(float *u, float *x, float *noise, float *y) {
     y[2] = x[2] + noise[2];
 }
 
+void navUkfOfVelUpdate(float *u, float *x, float *noise, float *y) {
+    y[0] = x[0] + noise[0]; // velN
+    y[1] = x[1] + noise[1]; // velE
+}
+
+void navUkfOfPosUpdate(float *u, float *x, float *noise, float *y) {
+    y[0] = x[3] + noise[0]; // posN
+    y[1] = x[4] + noise[1]; // posE
+    y[2] = x[5] + noise[2]; // alt
+}
+
 void navUkfFinish(void) {
     navUkfNormalizeQuat(&UKF_Q1, &UKF_Q1);
     navUkfQuatExtractEuler(&UKF_Q1, &navUkfData.yaw, &navUkfData.pitch, &navUkfData.roll);
@@ -394,8 +429,6 @@ void simDoPresUpdate(float pres) {
     float y[2];            // measurment(s)
 
     noise[0] = p[UKF_ALT_N];
-//    if (!(supervisorData.state & STATE_FLYING))
-//	noise[0] *= 0.001f;
 
     noise[1] = noise[0];
 
@@ -475,7 +508,7 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	    navUkfResetPosition(-UKF_POSN, -UKF_POSE, alt - UKF_POSD);
 	}
 	else {
-	    navUkfCalcDistance(lat, lon, &y[0], &y[1]);
+	    navUkfCalcGlobalDistance(lat, lon, &y[0], &y[1]);
 	    y[2] = alt;
 
 	    // determine how far back this GPS position update came from
@@ -507,22 +540,23 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	    UKF_POSE += posDelta[1];
 	    UKF_POSD += posDelta[2];
 
-#ifdef UKF_LOG_BUF
+#ifdef UKF_LOG_FNAME
 	{
 	    float *log = (float *)&ukfLog[navUkfData.logPointer];
+	    int i = 0;
 
-	    *(uint32_t *)&log[0] = 0xffffffff;
-	    log[1] = y[0];
-	    log[2] = y[1];
-	    log[3] = y[2];
-	    log[4] = noise[0];
-	    log[5] = noise[1];
-	    log[6] = noise[2];
-	    log[7] = posDelta[0];
-	    log[8] = posDelta[1];
-	    log[9] = posDelta[2];
+	    *(uint32_t *)&log[i++] = 0xffffffff;
+	    log[i++] = y[0];
+	    log[i++] = y[1];
+	    log[i++] = y[2];
+	    log[i++] = noise[0];
+	    log[i++] = noise[1];
+	    log[i++] = noise[2];
+	    log[i++] = posDelta[0];
+	    log[i++] = posDelta[1];
+	    log[i++] = posDelta[2];
 
-	    navUkfData.logPointer = (navUkfData.logPointer + 10*sizeof(float)) % UKF_LOG_BUF;
+	    navUkfData.logPointer = (navUkfData.logPointer + UKF_LOG_SIZE) % UKF_LOG_BUF_SIZE;
 	    filerSetHead(navUkfData.logHandle, navUkfData.logPointer);
 	}
 #endif
@@ -588,22 +622,23 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
 	UKF_VELE += velDelta[1];
 	UKF_VELD += velDelta[2];
 
-#ifdef UKF_LOG_BUF
+#ifdef UKF_LOG_FNAME
 	{
 	    float *log = (float *)&ukfLog[navUkfData.logPointer];
+	    int i = 0;
 
-	    *(uint32_t *)&log[0] = 0xfffffffe;
-	    log[1] = y[0];
-	    log[2] = y[1];
-	    log[3] = y[2];
-	    log[4] = noise[0];
-	    log[5] = noise[1];
-	    log[6] = noise[2];
-	    log[7] = velDelta[0];
-	    log[8] = velDelta[1];
-	    log[9] = velDelta[2];
+	    *(uint32_t *)&log[i++] = 0xffffffff;
+	    log[i++] = y[0];
+	    log[i++] = y[1];
+	    log[i++] = y[2];
+	    log[i++] = noise[0];
+	    log[i++] = noise[1];
+	    log[i++] = noise[2];
+	    log[i++] = velDelta[0];
+	    log[i++] = velDelta[1];
+	    log[i++] = velDelta[2];
 
-	    navUkfData.logPointer = (navUkfData.logPointer + 10*sizeof(float)) % UKF_LOG_BUF;
+	    navUkfData.logPointer = (navUkfData.logPointer + UKF_LOG_SIZE) % UKF_LOG_BUF_SIZE;
 	    filerSetHead(navUkfData.logHandle, navUkfData.logPointer);
 	}
 #endif
@@ -628,7 +663,152 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
     }
 }
 
-void navUkfOpticalFlow(float x, float y, uint8_t quality, float ground) {
+/*
+    We take raw pixel movement data reported by the sensor and combine
+    it with our own estimates of ground height and rotational rates
+    to calculate the x/y velocity estimates.  Along with reported sonar
+    altitudes, they are fed to the UKF as observations.
+*/
+#include "radio.h"
+void navUkfFlowUpdate(void) {
+//    static uint32_t loops = 0;
+    static float oldPitch, oldRoll;
+    float flowX, flowY;
+    float xT, yT;
+    float dt;
+    float flowAlt = 0.0f;
+    float y[3];
+    float noise[3];
+
+    // set default noise levels
+    noise[0] = 0.001f;
+    noise[1] = 0.001f;
+    noise[2] = 100.0f;
+
+    // valid altitudes?
+    if (navUkfData.flowAltCount > 0) {
+	flowAlt = navUkfData.flowSumAlt / navUkfData.flowAltCount;
+	if (fabsf(navUkfData.flowAlt - flowAlt) < 0.5f)
+	    noise[2] = 0.1f;
+
+	navUkfData.flowAlt = flowAlt;
+    }
+
+    // first valid flow update ?
+    if (navUkfData.flowInit == 0) {
+	// only allow init if we have a valid altitude
+	if (navUkfData.flowAltCount > 0) {
+	    UKFPressureAdjust(navUkfData.flowAlt);
+	    UKF_POSD = navUkfData.flowAlt;
+	    navUkfData.flowInit = 1;
+	}
+    }
+    else {
+	// scaled, average quality
+	navUkfData.flowQuality = (float)navUkfData.flowSumQuality / navUkfData.flowCount * (1.0f / 255.0f);
+
+	// first rotate sensor data to craft frame around Z axis
+	flowX = navUkfData.flowSumX * navUkfData.flowRotCos + navUkfData.flowSumY * navUkfData.flowRotSin;
+	flowY = navUkfData.flowSumY * navUkfData.flowRotCos - navUkfData.flowSumX * navUkfData.flowRotSin;
+
+	// adjust for pitch/roll rotations during measurement
+	flowX -= (AQ_PITCH - oldPitch) * DEG_TO_RAD * UKF_FOCAL_PX;
+	flowY += (AQ_ROLL  - oldRoll)  * DEG_TO_RAD * UKF_FOCAL_PX;
+
+	// next, rotate flow to world frame
+	xT = flowX * navUkfData.yawCos - flowY * navUkfData.yawSin;
+	yT = flowY * navUkfData.yawCos + flowX * navUkfData.yawSin;
+
+	// convert to distance covered based on focal length and height above ground
+	flowX = xT * (1.0f / UKF_FOCAL_PX) * UKF_POSD;
+	flowY = yT * (1.0f / UKF_FOCAL_PX) * UKF_POSD;
+
+	// integrate for absolute position
+	navUkfData.flowPosN += flowX;
+	navUkfData.flowPosE += flowY;
+
+	// time delta - assume each count is from two readings @ 5ms each
+	dt = (float)navUkfData.flowCount * (5.0f * 2.0f) / 1000.0f;
+
+	// differentiate for velocity
+	navUkfData.flowVelX = flowX / dt;
+	navUkfData.flowVelY = flowY / dt;
+
+	// vel update
+//	if ((loops++) & 1) {
+//	    // TODO: properly estimate noise
+//	    noise[0] = (p[UKF_GPS_VEL_N] + p[UKF_GPS_VEL_M_N]);
+//	    noise[1] = noise[0];
+//
+//	    y[0] = navUkfData.flowVelX;
+//	    y[1] = navUkfData.flowVelY;
+//
+//	    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 2, 2, noise, navUkfOfVelUpdate);
+//	}
+//	// pos update
+//	else {
+	    // TODO: properly estimate noise
+	    noise[0] = (p[UKF_GPS_POS_N] + p[UKF_GPS_POS_M_N]);
+	    noise[1] = noise[0];
+
+	    navUkfCalcLocalDistance(navUkfData.flowPosN, navUkfData.flowPosE, &y[0], &y[1]);
+	    y[2] = navUkfData.flowAlt;
+
+	    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfOfPosUpdate);
+//	}
+#ifdef UKF_LOG_FNAME
+	{
+	    float *log = (float *)&ukfLog[navUkfData.logPointer];
+	    int i = 0;
+
+	    *(uint32_t *)&log[i++] = 0xffffffff;
+	    log[i++] = flowX;
+	    log[i++] = flowY;
+	    log[i++] = navUkfData.flowVelX;
+	    log[i++] = navUkfData.flowVelY;
+	    log[i++] = flowAlt;
+	    log[i++] = navUkfData.flowQuality;
+	    log[i++] = (AQ_PITCH - oldPitch);
+	    log[i++] = (AQ_ROLL  - oldRoll);
+	    log[i++] = dt;
+
+	    navUkfData.logPointer = (navUkfData.logPointer + UKF_LOG_SIZE) % UKF_LOG_BUF_SIZE;
+	    filerSetHead(navUkfData.logHandle, navUkfData.logPointer);
+	}
+#endif
+    }
+
+    navUkfData.flowSumX = 0.0f;
+    navUkfData.flowSumY = 0.0f;
+    navUkfData.flowSumQuality = 0;
+    navUkfData.flowSumAlt = 0.0f;
+    navUkfData.flowCount = 0;
+    navUkfData.flowAltCount = 0;
+
+    oldRoll = AQ_ROLL;
+    oldPitch = AQ_PITCH;
+}
+
+void navUkfOpticalFlow(int16_t x, int16_t y, uint8_t quality, float ground) {
+    // since this is called from a low priority thread,
+    // this flag just lets high priority threads know we
+    // are in the middle of things here.
+    navUkfData.flowLock = 1;
+
+    // valid sonar reading?
+    if (ground > 0.4f && ground < 4.50f) {
+	navUkfData.flowSumAlt += ground;
+	navUkfData.flowAltCount++;
+    }
+    // valid flow?
+    if (quality > 0) {
+	navUkfData.flowSumX += (x * -0.1f);
+	navUkfData.flowSumY += (y * -0.1f);
+	navUkfData.flowSumQuality += quality;
+	navUkfData.flowCount++;
+    }
+
+    navUkfData.flowLock = 0;
 }
 
 void navUkfResetBias(void) {
@@ -810,8 +990,11 @@ void navUkfInit(void) {
 
     navUkfInitState();
 
-#ifdef UKF_LOG_BUF
-    navUkfData.logHandle = filerGetHandle(UKF_FNAME);
-    filerStream(navUkfData.logHandle, ukfLog, UKF_LOG_BUF);
+    navUkfData.flowRotCos = cosf(UKF_FLOW_ROT * DEG_TO_RAD);
+    navUkfData.flowRotSin = sinf(UKF_FLOW_ROT * DEG_TO_RAD);
+
+#ifdef UKF_LOG_FNAME
+    navUkfData.logHandle = filerGetHandle(UKF_LOG_FNAME);
+    filerStream(navUkfData.logHandle, ukfLog, UKF_LOG_BUF_SIZE);
 #endif
 }
