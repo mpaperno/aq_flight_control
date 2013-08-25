@@ -202,9 +202,11 @@ void runInit(void) {
 
     runData.bestHacc = 99.9f;
 
+#ifdef USE_MAVLINK
     // configure px4flow sensor
 //    mavlinkSendParameter(81, 50, "BFLOW_V_THLD", 2500.0f);
 //    mavlinkSendParameter(81, 50, "BFLOW_F_THLD", 100.0f);
     mavlinkSendParameter(81, 50, "BFLOW_GYRO_COM", 0.0f);
     mavlinkSendParameter(81, 50, "USB_SEND_VIDEO", 0.0f);
+#endif
 }
