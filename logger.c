@@ -141,7 +141,10 @@ loggerFields_t loggerFields[] = {
     {LOG_RADIO_CHANNEL16, LOG_TYPE_S16},
     {LOG_RADIO_CHANNEL17, LOG_TYPE_S16},
     {LOG_RADIO_ERRORS, LOG_TYPE_U16},
-    {LOG_GMBL_TRIGGER, LOG_TYPE_U16}
+    {LOG_GMBL_TRIGGER, LOG_TYPE_U16},
+    {LOG_ACC_BIAS_X, LOG_TYPE_FLOAT},
+    {LOG_ACC_BIAS_Y, LOG_TYPE_FLOAT},
+    {LOG_ACC_BIAS_Z, LOG_TYPE_FLOAT}
 };
 
 int loggerCopy8(void *to, void *from) {
@@ -587,6 +590,15 @@ void loggerSetup(void) {
 		break;
 	    case LOG_GMBL_TRIGGER:
 		loggerData.fp[i].fieldPointer = (void *)&gimbalData.triggerLogVal;
+		break;
+	    case LOG_ACC_BIAS_X:
+		loggerData.fp[i].fieldPointer = (void *)&UKF_ACC_BIAS_X;
+		break;
+	    case LOG_ACC_BIAS_Y:
+		loggerData.fp[i].fieldPointer = (void *)&UKF_ACC_BIAS_Y;
+		break;
+	    case LOG_ACC_BIAS_Z:
+		loggerData.fp[i].fieldPointer = (void *)&UKF_ACC_BIAS_Z;
 		break;
 	}
 
