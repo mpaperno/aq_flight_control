@@ -21,7 +21,6 @@
 
 #include "aq.h"
 #include "adc.h"
-#include "vn100.h"
 #include "d_imu.h"
 
 #define IMU_ROOM_TEMP		20.0f
@@ -33,26 +32,6 @@
 #define AQ_PITCH		navUkfData.pitch
 #define AQ_ROLL			navUkfData.roll
 #define AQ_PRES_ADJ		UKF_PRES_ALT
-
-#ifdef USE_VN100
-// using VN100 as IMU
-#define IMU_DRATEX		vn100Data.doubleRates[0]
-#define IMU_DRATEY		vn100Data.doubleRates[1]
-#define IMU_DRATEZ		vn100Data.doubleRates[2]
-#define IMU_RATEX		vn100Data.rates[0]
-#define IMU_RATEY		vn100Data.rates[1]
-#define IMU_RATEZ		vn100Data.rates[2]
-#define IMU_ACCX		vn100Data.accs[0]
-#define IMU_ACCY		vn100Data.accs[1]
-#define IMU_ACCZ		vn100Data.accs[2]
-#define IMU_MAGX		vn100Data.mags[0]
-#define IMU_MAGY		vn100Data.mags[1]
-#define IMU_MAGZ		vn100Data.mags[2]
-#define IMU_TEMP		vn100Data.recvBuf.parameters[9]
-#define IMU_LASTUPD		vn100Data.solutionTime
-#define AQ_TIMESTEP		adcData.dt
-#define AQ_PRESSURE		adcData.pressure
-#endif	// USE_VN100
 
 #ifdef USE_DIGITAL_IMU
 // using the Digital IMU as IMU
@@ -74,7 +53,6 @@
 #define AQ_PRESSURE		ms5611Data.pres
 #endif	// USE_DIGITAL_IMU
 
-#ifndef USE_VN100
 #ifndef USE_DIGITAL_IMU
 // using ADC as IMU
 #define IMU_DRATEX		adcData.dRateX
@@ -94,7 +72,6 @@
 #define AQ_TIMESTEP		adcData.dt
 #define AQ_PRESSURE		adcData.pressure
 #endif
-#endif
 
 typedef struct {
     OS_FlagID dRateFlag;
@@ -110,8 +87,6 @@ extern void imuInit(void);
 extern void imuQuasiStatic(int n);
 extern void imuAdcDRateReady(void);
 extern void imuAdcSensorReady(void);
-extern void imuVN100DRateReady(void);
-extern void imuVN100SensorReady(void);
 extern void imuDImuDRateReady(void);
 extern void imuDImuSensorReady(void);
 

@@ -202,7 +202,7 @@ AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o 
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
 	sdio.o serial.o signaling.o spektrum.o spi.o srcdkf.o supervisor.o \
-	telemetry.o ublox.o vn100.o
+	telemetry.o ublox.o
 
 ## other objects to create
 

@@ -83,12 +83,6 @@ void adcTaskCode(void *unused) {
 
 	loops = adcData.loops;
 
-#ifdef IMU_HAS_VN100
-	if (!(loops & 0x01))
-	    vn100Sync(0);
-	else
-	    vn100Sync(1);
-#endif
 	// sum adc values
 	for (i = 0; i < ADC_SENSORS; i++)
 	    adcData.channelSums[i] += adcData.adcSums[i];
@@ -290,10 +284,8 @@ void adcCalibOffsets(void) {
 
     delay(100);
 
-#ifndef USE_VN100
 #ifndef USE_DIGITAL_IMU
     imuQuasiStatic(ADC_RATE_CALIB_SAMPLES);
-#endif
 #endif
 
     sumRate[0] = sumRate[1] = sumRate[2] = 0.0;

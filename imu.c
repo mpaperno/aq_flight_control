@@ -76,45 +76,23 @@ void imuInit(void) {
     adcInit();
 #endif
 
-#ifdef HAS_VN100
-    vn100Init();
-#endif  // HAS_VN100
-
 #ifdef HAS_DIGITAL_IMU
     dIMUInit();
 #endif	// HAS_DIGITAL_IMU
 }
 
 void imuAdcDRateReady(void) {
-#ifndef USE_VN100
 #ifndef USE_DIGITAL_IMU
     imuData.halfUpdates++;
     CoSetFlag(imuData.dRateFlag);
 #endif
-#endif	// USE_VN100
 }
 
 void imuAdcSensorReady(void) {
-#ifndef USE_VN100
 #ifndef USE_DIGITAL_IMU
     imuData.fullUpdates++;
     CoSetFlag(imuData.sensorFlag);
 #endif
-#endif	// USE_VN100
-}
-
-void imuVN100DRateReady(void) {
-#ifdef USE_VN100
-    imuData.halfUpdates++;
-    isr_SetFlag(imuData.dRateFlag);
-#endif	// USE_VN100
-}
-
-void imuVN100SensorReady(void) {
-#ifdef USE_VN100
-    imuData.fullUpdates++;
-    isr_SetFlag(imuData.sensorFlag);
-#endif	// USE_VN100
 }
 
 void imuDImuDRateReady(void) {

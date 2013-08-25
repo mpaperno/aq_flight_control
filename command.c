@@ -216,33 +216,6 @@ static void commandExecute(commandBufStruct_t *b) {
 	    commandAccIn(b);
 	    break;
 
-#ifdef IMU_HAS_VN100
-    case COMMAND_VN100_PASSTHROUGH:
-	    if (!(supervisorData.state & STATE_FLYING))
-		vn100PassThrough(downlinkData.serialPort);
-	    break;
-
-    case COMMAND_VN100_BOOTLOADER:
-	    if (!(supervisorData.state & STATE_FLYING))
-		vn100BootLoader(downlinkData.serialPort);
-	    break;
-
-    case COMMAND_VN100_READ_CONFIG:
-	    if (!(supervisorData.state & STATE_FLYING) && vn100ReadConfig() == 0)
-		commandAck(NULL, 0);
-	    else
-		commandNack(NULL, 0);
-
-	    break;
-
-    case COMMAND_VN100_WRITE_CONFIG:
-	    if (!(supervisorData.state & STATE_FLYING) && vn100WriteConfig() == 0)
-		commandAck(NULL, 0);
-	    else
-		commandNack(NULL, 0);
-	    break;
-#endif
-
     default:
 	    commandNack(NULL, 0);
 	    break;

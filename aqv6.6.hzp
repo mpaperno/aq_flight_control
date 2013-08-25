@@ -57,8 +57,6 @@
       <file file_name="rtc.h"/>
       <file file_name="sdio.c"/>
       <file file_name="sdio.h"/>
-      <file file_name="vn100.c"/>
-      <file file_name="vn100.h"/>
       <file file_name="imu.c"/>
       <file file_name="imu.h"/>
       <file file_name="supervisor.c"/>
