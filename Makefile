@@ -31,7 +31,7 @@ INCR_BUILDNUM ?= 1
 # Use the single-folder source file organization from AQ repo? (0|1)
 FLAT_SRC ?= 1
 # Produced binaries file name prefix
-BIN_NAME ?= aqv6.7
+BIN_NAME ?= aqv6.8
 # Build debug version? (0|1; true by default if build_type contains the word "debug")
 ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 	DEBUG_BUILD ?= 1
@@ -183,7 +183,7 @@ AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mf
 
 # linker (ld) options
 LINKER_OPTS = -ereset_handler --omagic -defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
-	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(STMLIB_PATH)/STM32f4.ld -Map $(OBJ_PATH)/aqv6.6.map -u_vectors
+	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(STMLIB_PATH)/STM32f4.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
 
 # eabi linker libs
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
