@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    110
+#define DEFAULT_CONFIG_VERSION	    111
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -438,3 +438,7 @@
 #define DEFAULT_L1_ATT_MM_R14		0.0f
 #define DEFAULT_L1_ATT_MM_P14		0.0f
 #define DEFAULT_L1_ATT_MM_Y14		0.0f
+
+#define DEFAULT_LIC_KEY1		0.0f
+#define DEFAULT_LIC_KEY2		0.0f
+#define DEFAULT_LIC_KEY3		0.0f

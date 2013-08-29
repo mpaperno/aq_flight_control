@@ -402,7 +402,10 @@ const char *configParameterStrings[] = {
     "SIG_LED_1_PRT",
     "SIG_LED_2_PRT",
     "SIG_BEEP_PRT",
-    "SIG_PWM_PRT"
+    "SIG_PWM_PRT",
+    "LIC_KEY1",
+    "LIC_KEY2",
+    "LIC_KEY3"
 };
 
 void configLoadDefault(void) {
@@ -778,6 +781,9 @@ void configLoadDefault(void) {
     p[SIG_LED_2_PRT] = DEFAULT_SIG_LED_2_PRT;
     p[SIG_BEEP_PRT] = DEFAULT_SIG_BEEP_PRT;
     p[SIG_PWM_PRT] = DEFAULT_SIG_PWM_PRT;
+    p[LIC_KEY1] = DEFAULT_LIC_KEY1;
+    p[LIC_KEY2] = DEFAULT_LIC_KEY2;
+    p[LIC_KEY3] = DEFAULT_LIC_KEY3;
 }
 
 void configFlashRead(void) {

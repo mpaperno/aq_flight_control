@@ -130,7 +130,7 @@
       <file file_name="core_cmInstr.h"/>
     </folder>
     <folder Name="STM Driver Lib">
-      <folder Name="inc" file_name="">
+      <folder Name="src" file_name="">
         <file file_name="misc.c"/>
         <file file_name="stm32f4xx_adc.c"/>
         <file file_name="stm32f4xx_dma.c"/>
@@ -145,9 +145,11 @@
         <file file_name="stm32f4xx_tim.c"/>
         <file file_name="stm32f4xx_usart.c"/>
         <file file_name="stm32f4xx_pwr.c"/>
-        <file file_name="stm32f4xx_can.h"/>
+        <file file_name="stm32f4xx_can.c"/>
+        <file file_name="stm32f4xx_hash.c"/>
+        <file file_name="stm32f4xx_hash_md5.c"/>
       </folder>
-      <folder Name="src" file_name="">
+      <folder Name="inc" file_name="">
         <file file_name="stm32f4xx_conf.h"/>
         <file file_name="misc.h"/>
         <file file_name="stm32f4xx_adc.h"/>
@@ -163,7 +165,8 @@
         <file file_name="stm32f4xx_tim.h"/>
         <file file_name="stm32f4xx_usart.h"/>
         <file file_name="stm32f4xx_pwr.h"/>
-        <file file_name="stm32f4xx_can.c"/>
+        <file file_name="stm32f4xx_can.h"/>
+        <file file_name="stm32f4xx_hash.h"/>
       </folder>
     </folder>
     <folder Name="mavlink" filter="*.h" path="../mavlink/include" recurse="No">

@@ -401,6 +401,9 @@ enum configParameters {
     SIG_LED_2_PRT,
     SIG_BEEP_PRT,
     SIG_PWM_PRT,
+    LIC_KEY1,
+    LIC_KEY2,
+    LIC_KEY3,
     CONFIG_NUM_PARAMS
 };
 
