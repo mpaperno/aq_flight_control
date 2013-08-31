@@ -60,7 +60,6 @@ void motorsOff(void) {
 
 void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, float ruddCommand) {
     float throttle;
-    float expFactor;
     float voltageFactor;
     float value;
     float nominalBatVolts;
@@ -68,12 +67,6 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 
     // throttle limiter to prevent control saturation
     throttle = constrainFloat(throtCommand - motorsData.throttleLimiter, 0.0f, p[MOT_MAX]);
-
-    // scale commands based on throttle setting
-    expFactor = constrainFloat((p[MOT_HOV_THROT] - throttle) * p[MOT_EXP_FACT], p[MOT_EXP_MIN], p[MOT_EXP_MAX]);
-    pitchCommand += (pitchCommand * expFactor);
-    rollCommand += (rollCommand * expFactor);
-    ruddCommand += (ruddCommand * expFactor);
 
     // calculate voltage factor
     nominalBatVolts = MOTORS_CELL_VOLTS*analogData.batCellCount;

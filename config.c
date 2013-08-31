@@ -94,10 +94,6 @@ const char *configParameterStrings[] = {
     "MOT_START",
     "MOT_MIN",
     "MOT_MAX",
-    "MOT_HOV_THROT",
-    "MOT_EXP_FACT",
-    "MOT_EXP_MIN",
-    "MOT_EXP_MAX",
     "MOT_PWRD_01_T",
     "MOT_PWRD_01_P",
     "MOT_PWRD_01_R",
@@ -472,10 +468,6 @@ void configLoadDefault(void) {
     p[MOT_START] = DEFAULT_MOT_START;
     p[MOT_MIN] = DEFAULT_MOT_MIN;
     p[MOT_MAX] = DEFAULT_MOT_MAX;
-    p[MOT_HOV_THROT] = DEFAULT_MOT_HOV_THROT;
-    p[MOT_EXP_FACT] = DEFAULT_MOT_EXP_FACT;
-    p[MOT_EXP_MIN] = DEFAULT_MOT_EXP_MIN;
-    p[MOT_EXP_MAX] = DEFAULT_MOT_EXP_MAX;
     p[MOT_PWRD_01_T] = DEFAULT_MOT_PWRD_01_T;
     p[MOT_PWRD_01_P] = DEFAULT_MOT_PWRD_01_P;
     p[MOT_PWRD_01_R] = DEFAULT_MOT_PWRD_01_R;
