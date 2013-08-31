@@ -78,12 +78,16 @@ const char *esc32ParameterStrings[] = {
     "SERVO_P",
     "SERVO_D",
     "SERVO_MAX_RATE",
-    "SERVO_SCALE"
+    "SERVO_SCALE",
+    "ESC_ID",
+    "DIRECTION"
 };
 
 static float esc32ReadParamTransaction(uint8_t paramId) {
     uint8_t *p;
     float value;
+
+    yield(5);
 
     owData.buf[0] = OW_PARAM_READ;
     owData.buf[1] = paramId;
@@ -109,7 +113,7 @@ static float esc32ReadParam(uint8_t paramId) {
 	i++;
 	tmp = esc32ReadParamTransaction(paramId);
 
-	if (tmp != value)
+	if (tmp != NAN && tmp != value)
 	    value = tmp;
 	else
 	    return value;
@@ -130,6 +134,8 @@ static float esc32WriteParam(uint8_t paramId, float value) {
     owData.buf[4] = p[2];
     owData.buf[5] = p[3];
     owTransaction(6, 6);
+    // moment to update
+    yield(5);
 
     return esc32ReadParam(paramId);
 }
@@ -180,9 +186,9 @@ static uint8_t esc32Mode(uint8_t mode) {
 static int8_t esc32ReadFile(char *fname) {
     char *fileBuf;
     char *lineBuf;
-    char param[16];
+    char param[24];
     int paramId;
-    float value;
+    float value, retValue;
     int8_t needsConfigWrite = 0;
     int8_t fh;
     char c;
@@ -214,28 +220,38 @@ static int8_t esc32ReadFile(char *fname) {
 		if (c == '\n' || p1 == (ESC32_LINE_BUF_SIZE-1)) {
 		    lineBuf[p1] = 0;
 
-		    n = sscanf(lineBuf, "#define DEFAULT_%15s %f", param, &value);
+		    n = sscanf(lineBuf, "#define DEFAULT_%23s %f", param, &value);
 		    if (n != 2) {
-			n = sscanf(lineBuf, "#define %15s %f", param, &value);
+			n = sscanf(lineBuf, "#define %23s %f", param, &value);
 			if (n != 2)
-			    n = sscanf(lineBuf, "%15s %f", param, &value);
+			    n = sscanf(lineBuf, "%23s %f", param, &value);
 		    }
 
 		    if (n == 2) {
 			// lookup parameter id
 			paramId = esc32ParamIdByName(param);
+
 			// valid id?
-			if (paramId >= 0)
+			if (paramId >= 0) {
+			    // read
+			    retValue = esc32ReadParam(paramId);
+
 			    // current value differs from ours?
-			    if (esc32ReadParam(paramId) != value) {
+			    if (retValue != value) {
+				// write
+				esc32WriteParam(paramId, value);
+				// read back
+				retValue = esc32ReadParam(paramId);
+
 				// successful write?
-				if (esc32WriteParam(paramId, value)) {
+				if (retValue == value) {
 				    needsConfigWrite++;
 				}
 				else {
 				    AQ_NOTICE("esc32: parameter write failed!\n");
 				}
 			    }
+			}
 		    }
 		    p1 = 0;
 		}
@@ -273,7 +289,7 @@ void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
 	if (esc32ReadParam(ESC32_STARTUP_MODE) != (float)mode) {
 	    if (esc32Mode(mode) != mode)
 		    AQ_NOTICE("ESC32: failed to set mode\n");
-	    esc32WriteParamByName("ESC32_STARTUP_MODE", (float)mode);
+	    esc32WriteParamByName("STARTUP_MODE", (float)mode);
 	}
 
 	i = esc32ReadFile(0);

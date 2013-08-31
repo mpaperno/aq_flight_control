@@ -72,6 +72,8 @@ enum esc32configParameters {
     ESC32_SERVO_D,
     ESC32_SERVO_MAX_RATE,
     ESC32_SERVO_SCALE,
+    ESC32_ESC_ID,
+    ESC32_DIRECTION,
     ESC32_CONFIG_NUM_PARAMS
 };
 
