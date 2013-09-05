@@ -75,7 +75,6 @@ void aqInit(void *pdata) {
     analogInit();
     navUkfInit();
     radioInit();
-    controlInit();
     gpsInit();
     navInit();
     commandInit();
@@ -85,6 +84,7 @@ void aqInit(void *pdata) {
     loggerInit();
     canInit();
     motorsInit();
+    controlInit();
     gimbalInit();
     runInit();
 
