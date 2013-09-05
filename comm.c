@@ -22,6 +22,7 @@
 #include "run.h"
 #include "util.h"
 #include "filer.h"
+#include "can.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -273,7 +274,6 @@ static void commCheckNotices(void) {
 	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
 	    if (commData.noticeFuncs[i])
 		commData.noticeFuncs[i](s);
-
     }
 }
 
@@ -306,6 +306,7 @@ void commTaskCode(void *unused) {
     while (1) {
 	yield(1);
 
+	canCheckMessage();
 	commCheckNotices();
 	commCheckTelem();
 	commCheckRcvr();

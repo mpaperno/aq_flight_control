@@ -19,6 +19,8 @@
 #ifndef _esc32_h
 #define _esc32_h
 
+#include "can.h"
+
 #define ESC32_FILE_NAME			"esc32.txt"
 #define ESC32_FILE_BUF_SIZE		512
 #define ESC32_LINE_BUF_SIZE		128
@@ -77,6 +79,15 @@ enum esc32configParameters {
     ESC32_CONFIG_NUM_PARAMS
 };
 
-extern void esc32Setup(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode);
+enum esc32States {
+    ESC32_STATE_DISARMED = 0,
+    ESC32_STATE_STOPPED,
+    ESC32_STATE_NOCOMM,
+    ES32C_STATE_STARTING,
+    ESC32_STATE_RUNNING
+};
+
+extern void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode);
+extern void esc32SetupCan(canNodes_t *canNode, uint8_t mode);
 
 #endif

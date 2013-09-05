@@ -145,24 +145,6 @@ void delay(unsigned long t) {
     delayMicros(t * 1000);
 }
 
-int constrainInt(int i, int lo, int hi) {
-    if (i < lo)
-       return	lo;
-    if (i > hi)
-       return	hi;
-
-    return i;
-}
-
-float constrainFloat(float i, float lo, float hi) {
-    if (i < lo)
-       return	lo;
-    if (i > hi)
-       return	hi;
-
-    return i;
-}
-
 void utilVersionString(void) {
     AQ_PRINTF("AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
 }

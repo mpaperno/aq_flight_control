@@ -30,6 +30,7 @@
 #include "nav_ukf.h"
 #include "gps.h"
 #include "d_imu.h"
+#include "motors.h"
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -74,6 +75,7 @@ void supervisorCreateSOCTable(void) {
 }
 
 void supervisorArm(void) {
+    motorsArm();
     supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
     AQ_NOTICE("Armed\n");
 #ifdef USE_SIGNALING
@@ -82,6 +84,7 @@ void supervisorArm(void) {
 }
 
 void supervisorDisarm(void) {
+    motorsDisarm();
     supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
     AQ_NOTICE("Disarmed\n");
 #ifdef USE_SIGNALING
@@ -183,7 +186,7 @@ void supervisorTaskCode(void *unused) {
 		RADIO_PITCH = 0;    // center sticks
 		RADIO_ROLL = 0;
 		RADIO_RUDD = 0;
-		RADIO_THROT = 700;  // center throttle
+		RADIO_THROT = RADIO_MID_THROTTLE;  // center throttle
 	    }
 	    // loss 2
 	    else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
@@ -243,7 +246,7 @@ void supervisorTaskCode(void *unused) {
 		    RADIO_PITCH = 0;    // center sticks
 		    RADIO_ROLL = 0;
 		    RADIO_RUDD = 0;
-		    RADIO_THROT = 700 * 3 / 4;  // 1/4 max decent
+		    RADIO_THROT = RADIO_MID_THROTTLE * 3 / 4;  // 1/4 max decent
 		}
 	    }
 	}

@@ -71,8 +71,6 @@ void aqInit(void *pdata) {
     mavlinkInit();
 #endif
     telemetryInit();
-    motorsInit();
-    gimbalInit();
     imuInit();
     analogInit();
     navUkfInit();
@@ -81,13 +79,13 @@ void aqInit(void *pdata) {
     gpsInit();
     navInit();
     commandInit();
-#ifdef USE_CAN
-    canInit();
-#endif
 #ifdef USE_SIGNALING
     signalingInit();
 #endif
     loggerInit();
+    canInit();
+    motorsInit();
+    gimbalInit();
     runInit();
 
     info();

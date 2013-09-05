@@ -156,7 +156,7 @@ pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalV
 
 	// set ESC32 mode via 1-wire protocol if necessary before activating PWM output
 	if (ESC32Mode >= 0)
-	    esc32Setup(pwmPorts[pwmPort], pwmPins[pwmPort], ESC32Mode);
+	    esc32SetupOw(pwmPorts[pwmPort], pwmPins[pwmPort], ESC32Mode);
 
 	pwmGPIOInit(pwmPorts[pwmPort], pwmPins[pwmPort], GPIO_Mode_AF);
 	GPIO_PinAFConfig((GPIO_TypeDef *)pwmPorts[pwmPort], pwmPinSources[pwmPort], pwmAFs[pwmPort]);

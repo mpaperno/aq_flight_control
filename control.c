@@ -68,13 +68,13 @@ void controlTaskCode(void *unused) {
 		// are we in altitude hold mode?
 		if (navData.mode > NAV_STATUS_MANUAL) {
 		    // override throttle with nav's request
-		    throttle = pidUpdate(navData.altSpeedPID, navData.holdSpeedAlt, -UKF_VELD);
+		    throttle = pidUpdate(navData.altSpeedPID, navData.holdSpeedAlt, -UKF_VELD) * MOTORS_SCALE / RADIO_MID_THROTTLE;
 		}
 		else {
-		    throttle = (RADIO_THROT - p[CTRL_MIN_THROT]) * p[CTRL_FACT_THRO];
+		    throttle = ((uint32_t)RADIO_THROT - p[CTRL_MIN_THROT]) * MOTORS_SCALE / RADIO_MID_THROTTLE * p[CTRL_FACT_THRO];
 		}
 		// limit
-		throttle = constrainInt(throttle, 1, CONTROL_MAX_THROT);
+		throttle = constrainInt(throttle, 1, MOTORS_SCALE);
 
 		// if motors are not yet running, use this heading as hold heading
 		if (motorsData.throttle == 0) {
@@ -92,7 +92,7 @@ void controlTaskCode(void *unused) {
 
 		    // also set this position as hold position
 		    if (navData.mode == NAV_STATUS_POSHOLD)
-			navUkfSetGlobalPositionTarget(gpsData.lat, gpsData.lon);
+			navUkfSetHereAsPositionTarget();
 		}
 
 		// implement rudder dead zone
@@ -156,7 +156,6 @@ void controlTaskCode(void *unused) {
 		}
 
 		l1Attitude(quat);
-
 		l1AttitudePowerDistribution(throttle);
 		motorsSendValues();
 		motorsData.throttle = throttle;

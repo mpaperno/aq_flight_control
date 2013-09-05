@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    112
+#define DEFAULT_CONFIG_VERSION	    113
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -56,46 +56,48 @@
 // TILT rate PID
 #define DEFAULT_CTRL_TLT_RTE_P	    0.0f
 #define DEFAULT_CTRL_TLT_RTE_I	    0.0f
-#define DEFAULT_CTRL_TLT_RTE_D	    7180.0f
+#define DEFAULT_CTRL_TLT_RTE_D	    34600.0f
 #define DEFAULT_CTRL_TLT_RTE_F	    0.25f
-#define DEFAULT_CTRL_TLT_RTE_PM	    999.0f
-#define DEFAULT_CTRL_TLT_RTE_IM	    999.0f
-#define DEFAULT_CTRL_TLT_RTE_DM	    999.0f
-#define DEFAULT_CTRL_TLT_RTE_OM	    250.0f
+#define DEFAULT_CTRL_TLT_RTE_PM	    9999.0f
+#define DEFAULT_CTRL_TLT_RTE_IM	    9999.0f
+#define DEFAULT_CTRL_TLT_RTE_DM	    9999.0f
+#define DEFAULT_CTRL_TLT_RTE_OM	    1200.0f
 
 // YAW rate PID
-#define DEFAULT_CTRL_YAW_RTE_P	    300.0f
-#define DEFAULT_CTRL_YAW_RTE_I	    0.15f
-#define DEFAULT_CTRL_YAW_RTE_D	    50.0f
+#define DEFAULT_CTRL_YAW_RTE_P	    1445.0f
+#define DEFAULT_CTRL_YAW_RTE_I	    0.725f
+#define DEFAULT_CTRL_YAW_RTE_D	    240.0f
 #define DEFAULT_CTRL_YAW_RTE_F	    0.25f
-#define DEFAULT_CTRL_YAW_RTE_PM	    80.0f
-#define DEFAULT_CTRL_YAW_RTE_IM	    80.0f
-#define DEFAULT_CTRL_YAW_RTE_DM	    80.0f
-#define DEFAULT_CTRL_YAW_RTE_OM	    180.0f
+#define DEFAULT_CTRL_YAW_RTE_PM	    386.0f
+#define DEFAULT_CTRL_YAW_RTE_IM	    386.0f
+#define DEFAULT_CTRL_YAW_RTE_DM	    386.0f
+#define DEFAULT_CTRL_YAW_RTE_OM	    870.0f
 
 // TILT angle PID
-#define DEFAULT_CTRL_TLT_ANG_P	    60.0f
-#define DEFAULT_CTRL_TLT_ANG_I	    0.0005f
-#define DEFAULT_CTRL_TLT_ANG_D	    1744.0f
+#define DEFAULT_CTRL_TLT_ANG_P	    290.0f
+#define DEFAULT_CTRL_TLT_ANG_I	    0.0024f
+#define DEFAULT_CTRL_TLT_ANG_D	    8400.0f
 #define DEFAULT_CTRL_TLT_ANG_F	    0.25f
-#define DEFAULT_CTRL_TLT_ANG_PM	    150.0f
-#define DEFAULT_CTRL_TLT_ANG_IM	    75.0f
-#define DEFAULT_CTRL_TLT_ANG_DM	    150.0f
-#define DEFAULT_CTRL_TLT_ANG_OM	    250.0f
+#define DEFAULT_CTRL_TLT_ANG_PM	    725.0f
+#define DEFAULT_CTRL_TLT_ANG_IM	    360.0f
+#define DEFAULT_CTRL_TLT_ANG_DM	    725.0f
+#define DEFAULT_CTRL_TLT_ANG_OM	    1200.0f
 
 // YAW angle PID
-#define DEFAULT_CTRL_YAW_ANG_P	    0.05f
-#define DEFAULT_CTRL_YAW_ANG_I	    0.00002f
+#define DEFAULT_CTRL_YAW_ANG_P	    0.24f
+#define DEFAULT_CTRL_YAW_ANG_I	    0.0001f
 #define DEFAULT_CTRL_YAW_ANG_D	    0.0f
 #define DEFAULT_CTRL_YAW_ANG_F	    0.0f
-#define DEFAULT_CTRL_YAW_ANG_PM	    1.25f
-#define DEFAULT_CTRL_YAW_ANG_IM	    0.04f
+#define DEFAULT_CTRL_YAW_ANG_PM	    6.0f
+#define DEFAULT_CTRL_YAW_ANG_IM	    0.2f
 #define DEFAULT_CTRL_YAW_ANG_DM	    0.0f
-#define DEFAULT_CTRL_YAW_ANG_OM	    1.25f
+#define DEFAULT_CTRL_YAW_ANG_OM	    6.0f
 
+#define DEFAULT_MOT_CAN		    0
 #define DEFAULT_MOT_FRAME	    0		// used as hint for frame config GUI
+#define DEFAULT_MOT_ARM		    975
+#define DEFAULT_MOT_MIN		    1000
 #define DEFAULT_MOT_START	    1125
-#define DEFAULT_MOT_MIN		    975
 #define DEFAULT_MOT_MAX		    1950
 
 #define DEFAULT_MOT_PWRD_01_T	    0.0
@@ -384,8 +386,8 @@
 #define DEFAULT_L1_ATT_QUAT_TAU		0.05f
 #define DEFAULT_L1_ATT_L1_ASP		-10.0f
 #define DEFAULT_L1_ATT_L1_K1		18.6f
-#define DEFAULT_L1_ATT_PWM_LO		1000.0f		    // us
-#define DEFAULT_L1_ATT_PWM_HI		1950.0f		    // us
+//#define DEFAULT_L1_ATT_PWM_LO		1000.0f		    // us
+//#define DEFAULT_L1_ATT_PWM_HI		1950.0f		    // us
 #define DEFAULT_L1_ATT_PWM_SCAL 	6500.0f		    // RPM
 #define DEFAULT_L1_ATT_AM1_KNOB		0.0f		    // AM1
 #define DEFAULT_L1_ATT_AM2_KNOB		0.0f		    // AM2

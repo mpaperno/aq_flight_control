@@ -145,7 +145,7 @@ endif
 CC_INCLUDES :=  $(addprefix -I, $(AQINC_PATHS)) -I$(STMLIB_PATH)/include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
 
 # compiler flags
-CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -fno-gcse -Wall -finline-functions -Wdouble-promotion -std=c99 \
+CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -Wall -finline-functions -Wdouble-promotion -std=c99 \
 	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet -MD $(basename $@).d -MQ $@
 
 # macro definitions to pass via compiler command line

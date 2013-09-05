@@ -20,6 +20,7 @@
 #define _comm_h
 
 #include "serial.h"
+#include <stdio.h>
 
 #define COMM_STACK_SIZE		300
 #define COMM_PRIORITY		40

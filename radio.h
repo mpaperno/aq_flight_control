@@ -47,6 +47,8 @@
 #define RADIO_AUX6		radioData.channels[(int)p[RADIO_AUX6_CH]]
 #define RADIO_AUX7		radioData.channels[(int)p[RADIO_AUX7_CH]]
 
+#define RADIO_MID_THROTTLE	700
+
 #define RADIO_ERROR_COUNT       radioData.errorCount
 #define RADIO_QUALITY           radioData.quality
 

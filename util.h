@@ -23,14 +23,17 @@
 #include "CoOS.h"
 #include <stdlib.h>
 
-#define	UTIL_STACK_CHECK	CFG_MAX_USER_TASKS		// uncomment to allow system to self check for stack overflows
+#define	UTIL_STACK_CHECK	    CFG_MAX_USER_TASKS		// uncomment to allow system to self check for stack overflows
 
-#define UTIL_CCM_HEAP_SIZE	(0x2600)	// 38KB
+#define UTIL_CCM_HEAP_SIZE	    (0x2600)	// 38KB
 
-#define UTIL_ISR_DISABLE	__asm volatile ( "CPSID   F\n")
-#define UTIL_ISR_ENABLE		__asm volatile ( "CPSIE   F\n")
+#define UTIL_ISR_DISABLE	    __asm volatile ( "CPSID   F\n")
+#define UTIL_ISR_ENABLE		    __asm volatile ( "CPSIE   F\n")
 
-#define yield(n) CoTickDelay(n);
+#define yield(n)		    CoTickDelay(n)
+
+#define constrainInt(v, lo, hi)	    (((int)(v) < (int)(lo)) ? (int)(lo) : (((int)(v) > (int)(hi)) ? (int)(hi) : (int)(v)))
+#define constrainFloat(v, lo, hi)   (((float)(v) < (float)(lo)) ? (float)(lo) : (((float)(v) > (float)(hi)) ? (float)(hi) : (float)(v)))
 
 // first order filter
 typedef struct {
@@ -40,8 +43,6 @@ typedef struct {
 
 extern void delay(unsigned long t);
 extern void delayMicros(unsigned long t);
-extern int constrainInt(int i, int lo, int hi);
-extern float constrainFloat(float i, float lo, float hi);
 extern void dumpFloat(unsigned char n, float *floats);
 extern void dumpInt(unsigned char n, int *ints);
 extern void info(void);

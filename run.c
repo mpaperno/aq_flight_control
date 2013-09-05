@@ -28,7 +28,6 @@
 #include "supervisor.h"
 #include "gimbal.h"
 #include "analog.h"
-#include "can.h"
 #include "config.h"
 #include "aq_timer.h"
 #include "aq_mavlink.h"
@@ -145,14 +144,6 @@ void runTaskCode(void *unused) {
 	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();
-
-#ifdef USE_CAN
-	canCheckMessage();
-    #if CAN_OUTPUT_IMU_FREQ > 0
-	if (!(loops % (200 / CAN_OUTPUT_IMU_FREQ / 2)))
-	    canTxIMUData(loops);
-    #endif
-#endif
 
 	loops++;
     }

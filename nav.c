@@ -263,7 +263,7 @@ void navNavigate(void) {
 	    navSetHoldAlt(UKF_ALTITUDE, 0);
 
 	    // set integral to current RC throttle setting
-	    pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle);
+	    pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle * RADIO_MID_THROTTLE / MOTORS_SCALE);
 	    pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
 
 	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
@@ -515,10 +515,10 @@ void navNavigate(void) {
 	float vertStick;
 
 	// Throttle controls vertical speed
-	vertStick = RADIO_THROT - 700;
+	vertStick = RADIO_THROT - RADIO_MID_THROTTLE;
 	if ((vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO]) {
 	    // altitude velocity proportional to throttle stick
-	    navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / 700.0f);
+	    navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / RADIO_MID_THROTTLE);
 
 	    navData.verticalOverride = 1;
 	}

@@ -19,7 +19,6 @@
 // NOTE: These parameters must be passed to GCC:
 //
 //  -fsingle-precision-constant
-//  -fno-gcse
 //
 
 #ifndef _aq_h
@@ -29,8 +28,6 @@
 
 //#define HAS_DIGITAL_IMU
 //#define USE_DIGITAL_IMU
-
-//#define USE_CAN
 
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING			// uncomment to use external signaling events and ports

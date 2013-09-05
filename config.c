@@ -90,7 +90,9 @@ const char *configParameterStrings[] = {
     "CTRL_YAW_ANG_IM",
     "CTRL_YAW_ANG_DM",
     "CTRL_YAW_ANG_OM",
+    "MOT_CAN",
     "MOT_FRAME",
+    "MOT_ARM",
     "MOT_START",
     "MOT_MIN",
     "MOT_MAX",
@@ -346,8 +348,6 @@ const char *configParameterStrings[] = {
     "L1_ATT_QUAT_TAU",
     "L1_ATT_L1_ASP",
     "L1_ATT_L1_K1",
-    "L1_ATT_PWM_LO",
-    "L1_ATT_PWM_HI",
     "L1_ATT_PWM_SCAL",
     "L1_ATT_AM1_KNOB",
     "L1_ATT_AM2_KNOB",
@@ -464,9 +464,11 @@ void configLoadDefault(void) {
     p[CTRL_YAW_ANG_IM] = DEFAULT_CTRL_YAW_ANG_IM;
     p[CTRL_YAW_ANG_DM] = DEFAULT_CTRL_YAW_ANG_DM;
     p[CTRL_YAW_ANG_OM] = DEFAULT_CTRL_YAW_ANG_OM;
+    p[MOT_CAN] = DEFAULT_MOT_CAN;
     p[MOT_FRAME] = DEFAULT_MOT_FRAME;
-    p[MOT_START] = DEFAULT_MOT_START;
+    p[MOT_ARM] = DEFAULT_MOT_ARM;
     p[MOT_MIN] = DEFAULT_MOT_MIN;
+    p[MOT_START] = DEFAULT_MOT_START;
     p[MOT_MAX] = DEFAULT_MOT_MAX;
     p[MOT_PWRD_01_T] = DEFAULT_MOT_PWRD_01_T;
     p[MOT_PWRD_01_P] = DEFAULT_MOT_PWRD_01_P;
@@ -720,8 +722,6 @@ void configLoadDefault(void) {
     p[L1_ATT_QUAT_TAU] = DEFAULT_L1_ATT_QUAT_TAU;
     p[L1_ATT_L1_ASP] = DEFAULT_L1_ATT_L1_ASP;
     p[L1_ATT_L1_K1] = DEFAULT_L1_ATT_L1_K1;
-    p[L1_ATT_PWM_LO] = DEFAULT_L1_ATT_PWM_LO;
-    p[L1_ATT_PWM_HI] = DEFAULT_L1_ATT_PWM_HI;
     p[L1_ATT_PWM_SCAL] = DEFAULT_L1_ATT_PWM_SCAL;
     p[L1_ATT_AM1_KNOB] = DEFAULT_L1_ATT_AM1_KNOB;
     p[L1_ATT_AM2_KNOB] = DEFAULT_L1_ATT_AM2_KNOB;

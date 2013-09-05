@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -26,11 +26,21 @@
 #include "rcc.h"
 #include "analog.h"
 #include "aq_mavlink.h"
+#include "can.h"
+#include "esc32.h"
+#include "supervisor.h"
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
+
+static void motorsCanSendGroups(void) {
+    int i;
+
+    for (i = 0; i < motorsData.numGroups; i++)
+	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
+}
 
 void motorsSendValues(void) {
     int i;
@@ -38,10 +48,26 @@ void motorsSendValues(void) {
     for (i = 0; i < PWM_NUM_PORTS; i++)
 	if (motorsData.active[i]) {
 	    // ensure motor output is constrained
-	    motorsData.value[i] = constrainInt(motorsData.value[i], p[MOT_START], p[MOT_MAX]);
-	    if (motorsData.pwm[i])
-		*motorsData.pwm[i]->ccr = motorsData.value[i];
+	    motorsData.value[i] = constrainInt(motorsData.value[i], 0, MOTORS_SCALE);
+
+	    // PWM
+	    if (motorsData.pwm[i]) {
+		if (supervisorData.state & STATE_ARMED)
+		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] -  p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
+		else
+		    *motorsData.pwm[i]->ccr = 0;
+	    }
+	    // CAN
+	    else if (motorsData.can[i]) {
+		if (supervisorData.state & STATE_ARMED)
+		    // convert to 16 bit
+		    *motorsData.canPtrs[i] = constrainInt(motorsData.value[i], MOTORS_SCALE * 0.1f, MOTORS_SCALE)<<4;
+		else
+		    *motorsData.canPtrs[i] = 0;
+	    }
 	}
+
+    motorsCanSendGroups();
 }
 
 void motorsOff(void) {
@@ -49,10 +75,17 @@ void motorsOff(void) {
 
     for (i = 0; i < PWM_NUM_PORTS; i++)
 	if (motorsData.active[i]) {
-	    motorsData.value[i] = p[MOT_MIN];
+	    motorsData.value[i] = 0;
+
+	    // PWM
 	    if (motorsData.pwm[i])
-		*motorsData.pwm[i]->ccr = motorsData.value[i];
-    }
+		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
+	    // CAN
+	    else if (motorsData.can[i])
+		*motorsData.canPtrs[i] = 0;
+	}
+
+    motorsCanSendGroups();
 
     motorsData.throttle = 0;
     motorsData.throttleLimiter = 0.0f;
@@ -66,7 +99,7 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     int i;
 
     // throttle limiter to prevent control saturation
-    throttle = constrainFloat(throtCommand - motorsData.throttleLimiter, 0.0f, p[MOT_MAX]);
+    throttle = constrainFloat(throtCommand - motorsData.throttleLimiter, 0.0f, MOTORS_SCALE);
 
     // calculate voltage factor
     nominalBatVolts = MOTORS_CELL_VOLTS*analogData.batCellCount;
@@ -83,23 +116,107 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 	    value += (rollCommand * d->roll * 0.01f);
 	    value += (ruddCommand * d->yaw * 0.01f);
 
-	    motorsData.value[i] = value*voltageFactor + p[MOT_START];
+	    value *= voltageFactor;
 
 	    // check for over throttle
-	    if (motorsData.value[i] == p[MOT_MAX])
+	    if (value >= MOTORS_SCALE)
 		motorsData.throttleLimiter += MOTORS_THROTTLE_LIMITER;
+
+	    motorsData.value[i] = constrainInt(value, 0, MOTORS_SCALE);
 	}
     }
 
     motorsSendValues();
 
     // decay throttle limit
-    motorsData.throttleLimiter = constrainFloat(motorsData.throttleLimiter - MOTORS_THROTTLE_LIMITER, 0.0f, p[MOT_MAX]/2);
+    motorsData.throttleLimiter = constrainFloat(motorsData.throttleLimiter - MOTORS_THROTTLE_LIMITER, 0.0f, MOTORS_SCALE/4);
 
     motorsData.pitch = pitchCommand;
     motorsData.roll = rollCommand;
     motorsData.yaw = ruddCommand;
     motorsData.throttle = throttle;
+}
+
+static void motorsCanInit(int i) {
+    if ((motorsData.can[i] = canFindNode(CAN_TYPE_ESC, i+1)) == 0) {
+	AQ_PRINTF("Motors: cannot find CAN id [%d]\n", i+1);
+    }
+    else {
+#ifdef USE_L1_ATTITUDE
+	esc32SetupCan(motorsData.can[i], 1);
+#else
+	esc32SetupCan(motorsData.can[i], 0);
+#endif
+    }
+}
+
+static void motorsPwmInit(int i) {
+#ifdef USE_L1_ATTITUDE
+    motorsData.pwm[i] = pwmInitOut(i, 2500, 0, 1);	    // closed loop RPM mode
+#else
+    motorsData.pwm[i] = pwmInitOut(i, 2500, 0, 0);	    // open loop mode
+#endif
+}
+
+void motorsArm(void) {
+    int i;
+
+    // group arm
+    for (i = 0; i < motorsData.numGroups; i++)
+	canCommandArm(CAN_TT_GROUP, i+1);
+
+    // wait for all to arm
+    for (i = 0; i < PWM_NUM_PORTS; i++)
+	if (motorsData.can[i])
+	    while (*canGetState(motorsData.can[i]->nodeId) == ESC32_STATE_DISARMED)
+		yield(1);
+}
+
+void motorsDisarm(void) {
+    int i;
+
+    // group disarm
+    for (i = 0; i < motorsData.numGroups; i++)
+	canCommandDisarm(CAN_TT_GROUP, i+1);
+}
+
+static void motorsSetCanGroup(void) {
+    int group;
+    int subGroup;
+    int i;
+
+    group = 0;
+    subGroup = 0;
+    for (i = 0; i < PWM_NUM_PORTS; i++) {
+	if (motorsData.can[i]) {
+	    canSetGroup(motorsData.can[i]->nodeId, group+1, subGroup+1);
+
+	    switch (subGroup) {
+		case 0:
+		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value1;
+		    break;
+		case 1:
+		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value2;
+		    break;
+		case 2:
+		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value3;
+		    break;
+		case 3:
+		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value4;
+		    break;
+	    }
+
+	    subGroup++;
+	    if (subGroup == MOTORS_CAN_GROUP_SIZE) {
+		group++;
+		subGroup = 0;
+		motorsData.numGroups++;
+	    }
+
+	    if (motorsData.numGroups == 0)
+		motorsData.numGroups++;
+	}
+    }
 }
 
 void motorsInit(void) {
@@ -110,7 +227,7 @@ void motorsInit(void) {
 
     memset((void *)&motorsData, 0, sizeof(motorsData));
 
-    if ( p[MOT_FRAME] > 0.01f && p[MOT_FRAME] < 4.01f ) {
+    if (p[MOT_FRAME] > 0.01f && p[MOT_FRAME] < 4.01f) {
 	AQ_NOTICE("Motors: ERROR! Predefined frame types are no longer supported.\n");
 	return;
     }
@@ -126,11 +243,13 @@ void motorsInit(void) {
 
 	if (d->throttle != 0.0f || d->pitch != 0.0f || d->roll != 0.0f || d->yaw != 0.0f) {
 
-#ifdef USE_L1_ATTITUDE
-	    motorsData.pwm[i] = pwmInitOut(i, 2500, p[MOT_START], 1);	    // closed loop RPM mode
-#else
-	    motorsData.pwm[i] = pwmInitOut(i, 2500, p[MOT_START], 0);	    // open loop mode
-#endif
+	    // CAN
+	    if (((uint32_t)p[MOT_CAN]) & (1<<i))
+		motorsCanInit(i);
+	    // PWM
+	    else
+		motorsPwmInit(i);
+
 	    motorsData.active[i] = 1;
 
 	    sumPitch += d->pitch;
@@ -148,6 +267,7 @@ void motorsInit(void) {
     if (fabsf(sumYaw) > 0.01f)
 	AQ_NOTICE("Motors: Warning yaw control imbalance\n");
 
+    motorsSetCanGroup();
     motorsOff();
 }
 
