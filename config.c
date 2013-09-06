@@ -904,7 +904,10 @@ int8_t configReadFile(char *fname) {
 }
 
 int8_t configFormatParam(char *buf, int n) {
-    return sprintf(buf, "%-17s\t\t%+.10e\n", configParameterStrings[n], (double)p[n]);
+    char str[16];
+
+    ftoa(str, p[n], 10);
+    return sprintf(buf, "%-17s\t\t%s\n", configParameterStrings[n], str);
 }
 
 // write config to uSD
