@@ -163,11 +163,11 @@ uint8_t *canCommandConfigWrite(uint32_t tt, uint8_t tid) {
 }
 
 void canCommandSetpoint16(uint8_t tid, uint8_t *data) {
-    canSend(CAN_LCC_HIGH | CAN_TT_NODE | CAN_FID_CMD | (CAN_CMD_SETPOINT16<<19), tid, 8, data);
+    canSend(CAN_LCC_HIGH | CAN_TT_GROUP | CAN_FID_CMD | (CAN_CMD_SETPOINT16<<19), tid, 8, data);
 }
 
 void canCommandPos(uint8_t tid, float angle) {
-    canSend(CAN_LCC_HIGH | CAN_TT_GROUP | CAN_FID_CMD | (CAN_CMD_POS<<19), tid, 4, (uint8_t *)&angle);
+    canSend(CAN_LCC_HIGH | CAN_TT_NODE | CAN_FID_CMD | (CAN_CMD_POS<<19), tid, 4, (uint8_t *)&angle);
 }
 
 static void canResetBus(void) {
