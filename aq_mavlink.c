@@ -660,7 +660,7 @@ void mavlinkSetSystemType(void) {
 
     // get motor count
     motorsPowerStruct_t *d = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
-    for (uint8_t i = 0; i < PWM_NUM_PORTS; ++i)
+    for (uint8_t i = 0; i < MOTORS_NUM; ++i)
 	if (d[i].throttle != 0.0f)
 	    motCount++;
 

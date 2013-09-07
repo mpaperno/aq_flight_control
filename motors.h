@@ -26,6 +26,7 @@
 #define MOTORS_CELL_VOLTS	    3.7f
 #define MOTORS_THROTTLE_LIMITER	    0.15f
 #define MOTORS_SCALE		    ((1<<12) - 1)    // internal, unitless scale of motor output (0 -> 4095)
+#define MOTORS_NUM		    16
 
 #define MOTORS_CAN_GROUP_SIZE	    4
 
@@ -38,16 +39,16 @@ typedef struct {
 
 typedef struct {
     motorsPowerStruct_t *distribution;
-    canNodes_t *can[16];
-    uint16_t *canPtrs[16];
-    canGroup16_t canGroups[16/MOTORS_CAN_GROUP_SIZE + 1];
+    canNodes_t *can[MOTORS_NUM];
+    uint16_t *canPtrs[MOTORS_NUM];
+    canGroup16_t canGroups[MOTORS_NUM/MOTORS_CAN_GROUP_SIZE];
     pwmPortStruct_t *pwm[PWM_NUM_PORTS];
-    uint16_t value[PWM_NUM_PORTS];	    // in us
-    float thrust[PWM_NUM_PORTS];
+    uint16_t value[MOTORS_NUM];
+    float thrust[MOTORS_NUM];
     float pitch, roll, yaw;
     float throttle;
     float throttleLimiter;
-    uint8_t active[PWM_NUM_PORTS];
+    uint8_t active[MOTORS_NUM];
     uint8_t numGroups;
 } motorsStruct_t;
 

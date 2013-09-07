@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    113
+#define DEFAULT_CONFIG_VERSION	    114
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -156,6 +156,14 @@
 #define DEFAULT_MOT_PWRD_14_P	    0.0
 #define DEFAULT_MOT_PWRD_14_R	    0.0
 #define DEFAULT_MOT_PWRD_14_Y	    0.0
+#define DEFAULT_MOT_PWRD_15_T	    0.0
+#define DEFAULT_MOT_PWRD_15_P	    0.0
+#define DEFAULT_MOT_PWRD_15_R	    0.0
+#define DEFAULT_MOT_PWRD_15_Y	    0.0
+#define DEFAULT_MOT_PWRD_16_T	    0.0
+#define DEFAULT_MOT_PWRD_16_P	    0.0
+#define DEFAULT_MOT_PWRD_16_R	    0.0
+#define DEFAULT_MOT_PWRD_16_Y	    0.0
 
 
 #define DEFAULT_COMM_BAUD1	    115200
@@ -436,6 +444,13 @@
 #define DEFAULT_L1_ATT_MM_R14		0.0f
 #define DEFAULT_L1_ATT_MM_P14		0.0f
 #define DEFAULT_L1_ATT_MM_Y14		0.0f
+#define DEFAULT_L1_ATT_MM_R15		0.0f
+#define DEFAULT_L1_ATT_MM_P15		0.0f
+#define DEFAULT_L1_ATT_MM_Y15		0.0f
+#define DEFAULT_L1_ATT_MM_R16		0.0f
+#define DEFAULT_L1_ATT_MM_P16		0.0f
+#define DEFAULT_L1_ATT_MM_Y16		0.0f
+
 
 #define DEFAULT_LIC_KEY1		0.0f
 #define DEFAULT_LIC_KEY2		0.0f

@@ -45,13 +45,13 @@ static void motorsCanSendGroups(void) {
 void motorsSendValues(void) {
     int i;
 
-    for (i = 0; i < PWM_NUM_PORTS; i++)
+    for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.active[i]) {
 	    // ensure motor output is constrained
 	    motorsData.value[i] = constrainInt(motorsData.value[i], 0, MOTORS_SCALE);
 
 	    // PWM
-	    if (motorsData.pwm[i]) {
+	    if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
 		if (supervisorData.state & STATE_ARMED)
 		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] -  p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
 		else
@@ -73,12 +73,12 @@ void motorsSendValues(void) {
 void motorsOff(void) {
     int i;
 
-    for (i = 0; i < PWM_NUM_PORTS; i++)
+    for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.active[i]) {
 	    motorsData.value[i] = 0;
 
 	    // PWM
-	    if (motorsData.pwm[i])
+	    if (i < PWM_NUM_PORTS && motorsData.pwm[i])
 		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
 	    // CAN
 	    else if (motorsData.can[i])
@@ -106,7 +106,7 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
 
     // calculate and set each motor value
-    for (i = 0; i < PWM_NUM_PORTS; i++) {
+    for (i = 0; i < MOTORS_NUM; i++) {
 	if (motorsData.active[i]) {
 	    motorsPowerStruct_t *d = &motorsData.distribution[i];
 
@@ -166,7 +166,7 @@ void motorsArm(void) {
 	canCommandArm(CAN_TT_GROUP, i+1);
 
     // wait for all to arm
-    for (i = 0; i < PWM_NUM_PORTS; i++)
+    for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.can[i])
 	    while (*canGetState(motorsData.can[i]->nodeId) == ESC32_STATE_DISARMED)
 		yield(1);
@@ -187,7 +187,7 @@ static void motorsSetCanGroup(void) {
 
     group = 0;
     subGroup = 0;
-    for (i = 0; i < PWM_NUM_PORTS; i++) {
+    for (i = 0; i < MOTORS_NUM; i++) {
 	if (motorsData.can[i]) {
 	    canSetGroup(motorsData.can[i]->nodeId, group+1, subGroup+1);
 
@@ -238,7 +238,7 @@ void motorsInit(void) {
     sumRoll = 0.0f;
     sumYaw = 0.0f;
 
-    for (i = 0; i < PWM_NUM_PORTS; i++) {
+    for (i = 0; i < MOTORS_NUM; i++) {
 	motorsPowerStruct_t *d = &motorsData.distribution[i];
 
 	if (d->throttle != 0.0f || d->pitch != 0.0f || d->roll != 0.0f || d->yaw != 0.0f) {
@@ -247,7 +247,7 @@ void motorsInit(void) {
 	    if (((uint32_t)p[MOT_CAN]) & (1<<i))
 		motorsCanInit(i);
 	    // PWM
-	    else
+	    else if (i < PWM_NUM_PORTS)
 		motorsPwmInit(i);
 
 	    motorsData.active[i] = 1;
