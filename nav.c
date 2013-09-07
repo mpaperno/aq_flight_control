@@ -598,7 +598,7 @@ void navInit(void) {
     navData.speedEPID = pidInit(&p[NAV_SPEED_P], &p[NAV_SPEED_I], 0, 0, &p[NAV_SPEED_PM], &p[NAV_SPEED_IM], 0, &p[NAV_SPEED_OM], 0, 0, 0, 0);
     navData.distanceNPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
     navData.distanceEPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
-    navData.altSpeedPID = pidInit(&p[NAV_ATL_SPED_P], &p[NAV_ATL_SPED_I], 0, 0, &p[NAV_ATL_SPED_PM], &p[NAV_ATL_SPED_IM], 0, &p[NAV_ATL_SPED_OM], 0, 0, 0, 0);
+    navData.altSpeedPID = pidInit(&p[NAV_ALT_SPED_P], &p[NAV_ALT_SPED_I], 0, 0, &p[NAV_ALT_SPED_PM], &p[NAV_ALT_SPED_IM], 0, &p[NAV_ALT_SPED_OM], 0, 0, 0, 0);
     navData.altPosPID = pidInit(&p[NAV_ALT_POS_P], &p[NAV_ALT_POS_I], 0, 0, &p[NAV_ALT_POS_PM], &p[NAV_ALT_POS_IM], 0, &p[NAV_ALT_POS_OM], 0, 0, 0, 0);
 
     navData.mode = NAV_STATUS_MANUAL;

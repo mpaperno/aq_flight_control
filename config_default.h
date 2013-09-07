@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    114
+#define DEFAULT_CONFIG_VERSION	    115
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -200,11 +200,11 @@
 #define DEFAULT_NAV_DIST_OM	    999.0f
 
 // Altitude hold Speed PID
-#define DEFAULT_NAV_ATL_SPED_P	    200.0f
-#define DEFAULT_NAV_ATL_SPED_I	    2.85f
-#define DEFAULT_NAV_ATL_SPED_PM	    150.0f
-#define DEFAULT_NAV_ATL_SPED_IM	    700.0f
-#define DEFAULT_NAV_ATL_SPED_OM	    700.0f
+#define DEFAULT_NAV_ALT_SPED_P	    200.0f
+#define DEFAULT_NAV_ALT_SPED_I	    2.85f
+#define DEFAULT_NAV_ALT_SPED_PM	    150.0f
+#define DEFAULT_NAV_ALT_SPED_IM	    700.0f
+#define DEFAULT_NAV_ALT_SPED_OM	    700.0f
 
 // Altitude hold Position PID
 #define DEFAULT_NAV_ALT_POS_P	    0.20f
