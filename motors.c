@@ -194,6 +194,7 @@ static void motorsSetCanGroup(void) {
 	    switch (subGroup) {
 		case 0:
 		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value1;
+		    motorsData.numGroups++;
 		    break;
 		case 1:
 		    motorsData.canPtrs[i] = &motorsData.canGroups[group].value2;
@@ -210,11 +211,7 @@ static void motorsSetCanGroup(void) {
 	    if (subGroup == MOTORS_CAN_GROUP_SIZE) {
 		group++;
 		subGroup = 0;
-		motorsData.numGroups++;
 	    }
-
-	    if (motorsData.numGroups == 0)
-		motorsData.numGroups++;
 	}
     }
 }
