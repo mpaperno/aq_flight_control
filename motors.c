@@ -267,4 +267,3 @@ void motorsInit(void) {
     motorsSetCanGroup();
     motorsOff();
 }
-

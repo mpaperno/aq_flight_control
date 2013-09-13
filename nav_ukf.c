@@ -171,19 +171,19 @@ void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q) {
     navUkfRotateVectorByQuat(vr, v, qc);
 }
 
-void navUkfRotateVecByMatrix(float *vr, float *v, float *m) {
+static void navUkfRotateVecByMatrix(float *vr, float *v, float *m) {
     vr[0] = m[0*3 + 0]*v[0] + m[0*3 + 1]*v[1] + m[0*3 + 2]*v[2];
     vr[1] = m[1*3 + 0]*v[0] + m[1*3 + 1]*v[1] + m[1*3 + 2]*v[2];
     vr[2] = m[2*3 + 0]*v[0] + m[2*3 + 1]*v[1] + m[2*3 + 2]*v[2];
 }
 
-void navUkfRotateVecByRevMatrix(float *vr, float *v, float *m) {
+static void navUkfRotateVecByRevMatrix(float *vr, float *v, float *m) {
     vr[0] = m[0*3 + 0]*v[0] + m[1*3 + 0]*v[1] + m[2*3 + 0]*v[2];
     vr[1] = m[0*3 + 1]*v[0] + m[1*3 + 1]*v[1] + m[2*3 + 1]*v[2];
     vr[2] = m[0*3 + 2]*v[0] + m[1*3 + 2]*v[1] + m[2*3 + 2]*v[2];
 }
 
-void navUkfQuatToMatrix(float *m, float *q, int normalize) {
+static void navUkfQuatToMatrix(float *m, float *q, int normalize) {
     float sqw = q[0]*q[0];
     float sqx = q[1]*q[1];
     float sqy = q[2]*q[2];
@@ -193,9 +193,9 @@ void navUkfQuatToMatrix(float *m, float *q, int normalize) {
 
     // get the invert square length
     if (normalize)
-	    invs = 1.0f / (sqx + sqy + sqz + sqw);
+	invs = 1.0f / (sqx + sqy + sqz + sqw);
     else
-	    invs = 1.0f;
+	invs = 1.0f;
 
     // rotation matrix is scaled by inverse square length
     m[0*3 + 0] = ( sqx - sqy - sqz + sqw) * invs;
@@ -249,80 +249,161 @@ void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll) {
 }
 
 // result and source can be the same
-void navUkfRotateQuat(float *qr, float *q, float *rate, float dt) {
-    float q1[4];
-    float s, t, lg;
-    float qMag;
+//static void navUkfRotateQuat(float *qr, float *q, float *rate, float dt) {
+//    float q1[4];
+//    float s, t, lg;
+//    float qMag;
+//
+//    s = __sqrtf(rate[0]*rate[0] + rate[1]*rate[1] + rate[2]*rate[2]) * 0.5f;
+//    t = -(0.5f * sinf(s) / s);
+//    rate[0] *= t;
+//    rate[1] *= t;
+//    rate[2] *= t;
+//
+//    // create Lagrange factor to control quat's numerical integration errors
+//    qMag = q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3];
+//    lg = cosf(s) + (1.0f - qMag*qMag) * dt * dt;
+//
+//    // rotate
+//    q1[0] = q[0];
+//    q1[1] = q[1];
+//    q1[2] = q[2];
+//    q1[3] = q[3];
+//
+//    qr[0] =  lg*q1[0]      + rate[0]*q1[1] + rate[1]*q1[2] + rate[2]*q1[3];
+//    qr[1] = -rate[0]*q1[0] + lg*q1[1]      - rate[2]*q1[2] + rate[1]*q1[3];
+//    qr[2] = -rate[1]*q1[0] + rate[2]*q1[1] + lg*q1[2]      - rate[0]*q1[3];
+//    qr[3] = -rate[2]*q1[0] - rate[1]*q1[1] + rate[0]*q1[2] + lg*q1[3];
+//}
 
-    s = __sqrtf(rate[0]*rate[0] + rate[1]*rate[1] + rate[2]*rate[2]) * 0.5f;
-    t = -(0.5f * sinf(s) / s);
-    rate[0] *= t;
-    rate[1] *= t;
-    rate[2] *= t;
+// result and source can be the same
+static void navUkfRotateQuat(float *qOut, float *qIn, float *rate, float dt) {
+    float q[4];
+    float r[3];
 
-    // create Lagrange factor to control quat's numerical integration errors
-    qMag = q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3];
-    lg = cosf(s) + (1.0f - qMag*qMag) * dt * dt;
+    r[0] = rate[0] * -0.5f;
+    r[1] = rate[1] * -0.5f;
+    r[2] = rate[2] * -0.5f;
+
+    q[0] = qIn[0];
+    q[1] = qIn[1];
+    q[2] = qIn[2];
+    q[3] = qIn[3];
 
     // rotate
-    q1[0] = q[0];
-    q1[1] = q[1];
-    q1[2] = q[2];
-    q1[3] = q[3];
-
-    qr[0] =  lg*q1[0]      + rate[0]*q1[1] + rate[1]*q1[2] + rate[2]*q1[3];
-    qr[1] = -rate[0]*q1[0] + lg*q1[1]      - rate[2]*q1[2] + rate[1]*q1[3];
-    qr[2] = -rate[1]*q1[0] + rate[2]*q1[1] + lg*q1[2]      - rate[0]*q1[3];
-    qr[3] = -rate[2]*q1[0] - rate[1]*q1[1] + rate[0]*q1[2] + lg*q1[3];
+    qOut[0] =       q[0] + r[0]*q[1] + r[1]*q[2] + r[2]*q[3];
+    qOut[1] = -r[0]*q[0] +      q[1] - r[2]*q[2] + r[1]*q[3];
+    qOut[2] = -r[1]*q[0] + r[2]*q[1] +      q[2] - r[0]*q[3];
+    qOut[3] = -r[2]*q[0] - r[1]*q[1] + r[0]*q[2] +      q[3];
 }
 
-float t1, t2, t3;
-void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt) {
+void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, int n) {
     float tmp[3], acc[3];
     float rate[3];
     float mat3x3[3*3];
+    float q[4];
+    int i;
 
-    // acc bias
-    out[6] = in[6] + noise[0] * dt;
-    out[7] = in[7] + noise[1] * dt;
-    out[8] = in[8] + noise[2] * dt;
+    for (i = 0; i < n; i++) {
+	// pos
+	out[3*n + i] = in[3*n + i] + in[0*n + i] *  dt + noise[13*n + i];
+	out[4*n + i] = in[4*n + i] + in[1*n + i] *  dt + noise[14*n + i];
+	out[5*n + i] = in[5*n + i] - in[2*n + i] *  dt + noise[15*n + i];
 
-    // gbias
-    out[9] = in[9] + noise[3] * dt;
-    out[10] = in[10] + noise[4] * dt;
-    out[11] = in[11] + noise[5] * dt;
+	// pres alt
+	out[16*n + i] = in[16*n + i] - in[2*n + i] * dt + noise[9*n + i];
 
-    // rate = rate + bias + noise
-    rate[0] = (u[3] + out[9]  + noise[6]) * dt;
-    rate[1] = (u[4] + out[10] + noise[7]) * dt;
-    rate[2] = (u[5] + out[11] + noise[8]) * dt;
+	// create rot matrix from current quat
+	q[0] = in[12*n + i];
+	q[1] = in[13*n + i];
+	q[2] = in[14*n + i];
+	q[3] = in[15*n + i];
+	navUkfQuatToMatrix(mat3x3, q, 1);
 
-    // rotate
-    navUkfRotateQuat(&out[12], &in[12], rate, dt);
-    navUkfQuatToMatrix(mat3x3, &out[12], 1);
+	// acc
+	tmp[0] = u[0] + in[6*n + i];
+	tmp[1] = u[1] + in[7*n + i];
+	tmp[2] = u[2] + in[8*n + i];
 
-    // acc
-    tmp[0] = u[0] + out[6];
-    tmp[1] = u[1] + out[7];
-    tmp[2] = u[2] + out[8];
+	// rotate acc to world frame
+	navUkfRotateVecByMatrix(acc, tmp, mat3x3);
+	acc[2] += GRAVITY;
 
-    // rotate acc to world frame
-    navUkfRotateVecByMatrix(acc, tmp, mat3x3);
-    acc[2] += GRAVITY;
+	// vel
+	out[0*n + i] = in[0*n + i] + acc[0] * dt + noise[10*n + i];
+	out[1*n + i] = in[1*n + i] + acc[1] * dt + noise[11*n + i];
+	out[2*n + i] = in[2*n + i] + acc[2] * dt + noise[12*n + i];
 
-    // vel
-    out[0] = in[0] + acc[0] * dt + noise[10];
-    out[1] = in[1] + acc[1] * dt + noise[11];
-    out[2] = in[2] + acc[2] * dt + noise[12];
+	// acc bias
+	out[6*n + i] = in[6*n + i] + noise[0*n + i] * dt;
+	out[7*n + i] = in[7*n + i] + noise[1*n + i] * dt;
+	out[8*n + i] = in[8*n + i] + noise[2*n + i] * dt;
 
-    // pos
-    out[3] = in[3] + (in[0] + out[0]) * 0.5f * dt + noise[13];
-    out[4] = in[4] + (in[1] + out[1]) * 0.5f * dt + noise[14];
-    out[5] = in[5] - (in[2] + out[2]) * 0.5f * dt + noise[15];
+	// rate = rate + bias + noise
+	rate[0] = (u[3] + in[9*n + i]  + noise[6*n + i]) * dt;
+	rate[1] = (u[4] + in[10*n + i] + noise[7*n + i]) * dt;
+	rate[2] = (u[5] + in[11*n + i] + noise[8*n + i]) * dt;
 
-    // pres alt
-    out[16] = in[16] - (in[2] + out[2]) * 0.5f * dt + noise[9];
+	// rotate quat
+	navUkfRotateQuat(q, q, rate, dt);
+	out[12*n + i] = q[0];
+	out[13*n + i] = q[1];
+	out[14*n + i] = q[2];
+	out[15*n + i] = q[3];
+
+	// gbias
+	out[9*n + i]  = in[9*n + i]  + noise[3*n + i] * dt;
+	out[10*n + i] = in[10*n + i] + noise[4*n + i] * dt;
+	out[11*n + i] = in[11*n + i] + noise[5*n + i] * dt;
+    }
 }
+
+//void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt) {
+//    float tmp[3], acc[3];
+//    float rate[3];
+//    float mat3x3[3*3];
+//
+//    // acc bias
+//    out[6] = in[6] + noise[0] * dt;
+//    out[7] = in[7] + noise[1] * dt;
+//    out[8] = in[8] + noise[2] * dt;
+//
+//    // gbias
+//    out[9] = in[9] + noise[3] * dt;
+//    out[10] = in[10] + noise[4] * dt;
+//    out[11] = in[11] + noise[5] * dt;
+//
+//    // rate = rate + bias + noise
+//    rate[0] = (u[3] + out[9]  + noise[6]) * dt;
+//    rate[1] = (u[4] + out[10] + noise[7]) * dt;
+//    rate[2] = (u[5] + out[11] + noise[8]) * dt;
+//
+//    // rotate
+//    navUkfRotateQuat(&out[12], &in[12], rate, dt);
+//    navUkfQuatToMatrix(mat3x3, &out[12], 1);
+//
+//    // acc
+//    tmp[0] = u[0] + out[6];
+//    tmp[1] = u[1] + out[7];
+//    tmp[2] = u[2] + out[8];
+//
+//    // rotate acc to world frame
+//    navUkfRotateVecByMatrix(acc, tmp, mat3x3);
+//    acc[2] += GRAVITY;
+//
+//    // vel
+//    out[0] = in[0] + acc[0] * dt + noise[10];
+//    out[1] = in[1] + acc[1] * dt + noise[11];
+//    out[2] = in[2] + acc[2] * dt + noise[12];
+//
+//    // pos
+//    out[3] = in[3] + (in[0] + out[0]) * 0.5f * dt + noise[13];
+//    out[4] = in[4] + (in[1] + out[1]) * 0.5f * dt + noise[14];
+//    out[5] = in[5] - (in[2] + out[2]) * 0.5f * dt + noise[15];
+//
+//    // pres alt
+//    out[16] = in[16] - (in[2] + out[2]) * 0.5f * dt + noise[9];
+//}
 
 void navUkfRateUpdate(float *u, float *x, float *noise, float *y) {
     y[0] = -x[9+(int)u[0]] + noise[0];

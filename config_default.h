@@ -186,8 +186,8 @@
 #define DEFAULT_NAV_LANDING_VEL	    1.5f	// m/s
 
 // speed => tilt PID
-#define DEFAULT_NAV_SPEED_P	    7.0f
-#define DEFAULT_NAV_SPEED_I	    0.005f
+#define DEFAULT_NAV_SPEED_P	    10.5f
+#define DEFAULT_NAV_SPEED_I	    0.0075f
 #define DEFAULT_NAV_SPEED_PM	    20.0f
 #define DEFAULT_NAV_SPEED_IM	    20.0f
 #define DEFAULT_NAV_SPEED_OM	    30.0f

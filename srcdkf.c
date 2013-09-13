@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "srcdkf.h"
@@ -120,7 +120,7 @@ srcdkf_t *srcdkfInit(int s, int m, int v, int n, SRCDKFTimeUpdate_t *timeUpdate)
 }
 
 // given noise matrix
-void srcdkfCalcSigmaPoints(srcdkf_t *f, arm_matrix_instance_f32 *Sn) {
+static void srcdkfCalcSigmaPoints(srcdkf_t *f, arm_matrix_instance_f32 *Sn) {
 	int S = f->S;			// number of states
 	int N = Sn->numRows;		// number of noise variables
 	int A = S+N;			// number of agumented states
@@ -170,11 +170,10 @@ void srcdkfTimeUpdate(srcdkf_t *f, float32_t *u, float32_t dt) {
 	int V = f->V;			// number of noise variables
 	int L;				// number of sigma points
 	float32_t *x = f->x.pData;	// state estimate
-//	float32_t *Sv = f->Sv.pData;	// process covariance
 	float32_t *Xa = f->Xa.pData;	// augmented sigma points
-	float32_t *xIn = f->xIn;	// callback buffer
-	float32_t *xOut = f->xOut;	// callback buffer
-	float32_t *xNoise = f->xNoise;	// callback buffer
+//	float32_t *xIn = f->xIn;	// callback buffer
+//	float32_t *xOut = f->xOut;	// callback buffer
+//	float32_t *xNoise = f->xNoise;	// callback buffer
 	float32_t *qrTempS = f->qrTempS.pData;
 	int i, j;
 
@@ -182,18 +181,19 @@ void srcdkfTimeUpdate(srcdkf_t *f, float32_t *u, float32_t dt) {
 	L = f->L;
 
 	// Xa = f(Xx, Xv, u, dt)
-	for (i = 0; i < L; i++) {
-		for (j = 0; j < S; j++)
-			xIn[j] = Xa[j*L + i];
-
-		for (j = 0; j < V; j++)
-			xNoise[j] = Xa[(S+j)*L + i];
-
-		f->timeUpdate(xIn, xNoise, xOut, u, dt);
-
-		for (j = 0; j < S; j++)
-			Xa[j*L + i] = xOut[j];
-	}
+//	for (i = 0; i < L; i++) {
+//		for (j = 0; j < S; j++)
+//			xIn[j] = Xa[j*L + i];
+//
+//		for (j = 0; j < V; j++)
+//			xNoise[j] = Xa[(S+j)*L + i];
+//
+//		f->timeUpdate(xIn, xNoise, xOut, u, dt);
+//
+//		for (j = 0; j < S; j++)
+//			Xa[j*L + i] = xOut[j];
+//	}
+	f->timeUpdate(&Xa[0], &Xa[S*L], &Xa[0], u, dt, L);
 
 	// sum weighted resultant sigma points to create estimated state
 	f->w0m = (f->hh - (float32_t)(S+V)) / f->hh;
@@ -215,11 +215,8 @@ void srcdkfTimeUpdate(srcdkf_t *f, float32_t *u, float32_t dt) {
 			qrTempS[rOffset + S+V + j] = (Xa[i*L + j + 1] + Xa[i*L + S+V + j + 1] - 2.0f*Xa[i*L + 0]) * f->wic2;
 		}
 	}
-//matrixDump("qrTempS", &f->qrTempS);
-//yield(1);
+
 	qrDecompositionT_f32(&f->qrTempS, NULL, &f->SxT);   // with transposition
-//matrixDump("SxT", &f->SxT);
-//yield(200);
 	arm_mat_trans_f32(&f->SxT, &f->Sx);
 }
 
@@ -241,8 +238,6 @@ void srcdkfMeasurementUpdate(srcdkf_t *f, float32_t *u, float32_t *ym, int M, in
 	float32_t *xUpdate = f->xUpdate.pData;	// S x 1 matrix
 	float32_t *x = f->x.pData;			// state estimate
 	float32_t *Sx = f->Sx.pData;
-//	float32_t *SxT = f->SxT.pData;
-//	float32_t *Pxy = f->Pxy.pData;
 	float32_t *Q = f->Q.pData;
 	float32_t *qrFinal = f->qrFinal.pData;
 	int L;					// number of sigma points
@@ -333,12 +328,8 @@ void srcdkfMeasurementUpdate(srcdkf_t *f, float32_t *u, float32_t *ym, int M, in
 			D[i*(S+N) + j] = d;
 		}
 	}
-//matrixDump("Y", &f->Y);
-//yield(1);
-//matrixDump("qrTempM", &f->qrTempM);
-	qrDecompositionT_f32(&f->qrTempM, NULL, &f->SyT);	// with transposition
-//matrixDump("SyT", &f->SyT);
 
+	qrDecompositionT_f32(&f->qrTempM, NULL, &f->SyT);	// with transposition
 
 	arm_mat_trans_f32(&f->SyT, &f->Sy);
 	arm_mat_trans_f32(&f->SyT, &f->SyC);		// make copy as later Div is destructive
@@ -354,7 +345,7 @@ void srcdkfMeasurementUpdate(srcdkf_t *f, float32_t *u, float32_t *ym, int M, in
 	for (i = 0; i < M; i++)
 		inov[i] = ym[i] - y[i];
 	arm_mat_mult_f32(&f->K, &f->inov, &f->xUpdate);
-//matrixDump("K", &f->K);
+
 	for (i = 0; i < S; i++)
 		x[i] += xUpdate[i];
 
@@ -436,7 +427,7 @@ void paramsrcdkfSetRM(srcdkf_t *f, float32_t rm) {
 srcdkf_t *paramsrcdkfInit(int w, int d, int n, SRCDKFMeasurementUpdate_t *map) {
 	srcdkf_t *f;
 
-	f = srcdkfInit(w, d, w, n, (void(*)(float32_t*, float32_t*, float32_t*, float32_t*, float32_t))0);
+	f = srcdkfInit(w, d, w, n, (void(*)(float32_t*, float32_t*, float32_t*, float32_t*, float32_t, int))0);
 
 	f->M = d;
 	f->N = n;

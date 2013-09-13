@@ -119,16 +119,19 @@ uint8_t *canSetRunMode(uint32_t tt, uint8_t tid, uint8_t mode) {
 }
 
 uint8_t *canSetGroup(uint8_t tid, uint8_t gid, uint8_t sgid) {
-    canData.nodes[tid-1].groupId = gid;
-    canData.nodes[tid-1].subgroupId = sgid;
+    uint8_t data[2];
+
+    canData.nodes[tid-1].groupId = data[0] = gid;
+    canData.nodes[tid-1].subgroupId = data[1] = sgid;
     return canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_SET | (CAN_DATA_GROUP<<19), tid, 2, &canData.nodes[tid-1].groupId);
 }
 
 uint8_t *canSetParam(uint32_t tt, uint8_t tid, uint16_t paramId, float value) {
     uint32_t data[2];
+    float *fPtr = (float *)&data[1];
 
     data[0] = paramId;
-    *(float *)&data[1] = value;
+    *fPtr = value;
 
     return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_SET | (CAN_DATA_PARAM<<19), tid, 8, (uint8_t *)&data);
 }
