@@ -30,8 +30,8 @@ BOARD_REV ?= 0
 INCR_BUILDNUM ?= 1
 # Use the single-folder source file organization from AQ repo? (0|1)
 FLAT_SRC ?= 1
-# Produced binaries file name prefix
-BIN_NAME ?= aqv6.8
+# Produced binaries file name prefix (version/revision/build/hardware info will be automatically appended)
+BIN_NAME ?= aq
 # Build debug version? (0|1; true by default if build_type contains the word "debug")
 ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 	DEBUG_BUILD ?= 1
@@ -88,6 +88,7 @@ BIN_PATH = $(BUILD_PATH)/$(BUILD_TYPE)
 CMD_BUILDNUMBER = $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{ $$NF=$$NF+1 } 1' $(SRC_PATH)/buildnum.h > $(SRC_PATH)/tmp_buildnum.h && $(EXE_MV) $(SRC_PATH)/tmp_buildnum.h $(SRC_PATH)/buildnum.h)
 
 # get current revision and build numbers
+FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"]+" }$$2 ~ /FI(MR|RM)WARE_VERSION/{print $$3}' $(SRC_PATH)/getbuildnum.h)
 REV_NUM := $(shell $(EXE_AWK) '$$2 ~ /REVISION/{print $$4}' $(SRC_PATH)/buildnum.h)
 BUILD_NUM := $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{print $$NF}' $(SRC_PATH)/buildnum.h)
 ifeq ($(INCR_BUILDNUM), 1)
@@ -96,10 +97,11 @@ endif
 
 # Resulting bin file names before extension
 ifeq ($(DEBUG_BUILD), 1)
+	# debug build gets a consistent name to simplify dev setup
 	BIN_NAME := $(BIN_NAME)-debug
 	INCR_BUILDNUM = 0
 else
-	BIN_NAME := $(BIN_NAME).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
+	BIN_NAME := $(BIN_NAME)v$(FW_VER).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
 	ifdef BIN_SUFFIX
 		BIN_NAME := $(BIN_NAME)-$(BIN_SUFFIX)
 	endif
@@ -189,6 +191,7 @@ LINKER_OPTS = -ereset_handler --omagic -defsym=__do_debug_operation=__do_debug_o
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
 EXTRA_LIB_FILES = libm_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_v7em_fpv4_sp_d16_hard_t_le_eabi.a libcpp_v7em_fpv4_sp_d16_hard_t_le_eabi.a \
 	libdebugio_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_targetio_impl_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_user_libc_v7em_fpv4_sp_d16_hard_t_le_eabi.a
+
 EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 
 
@@ -207,8 +210,26 @@ AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o 
 ## other objects to create
 
 # STM32 related including preprocessor and startup 
-STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o \
-	stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o system_stm32f4xx.o STM32_Startup.o thumb_crt0.o
+STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_hash.o stm32f4xx_hash_md5.o \
+	stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o \
+	system_stm32f4xx.o STM32_Startup.o thumb_crt0.o
+	
+# CoOS
+COOS_OBJ_FILES = arch.o core.o event.o flag.o kernelHeap.o mbox.o mm.o mutex.o port.o queue.o sem.o serviceReq.o task.o time.o timer.o utility.o
+	
+# ARM
+DSPLIB_OBJ_FILES = arm_fill_f32.o arm_copy_f32.o arm_mat_init_f32.o arm_mat_inverse_f32.o arm_mat_trans_f32.o arm_mat_mult_f32.o \
+	arm_mat_add_f32.o arm_mat_sub_f32.o arm_mean_f32.o arm_scale_f32.o arm_std_f32.o
+	
+# FATfs
+FATFS_OBJ_FILES = ff.o
+	
+# Digital IMU
+DIGI_OBJ_FILES = d_imu.o hmc5983.o mpu6000.o ms5611.o
+
+
+## assemble object lists
+
 ifeq ($(STM32SYS_PATH),$(SRC_PATH))
 	STM32_SYS_OBJS := $(STM32_SYS_OBJ_FILES)
 	STM32_OBJ_TARGET := $(OBJ_PATH)
@@ -216,42 +237,28 @@ else
 	STM32_SYS_OBJS := $(addprefix $(STM32SYS_PATH)/, $(STM32_SYS_OBJ_FILES))
 	STM32_OBJ_TARGET := $(OBJ_PATH)/$(STM32SYS_PATH)
 endif
-
-# CoOS
-COOS_OBJ_FILES = arch.o core.o event.o flag.o kernelHeap.o mbox.o mm.o mutex.o port.o queue.o sem.o serviceReq.o task.o time.o timer.o utility.o
 ifeq ($(COOS_PATH),$(SRC_PATH))
 	COOS_OBJS := $(COOS_OBJ_FILES)
 else
 	COOS_OBJS := $(addprefix $(COOS_PATH)/, $(COOS_OBJ_FILES))
 endif
-
-# ARM
-DSPLIB_OBJ_FILES = arm_fill_f32.o arm_copy_f32.o arm_mat_init_f32.o arm_mat_inverse_f32.o arm_mat_trans_f32.o arm_mat_mult_f32.o \
-	arm_mat_add_f32.o arm_mat_sub_f32.o arm_mean_f32.o arm_scale_f32.o arm_std_f32.o
 ifeq ($(DSP_PATH),$(SRC_PATH))
 	DSPLIB_OBJS := $(DSPLIB_OBJ_FILES)
 else
 	DSPLIB_OBJS := $(addprefix $(DSP_PATH)/, $(DSPLIB_OBJ_FILES))
 endif
-
-# FATfs
-FATFS_OBJ_FILES = ff.o
 ifeq ($(FATFS_PATH),$(SRC_PATH))
 	FATFS_OBJS := $(FATFS_OBJ_FILES)
 else
 	FATFS_OBJS := $(addprefix $(FATFS_PATH)/, $(FATFS_OBJ_FILES))
 endif
-
-# Digital IMU
-DIGI_OBJ_FILES = d_imu.o hmc5983.o mpu6000.o ms5611.o
 ifeq ($(DIGI_PATH),$(SRC_PATH))
 	DIGI_OBJS := $(DIGI_OBJ_FILES)
 else
 	DIGI_OBJS := $(addprefix $(DIGI_PATH)/, $(DIGI_OBJ_FILES))
 endif
 
-
-## all objects
+# all objects
 C_OBJECTS := $(addprefix $(OBJ_PATH)/, $(AQV6_OBJS) $(STM32_SYS_OBJS) $(COOS_OBJS) $(DSPLIB_OBJS) $(FATFS_OBJS) $(DIGI_OBJS))
 
 # dependency files generated by previous make runs
