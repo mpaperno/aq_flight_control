@@ -304,11 +304,14 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, i
     float q[4];
     int i;
 
+    // assume out == in
+    out = in;
+
     for (i = 0; i < n; i++) {
 	// pos
-	out[3*n + i] = in[3*n + i] + in[0*n + i] *  dt + noise[13*n + i];
-	out[4*n + i] = in[4*n + i] + in[1*n + i] *  dt + noise[14*n + i];
-	out[5*n + i] = in[5*n + i] - in[2*n + i] *  dt + noise[15*n + i];
+	out[3*n + i] = in[3*n + i] + in[0*n + i] * dt + noise[13*n + i];
+	out[4*n + i] = in[4*n + i] + in[1*n + i] * dt + noise[14*n + i];
+	out[5*n + i] = in[5*n + i] - in[2*n + i] * dt + noise[15*n + i];
 
 	// pres alt
 	out[16*n + i] = in[16*n + i] - in[2*n + i] * dt + noise[9*n + i];
@@ -357,53 +360,6 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, i
 	out[11*n + i] = in[11*n + i] + noise[5*n + i] * dt;
     }
 }
-
-//void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt) {
-//    float tmp[3], acc[3];
-//    float rate[3];
-//    float mat3x3[3*3];
-//
-//    // acc bias
-//    out[6] = in[6] + noise[0] * dt;
-//    out[7] = in[7] + noise[1] * dt;
-//    out[8] = in[8] + noise[2] * dt;
-//
-//    // gbias
-//    out[9] = in[9] + noise[3] * dt;
-//    out[10] = in[10] + noise[4] * dt;
-//    out[11] = in[11] + noise[5] * dt;
-//
-//    // rate = rate + bias + noise
-//    rate[0] = (u[3] + out[9]  + noise[6]) * dt;
-//    rate[1] = (u[4] + out[10] + noise[7]) * dt;
-//    rate[2] = (u[5] + out[11] + noise[8]) * dt;
-//
-//    // rotate
-//    navUkfRotateQuat(&out[12], &in[12], rate, dt);
-//    navUkfQuatToMatrix(mat3x3, &out[12], 1);
-//
-//    // acc
-//    tmp[0] = u[0] + out[6];
-//    tmp[1] = u[1] + out[7];
-//    tmp[2] = u[2] + out[8];
-//
-//    // rotate acc to world frame
-//    navUkfRotateVecByMatrix(acc, tmp, mat3x3);
-//    acc[2] += GRAVITY;
-//
-//    // vel
-//    out[0] = in[0] + acc[0] * dt + noise[10];
-//    out[1] = in[1] + acc[1] * dt + noise[11];
-//    out[2] = in[2] + acc[2] * dt + noise[12];
-//
-//    // pos
-//    out[3] = in[3] + (in[0] + out[0]) * 0.5f * dt + noise[13];
-//    out[4] = in[4] + (in[1] + out[1]) * 0.5f * dt + noise[14];
-//    out[5] = in[5] - (in[2] + out[2]) * 0.5f * dt + noise[15];
-//
-//    // pres alt
-//    out[16] = in[16] - (in[2] + out[2]) * 0.5f * dt + noise[9];
-//}
 
 void navUkfRateUpdate(float *u, float *x, float *noise, float *y) {
     y[0] = -x[9+(int)u[0]] + noise[0];
