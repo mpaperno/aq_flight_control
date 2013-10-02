@@ -31,6 +31,7 @@ typedef struct {
     OS_FlagID runFlag;
 
     float bestHacc;
+    float accMask;
     float accHist[3][RUN_SENSOR_HIST];
     float magHist[3][RUN_SENSOR_HIST];
     float presHist[RUN_SENSOR_HIST];

@@ -236,7 +236,7 @@ void navNavigate(void) {
     digitalLo(gpsData.gpsLed);
 
     // do we have a sufficient, recent fix?
-    if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && gpsData.hAcc < NAV_MIN_GPS_ACC) {
+    if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && (gpsData.hAcc + runData.accMask) < NAV_MIN_GPS_ACC) {
 	// activate GPS LED
 	digitalHi(gpsData.gpsLed);
 	navData.navCapable = 1;

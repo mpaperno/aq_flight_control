@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -49,6 +49,9 @@ void runTaskCode(void *unused) {
     while (1) {
 	// wait for data
 	CoWaitForSingleFlag(imuData.sensorFlag, 0);
+
+	// soft start GPS accuracy
+	runData.accMask *= 0.999f;
 
 	navUkfInertialUpdate();
 
@@ -101,7 +104,7 @@ void runTaskCode(void *unused) {
 	}
 	// only accept GPS updates if there is no optical flow
 	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
-	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc, gpsData.vAcc);
+	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc + runData.accMask, gpsData.vAcc + runData.accMask);
 	    CoClearFlag(gpsData.gpsPosFlag);
 	    // refine static sea level pressure based on better GPS altitude fixes
 	    if (gpsData.hAcc < runData.bestHacc && gpsData.hAcc < NAV_MIN_GPS_ACC) {
@@ -110,7 +113,7 @@ void runTaskCode(void *unused) {
 	    }
 	}
 	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
-	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc);
+	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc + runData.accMask);
 	    CoClearFlag(gpsData.gpsVelFlag);
 	}
 	// observe that the rates are exactly 0 if not flying or moving
@@ -191,7 +194,8 @@ void runInit(void) {
 
     runData.sensorHistIndex = 0;
 
-    runData.bestHacc = 99.9f;
+    runData.bestHacc = 1000.0f;
+    runData.accMask = 1000.0f;
 
 #ifdef USE_MAVLINK
     // configure px4flow sensor

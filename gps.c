@@ -124,12 +124,6 @@ void gpsInit(void) {
     gpsData.baudCycle[1] = 9600;
     gpsData.baudCycle[2] = 0;
 
-//    gpsData.baudCycle[2] = 230400;
-//    gpsData.baudCycle[3] = 115200;
-//    gpsData.baudCycle[4] = 19200;
-//    gpsData.baudCycle[5] = 38400;
-//    gpsData.baudCycle[6] = 0;
-
     gpsData.baudSlot = 0;
 
     gpsData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN);
@@ -168,7 +162,7 @@ void gpsInit(void) {
 
     gpsData.microsPerSecond = AQ_US_PER_SEC<<11;
 
-    gpsData.hAcc = gpsData.vAcc = gpsData.sAcc = 1e6f;
+    gpsData.hAcc = gpsData.vAcc = gpsData.sAcc = 100.0f;
 
 #ifdef GPS_LOG_BUF
     gpsData.logHandle = filerGetHandle(GPS_FNAME);
