@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "nav_ukf.h"
@@ -249,34 +249,6 @@ void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll) {
 }
 
 // result and source can be the same
-//static void navUkfRotateQuat(float *qr, float *q, float *rate, float dt) {
-//    float q1[4];
-//    float s, t, lg;
-//    float qMag;
-//
-//    s = __sqrtf(rate[0]*rate[0] + rate[1]*rate[1] + rate[2]*rate[2]) * 0.5f;
-//    t = -(0.5f * sinf(s) / s);
-//    rate[0] *= t;
-//    rate[1] *= t;
-//    rate[2] *= t;
-//
-//    // create Lagrange factor to control quat's numerical integration errors
-//    qMag = q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3];
-//    lg = cosf(s) + (1.0f - qMag*qMag) * dt * dt;
-//
-//    // rotate
-//    q1[0] = q[0];
-//    q1[1] = q[1];
-//    q1[2] = q[2];
-//    q1[3] = q[3];
-//
-//    qr[0] =  lg*q1[0]      + rate[0]*q1[1] + rate[1]*q1[2] + rate[2]*q1[3];
-//    qr[1] = -rate[0]*q1[0] + lg*q1[1]      - rate[2]*q1[2] + rate[1]*q1[3];
-//    qr[2] = -rate[1]*q1[0] + rate[2]*q1[1] + lg*q1[2]      - rate[0]*q1[3];
-//    qr[3] = -rate[2]*q1[0] - rate[1]*q1[1] + rate[0]*q1[2] + lg*q1[3];
-//}
-
-// result and source can be the same
 static void navUkfRotateQuat(float *qOut, float *qIn, float *rate, float dt) {
     float q[4];
     float r[3];
@@ -309,106 +281,106 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, i
 
     for (i = 0; i < n; i++) {
 	// pos
-	out[3*n + i] = in[3*n + i] + in[0*n + i] * dt + noise[13*n + i];
-	out[4*n + i] = in[4*n + i] + in[1*n + i] * dt + noise[14*n + i];
-	out[5*n + i] = in[5*n + i] - in[2*n + i] * dt + noise[15*n + i];
+	out[UKF_STATE_POSN*n + i] = in[UKF_STATE_POSN*n + i] + in[UKF_STATE_VELN*n + i] * dt + noise[UKF_V_NOISE_POSN*n + i];
+	out[UKF_STATE_POSE*n + i] = in[UKF_STATE_POSE*n + i] + in[UKF_STATE_VELE*n + i] * dt + noise[UKF_V_NOISE_POSE*n + i];
+	out[UKF_STATE_POSD*n + i] = in[UKF_STATE_POSD*n + i] - in[UKF_STATE_VELD*n + i] * dt + noise[UKF_V_NOISE_POSD*n + i];
 
 	// pres alt
-	out[16*n + i] = in[16*n + i] - in[2*n + i] * dt + noise[9*n + i];
+	out[UKF_STATE_PRES_ALT*n + i] = in[UKF_STATE_PRES_ALT*n + i] - in[UKF_STATE_VELD*n + i] * dt + noise[UKF_V_NOISE_PRES_ALT*n + i];
 
 	// create rot matrix from current quat
-	q[0] = in[12*n + i];
-	q[1] = in[13*n + i];
-	q[2] = in[14*n + i];
-	q[3] = in[15*n + i];
+	q[0] = in[UKF_STATE_Q1*n + i];
+	q[1] = in[UKF_STATE_Q2*n + i];
+	q[2] = in[UKF_STATE_Q3*n + i];
+	q[3] = in[UKF_STATE_Q4*n + i];
 	navUkfQuatToMatrix(mat3x3, q, 1);
 
 	// acc
-	tmp[0] = u[0] + in[6*n + i];
-	tmp[1] = u[1] + in[7*n + i];
-	tmp[2] = u[2] + in[8*n + i];
+	tmp[0] = u[0] + in[UKF_STATE_ACC_BIAS_X*n + i];
+	tmp[1] = u[1] + in[UKF_STATE_ACC_BIAS_Y*n + i];
+	tmp[2] = u[2] + in[UKF_STATE_ACC_BIAS_Z*n + i];
 
 	// rotate acc to world frame
 	navUkfRotateVecByMatrix(acc, tmp, mat3x3);
 	acc[2] += GRAVITY;
 
 	// vel
-	out[0*n + i] = in[0*n + i] + acc[0] * dt + noise[10*n + i];
-	out[1*n + i] = in[1*n + i] + acc[1] * dt + noise[11*n + i];
-	out[2*n + i] = in[2*n + i] + acc[2] * dt + noise[12*n + i];
+	out[UKF_STATE_VELN*n + i] = in[UKF_STATE_VELN*n + i] + acc[0] * dt + noise[UKF_V_NOISE_VELN*n + i];
+	out[UKF_STATE_VELE*n + i] = in[UKF_STATE_VELE*n + i] + acc[1] * dt + noise[UKF_V_NOISE_VELE*n + i];
+	out[UKF_STATE_VELD*n + i] = in[UKF_STATE_VELD*n + i] + acc[2] * dt + noise[UKF_V_NOISE_VELD*n + i];
 
 	// acc bias
-	out[6*n + i] = in[6*n + i] + noise[0*n + i] * dt;
-	out[7*n + i] = in[7*n + i] + noise[1*n + i] * dt;
-	out[8*n + i] = in[8*n + i] + noise[2*n + i] * dt;
+	out[UKF_STATE_ACC_BIAS_X*n + i] = in[UKF_STATE_ACC_BIAS_X*n + i] + noise[UKF_V_NOISE_ACC_BIAS_X*n + i] * dt;
+	out[UKF_STATE_ACC_BIAS_Y*n + i] = in[UKF_STATE_ACC_BIAS_Y*n + i] + noise[UKF_V_NOISE_ACC_BIAS_Y*n + i] * dt;
+	out[UKF_STATE_ACC_BIAS_Z*n + i] = in[UKF_STATE_ACC_BIAS_Z*n + i] + noise[UKF_V_NOISE_ACC_BIAS_Z*n + i] * dt;
 
 	// rate = rate + bias + noise
-	rate[0] = (u[3] + in[9*n + i]  + noise[6*n + i]) * dt;
-	rate[1] = (u[4] + in[10*n + i] + noise[7*n + i]) * dt;
-	rate[2] = (u[5] + in[11*n + i] + noise[8*n + i]) * dt;
+	rate[0] = (u[3] + in[UKF_STATE_GYO_BIAS_X*n + i] + noise[UKF_V_NOISE_RATE_X*n + i]) * dt;
+	rate[1] = (u[4] + in[UKF_STATE_GYO_BIAS_Y*n + i] + noise[UKF_V_NOISE_RATE_Y*n + i]) * dt;
+	rate[2] = (u[5] + in[UKF_STATE_GYO_BIAS_Z*n + i] + noise[UKF_V_NOISE_RATE_Z*n + i]) * dt;
 
 	// rotate quat
 	navUkfRotateQuat(q, q, rate, dt);
-	out[12*n + i] = q[0];
-	out[13*n + i] = q[1];
-	out[14*n + i] = q[2];
-	out[15*n + i] = q[3];
+	out[UKF_STATE_Q1*n + i] = q[0];
+	out[UKF_STATE_Q2*n + i] = q[1];
+	out[UKF_STATE_Q3*n + i] = q[2];
+	out[UKF_STATE_Q4*n + i] = q[3];
 
 	// gbias
-	out[9*n + i]  = in[9*n + i]  + noise[3*n + i] * dt;
-	out[10*n + i] = in[10*n + i] + noise[4*n + i] * dt;
-	out[11*n + i] = in[11*n + i] + noise[5*n + i] * dt;
+	out[UKF_STATE_GYO_BIAS_X*n + i] = in[UKF_STATE_GYO_BIAS_X*n + i] + noise[UKF_V_NOISE_GYO_BIAS_X*n + i] * dt;
+	out[UKF_STATE_GYO_BIAS_Y*n + i] = in[UKF_STATE_GYO_BIAS_Y*n + i] + noise[UKF_V_NOISE_GYO_BIAS_Y*n + i] * dt;
+	out[UKF_STATE_GYO_BIAS_Z*n + i] = in[UKF_STATE_GYO_BIAS_Z*n + i] + noise[UKF_V_NOISE_GYO_BIAS_Z*n + i] * dt;
     }
 }
 
 void navUkfRateUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = -x[9+(int)u[0]] + noise[0];
+    y[0] = -x[UKF_STATE_GYO_BIAS_X+(int)u[0]] + noise[0];
 }
 
 void navUkfAccUpdate(float *u, float *x, float *noise, float *y) {
-    navUkfRotateVectorByRevQuat(y, navUkfData.v0a, &x[12]);
+    navUkfRotateVectorByRevQuat(y, navUkfData.v0a, &x[UKF_STATE_Q1]);
     y[0] += noise[0];
     y[1] += noise[1];
     y[2] += noise[2];
 }
 
 void navUkfMagUpdate(float *u, float *x, float *noise, float *y) {
-    navUkfRotateVectorByRevQuat(y, navUkfData.v0m, &x[12]);
+    navUkfRotateVectorByRevQuat(y, navUkfData.v0m, &x[UKF_STATE_Q1]);
     y[0] += noise[0];
     y[1] += noise[1];
     y[2] += noise[2];
 }
 
 void navUkfPresUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[16] + noise[0]; // return altitude
+    y[0] = x[UKF_STATE_PRES_ALT] + noise[0]; // return altitude
 }
 
 void navUkfPresGPSAltUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[16] + noise[0];// return pres altitude
-    y[1] = x[5] + noise[1]; // return GPS altitude
+    y[0] = x[UKF_STATE_PRES_ALT] + noise[0];// return pres altitude
+    y[1] = x[UKF_STATE_POSD] + noise[1]; // return GPS altitude
 }
 
 void navUkfPosUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[3] + noise[0]; // return position
-    y[1] = x[4] + noise[1];
-    y[2] = x[5] + noise[2];
+    y[0] = x[UKF_STATE_POSN] + noise[0]; // return position
+    y[1] = x[UKF_STATE_POSE] + noise[1];
+    y[2] = x[UKF_STATE_POSD] + noise[2];
 }
 
 void navUkfVelUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[0] + noise[0]; // return velocity
-    y[1] = x[1] + noise[1];
-    y[2] = x[2] + noise[2];
+    y[0] = x[UKF_STATE_VELN] + noise[0]; // return velocity
+    y[1] = x[UKF_STATE_VELE] + noise[1];
+    y[2] = x[UKF_STATE_VELD] + noise[2];
 }
 
 void navUkfOfVelUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[0] + noise[0]; // velN
-    y[1] = x[1] + noise[1]; // velE
+    y[0] = x[UKF_STATE_VELN] + noise[0]; // velN
+    y[1] = x[UKF_STATE_VELE] + noise[1]; // velE
 }
 
 void navUkfOfPosUpdate(float *u, float *x, float *noise, float *y) {
-    y[0] = x[3] + noise[0]; // posN
-    y[1] = x[4] + noise[1]; // posE
-    y[2] = x[5] + noise[2]; // alt
+    y[0] = x[UKF_STATE_POSN] + noise[0]; // posN
+    y[1] = x[UKF_STATE_POSE] + noise[1]; // posE
+    y[2] = x[UKF_STATE_POSD] + noise[2]; // alt
 }
 
 void navUkfFinish(void) {
@@ -465,7 +437,7 @@ void simDoPresUpdate(float pres) {
     float noise[2];        // measurement variance
     float y[2];            // measurment(s)
 
-    noise[0] = p[UKF_ALT_N];
+    noise[0] = UKF_ALT_N;
 
     noise[1] = noise[0];
 
@@ -496,7 +468,7 @@ void simDoAccUpdate(float accX, float accY, float accZ) {
     y[1] = accY / norm;
     y[2] = accZ / norm;
 
-    noise[0] = p[UKF_ACC_N] + fabsf(GRAVITY - norm) * p[UKF_DIST_N];
+    noise[0] = UKF_ACC_N + fabsf(GRAVITY - norm) * UKF_DIST_N;
     if (!(supervisorData.state & STATE_FLYING)) {
 	accX -= UKF_ACC_BIAS_X;
 	accY -= UKF_ACC_BIAS_Y;
@@ -514,7 +486,7 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     float y[3];            // measurement(s)
     float norm;
 
-    noise[0] = p[UKF_MAG_N];
+    noise[0] = UKF_MAG_N;
     if (!(supervisorData.state & STATE_FLYING))
 	noise[0] *= 0.001f;
 
@@ -536,7 +508,7 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
     float posDelta[3];
     int histIndex;
 
-    if (hAcc < 4.0f && gpsData.tDOP != 0.0f) {
+    if (hAcc < NAV_MIN_GPS_ACC && gpsData.tDOP != 0.0f) {
 	if (navUkfData.holdLat == (double)0.0) {
 	    navUkfData.holdLat = lat;
 	    navUkfData.holdLon = lon;
@@ -549,7 +521,7 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	    y[2] = alt;
 
 	    // determine how far back this GPS position update came from
-	    histIndex = (timerMicros() - (gpsMicros + p[UKF_POS_DELAY])) / (int)(1e6f * AQ_TIMESTEP);
+	    histIndex = (timerMicros() - (gpsMicros + UKF_POS_DELAY)) / (int)(1e6f * AQ_TIMESTEP);
 	    histIndex = navUkfData.navHistIndex - histIndex;
 	    if (histIndex < 0)
 		histIndex += UKF_HIST;
@@ -566,9 +538,9 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	    UKF_POSE = navUkfData.posE[histIndex];
 	    UKF_POSD = navUkfData.posD[histIndex];
 
-	    noise[0] = p[UKF_GPS_POS_N] + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * p[UKF_GPS_POS_M_N];
-	    noise[1] = p[UKF_GPS_POS_N] + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * p[UKF_GPS_POS_M_N];
-	    noise[2] = p[UKF_GPS_ALT_N] + vAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * p[UKF_GPS_ALT_M_N];
+	    noise[0] = UKF_GPS_POS_N + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * UKF_GPS_POS_M_N;
+	    noise[1] = UKF_GPS_POS_N + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * UKF_GPS_POS_M_N;
+	    noise[2] = UKF_GPS_ALT_N + vAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * UKF_GPS_ALT_M_N;
 
 	    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfPosUpdate);
 
@@ -625,13 +597,13 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
     float velDelta[3];
     int histIndex;
 
-    if (sAcc < 2.0f && gpsData.tDOP != 0.0f) {
+    if (sAcc < NAV_MIN_GPS_ACC/2 && gpsData.tDOP != 0.0f) {
 	y[0] = velN;
 	y[1] = velE;
 	y[2] = velD;
 
 	// determine how far back this GPS velocity update came from
-	histIndex = (timerMicros() - (gpsMicros + p[UKF_VEL_DELAY])) / (int)(1e6f * AQ_TIMESTEP);
+	histIndex = (timerMicros() - (gpsMicros + UKF_VEL_DELAY)) / (int)(1e6f * AQ_TIMESTEP);
 	histIndex = navUkfData.navHistIndex - histIndex;
 	if (histIndex < 0)
 	    histIndex += UKF_HIST;
@@ -648,9 +620,9 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
 	UKF_VELE = navUkfData.velE[histIndex];
 	UKF_VELD = navUkfData.velD[histIndex];
 
-	noise[0] = p[UKF_GPS_VEL_N] + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * p[UKF_GPS_VEL_M_N];
-	noise[1] = p[UKF_GPS_VEL_N] + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * p[UKF_GPS_VEL_M_N];
-	noise[2] = p[UKF_GPS_VD_N]  + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * p[UKF_GPS_VD_M_N];
+	noise[0] = UKF_GPS_VEL_N + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * UKF_GPS_VEL_M_N;
+	noise[1] = UKF_GPS_VEL_N + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * UKF_GPS_VEL_M_N;
+	noise[2] = UKF_GPS_VD_N  + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * UKF_GPS_VD_M_N;
 
 	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
 
@@ -785,7 +757,7 @@ void navUkfFlowUpdate(void) {
 //	// pos update
 //	else {
 	    // TODO: properly estimate noise
-	    noise[0] = (p[UKF_GPS_POS_N] + p[UKF_GPS_POS_M_N]);
+	    noise[0] = (UKF_GPS_POS_N + UKF_GPS_POS_M_N);
 	    noise[1] = noise[0];
 
 	    navUkfCalcLocalDistance(navUkfData.flowPosN, navUkfData.flowPosE, &y[0], &y[1]);
@@ -981,47 +953,47 @@ void navUkfInit(void) {
 
     // rotate local mag vector to align with true north
     navUkfData.v0m[0] = mag[0] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) - mag[1] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
-    navUkfData.v0m[1] = mag[1] * cosf(p[IMU_MAG_DECL]  * DEG_TO_RAD) + mag[0] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
+    navUkfData.v0m[1] = mag[1] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) + mag[0] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
     navUkfData.v0m[2] = mag[2];
 
     navUkfData.kf = srcdkfInit(SIM_S, SIM_M, SIM_V, SIM_N, navUkfTimeUpdate);
 
     navUkfData.x = srcdkfGetState(navUkfData.kf);
 
-    Q[0] = p[UKF_VEL_Q];
-    Q[1] = p[UKF_VEL_Q];
-    Q[2] = p[UKF_VEL_ALT_Q];
-    Q[3] = p[UKF_POS_Q];
-    Q[4] = p[UKF_POS_Q];
-    Q[5] = p[UKF_POS_ALT_Q];
-    Q[6] = p[UKF_ACC_BIAS_Q];
-    Q[7] = p[UKF_ACC_BIAS_Q];
-    Q[8] = p[UKF_ACC_BIAS_Q];
-    Q[9] = p[UKF_GYO_BIAS_Q];
-    Q[10] = p[UKF_GYO_BIAS_Q];
-    Q[11] = p[UKF_GYO_BIAS_Q];
-    Q[12] = p[UKF_QUAT_Q];
-    Q[13] = p[UKF_QUAT_Q];
-    Q[14] = p[UKF_QUAT_Q];
-    Q[15] = p[UKF_QUAT_Q];
-    Q[16] = p[UKF_PRES_ALT_Q];
+    Q[0] = UKF_VEL_Q;
+    Q[1] = UKF_VEL_Q;
+    Q[2] = UKF_VEL_ALT_Q;
+    Q[3] = UKF_POS_Q;
+    Q[4] = UKF_POS_Q;
+    Q[5] = UKF_POS_ALT_Q;
+    Q[6] = UKF_ACC_BIAS_Q;
+    Q[7] = UKF_ACC_BIAS_Q;
+    Q[8] = UKF_ACC_BIAS_Q;
+    Q[9] = UKF_GYO_BIAS_Q;
+    Q[10] = UKF_GYO_BIAS_Q;
+    Q[11] = UKF_GYO_BIAS_Q;
+    Q[12] = UKF_QUAT_Q;
+    Q[13] = UKF_QUAT_Q;
+    Q[14] = UKF_QUAT_Q;
+    Q[15] = UKF_QUAT_Q;
+    Q[16] = UKF_PRES_ALT_Q;
 
-    V[0] = p[UKF_ACC_BIAS_V];
-    V[1] = p[UKF_ACC_BIAS_V];
-    V[2] = p[UKF_ACC_BIAS_V];
-    V[3] = p[UKF_GYO_BIAS_V];
-    V[4] = p[UKF_GYO_BIAS_V];
-    V[5] = p[UKF_GYO_BIAS_V];
-    V[6] = p[UKF_RATE_V];
-    V[7] = p[UKF_RATE_V];
-    V[8] = p[UKF_RATE_V];
-    V[9] = p[UKF_PRES_ALT_V];
-    V[10] = p[UKF_VEL_V];
-    V[11] = p[UKF_VEL_V];
-    V[12] = p[UKF_ALT_VEL_V];
-    V[13] = p[UKF_POS_V];
-    V[14] = p[UKF_POS_V];
-    V[15] = p[UKF_ALT_POS_V];
+    V[UKF_V_NOISE_ACC_BIAS_X] = UKF_ACC_BIAS_V;
+    V[UKF_V_NOISE_ACC_BIAS_Y] = UKF_ACC_BIAS_V;
+    V[UKF_V_NOISE_ACC_BIAS_Z] = UKF_ACC_BIAS_V;
+    V[UKF_V_NOISE_GYO_BIAS_X] = UKF_GYO_BIAS_V;
+    V[UKF_V_NOISE_GYO_BIAS_Y] = UKF_GYO_BIAS_V;
+    V[UKF_V_NOISE_GYO_BIAS_Z] = UKF_GYO_BIAS_V;
+    V[UKF_V_NOISE_RATE_X] = UKF_RATE_V;
+    V[UKF_V_NOISE_RATE_Y] = UKF_RATE_V;
+    V[UKF_V_NOISE_RATE_Z] = UKF_RATE_V;
+    V[UKF_V_NOISE_PRES_ALT] = UKF_PRES_ALT_V;
+    V[UKF_V_NOISE_VELN] = UKF_VEL_V;
+    V[UKF_V_NOISE_VELE] = UKF_VEL_V;
+    V[UKF_V_NOISE_VELD] = UKF_ALT_VEL_V;
+    V[UKF_V_NOISE_POSN] = UKF_POS_V;
+    V[UKF_V_NOISE_POSE] = UKF_POS_V;
+    V[UKF_V_NOISE_POSD] = UKF_ALT_POS_V;
 
     srcdkfSetVariance(navUkfData.kf, Q, V, 0, 0);
 

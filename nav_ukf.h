@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _nav_ukf_h
@@ -33,23 +33,58 @@
 
 #define UKF_GYO_AVG_NUM		40
 
-#define UKF_VELN		navUkfData.x[0]
-#define UKF_VELE		navUkfData.x[1]
-#define UKF_VELD		navUkfData.x[2]
-#define UKF_POSN		navUkfData.x[3]
-#define UKF_POSE		navUkfData.x[4]
-#define UKF_POSD		navUkfData.x[5]
-#define UKF_ACC_BIAS_X		navUkfData.x[6]
-#define UKF_ACC_BIAS_Y		navUkfData.x[7]
-#define UKF_ACC_BIAS_Z		navUkfData.x[8]
-#define UKF_GYO_BIAS_X		navUkfData.x[9]
-#define UKF_GYO_BIAS_Y		navUkfData.x[10]
-#define UKF_GYO_BIAS_Z		navUkfData.x[11]
-#define UKF_Q1			navUkfData.x[12]
-#define UKF_Q2			navUkfData.x[13]
-#define UKF_Q3			navUkfData.x[14]
-#define UKF_Q4			navUkfData.x[15]
-#define UKF_PRES_ALT		navUkfData.x[16]
+#define UKF_STATE_VELN		0
+#define UKF_STATE_VELE		1
+#define UKF_STATE_VELD		2
+#define UKF_STATE_POSN		3
+#define UKF_STATE_POSE		4
+#define UKF_STATE_POSD		5
+#define UKF_STATE_ACC_BIAS_X	6
+#define UKF_STATE_ACC_BIAS_Y	7
+#define UKF_STATE_ACC_BIAS_Z	8
+#define UKF_STATE_GYO_BIAS_X	9
+#define UKF_STATE_GYO_BIAS_Y	10
+#define UKF_STATE_GYO_BIAS_Z	11
+#define UKF_STATE_Q1		12
+#define UKF_STATE_Q2		13
+#define UKF_STATE_Q3		14
+#define UKF_STATE_Q4		15
+#define UKF_STATE_PRES_ALT	16
+
+#define UKF_V_NOISE_ACC_BIAS_X	0
+#define UKF_V_NOISE_ACC_BIAS_Y	1
+#define UKF_V_NOISE_ACC_BIAS_Z	2
+#define UKF_V_NOISE_GYO_BIAS_X	3
+#define UKF_V_NOISE_GYO_BIAS_Y	4
+#define UKF_V_NOISE_GYO_BIAS_Z	5
+#define UKF_V_NOISE_RATE_X	6
+#define UKF_V_NOISE_RATE_Y	7
+#define UKF_V_NOISE_RATE_Z	8
+#define UKF_V_NOISE_PRES_ALT	9
+#define UKF_V_NOISE_VELN	10
+#define UKF_V_NOISE_VELE	11
+#define UKF_V_NOISE_VELD	12
+#define UKF_V_NOISE_POSN	13
+#define UKF_V_NOISE_POSE	14
+#define UKF_V_NOISE_POSD	15
+
+#define UKF_VELN		navUkfData.x[UKF_STATE_VELN]
+#define UKF_VELE		navUkfData.x[UKF_STATE_VELE]
+#define UKF_VELD		navUkfData.x[UKF_STATE_VELD]
+#define UKF_POSN		navUkfData.x[UKF_STATE_POSN]
+#define UKF_POSE		navUkfData.x[UKF_STATE_POSE]
+#define UKF_POSD		navUkfData.x[UKF_STATE_POSD]
+#define UKF_ACC_BIAS_X		navUkfData.x[UKF_STATE_ACC_BIAS_X]
+#define UKF_ACC_BIAS_Y		navUkfData.x[UKF_STATE_ACC_BIAS_Y]
+#define UKF_ACC_BIAS_Z		navUkfData.x[UKF_STATE_ACC_BIAS_Z]
+#define UKF_GYO_BIAS_X		navUkfData.x[UKF_STATE_GYO_BIAS_X]
+#define UKF_GYO_BIAS_Y		navUkfData.x[UKF_STATE_GYO_BIAS_Y]
+#define UKF_GYO_BIAS_Z		navUkfData.x[UKF_STATE_GYO_BIAS_Z]
+#define UKF_Q1			navUkfData.x[UKF_STATE_Q1]
+#define UKF_Q2			navUkfData.x[UKF_STATE_Q2]
+#define UKF_Q3			navUkfData.x[UKF_STATE_Q3]
+#define UKF_Q4			navUkfData.x[UKF_STATE_Q4]
+#define UKF_PRES_ALT		navUkfData.x[UKF_STATE_PRES_ALT]
 
 #ifdef USE_PRES_ALT
 #define UKF_ALTITUDE	UKF_PRES_ALT
