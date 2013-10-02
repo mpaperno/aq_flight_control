@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -66,14 +66,6 @@ void timerInit(void) {
 
     // go...
     TIM_Cmd(TIMER_TIM, ENABLE);
-}
-
-void timerStart(void) {
-    timerData.timerStart = timerMicros();
-}
-
-uint32_t timerStop(void) {
-    return timerMicros() - timerData.timerStart;
 }
 
 void timerCancelAlarm1(void) {

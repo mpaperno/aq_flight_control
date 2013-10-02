@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _timer_h
@@ -26,6 +26,8 @@
 #define TIMER_ISR	TIM5_IRQHandler
 
 #define timerMicros()	TIMER_TIM->CNT
+#define timerStart()	timerData.timerStart = timerMicros()
+#define timerStop()	(timerMicros() - timerData.timerStart)
 
 typedef void timerCallback_t(int);
 
@@ -36,9 +38,9 @@ typedef struct {
     uint32_t timerStart;
 } timerStruct_t;
 
+extern timerStruct_t timerData;
+
 extern void timerInit(void);
-extern void timerStart(void);
-extern uint32_t timerStop(void);
 extern void timerCancelAlarm1(void);
 extern void timerCancelAlarm2(void);
 extern void timerCancelAlarm3(void);
