@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    117
+#define DEFAULT_CONFIG_VERSION	    118
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -84,14 +84,14 @@
 #define DEFAULT_CTRL_TLT_ANG_OM	    1200.0f
 
 // YAW angle PID
-#define DEFAULT_CTRL_YAW_ANG_P	    0.24f
-#define DEFAULT_CTRL_YAW_ANG_I	    0.0001f
-#define DEFAULT_CTRL_YAW_ANG_D	    0.0f
-#define DEFAULT_CTRL_YAW_ANG_F	    0.0f
-#define DEFAULT_CTRL_YAW_ANG_PM	    6.0f
-#define DEFAULT_CTRL_YAW_ANG_IM	    0.2f
-#define DEFAULT_CTRL_YAW_ANG_DM	    0.0f
-#define DEFAULT_CTRL_YAW_ANG_OM	    6.0f
+#define DEFAULT_CTRL_YAW_ANG_P      0.05f
+#define DEFAULT_CTRL_YAW_ANG_I      0.00002f
+#define DEFAULT_CTRL_YAW_ANG_D      0.0f
+#define DEFAULT_CTRL_YAW_ANG_F      0.0f
+#define DEFAULT_CTRL_YAW_ANG_PM     1.25f
+#define DEFAULT_CTRL_YAW_ANG_IM     0.04f
+#define DEFAULT_CTRL_YAW_ANG_DM     0.0f
+#define DEFAULT_CTRL_YAW_ANG_OM     1.25f
 
 #define DEFAULT_MOT_CAN		    0
 #define DEFAULT_MOT_FRAME	    0		// used as hint for frame config GUI
