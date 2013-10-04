@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _srcdkf_h
@@ -21,7 +21,7 @@
 
 #include "aq_math.h"
 
-#define SRCDKF_H	__sqrtf(3.0f)
+#define SRCDKF_H	(__sqrtf(3.0f) * 3.0f)
 #define SRCDKF_RM	0.0001f		// Robbins-Monro stochastic term
 
 #define MAX(a, b)	((a > b) ? a : b)
