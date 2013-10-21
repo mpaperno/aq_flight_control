@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    118
+#define DEFAULT_CONFIG_VERSION	    119
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -46,7 +46,7 @@
 #define DEFAULT_CTRL_FACT_THRO	    0.70f	// user throttle multiplier
 #define DEFAULT_CTRL_FACT_PITC	    0.05f	// user pitch multiplier
 #define DEFAULT_CTRL_FACT_ROLL	    0.05f	// user roll multiplier
-#define DEFAULT_CTRL_FACT_RUDD	    0.0004f	// user rudder multiplier
+#define DEFAULT_CTRL_MAN_YAW_RT	    60.0f	// deg/s
 #define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band (for pitch, roll, & rudder control)
 #define DEFAULT_CTRL_DBAND_THRO	    40.0f	// rc control dead band (for throttle channel only)
 #define DEFAULT_CTRL_MIN_THROT	    20.0f	// minimum user throttle to activate motors

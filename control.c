@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -47,6 +47,8 @@ OS_STK *controlTaskStack;
 void controlTaskCode(void *unused) {
     float yaw;
     float throttle;
+    float rates[3];
+    uint16_t overrides[3];
 #ifdef USE_L1_ATTITUDE
     float quat[4];
 #else
@@ -55,6 +57,11 @@ void controlTaskCode(void *unused) {
 #endif	// USE_L1_ATTITUDE
 
     AQ_NOTICE("Control task started\n");
+
+    // disable all axes' rate overrides
+    overrides[0] = 0;
+    overrides[1] = 0;
+    overrides[2] = 0;
 
     while (1) {
 	// wait for work
@@ -95,21 +102,6 @@ void controlTaskCode(void *unused) {
 			navUkfSetHereAsPositionTarget();
 		}
 
-		// implement rudder dead zone
-		if (RADIO_RUDD > p[CTRL_DEAD_BAND] || RADIO_RUDD < -p[CTRL_DEAD_BAND]) {
-		    // remove dead band first
-		    if (RADIO_RUDD > p[CTRL_DEAD_BAND])
-			yaw = (RADIO_RUDD - p[CTRL_DEAD_BAND]) * p[CTRL_FACT_RUDD];
-		    else
-			yaw = (RADIO_RUDD + p[CTRL_DEAD_BAND]) * p[CTRL_FACT_RUDD];
-
-		    // don't allow desired yaw angle to lead attitude yaw angle by more than 45 deg
-		    if (fabsf(compassDifference(navData.holdHeading + yaw, AQ_YAW)) < 45.0f) {
-			controlData.yaw = compassNormalize(controlData.yaw + yaw);
-			navData.holdHeading = compassNormalize(navData.holdHeading + yaw);
-		    }
-		}
-
 		// constrict nav (only) yaw rates
 		yaw = compassDifference(controlData.yaw, navData.holdHeading);
 		yaw = constrainFloat(yaw, -p[CTRL_NAV_YAW_RT]/400.0f, +p[CTRL_NAV_YAW_RT]/400.0f);
@@ -135,9 +127,40 @@ void controlTaskCode(void *unused) {
 		    controlData.navRollTarget = 0.0f;
 		}
 
-#ifdef USE_L1_ATTITUDE
-		// calculate required thrust for each axis + throttle
+		// manual rate cut through for yaw
+		if (RADIO_RUDD > p[CTRL_DEAD_BAND] || RADIO_RUDD < -p[CTRL_DEAD_BAND]) {
+		    // fisrt remove dead band
+		    if (RADIO_RUDD > p[CTRL_DEAD_BAND])
+			rates[2] = (RADIO_RUDD - p[CTRL_DEAD_BAND]);
+		    else
+			rates[2] = (RADIO_RUDD + p[CTRL_DEAD_BAND]);
 
+		    // calculate desired rate based on full stick scale
+		    rates[2] = rates[2] * p[CTRL_MAN_YAW_RT] * DEG_TO_RAD * (1.0f / 700.0f);
+
+		    // keep up with actual craft heading
+		    controlData.yaw = AQ_YAW;
+		    navData.holdHeading = AQ_YAW;
+
+		    // request override
+		    overrides[2] = CONTROL_MIN_YAW_OVERRIDE;
+		}
+		else {
+		    // currently overriding?
+		    if (overrides[2] > 0) {
+			// request zero rate
+			rates[2] = 0.0f;
+
+			// follow actual craft heading
+			controlData.yaw = AQ_YAW;
+			navData.holdHeading = AQ_YAW;
+
+			// decrease override timer
+			overrides[2]--;
+		    }
+		}
+
+#ifdef USE_L1_ATTITUDE
 		// determine which frame of reference to control from
 		if (navData.mode <= NAV_STATUS_ALTHOLD)
 		    // craft frame - manual
@@ -155,7 +178,8 @@ void controlTaskCode(void *unused) {
 		    l1AttitudeReset(quat);
 		}
 
-		l1Attitude(quat);
+
+		l1Attitude(quat, rates, overrides);
 		l1AttitudePowerDistribution(throttle);
 		motorsSendValues();
 		motorsData.throttle = throttle;
@@ -201,8 +225,13 @@ void controlTaskCode(void *unused) {
 		    ruddCommand = 0.0f;
 		}
 
-		// seek a 0 deg difference between hold heading and actual yaw
-		ruddCommand = pidUpdate(controlData.yawRatePID, pidUpdate(controlData.yawAnglePID, 0.0f, compassDifference(controlData.yaw, AQ_YAW)), IMU_DRATEZ);
+		// yaw rate override?
+		if (overrides[2] > 0)
+		    // manual yaw rate
+		    ruddCommand = pidUpdate(controlData.yawRatePID, rates[2], IMU_DRATEZ);
+		else
+		    // seek a 0 deg difference between hold heading and actual yaw
+		    ruddCommand = pidUpdate(controlData.yawRatePID, pidUpdate(controlData.yawAnglePID, 0.0f, compassDifference(controlData.yaw, AQ_YAW)), IMU_DRATEZ);
 
 		rollCommand = constrainFloat(rollCommand, -p[CTRL_MAX], p[CTRL_MAX]);
 		pitchCommand = constrainFloat(pitchCommand, -p[CTRL_MAX], p[CTRL_MAX]);

@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _config_h
@@ -50,7 +50,7 @@ enum configParameters {
     CTRL_FACT_THRO,
     CTRL_FACT_PITC,
     CTRL_FACT_ROLL,
-    CTRL_FACT_RUDD,
+    CTRL_MAN_YAW_RT,
     CTRL_DEAD_BAND,
     CTRL_DBAND_THRO,
     CTRL_MIN_THROT,

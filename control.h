@@ -23,8 +23,10 @@
 #include "util.h"
 #include <CoOS.h>
 
-#define CONTROL_STACK_SIZE	200
-#define CONTROL_PRIORITY	5
+#define CONTROL_STACK_SIZE	    200
+#define CONTROL_PRIORITY	    5
+
+#define CONTROL_MIN_YAW_OVERRIDE    300	    // in cycles (0.75 s)
 
 typedef struct {
     OS_TID controlTask;

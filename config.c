@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -52,7 +52,7 @@ const char *configParameterStrings[] = {
     "CTRL_FACT_THRO",
     "CTRL_FACT_PITC",
     "CTRL_FACT_ROLL",
-    "CTRL_FACT_RUDD",
+    "CTRL_MAN_YAW_RT",
     "CTRL_DEAD_BAND",
     "CTRL_DBAND_THRO",
     "CTRL_MIN_THROT",
@@ -410,7 +410,7 @@ void configLoadDefault(void) {
     p[CTRL_FACT_THRO] = DEFAULT_CTRL_FACT_THRO;
     p[CTRL_FACT_PITC] = DEFAULT_CTRL_FACT_PITC;
     p[CTRL_FACT_ROLL] = DEFAULT_CTRL_FACT_ROLL;
-    p[CTRL_FACT_RUDD] = DEFAULT_CTRL_FACT_RUDD;
+    p[CTRL_MAN_YAW_RT] = DEFAULT_CTRL_MAN_YAW_RT;
     p[CTRL_DEAD_BAND] = DEFAULT_CTRL_DEAD_BAND;
     p[CTRL_DBAND_THRO] = DEFAULT_CTRL_DBAND_THRO;
     p[CTRL_MIN_THROT] = DEFAULT_CTRL_MIN_THROT;

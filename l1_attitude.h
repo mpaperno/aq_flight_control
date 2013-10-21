@@ -23,7 +23,8 @@
 
 extern void l1AttitudeInit(void);
 extern void l1AttitudeReset(float32_t *quat);
-extern void l1Attitude(float32_t *quatD);
+extern void l1Attitude(float32_t *quatD, float32_t *rates, uint16_t *override);
+extern void l1AttitudeRate(float32_t *rates);
 extern void l1AttitudePowerDistribution(float32_t hoverThrot);
 
 #endif
