@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef ublox_h
@@ -24,32 +24,55 @@
 
 #define UBLOX_NAV_CLASS	    0x01
 #define UBLOX_RXM_CLASS	    0x02
+#define UBLOX_CFG_CLASS	    0x06
 #define UBLOX_MON_CLASS	    0x0a
 #define UBLOX_AID_CLASS	    0x0b
 #define UBLOX_TIM_CLASS	    0x0d
 
-#define UBLOX_WAIT_SYNC1    0x00
-#define UBLOX_WAIT_SYNC2    0x01
-#define UBLOX_WAIT_CLASS    0x02
-#define UBLOX_WAIT_ID	    0x03
-#define UBLOX_WAIT_LEN1	    0x04
-#define UBLOX_WAIT_LEN2	    0x05
-#define UBLOX_PAYLOAD	    0x06
-#define UBLOX_CHECK1	    0x07
-#define UBLOX_CHECK2	    0x08
 
-#define UBLOX_POSLLH	    0x02
-#define UBLOX_DOP	    0x04
-#define UBLOX_PVT	    0x07
-#define UBLOX_VALNED	    0x12
-#define UBLOX_TP	    0x01
-#define UBLOX_TIMEUTC	    0x21
+#define UBLOX_NAV_POSLLH    0x02
+#define UBLOX_NAV_DOP	    0x04
+#define UBLOX_NAV_VALNED    0x12
+#define UBLOX_NAV_TIMEUTC   0x21
+#define UBLOX_NAV_SBAS	    0x32
+#define UBLOX_NAV_SVINFO    0x30
+
 #define UBLOX_AID_REQ	    0x00
-#define UBLOX_RAW	    0x10
-#define UBLOX_SFRB	    0x11
-#define UBLOX_VER	    0x04
+
+#define UBLOX_RXM_RAW	    0x10
+#define UBLOX_RXM_SFRB	    0x11
+
+#define UBLOX_MON_VER	    0x04
+#define UBLOX_MON_HW	    0x09
+
+#define UBLOX_TIM_TP	    0x01
+
+#define UBLOX_CFG_MSG	    0x01
+#define UBLOX_CFG_TP	    0x07
+#define UBLOX_CFG_RTATE	    0x08
+#define UBLOX_CFG_SBAS	    0x16
+#define UBLOX_CFG_NAV5	    0x24
+
+#define UBLOX_SBAS_AUTO	    0x00000000
+#define UBLOX_SBAS_WAAS	    0x0004E004
+#define UBLOX_SBAS_EGNOS    0x00000851
+#define UBLOX_SBAS_MSAS	    0x00020200
+#define UBLOX_SBAS_GAGAN    0x00000108
 
 #define UBLOX_MAX_PAYLOAD   384
+#define UBLOX_WAIT_MS	    20
+
+enum ubloxStates {
+    UBLOX_WAIT_SYNC1 = 0,
+    UBLOX_WAIT_SYNC2,
+    UBLOX_WAIT_CLASS,
+    UBLOX_WAIT_ID,
+    UBLOX_WAIT_LEN1,
+    UBLOX_WAIT_LEN2,
+    UBLOX_PAYLOAD,
+    UBLOX_CHECK1,
+    UBLOX_CHECK2
+};
 
 // Geodetic Position Solution
 typedef struct {

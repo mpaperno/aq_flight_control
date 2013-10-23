@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -96,31 +96,37 @@ static void ubloxSendPreamble(void) {
 static void ubloxEnableMessage(unsigned char c, unsigned char i, unsigned char rate) {
     ubloxSendPreamble();
 
-    ubloxWriteU1(0x06);	// CFG
-    ubloxWriteU1(0x01);	// MSG
-    ubloxWriteU1(0x03);	// length lsb
-    ubloxWriteU1(0x00);	// length msb
-    ubloxWriteU1(c);	// class
-    ubloxWriteU1(i);	// id
-    ubloxWriteU1(rate);	// rate
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_MSG);    // MSG
+
+    ubloxWriteU1(0x03);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
+
+    ubloxWriteU1(c);		    // class
+    ubloxWriteU1(i);		    // id
+    ubloxWriteU1(rate);		    // rate
+
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
-    yield(50);
+    yield(UBLOX_WAIT_MS);
 }
 
 static void ubloxSetRate(unsigned short int ms) {
     ubloxSendPreamble();
 
-    ubloxWriteU1(0x06);	// CFG
-    ubloxWriteU1(0x08);	// RTATE
-    ubloxWriteU1(0x06);	// length lsb
-    ubloxWriteU1(0x00);	// length msb
-    ubloxWriteU2(ms);	// rate
-    ubloxWriteU2(0x01);	// cycles
-    ubloxWriteU2(0x01);	// timeRef	0 == UTC, 1 == GPS time
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_RTATE);  // RTATE
+
+    ubloxWriteU1(0x06);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
+
+    ubloxWriteU2(ms);		    // rate
+    ubloxWriteU2(0x01);		    // cycles
+    ubloxWriteU2(0x01);		    // timeRef	0 == UTC, 1 == GPS time
+
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
-    yield(50);
+    yield(UBLOX_WAIT_MS);
 }
 
 static void ubloxSetMode(void) {
@@ -128,14 +134,16 @@ static void ubloxSetMode(void) {
 
     ubloxSendPreamble();
 
-    ubloxWriteU1(0x06);		// CFG
-    ubloxWriteU1(0x24);		// NAV5
-    ubloxWriteU1(0x24);		// length lsb
-    ubloxWriteU1(0x00);		// length msb
-    ubloxWriteU1(0b0000101);	// mask LSB (fixMode, dyn)
-    ubloxWriteU1(0x00);		// mask MSB (reserved)
-    ubloxWriteU1(0x06);		// dynModel (6 == airborne < 1g, 8 == airborne < 4g)
-    ubloxWriteU1(0x02);		// fixMode (2 == 3D only)
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_NAV5);   // NAV5
+
+    ubloxWriteU1(0x24);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
+
+    ubloxWriteU1(0b0000101);	    // mask LSB (fixMode, dyn)
+    ubloxWriteU1(0x00);		    // mask MSB (reserved)
+    ubloxWriteU1(0x06);		    // dynModel (6 == airborne < 1g, 8 == airborne < 4g)
+    ubloxWriteU1(0x02);		    // fixMode (2 == 3D only)
 
     // the rest of the packet is ignored due to the above mask
     for (i = 0; i < 32; i++)
@@ -143,73 +151,109 @@ static void ubloxSetMode(void) {
 
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
-    yield(50);
+    yield(UBLOX_WAIT_MS);
 }
 
 static void ubloxSetTimepulse(void) {
     ubloxSendPreamble();
 
-    ubloxWriteU1(0x06);		// CFG
-    ubloxWriteU1(0x07);		// TP
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_TP);	    // TP
 
-    ubloxWriteU1(0x14);		// length lsb
-    ubloxWriteU1(0x00);		// length msb
+    ubloxWriteU1(0x14);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
 
-    ubloxWriteU4(1000000);	// interval (us)
-    ubloxWriteU4(100000);	// length (us)
+    ubloxWriteU4(1000000);	    // interval (us)
+    ubloxWriteU4(100000);	    // length (us)
 #ifdef GPS_LATENCY
-    ubloxWriteI1(0x00);		// config setting (0 == off)
+    ubloxWriteI1(0x00);		    // config setting (0 == off)
 #else
-    ubloxWriteI1(0x01);		// config setting (1 == +polarity)
+    ubloxWriteI1(0x01);		    // config setting (1 == +polarity)
 #endif
-    ubloxWriteU1(0x01);		// alignment reference time (GPS)
-    ubloxWriteU1(0x00);		// bitmask (syncmode 0)
-    ubloxWriteU1(0x00);		// reserved
-    ubloxWriteI2(0x00);		// antenna delay
-    ubloxWriteI2(0x00);		// rf group delay
-    ubloxWriteI4(0x00);		// user delay
+    ubloxWriteU1(0x01);		    // alignment reference time (GPS)
+    ubloxWriteU1(0x00);		    // bitmask (syncmode 0)
+    ubloxWriteU1(0x00);		    // reserved
+    ubloxWriteI2(0x00);		    // antenna delay
+    ubloxWriteI2(0x00);		    // rf group delay
+    ubloxWriteI4(0x00);		    // user delay
 
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
-    yield(50);
+    yield(UBLOX_WAIT_MS);
+}
+
+static void ubloxSetSBAS(uint8_t enable) {
+    // second bit of mode field is diffCorr
+    enable = (enable > 0);
+
+    ubloxSendPreamble();
+
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_SBAS);   // SBAS
+
+    ubloxWriteU1(0x08);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
+
+    ubloxWriteU1(enable);	    // enable
+    ubloxWriteU1(0b011);	    // mode
+    ubloxWriteU1(3);		    // # SBAS tracking channels
+    ubloxWriteU1(0);
+    ubloxWriteU4(UBLOX_SBAS_AUTO);  // ANY SBAS system
+
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    yield(UBLOX_WAIT_MS);
 }
 
 static void ubloxPollVersion(void) {
     ubloxSendPreamble();
 
-    ubloxWriteU1(0x0A);		// MON
-    ubloxWriteU1(0x04);		// VER
+    ubloxWriteU1(UBLOX_MON_CLASS);  // MON
+    ubloxWriteU1(UBLOX_MON_VER);    // VER
 
-    ubloxWriteU1(0x00);		// length lsb
-    ubloxWriteU1(0x00);		// length msb
+    ubloxWriteU1(0x00);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
 
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
     serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
-    yield(50);
+    yield(UBLOX_WAIT_MS);
+}
+
+static void ubloxVersionSpecific(int ver) {
+    if (ver > 6) {
+	// 10Hz for ver 7+
+	ubloxSetRate((uint16_t)100);
+	// SBAS screwed up on v7 modules w/ v1 firmware
+	ubloxSetSBAS(0);					// disable SBAS
+    }
+    else {
+	// 5Hz
+	ubloxSetRate((uint16_t)200);
+    }
 }
 
 void ubloxSendSetup(void) {
-    yield(50);
+    yield(UBLOX_WAIT_MS);
     ubloxSetTimepulse();
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_VALNED, 1);	// NAV VALNED
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_POSLLH, 1);	// NAV POSLLH
-    ubloxEnableMessage(UBLOX_TIM_CLASS, UBLOX_TP, 1);		// TIM TP
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_DOP, 5);		// NAV DOP
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_VALNED, 1);	// NAV VALNED
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_POSLLH, 1);	// NAV POSLLH
+    ubloxEnableMessage(UBLOX_TIM_CLASS, UBLOX_TIM_TP, 1);	// TIM TP
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_DOP, 5);	// NAV DOP
     ubloxEnableMessage(UBLOX_AID_CLASS, UBLOX_AID_REQ, 1);	// AID REQ
-    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 5);	// TIME UTC
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_TIMEUTC, 5);	// NAV TIMEUTC
 #ifdef GPS_DO_RTK
-    ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_RAW, 1);		// RXM RAW
-    ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_SFRB, 1);		// RXM SFRB
+    ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_RXM_RAW, 1);	// RXM RAW
+    ubloxEnableMessage(UBLOX_RXM_CLASS, UBLOX_RXM_SFRB, 1);	// RXM SFRB
+#endif
+#ifdef GPS_DEBUG
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_SVINFO, 1);	// NAV SVINFO
+    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_SBAS, 1);	// NAV SBAS
+    ubloxEnableMessage(UBLOX_MON_CLASS, UBLOX_MON_HW, 1);	// MON HW
 #endif
 
     ubloxSetMode();						// 3D, airborne
     ubloxPollVersion();
-    if (ubloxData.hwVer > 6)
-	// 10Hz
-	ubloxSetRate((uint16_t)100);
-    else
-	// 5Hz
-	ubloxSetRate((uint16_t)200);
+    ubloxVersionSpecific(ubloxData.hwVer);
 }
 
 void ubloxInit(void) {
@@ -231,7 +275,7 @@ unsigned char ubloxPublish(void) {
     // don't allow preemption
     CoSetPriority(gpsData.gpsTask, 1);
 
-    if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_POSLLH) {
+    if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_POSLLH) {
 	// work around uBlox's inability to give new data on each report sometimes
 	if (ubloxData.lastLat != ubloxData.payload.posllh.lat || ubloxData.lastLon != ubloxData.payload.posllh.lon) {
 	    ubloxData.lastLat = ubloxData.payload.posllh.lat;
@@ -253,7 +297,7 @@ unsigned char ubloxPublish(void) {
 	    ret = 1;
 	}
     }
-    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_VALNED) {
+    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_VALNED) {
 	gpsData.iTOW = ubloxData.payload.valned.iTOW;
 	gpsData.velN = ubloxData.payload.valned.velN * 0.01f;	    // cm => m
 	gpsData.velE = ubloxData.payload.valned.velE * 0.01f;	    // cm => m
@@ -272,10 +316,10 @@ unsigned char ubloxPublish(void) {
 	// velocity update
 	ret = 2;
     }
-    else if (ubloxData.class == UBLOX_TIM_CLASS && ubloxData.id == UBLOX_TP) {
+    else if (ubloxData.class == UBLOX_TIM_CLASS && ubloxData.id == UBLOX_TIM_TP) {
 	gpsData.lastReceivedTPtowMS = ubloxData.payload.tp.towMS;
     }
-    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_DOP) {
+    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_DOP) {
 	gpsData.pDOP = ubloxData.payload.dop.pDOP * 0.01f;
 	gpsData.hDOP = ubloxData.payload.dop.hDOP * 0.01f;
 	gpsData.vDOP = ubloxData.payload.dop.vDOP * 0.01f;
@@ -284,22 +328,22 @@ unsigned char ubloxPublish(void) {
 	gpsData.eDOP = ubloxData.payload.dop.eDOP * 0.01f;
 	gpsData.gDOP = ubloxData.payload.dop.gDOP * 0.01f;
     }
-    else if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100)) {
+
+    // end of high priority section
+    CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
+
+    if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100)) {
 	// if setting the RTC succeeds, disable the TIMEUTC message
 	if (rtcSetDataTime(ubloxData.payload.timeutc.year, ubloxData.payload.timeutc.month, ubloxData.payload.timeutc.day,
 		ubloxData.payload.timeutc.hour, ubloxData.payload.timeutc.min, ubloxData.payload.timeutc.sec))
-	    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_TIMEUTC, 0);
+	    ubloxEnableMessage(UBLOX_NAV_CLASS, UBLOX_NAV_TIMEUTC, 0);
     }
-    else if (ubloxData.class == UBLOX_MON_CLASS && ubloxData.id == UBLOX_VER) {
+    else if (ubloxData.class == UBLOX_MON_CLASS && ubloxData.id == UBLOX_MON_VER) {
 	ubloxData.hwVer = atoi(ubloxData.payload.ver.hwVersion) / 10000;
-	// version 7 modules are capable of 10Hz output
-	if (ubloxData.hwVer > 6)
-	    ubloxSetRate((uint16_t)100);
+	ubloxVersionSpecific(ubloxData.hwVer);
     }
 
     gpsData.lastMessage = IMU_LASTUPD;
-
-    CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
 
     // TODO
     if (1 && commStreamUsed(COMM_TYPE_TELEMETRY)) {

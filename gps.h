@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _gps_h
@@ -31,9 +31,11 @@
 #define GPS_BAUD_RATE	    230400
 
 #define GPS_LATENCY	    75000	// us (comment out to use uBlox timepulse)
+
 //#define GPS_LOG_BUF	    2048	// comment out to disable logging
 //#define GPS_FNAME	    "GPS"
-//#define GPS_DO_RTK		// comment out to disable GPS Raw data reports
+//#define GPS_DO_RTK			// comment out to disable GPS Raw data reports
+//#define GPS_DEBUG			// uncomment to enable extra GPS messages
 
 typedef struct {
     OS_TID gpsTask;
