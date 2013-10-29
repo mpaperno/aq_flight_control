@@ -97,7 +97,7 @@
 
 #define UKF_FLOW_ROT		-90.0f				    // optical flow mounting rotation in degrees
 #define UKF_FOCAL_LENGTH	16.0f				    // 16mm
-#define UKF_FOCAL_PX		((UKF_FOCAL_LENGTH + UKF_FOCAL_LENGTH * RADIO_AUX6 / 1000.0f) / (4.0f * 6.0f) * 1000.0f)   // pixel size: 6um, binning 4 enabled
+#define UKF_FOCAL_PX		(UKF_FOCAL_LENGTH / (4.0f * 6.0f) * 1000.0f)   // pixel size: 6um, binning 4 enabled
 
 typedef struct {
     srcdkf_t *kf;
