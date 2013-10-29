@@ -13,9 +13,11 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
+#include "config.h"
+#ifdef HAS_DIGITAL_IMU
 #include "imu.h"
 #include "mpu6000.h"
 #include "aq_timer.h"
@@ -77,28 +79,16 @@ static void mpu6000CalibAcc(float *in, volatile float *out) {
 
 static void mpu6000ScaleGyo(int32_t *in, float *out, float divisor) {
     // 500 deg/s
-#ifdef DIUM_IMUV1
-    out[0] = -in[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[1] = -in[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[2] = +in[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-#else
-    out[0] = -in[0] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[1] = +in[1] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[2] = -in[2] * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-#endif
+    out[0] = DIMU_ORIENT_GYO_X * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[1] = DIMU_ORIENT_GYO_Y * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    out[2] = DIMU_ORIENT_GYO_Z * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
 }
 
 static void mpu6000ScaleAcc(int32_t *in, float *out, float divisor) {
     // 4g
-#ifdef DIUM_IMUV1
-    out[0] = +in[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[1] = +in[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[2] = +in[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
-#else
-    out[0] = +in[0] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[1] = -in[1] * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[2] = -in[2] * divisor * (1.0f / 8192.0f) * GRAVITY;
-#endif
+    out[0] = DIMU_ORIENT_ACC_X * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[1] = DIMU_ORIENT_ACC_Y * divisor * (1.0f / 8192.0f) * GRAVITY;
+    out[2] = DIMU_ORIENT_ACC_Z * divisor * (1.0f / 8192.0f) * GRAVITY;
 }
 
 static void mpu6000CalibGyo(float *in, volatile float *out) {
@@ -331,4 +321,4 @@ void DIMU_MPU6000_INT_ISR(void) {
     EXTI_ClearITPendingBit(DIMU_MPU6000_INT_EXTI_LINE);
     mpu6000StartTransfer();
 }
-
+#endif

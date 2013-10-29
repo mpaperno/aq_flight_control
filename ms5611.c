@@ -13,9 +13,11 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
+#include "config.h"
+#ifdef HAS_DIGITAL_IMU
 #include "ms5611.h"
 #include "imu.h"
 #include "aq_timer.h"
@@ -250,3 +252,4 @@ void ms5611Init(void) {
 
     spiChangeCallback(ms5611Data.spi, ms5611Callback);
 }
+#endif

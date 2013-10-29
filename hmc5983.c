@@ -13,9 +13,11 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
+#include "config.h"
+#ifdef HAS_DIGITAL_IMU
 #include "imu.h"
 #include "hmc5983.h"
 #include "aq_timer.h"
@@ -29,6 +31,12 @@ hmc5983Struct_t hmc5983Data;
 
 static void hmc5983TransferComplete(int unused) {
     hmc5983Data.slot = (hmc5983Data.slot + 1) % HMC5983_SLOTS;
+}
+
+static void hmc5983ScaleMag(int32_t *in, float *out, float divisor) {
+    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 390.0f);
+    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 390.0f);
+    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 390.0f);
 }
 
 void hmc5983Decode(void) {
@@ -60,15 +68,7 @@ void hmc5983Decode(void) {
 
     divisor = 1.0f / divisor;
 
-#ifdef DIUM_IMUV1
-    hmc5983Data.rawMag[0] = -mag[0] * divisor * (1.0f / 390.0f);
-    hmc5983Data.rawMag[1] = -mag[1] * divisor * (1.0f / 390.0f);
-    hmc5983Data.rawMag[2] = +mag[2] * divisor * (1.0f / 390.0f);
-#else
-    hmc5983Data.rawMag[0] = -mag[0] * divisor * (1.0f / 390.0f);
-    hmc5983Data.rawMag[1] = +mag[1] * divisor * (1.0f / 390.0f);
-    hmc5983Data.rawMag[2] = -mag[2] * divisor * (1.0f / 390.0f);
-#endif
+    hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
 
     // bias
     a = +(hmc5983Data.rawMag[0] + p[IMU_MAG_BIAS_X] + p[IMU_MAG_BIAS1_X]*dImuData.dTemp + p[IMU_MAG_BIAS2_X]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_X]*dImuData.dTemp3);
@@ -198,3 +198,4 @@ void DIMU_HMC5983_INT_ISR(void) {
     EXTI_ClearITPendingBit(DIMU_HMC5983_INT_EXTI_LINE);
     hmc5983StartTransfer();
 }
+#endif

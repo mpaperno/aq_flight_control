@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 // NOTE: These parameters must be passed to GCC:
@@ -25,9 +25,6 @@
 #define _aq_h
 
 #define USE_MAVLINK
-
-//#define HAS_DIGITAL_IMU
-//#define USE_DIGITAL_IMU
 
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING			// uncomment to use external signaling events and ports

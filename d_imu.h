@@ -13,25 +13,16 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _digital_imu_h
 #define _digital_imu_h
 
+#include "aq.h"
+#include "config.h"
 #include "rcc.h"
 #include <CoOS.h>
-
-#define DIMU_HAVE_MPU6000
-//#define DIMU_HAVE_BMA250
-#define DIMU_HAVE_HMC5983
-#define DIMU_HAVE_MS5611
-
-#define DIUM_IMUV1
-
-#ifdef DIUM_IMUV1
-#define DIMU_HAVE_EEPROM
-#endif
 
 #ifdef DIMU_HAVE_MPU6000
 #include "mpu6000.h"

@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -22,6 +22,7 @@
 #include "supervisor.h"
 #include "imu.h"
 #include "aq_timer.h"
+#include "util.h"
 
 canStruct_t canData;
 
