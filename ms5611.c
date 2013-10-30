@@ -241,7 +241,8 @@ void ms5611Init(void) {
 	    }
 	}
     }
-    while (ms5611CheckSum() != (ms5611Data.p[7] & 0x000f));
+    while (ms5611CheckSum() != (ms5611Data.p[7] & 0x000f))
+	;
 
     ms5611Data.adcRead = 0x00;
 

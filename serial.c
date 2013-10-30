@@ -394,7 +394,7 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
 #endif	// SERIAL_UART4_RX_PIN
 
 #ifdef SERIAL_UART4_TX_PIN
-    s->txBufSize = (txBufSize) ? txBufSize : SERIAL_DEFAULT_BUFSIZE;
+    s->txBufSize = txBufSize;
     s->txBuf = (volatile unsigned char*)aqCalloc(1, s->txBufSize);
 
     GPIO_PinAFConfig(SERIAL_UART4_PORT, SERIAL_UART4_TX_SOURCE, GPIO_AF_UART4);

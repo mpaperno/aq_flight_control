@@ -112,9 +112,11 @@ void gpsTaskCode(void *p) {
 }
 
 void gpsInit(void) {
+#ifdef GPS_TP_PORT
     GPIO_InitTypeDef GPIO_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
+#endif
 
     AQ_NOTICE("GPS init\n");
 
@@ -138,6 +140,7 @@ void gpsInit(void) {
 
     gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 
+#ifdef GPS_TP_PORT
     // External Interrupt line PE1 for timepulse
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = GPS_TP_PIN;
@@ -159,6 +162,7 @@ void gpsInit(void) {
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+#endif
 
     gpsData.microsPerSecond = AQ_US_PER_SEC<<11;
 
@@ -200,6 +204,7 @@ void gpsSendPacket(unsigned char len, char *buf) {
 	serialWrite(gpsData.gpsPort, buf[i]);
 }
 
+#ifdef GPS_TP_HANDLER
 void GPS_TP_HANDLER() {
     unsigned long tp = timerMicros();
     unsigned long diff = (tp - gpsData.lastTimepulse);
@@ -211,3 +216,4 @@ void GPS_TP_HANDLER() {
 
     EXTI_ClearITPendingBit(GPS_TP_EXTI_LINE);
 }
+#endif

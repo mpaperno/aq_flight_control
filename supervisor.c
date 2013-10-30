@@ -110,9 +110,11 @@ void supervisorTaskCode(void *unused) {
 	yield(1000/SUPERVISOR_RATE);
 
 	if (supervisorData.state & STATE_DISARMED) {
+#ifdef SUPERVISOR_DEBUG_PORT
 	    // 0.5 Hz blink debug LED if config file could be found on uSD card
 	    if (!(count % 10) && supervisorData.configRead)
 		digitalTogg(supervisorData.debugLed);
+#endif
 
 	    // 1 Hz blink if disarmed, 5 Hz if writing to uSD card
 	    if (!(count % ((supervisorData.diskWait) ? 1 : 5)))
@@ -136,14 +138,18 @@ void supervisorTaskCode(void *unused) {
 #ifdef HAS_DIGITAL_IMU
 	    // leveling function
 	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500 && RADIO_ROLL < -500 && RADIO_PITCH > +500) {
+#ifdef SUPERVISOR_DEBUG_PORT
 		digitalHi(supervisorData.debugLed);
+#endif
 		digitalHi(supervisorData.readyLed);
 
 		dIMUTare();
 
 		AQ_NOTICE("Leveled\n");
 
+#ifdef SUPERVISOR_DEBUG_PORT
 		digitalLo(supervisorData.debugLed);
+#endif
 		digitalLo(supervisorData.readyLed);
 	    }
 #endif
@@ -312,16 +318,22 @@ void supervisorThrottleUp(uint8_t throttle) {
 }
 
 void supervisorSendDataStart(void) {
+#ifdef SUPERVISOR_DEBUG_PORT
     digitalTogg(supervisorData.debugLed);
+#endif
 }
 
 void supervisorSendDataStop(void) {
+#ifdef SUPERVISOR_DEBUG_PORT
     digitalTogg(supervisorData.debugLed);
+#endif
 }
 
 void supervisorConfigRead(void) {
     supervisorData.configRead = 1;
+#ifdef SUPERVISOR_DEBUG_PORT
     digitalHi(supervisorData.debugLed);
+#endif
 }
 
 void supervisorInit(void) {
@@ -330,8 +342,10 @@ void supervisorInit(void) {
     supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN);
     digitalLo(supervisorData.readyLed);
 
+#ifdef SUPERVISOR_DEBUG_PORT
     supervisorData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN);
     digitalLo(supervisorData.debugLed);
+#endif
 
     supervisorData.state = STATE_INITIALIZING;
     supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE, "SUPERVISOR");

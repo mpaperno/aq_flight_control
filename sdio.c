@@ -46,8 +46,10 @@ uint8_t SD_Detect(void) {
     __IO uint8_t status = SD_PRESENT;
 
     if (sdioData.cardRemovalMicros && (timerMicros() - sdioData.cardRemovalMicros) > 100000) {
+#ifdef SDIO_POWER_PORT
 	// power off LDO
 	digitalLo(sdioData.sdEnable);
+#endif
 	status = SD_NOT_PRESENT;
 	sdioData.initialized = 0;
     }
@@ -1039,9 +1041,11 @@ void sdioLowLevelInit(void) {
     // Enable the SDIO APB2 Clock
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SDIO, ENABLE);
 
+#ifdef SDIO_POWER_PORT
     // turn off SDIO power supply
     sdioData.sdEnable = digitalInit(SDIO_POWER_PORT, SDIO_POWER_PIN);
     digitalLo(sdioData.sdEnable);
+#endif
 
     // SDIO Interrupt ENABLE
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
@@ -1084,8 +1088,10 @@ void sdioLowLevelInit(void) {
 
     if (SD_DetectLowLevel() == SD_NOT_PRESENT)
 	sdioData.cardRemovalMicros = timerMicros();
+#ifdef SDIO_POWER_PORT
     else
 	digitalHi(sdioData.sdEnable);
+#endif
 }
 
 void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
@@ -1165,9 +1171,11 @@ SD_Error sdioInit(void) {
     sdioData.TransferError = SD_OK;
     sdioData.TransferEnd = 0;
 
+#ifdef SDIO_POWER_PORT
     // power on LDO
     digitalHi(sdioData.sdEnable);
     yield(10);
+#endif
 
     SDIO_DeInit();
 

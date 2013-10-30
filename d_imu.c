@@ -22,6 +22,7 @@
 #include "d_imu.h"
 #include "util.h"
 #include "aq_timer.h"
+#include "config.h"
 #include "comm.h"
 #include "aq_init.h"
 #include "nav_ukf.h"

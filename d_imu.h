@@ -44,11 +44,11 @@
 #define DIMU_DT		    ((float)DIMU_PERIOD / 1e6f)
 #define DIMU_TEMP_TAU	    5.0f
 
-#define DIMU_TIM	    TIM3
-#define DIMU_CLOCK	    (rccClocks.PCLK1_Frequency * 2)
-#define DIMU_EN		    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE)
-#define DIMU_IRQ_CH	    TIM3_IRQn
-#define DIMU_ISR	    TIM3_IRQHandler
+#define DIMU_TIM	    TIM8
+#define DIMU_CLOCK	    (rccClocks.PCLK2_Frequency * 2)
+#define DIMU_EN		    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE)
+#define DIMU_IRQ_CH	    TIM8_CC_IRQn
+#define DIMU_ISR	    TIM8_CC_IRQHandler
 
 #ifndef __rev16
     #define __rev16 __REV16

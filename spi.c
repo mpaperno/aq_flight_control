@@ -13,12 +13,12 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 /*
     This module handles the coordination of multiple SPI clients which may be
-    sharing an SPI bus.  Once a transfer request has been queued, the caller
+    sharing a SPI bus.  Once a transfer request has been queued, the caller
     will be notified via a flag or callback at their option when complete.
     Requests are handled on a FIFO basis.  It is up to the client(s) to make sure
     that they do not call spiTransaction() concurrently as it is not thread safe.
@@ -34,13 +34,20 @@
 #include "util.h"
 #include "digital.h"
 
-spiStruct_t spiData[2];
+spiStruct_t spiData[3];
 
 static void spiTriggerSchedule(uint8_t interface) {
-    if (interface)
-	NVIC->STIR = ETH_WKUP_IRQn;
-    else
-	NVIC->STIR = ETH_IRQn;
+    switch (interface) {
+	case 0:
+	    NVIC->STIR = ETH_IRQn;
+	    break;
+	case 1:
+	    NVIC->STIR = ETH_WKUP_IRQn;
+	    break;
+	case 2:
+	    NVIC->STIR = DCMI_IRQn;
+	    break;
+    }
 }
 
 #ifdef SPI_SPI1_CLOCK
@@ -280,6 +287,124 @@ void spi2Init(void) {
 }
 #endif
 
+#ifdef SPI_SPI3_CLOCK
+void spi3Init(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+    SPI_InitTypeDef  SPI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+    DMA_InitTypeDef DMA_InitStructure;
+
+    if (!spiData[2].initialized) {
+	// SPI interface
+	RCC_APB1PeriphClockCmd(SPI_SPI3_CLOCK, ENABLE);
+
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+
+	// SPI SCK / MOSI / MISO pin configuration
+	GPIO_InitStructure.GPIO_Pin = SPI_SPI3_SCK_PIN;
+	GPIO_Init(SPI_SPI3_SCK_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = SPI_SPI3_MISO_PIN;
+	GPIO_Init(SPI_SPI3_MISO_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = SPI_SPI3_MOSI_PIN;
+	GPIO_Init(SPI_SPI3_MOSI_PORT, &GPIO_InitStructure);
+
+	// Connect SPI pins to AF6
+	GPIO_PinAFConfig(SPI_SPI3_SCK_PORT, SPI_SPI3_SCK_SOURCE, SPI_SPI3_AF);
+	GPIO_PinAFConfig(SPI_SPI3_MISO_PORT, SPI_SPI3_MISO_SOURCE, SPI_SPI3_AF);
+	GPIO_PinAFConfig(SPI_SPI3_MOSI_PORT, SPI_SPI3_MOSI_SOURCE, SPI_SPI3_AF);
+
+	// SPI configuration
+	SPI_I2S_DeInit(SPI3);
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
+	SPI_InitStructure.SPI_CRCPolynomial = 7;
+	SPI_Init(SPI3, &SPI_InitStructure);
+
+	SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, ENABLE);
+
+	// RX DMA
+	DMA_DeInit(SPI_SPI3_DMA_RX);
+	DMA_StructInit(&DMA_InitStructure);
+	DMA_InitStructure.DMA_Channel = SPI_SPI3_DMA_RX_CHANNEL;
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&SPI3->DR;
+	DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)spiData;
+	DMA_InitStructure.DMA_BufferSize = 1;
+	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
+	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	DMA_Init(SPI_SPI3_DMA_RX, &DMA_InitStructure);
+
+	// store flags for later use
+	spiData[2].intRxFlags = SPI_SPI3_DMA_RX_FLAGS;
+
+	DMA_ClearITPendingBit(SPI_SPI3_DMA_RX, spiData[2].intRxFlags);
+	DMA_ITConfig(SPI_SPI3_DMA_RX, DMA_IT_TC, ENABLE);
+
+	// Enable RX DMA global Interrupt
+	NVIC_InitStructure.NVIC_IRQChannel = SPI_SPI3_DMA_RX_IRQ;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+	// TX DMA - one shot
+	DMA_DeInit(SPI_SPI3_DMA_TX);
+	DMA_StructInit(&DMA_InitStructure);
+	DMA_InitStructure.DMA_Channel = SPI_SPI3_DMA_TX_CHANNEL;
+	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&SPI3->DR;
+	DMA_InitStructure.DMA_BufferSize = 1;
+	DMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
+	DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;		    // note the buffer must be word aligned
+	DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+	DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_INC4;
+	DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	DMA_Init(SPI_SPI3_DMA_TX, &DMA_InitStructure);
+
+	// store flags for later use
+	spiData[2].intTxFlags = SPI_SPI3_DMA_TX_FLAGS;
+	DMA_ClearITPendingBit(SPI_SPI3_DMA_TX, spiData[2].intTxFlags);
+
+	spiData[2].spi = SPI3;
+	spiData[2].rxDMAStream = SPI_SPI3_DMA_RX;
+	spiData[2].txDMAStream = SPI_SPI3_DMA_TX;
+	spiData[2].initialized = 1;
+
+	// Enable Ethernet Interrupt (for our stack management)
+	NVIC_InitStructure.NVIC_IRQChannel = DCMI_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+    }
+}
+#endif
+
 static void spiDeselect(spiClient_t *client) {
     digitalHi(client->cs);
 }
@@ -447,6 +572,12 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
 	spi2Init();
     }
 #endif
+#ifdef SPI_SPI3_CLOCK
+    if (spi == SPI3) {
+	client->interface = 2;
+	spi3Init();
+    }
+#endif
 
     client->cs = digitalInit(csPort, csPin);
     spiDeselect(client);
@@ -458,6 +589,13 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
     return client;
 }
 
+#ifdef SPI_SPI1_CLOCK
+void SPI_SPI1_DMA_RX_HANDLER(void) {
+    // finish transaction
+    spiEndTxn(&spiData[0]);
+}
+#endif
+
 #ifdef SPI_SPI2_CLOCK
 void SPI_SPI2_DMA_RX_HANDLER(void) {
     // finish transaction
@@ -465,10 +603,10 @@ void SPI_SPI2_DMA_RX_HANDLER(void) {
 }
 #endif
 
-#ifdef SPI_SPI1_CLOCK
-void SPI_SPI1_DMA_RX_HANDLER(void) {
+#ifdef SPI_SPI3_CLOCK
+void SPI_SPI3_DMA_RX_HANDLER(void) {
     // finish transaction
-    spiEndTxn(&spiData[0]);
+    spiEndTxn(&spiData[2]);
 }
 #endif
 
@@ -479,4 +617,8 @@ void ETH_IRQHandler(void) {
 
 void ETH_WKUP_IRQHandler(void) {
     spiStartTxn(&spiData[1]);
+}
+
+void DCMI_IRQHandler(void) {
+    spiStartTxn(&spiData[2]);
 }

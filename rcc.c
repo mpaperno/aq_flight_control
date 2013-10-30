@@ -13,13 +13,15 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "pwm.h"
+#include "digital.h"
 
 RCC_ClocksTypeDef rccClocks;
+digitalPin *sysoff, *en1, *en2;
 
 void rccConfiguration(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -38,6 +40,19 @@ void rccConfiguration(void) {
     // exclude PA13 & PA14 for SWD
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All & ~(GPIO_Pin_13 | GPIO_Pin_14);
     GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+#ifdef RCC_EN1_PORT
+    en1 = digitalInit(RCC_EN1_PORT, RCC_EN1_PIN);
+    digitalHi(en1);
+#endif
+#ifdef RCC_EN2_PORT
+    en2 = digitalInit(RCC_EN2_PORT, RCC_EN2_PIN);
+    digitalLo(en2);
+#endif
+#ifdef RCC_SYSOFF_PORT
+    sysoff = digitalInit(RCC_SYSOFF_PORT, RCC_SYSOFF_PIN);
+    digitalLo(sysoff);
+#endif
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1 | RCC_AHB1Periph_DMA2, ENABLE);
 

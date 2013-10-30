@@ -38,8 +38,12 @@ void analogDecode(void) {
 	analogData.voltages[i] = analogData.rawChannels[i] * ANALOG_DIVISOR;
 
     analogData.vIn = analogData.voltages[ANALOG_VOLTS_VIN] * ANALOG_VIN_SLOPE;
+#ifdef ANALOG_EXT_VOLT_SLOPE
     analogData.extVolt = analogData.voltages[ANALOG_VOLTS_EXT_VOLT] * ANALOG_EXT_VOLT_SLOPE;
+#endif
+#ifdef ANALOG_EXT_AMP_SLOPE
     analogData.extAmp = analogData.voltages[ANALOG_VOLTS_EXT_AMP] * ANALOG_EXT_AMP_SLOPE;
+#endif
 }
 #endif
 
