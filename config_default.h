@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    119
+#define DEFAULT_CONFIG_VERSION	    120
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -97,7 +97,6 @@
 #define DEFAULT_MOT_FRAME	    0		// used as hint for frame config GUI
 #define DEFAULT_MOT_ARM		    975
 #define DEFAULT_MOT_MIN		    1000
-#define DEFAULT_MOT_START	    1125
 #define DEFAULT_MOT_MAX		    1950
 
 #define DEFAULT_MOT_PWRD_01_T	    0.0

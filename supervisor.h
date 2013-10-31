@@ -25,7 +25,7 @@
 #define SUPERVISOR_STACK_SIZE	    105
 #define SUPERVISOR_PRIORITY	    34
 
-#define SUPERVISOR_RATE		    10		    // Hz
+#define SUPERVISOR_RATE		    20		    // Hz
 #define SUPERVISOR_DISARM_TIME	    (1e6*2)	    // 2 seconds
 #define SUPERVISOR_RADIO_LOSS1	    ((int)1e6)	    // 1 second
 #define SUPERVISOR_RADIO_LOSS2	    ((int)15e6)	    // 15 seconds

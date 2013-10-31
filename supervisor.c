@@ -112,12 +112,12 @@ void supervisorTaskCode(void *unused) {
 	if (supervisorData.state & STATE_DISARMED) {
 #ifdef SUPERVISOR_DEBUG_PORT
 	    // 0.5 Hz blink debug LED if config file could be found on uSD card
-	    if (!(count % 10) && supervisorData.configRead)
+	    if (!(count % (SUPERVISOR_RATE/1)) && supervisorData.configRead)
 		digitalTogg(supervisorData.debugLed);
 #endif
 
 	    // 1 Hz blink if disarmed, 5 Hz if writing to uSD card
-	    if (!(count % ((supervisorData.diskWait) ? 1 : 5)))
+	    if (!(count % ((supervisorData.diskWait) ? SUPERVISOR_RATE/10 : SUPERVISOR_RATE/2)))
 		digitalTogg(supervisorData.readyLed);
 
 	    // Arm if all the switches are in default (startup positions) - flaps down, aux2 centered
@@ -128,7 +128,6 @@ void supervisorTaskCode(void *unused) {
 		else if ((timerMicros() - supervisorData.armTime) > SUPERVISOR_DISARM_TIME) {
 		    supervisorArm();
 		    supervisorData.armTime = 0;
-		    digitalHi(supervisorData.readyLed);
 		}
 	    }
 	    else {
@@ -258,25 +257,10 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	// smooth vIn readings
-	supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * 0.05f;
+	supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * (0.5f / SUPERVISOR_RATE);
 
 	// determine battery state of charge
 	supervisorData.soc = supervisorSOCTableLookup(supervisorData.vInLPF);
-
-	if (supervisorData.state & STATE_FLYING) {
-	    // count flight time in seconds
-	    supervisorData.flightTime += (1.0f / SUPERVISOR_RATE);
-
-	    // calculate remaining flight time
-	    if (supervisorData.soc < 99.0f) {
-		supervisorData.flightSecondsAvg += (supervisorData.flightTime / (100.0f - supervisorData.soc) - supervisorData.flightSecondsAvg) * 0.001f;
-		supervisorData.flightTimeRemaining = supervisorData.flightSecondsAvg * supervisorData.soc;
-	    }
-	    else {
-		supervisorData.flightSecondsAvg = supervisorData.flightTime;
-		supervisorData.flightTimeRemaining = 999.9f * 60.0f;		// unknown
-	    }
-	}
 
 	// low battery
 	if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*analogData.batCellCount)) {
@@ -290,6 +274,35 @@ void supervisorTaskCode(void *unused) {
 	    AQ_NOTICE("Warning: Low battery stage 2\n");
 
 	    // TODO: something
+	}
+
+	if (supervisorData.state & STATE_FLYING) {
+	    // count flight time in seconds
+	    supervisorData.flightTime += (1.0f / SUPERVISOR_RATE);
+
+	    // calculate remaining flight time
+	    if (supervisorData.soc < 99.0f) {
+		supervisorData.flightSecondsAvg += (supervisorData.flightTime / (100.0f - supervisorData.soc) - supervisorData.flightSecondsAvg) * (0.01f / SUPERVISOR_RATE);
+		supervisorData.flightTimeRemaining = supervisorData.flightSecondsAvg * supervisorData.soc;
+	    }
+	    else {
+		supervisorData.flightSecondsAvg = supervisorData.flightTime;
+		supervisorData.flightTimeRemaining = 999.9f * 60.0f;		// unknown
+	    }
+
+	    // rapidly flash both LEDs if we are critically low on power
+	    if (supervisorData.state & STATE_LOW_BATTERY2) {
+		digitalTogg(supervisorData.readyLed);
+#ifdef SUPERVISOR_DEBUG_PORT
+		digitalTogg(supervisorData.debugLed);
+#endif
+	    }
+	}
+	else if (supervisorData.state & STATE_ARMED) {
+	    digitalHi(supervisorData.readyLed);
+#ifdef SUPERVISOR_DEBUG_PORT
+	    digitalLo(supervisorData.debugLed);
+#endif
 	}
 
 	count++;

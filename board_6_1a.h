@@ -542,4 +542,7 @@ enum pwmPorts {
 #define ANALOG_VIN_RTOP            8.45f   // first run beta boards were 4.7K, second run are 8.45K
 #define ANALOG_VIN_RBOT            1.33f
 
+
+#define MOTORS_PWM_FREQ                   400 // Hz
+
 #endif
