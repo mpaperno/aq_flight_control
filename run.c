@@ -143,7 +143,7 @@ void runTaskCode(void *unused) {
 #ifndef HAS_AIMU
 	analogDecode();
 #endif
-	if (!(loops % 200))
+	if (!(loops % (int)(1.0f / AQ_OUTER_TIMESTEP)))
 	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();

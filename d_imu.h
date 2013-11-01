@@ -40,8 +40,10 @@
 #define DIMU_STACK_SIZE	    250
 #define DIMU_PRIORITY	    11
 
-#define DIMU_PERIOD	    5000			// us
-#define DIMU_DT		    ((float)DIMU_PERIOD / 1e6f)
+#define DIMU_OUTER_PERIOD   5000			    // us (200 Hz)
+#define DIMU_INNER_PERIOD   2500			    // us (400 Hz)
+#define DIMU_OUTER_DT	    ((float)DIMU_OUTER_PERIOD / 1e6f)
+#define DIMU_INNER_DT	    ((float)DIMU_INNER_PERIOD / 1e6f)
 #define DIMU_TEMP_TAU	    5.0f
 
 #define DIMU_TIM	    TIM8

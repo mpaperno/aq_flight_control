@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _imu_h
@@ -49,7 +49,8 @@
 #define IMU_MAGZ		hmc5983Data.mag[2]
 #define IMU_TEMP		dImuData.temp
 #define IMU_LASTUPD		dImuData.lastUpdate
-#define AQ_TIMESTEP		DIMU_DT
+#define AQ_OUTER_TIMESTEP	DIMU_OUTER_DT
+#define AQ_INNER_TIMESTEP	DIMU_INNER_DT
 #define AQ_PRESSURE		ms5611Data.pres
 #endif	// USE_DIGITAL_IMU
 
@@ -69,7 +70,8 @@
 #define IMU_MAGZ		adcData.magZ
 #define IMU_TEMP		adcData.temperature
 #define IMU_LASTUPD		adcData.lastUpdate
-#define AQ_TIMESTEP		adcData.dt
+#define AQ_OUTER_TIMESTEP	adcData.dt
+#define AQ_INNER_TIMESTEP	(adcData.dt * 0.5f)
 #define AQ_PRESSURE		adcData.pressure
 #endif
 

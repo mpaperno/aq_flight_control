@@ -118,7 +118,7 @@ const uint16_t dImuCalibParameters[] = {
 void dIMUTare(void) {
     float acc[3], gyo[3];
     uint32_t lastUpdate;
-    float samples = 0.5f / DIMU_DT; // 0.5 second
+    float samples = 0.5f / DIMU_OUTER_DT; // 0.5 second
     int i;
 
     // reset all parameters
@@ -208,7 +208,7 @@ static void dIMUTaskCode(void *unused) {
 	imuDImuDRateReady();
 
 	// full sensor loop
-	if ((loops & 0b1) == 0) {
+	if (!(loops % (DIMU_OUTER_PERIOD/DIMU_INNER_PERIOD))) {
 #ifdef DIMU_HAVE_MPU6000
 	    mpu6000Decode();
 #endif
@@ -375,7 +375,7 @@ void dIMUInit(void) {
 #endif
 
     // setup IMU timestep alarm
-    dImuData.nextPeriod = DIMU_TIM->CCR4 + DIMU_PERIOD/2;
+    dImuData.nextPeriod = DIMU_TIM->CCR4 + DIMU_INNER_PERIOD;
     DIMU_TIM->CCR4 = dImuData.nextPeriod;
     DIMU_TIM->DIER |= TIM_IT_CC4;
 
@@ -438,7 +438,7 @@ void DIMU_ISR(void) {
 	DIMU_TIM->SR = (uint16_t)~TIM_IT_CC4;
 
 	// set next alarm
-	dImuData.nextPeriod += DIMU_PERIOD/2;
+	dImuData.nextPeriod += DIMU_INNER_PERIOD;
 	DIMU_TIM->CCR4 = dImuData.nextPeriod;
 
 	CoEnterISR();

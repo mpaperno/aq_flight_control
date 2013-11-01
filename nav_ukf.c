@@ -407,7 +407,7 @@ void navUkfInertialUpdate(void) {
     u[4] = IMU_RATEY;
     u[5] = IMU_RATEZ;
 
-    srcdkfTimeUpdate(navUkfData.kf, u, AQ_TIMESTEP);
+    srcdkfTimeUpdate(navUkfData.kf, u, AQ_OUTER_TIMESTEP);
 
     // store history
     navUkfData.posN[navUkfData.navHistIndex] = UKF_POSN;
@@ -521,7 +521,7 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	    y[2] = alt;
 
 	    // determine how far back this GPS position update came from
-	    histIndex = (timerMicros() - (gpsMicros + UKF_POS_DELAY)) / (int)(1e6f * AQ_TIMESTEP);
+	    histIndex = (timerMicros() - (gpsMicros + UKF_POS_DELAY)) / (int)(1e6f * AQ_OUTER_TIMESTEP);
 	    histIndex = navUkfData.navHistIndex - histIndex;
 	    if (histIndex < 0)
 		histIndex += UKF_HIST;
@@ -603,7 +603,7 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
 	y[2] = velD;
 
 	// determine how far back this GPS velocity update came from
-	histIndex = (timerMicros() - (gpsMicros + UKF_VEL_DELAY)) / (int)(1e6f * AQ_TIMESTEP);
+	histIndex = (timerMicros() - (gpsMicros + UKF_VEL_DELAY)) / (int)(1e6f * AQ_OUTER_TIMESTEP);
 	histIndex = navUkfData.navHistIndex - histIndex;
 	if (histIndex < 0)
 	    histIndex += UKF_HIST;
@@ -927,7 +927,7 @@ void navUkfInitState(void) {
 //	}
 
 	i++;
-//    } while (i < (int)(1.0f / AQ_TIMESTEP)*IMU_STATIC_TIMEOUT && (i <= UKF_GYO_AVG_NUM*5 || (stdX + stdY + stdZ) > 0.004f));
+//    } while (i < (int)(1.0f / AQ_OUTER_TIMESTEP)*IMU_STATIC_TIMEOUT && (i <= UKF_GYO_AVG_NUM*5 || (stdX + stdY + stdZ) > 0.004f));
     } while (i <= UKF_GYO_AVG_NUM*5);
 
 //    arm_mean_f32(vX, UKF_GYO_AVG_NUM, &UKF_GYO_BIAS_X);

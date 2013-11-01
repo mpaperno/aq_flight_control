@@ -256,7 +256,7 @@ void mpu6000Init(void) {
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    utilFilterInit(&mpu6000Data.tempFilter, DIMU_DT, DIMU_TEMP_TAU, IMU_ROOM_TEMP);
+    utilFilterInit(&mpu6000Data.tempFilter, DIMU_OUTER_DT, DIMU_TEMP_TAU, IMU_ROOM_TEMP);
 
     // reset
     mpu6000SetReg(107, 0b10000000);
