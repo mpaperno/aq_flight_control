@@ -108,6 +108,15 @@
         <file file_name="board_dimu_v1.h"/>
         <file file_name="board_dimu_v2.h"/>
       </folder>
+      <folder Name="USB" file_name="">
+        <file file_name="usbd_conf.h"/>
+        <file file_name="usbd_desc.h"/>
+        <file file_name="usb_bsp.c"/>
+        <file file_name="usbd_desc.c"/>
+        <file file_name="usb_conf.h"/>
+        <file file_name="usb.h"/>
+        <file file_name="usb.c"/>
+      </folder>
       <file file_name="getbuildnum.c">
         <configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
       </file>
@@ -247,6 +256,48 @@
       <file file_name="algebra.c"/>
       <file file_name="aq_math.h"/>
       <file file_name="rotations.c"/>
+    </folder>
+    <folder Name="USB Drivers">
+      <folder Name="Device">
+        <folder Name="Core">
+          <folder Name="src" file_name="">
+            <file file_name="usbd_core.c"/>
+            <file file_name="usbd_ioreq.c"/>
+            <file file_name="usbd_req.c"/>
+          </folder>
+          <folder Name="inc" file_name="">
+            <file file_name="usbd_core.h"/>
+            <file file_name="usbd_def.h"/>
+            <file file_name="usbd_ioreq.h"/>
+            <file file_name="usbd_req.h"/>
+          </folder>
+        </folder>
+        <folder Name="Class">
+          <folder Name="cdc">
+            <folder Name="src" file_name="">
+              <file file_name="usbd_cdc_core.c"/>
+            </folder>
+            <folder Name="inc" file_name="">
+              <file file_name="usbd_cdc_core.h"/>
+            </folder>
+          </folder>
+        </folder>
+      </folder>
+      <folder Name="OTG">
+        <folder Name="inc" file_name="">
+          <file file_name="usb_bsp.h"/>
+          <file file_name="usb_core.h"/>
+          <file file_name="usb_dcd.h"/>
+          <file file_name="usb_dcd_int.h"/>
+          <file file_name="usb_defines.h"/>
+          <file file_name="usb_regs.h"/>
+        </folder>
+        <folder Name="src" file_name="">
+          <file file_name="usb_core.c"/>
+          <file file_name="usb_dcd.c"/>
+          <file file_name="usb_dcd_int.c"/>
+        </folder>
+      </folder>
     </folder>
     <configuration Name="Release" c_preprocessor_definitions="STARTUP_FROM_RESET" gcc_debugging_level="Level 2" gcc_optimization_level="Level 2" gcc_strip_symbols="No"/>
     <configuration Name="Debug" c_preprocessor_definitions="USE_FULL_ASSERT" gcc_optimization_level="Level 1"/>

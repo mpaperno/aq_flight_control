@@ -23,6 +23,7 @@
 #include "util.h"
 #include "filer.h"
 #include "can.h"
+#include "usb.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -52,7 +53,7 @@ void commNotice(const char *s) {
 
 static void commTriggerSchedule(void) {
     // another stolen interrupt
-    NVIC->STIR = OTG_FS_IRQn;
+    NVIC->STIR = CRYP_IRQn;
 }
 
 uint8_t commStreamUsed(uint8_t streamType) {
@@ -94,11 +95,27 @@ void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func) {
 }
 
 uint8_t commReadChar(commRcvrStruct_t *r) {
-    return serialRead(r->s);
+    if (r->s)
+	return serialRead(r->s);
+#ifdef HAS_USB
+    else
+	return usbRx();
+#else
+    else
+	return 0;
+#endif
 }
 
 uint8_t commAvailable(commRcvrStruct_t *r) {
-    return serialAvailable(r->s);
+    if (r->s)
+	return serialAvailable(r->s);
+#ifdef HAS_USB
+    else
+	return usbAvailable();
+#else
+    else
+	return 0;
+#endif
 }
 
 // return 0 if none are available
@@ -203,7 +220,7 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
 	    toBeScheduled[i] = 0;
 
 	    // singleplex case
-	    if (commData.portStreams[i] == txBuf->type) {
+	    if (commData.portStreams[i] == txBuf->type && commData.serialPorts[i]) {
 		head = commData.txStackHeads[i];
 		newHeads[i] = (head + 1) % COMM_STACK_DEPTH;
 
@@ -244,6 +261,11 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
 	}
 
 	CoLeaveMutexSection(commData.txBufferMutex);
+
+#ifdef HAS_USB
+	if (commData.portStreams[COMM_USB_PORT] == txBuf->type)
+	    usbTx(&txBuf->buf, size);
+#endif
     }
 }
 
@@ -313,6 +335,21 @@ void commTaskCode(void *unused) {
     }
 }
 
+void commSetTypesUsed(void) {
+    uint8_t typesUsed = 0;
+    int i;
+
+    for (i = 0; i < COMM_NUM_PORTS; i++)
+	typesUsed |= commData.portStreams[i];
+
+    commData.typesUsed = typesUsed;
+}
+
+void commSetStreamType(uint8_t port, uint8_t type) {
+    commData.portStreams[port] = type;
+    commSetTypesUsed();
+}
+
 void commInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     uint16_t flowControl;
@@ -366,7 +403,7 @@ void commInit(void) {
 #endif
 
     // record which stream types that we are working with
-    commData.typesUsed = (uint8_t)p[COMM_STREAM_TYP1] | (uint8_t)p[COMM_STREAM_TYP2] | (uint8_t)p[COMM_STREAM_TYP3] | (uint8_t)p[COMM_STREAM_TYP4];
+    commSetTypesUsed();
 
     // perhaps make this dynamic later
     commData.txPacketBufSizes[0] = 16;
@@ -387,8 +424,8 @@ void commInit(void) {
     for (i = 0; i < COMM_TX_NUM_SIZES; i++)
 	commData.txPacketBufs[i] = aqCalloc(commData.txPacketBufNum[i], commData.txPacketBufSizes[i] + COMM_HEADER_SIZE);
 
-    // Enable OTG FS interrupt (for our stack management)
-    NVIC_InitStructure.NVIC_IRQChannel = OTG_FS_IRQn;
+    // Enable CRYP interrupt (for our stack management)
+    NVIC_InitStructure.NVIC_IRQChannel = CRYP_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -404,9 +441,12 @@ void commInit(void) {
 
     commData.commTask = CoCreateTask(commTaskCode, (void *)0, 5, &commTaskStack[COMM_STACK_SIZE-1], COMM_STACK_SIZE);
 
+#ifdef HAS_USB
+    usbInit();
+#endif
     commData.initialized = 1;
 }
 
-void OTG_FS_IRQHandler(void) {
+void CRYP_IRQHandler(void) {
     commSchedule();
 }

@@ -30,7 +30,12 @@
 #define COMM_LOG_BUF_SIZE	512
 #define COMM_LOG_FNAME		"MSG"		// comment out to disable logging
 
+#ifdef HAS_USB
+#define COMM_NUM_PORTS		5
+#define COMM_USB_PORT		4
+#else
 #define COMM_NUM_PORTS		4
+#endif
 
 //#define COMM_DISABLE_FLOW_CONTROL1
 #define COMM_DISABLE_FLOW_CONTROL2
@@ -143,5 +148,6 @@ extern uint8_t commAvailable(commRcvrStruct_t *r);
 extern uint8_t commReadChar(commRcvrStruct_t *r);
 extern uint8_t commStreamUsed(uint8_t streamType);
 extern void commTxDMAFinished(void *param);
+extern void commSetStreamType(uint8_t port, uint8_t type);
 
 #endif
