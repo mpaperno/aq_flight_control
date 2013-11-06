@@ -19,6 +19,9 @@
 #ifndef _board_dimu_v1_h
 #define _board_dimu_v1_h
 
+#define HAS_DIGITAL_IMU
+#define USE_DIGITAL_IMU
+
 #define DIMU_HAVE_MPU6000
 #define DIMU_HAVE_HMC5983
 #define DIMU_HAVE_MS5611

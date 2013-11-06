@@ -19,6 +19,9 @@
 #ifndef _board_dimu_v2_h
 #define _board_dimu_v2_h
 
+#define HAS_DIGITAL_IMU
+#define USE_DIGITAL_IMU
+
 #define DIMU_HAVE_EEPROM
 
 #define DIMU_HAVE_MPU6000
