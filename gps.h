@@ -84,7 +84,6 @@ typedef struct {
 extern gpsStruct_t gpsData;
 
 extern void gpsInit(void);
-extern void gpsPassthrough(serialPort_t *from, serialPort_t *to);
 extern void gpsSendPacket(unsigned char len, char *buf);
 
 #endif

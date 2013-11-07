@@ -111,6 +111,11 @@ void gpsTaskCode(void *p) {
     }
 }
 
+void gpsPassThrough(commRcvrStruct_t *r) {
+    while (commAvailable(r))
+	serialWrite(gpsData.gpsPort, commReadChar(r));
+}
+
 void gpsInit(void) {
 #ifdef GPS_TP_PORT
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -172,29 +177,8 @@ void gpsInit(void) {
     gpsData.logHandle = filerGetHandle(GPS_FNAME);
     filerStream(gpsData.logHandle, gpsLog, GPS_LOG_BUF);
 #endif
-}
 
-void gpsPassthrough(serialPort_t *s1, serialPort_t *s2) {
-    digitalPin *gpsLed;
-
-    gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN);
-
-    AQ_NOTICE("Starting GPS passthrough mode\n");
-
-    // don't allow any preemption
-    CoSetPriority(gpsData.gpsTask, 1);
-
-    // this is a dead end
-    while (1) {
-	if (serialAvailable(s1)) {
-	    digitalHi(gpsLed);
-	    serialWrite(s2, serialRead(s1));
-	    digitalLo(gpsLed);
-	}
-	if (serialAvailable(s2)) {
-	    serialWrite(s1, serialRead(s2));
-	}
-    }
+    commRegisterRcvrFunc(COMM_TYPE_GPS, gpsPassThrough);
 }
 
 void gpsSendPacket(unsigned char len, char *buf) {

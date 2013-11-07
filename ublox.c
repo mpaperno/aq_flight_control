@@ -269,6 +269,32 @@ void ubloxInitGps(void) {
     yield(200);
 }
 
+static void ubloxSendPacket(uint8_t commType) {
+    commTxBuf_t *txBuf;
+    uint8_t *ptr;
+    int i;
+
+    txBuf = commGetTxBuf(commType, ubloxData.length + 6 + 2);
+    ptr = &txBuf->buf;
+
+    if (ptr) {
+	*ptr++ = (UBLOX_SYNC1);
+	*ptr++ = (UBLOX_SYNC2);
+	*ptr++ = (ubloxData.class);
+	*ptr++ = (ubloxData.id);
+	*ptr++ = (ubloxData.length & 0xff);
+	*ptr++ = ((ubloxData.length & 0xff00) >> 8);
+
+	for (i = 0; i < ubloxData.length; i++)
+	    *ptr++ = (*((char *)&ubloxData.payload + i));
+
+	*ptr++ = (ubloxData.ubloxRxCK_A);
+	*ptr++ = (ubloxData.ubloxRxCK_B);
+
+	commSendTxBuf(txBuf, ptr - &txBuf->buf);
+    }
+}
+
 unsigned char ubloxPublish(void) {
     unsigned char ret = 0;
 
@@ -344,6 +370,9 @@ unsigned char ubloxPublish(void) {
     }
 
     gpsData.lastMessage = IMU_LASTUPD;
+
+    if (commStreamUsed(COMM_TYPE_GPS))
+	ubloxSendPacket(COMM_TYPE_GPS);
 
     // TODO
     if (1 && commStreamUsed(COMM_TYPE_TELEMETRY)) {
