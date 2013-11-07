@@ -47,7 +47,7 @@
 #define COMM_STACK_DEPTH	32			// number of outstanding requests allowed (per port)
 #define COMM_TX_NUM_SIZES	6
 
-#define COMM_MAX_PROTOCOLS	2
+#define COMM_MAX_PROTOCOLS	3
 
 #define AQ_NOTICE		commNotice
 #define AQ_PRINTF(fmt, args...)	{char *sTemp = commGetNoticeBuf(); snprintf(sTemp, COMM_NOTICE_LENGTH, fmt, args); commNotice(sTemp);}
