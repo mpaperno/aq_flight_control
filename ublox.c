@@ -275,9 +275,10 @@ static void ubloxSendPacket(uint8_t commType) {
     int i;
 
     txBuf = commGetTxBuf(commType, ubloxData.length + 6 + 2);
-    ptr = &txBuf->buf;
 
-    if (ptr) {
+    if (txBuf) {
+	ptr = &txBuf->buf;
+
 	*ptr++ = (UBLOX_SYNC1);
 	*ptr++ = (UBLOX_SYNC2);
 	*ptr++ = (ubloxData.class);
@@ -381,9 +382,10 @@ unsigned char ubloxPublish(void) {
 	int i;
 
 	txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, ubloxData.length + 3 + 2 + 6 + 2 + 2);
-	ptr = &txBuf->buf;
 
-	if (ptr) {
+	if (txBuf) {
+	    ptr = &txBuf->buf;
+
 	    *ptr++ = 'A';
 	    *ptr++ = 'q';
 	    *ptr++ = 'G';
