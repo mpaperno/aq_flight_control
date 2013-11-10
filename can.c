@@ -249,14 +249,12 @@ canNodes_t *canFindNode(uint8_t type, uint8_t canId) {
     return 0;
 }
 
-void canInit(void) {
+void canLowLevelInit(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
     CAN_InitTypeDef CAN_InitStructure;
-    CAN_FilterInitTypeDef CAN_FilterInitStructure;
     NVIC_InitTypeDef  NVIC_InitStructure;
-    uint32_t micros;
 
-    // Connect CAN pins to AF9
+    // Connect CAN pins to AF
     GPIO_PinAFConfig(CAN_GPIO_PORT, CAN_RX_SOURCE, CAN_AF_PORT);
     GPIO_PinAFConfig(CAN_GPIO_PORT, CAN_TX_SOURCE, CAN_AF_PORT);
 
@@ -289,6 +287,22 @@ void canInit(void) {
     CAN_InitStructure.CAN_Prescaler = 3;
     CAN_Init(CANx, &CAN_InitStructure);
 
+    NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+
+    // Enable FIFO 0 message pending Interrupt
+//    CAN_ITConfig(CANx, CAN_IT_FMP0, ENABLE);
+}
+
+void canInit(void) {
+    CAN_FilterInitTypeDef CAN_FilterInitStructure;
+    uint32_t micros;
+
+    canLowLevelInit();
+
     // only packets targeted at us (bus master)
     CAN_FilterInitStructure.CAN_FilterNumber = 0;
     CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;
@@ -300,15 +314,6 @@ void canInit(void) {
     CAN_FilterInitStructure.CAN_FilterFIFOAssignment = 0;
     CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
     CAN_FilterInit(&CAN_FilterInitStructure);
-
-    NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-
-    // Enable FIFO 0 message pending Interrupt
-//    CAN_ITConfig(CANx, CAN_IT_FMP0, ENABLE);
 
     canResetBus();
 

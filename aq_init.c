@@ -42,6 +42,7 @@
 #include "sdio.h"
 #include "can.h"
 #include "analog.h"
+#include "canCalib.h"
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -82,7 +83,11 @@ void aqInit(void *pdata) {
     signalingInit();
 #endif
     loggerInit();
+#ifdef CAN_CALIB
+    canCalibInit();
+#else
     canInit();
+#endif
     motorsInit();
     controlInit();
     gimbalInit();
