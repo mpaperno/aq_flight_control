@@ -103,7 +103,7 @@ void runTaskCode(void *unused) {
 	    navUkfFlowUpdate();
 	}
 	// only accept GPS updates if there is no optical flow
-	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
+	else if (CoAcceptSingleFlag(gpsData.gpsPosFlag) == E_OK && navUkfData.flowQuality == 0.0f && gpsData.hAcc < NAV_MIN_GPS_ACC && gpsData.tDOP != 0.0f) {
 	    navUkfGpsPosUpdate(gpsData.lastPosUpdate, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hAcc + runData.accMask, gpsData.vAcc + runData.accMask);
 	    CoClearFlag(gpsData.gpsPosFlag);
 	    // refine static sea level pressure based on better GPS altitude fixes
@@ -112,9 +112,17 @@ void runTaskCode(void *unused) {
 		runData.bestHacc = gpsData.hAcc;
 	    }
 	}
-	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK && navUkfData.flowQuality == 0.0f) {
+	else if (CoAcceptSingleFlag(gpsData.gpsVelFlag) == E_OK && navUkfData.flowQuality == 0.0f && gpsData.sAcc < NAV_MIN_GPS_ACC/2 && gpsData.tDOP != 0.0f) {
 	    navUkfGpsVelUpdate(gpsData.lastVelUpdate, gpsData.velN, gpsData.velE, gpsData.velD, gpsData.sAcc + runData.accMask);
 	    CoClearFlag(gpsData.gpsVelFlag);
+	}
+	// observe zero position
+	else if (!((loops+4) % 20) && (gpsData.hAcc >= NAV_MIN_GPS_ACC || gpsData.tDOP == 0.0f)) {
+	    navUkfZeroPos();
+	}
+	// observer zero velocity
+	else if (!((loops+10) % 20) && (gpsData.sAcc >= NAV_MIN_GPS_ACC/2 || gpsData.tDOP == 0.0f)) {
+	    navUkfZeroVel();
 	}
 	// observe that the rates are exactly 0 if not flying or moving
 	else if (!(supervisorData.state & STATE_FLYING)) {
@@ -147,6 +155,10 @@ void runTaskCode(void *unused) {
 	    loggerDoHeader();
 	loggerDo();
 	gimbalUpdate();
+
+#ifdef CAN_CALIB
+	canTxIMUData(loops);
+#endif
 
 	loops++;
     }

@@ -165,6 +165,7 @@ typedef struct {
 extern canStruct_t canData;
 
 extern void canInit(void);
+extern void canLowLevelInit(void);
 extern void canCheckMessage(void);
 extern char *canGetVersion(uint8_t tid);
 extern float *canGetParam(uint8_t tid, uint16_t paramId);

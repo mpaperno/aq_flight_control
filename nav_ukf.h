@@ -151,5 +151,7 @@ extern void navUkfZeroRate(float zRate, int axis);
 extern void navUkfFinish(void);
 extern void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q);
 extern void navUkfResetBias(void);
+extern void navUkfZeroPos(void);
+extern void navUkfZeroVel(void);
 
 #endif
