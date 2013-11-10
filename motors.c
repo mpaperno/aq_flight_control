@@ -152,9 +152,9 @@ static void motorsCanInit(int i) {
 
 static void motorsPwmInit(int i) {
 #ifdef USE_L1_ATTITUDE
-    motorsData.pwm[i] = pwmInitOut(i, 1000000/MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
+    motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
 #else
-    motorsData.pwm[i] = pwmInitOut(i, 1000000/MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
+    motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
 #endif
 }
 

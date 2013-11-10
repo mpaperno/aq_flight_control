@@ -544,4 +544,7 @@ enum pwmPorts {
 
 #define MOTORS_PWM_FREQ                   400 // Hz
 
+
+#define PWM_PRESCALE		    1000000
+
 #endif
