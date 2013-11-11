@@ -34,17 +34,42 @@ static void hmc5983TransferComplete(int unused) {
 }
 
 static void hmc5983ScaleMag(int32_t *in, float *out, float divisor) {
-    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 390.0f);
-    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 390.0f);
-    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 390.0f);
+//    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 390.0f);
+//    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 390.0f);
+//    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 390.0f);
+    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 187.88f);
+    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 187.88f);
+    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 187.88f);
+}
+
+static void hmc5983CalibMag(float *in, volatile float *out) {
+    float a, b, c;
+    float x, y, z;
+
+    // bias
+    a = +(in[0] + p[IMU_MAG_BIAS_X] + p[IMU_MAG_BIAS1_X]*dImuData.dTemp + p[IMU_MAG_BIAS2_X]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_X]*dImuData.dTemp3);
+    b = +(in[1] + p[IMU_MAG_BIAS_Y] + p[IMU_MAG_BIAS1_Y]*dImuData.dTemp + p[IMU_MAG_BIAS2_Y]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_Y]*dImuData.dTemp3);
+    c = -(in[2] + p[IMU_MAG_BIAS_Z] + p[IMU_MAG_BIAS1_Z]*dImuData.dTemp + p[IMU_MAG_BIAS2_Z]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_Z]*dImuData.dTemp3);
+
+    // misalignment
+    x = a + b*p[IMU_MAG_ALGN_XY] + c*p[IMU_MAG_ALGN_XZ];
+    y = a*p[IMU_MAG_ALGN_YX] + b + c*p[IMU_MAG_ALGN_YZ];
+    z = a*p[IMU_MAG_ALGN_ZX] + b*p[IMU_MAG_ALGN_ZY] + c;
+
+    // scale
+    x /= (p[IMU_MAG_SCAL_X] + p[IMU_MAG_SCAL1_X]*dImuData.dTemp + p[IMU_MAG_SCAL2_X]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_X]*dImuData.dTemp3);
+    y /= (p[IMU_MAG_SCAL_Y] + p[IMU_MAG_SCAL1_Y]*dImuData.dTemp + p[IMU_MAG_SCAL2_Y]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_Y]*dImuData.dTemp3);
+    z /= (p[IMU_MAG_SCAL_Z] + p[IMU_MAG_SCAL1_Z]*dImuData.dTemp + p[IMU_MAG_SCAL2_Z]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_Z]*dImuData.dTemp3);
+
+    out[0] = x * imuData.cosRot - y * imuData.sinRot;
+    out[1] = y * imuData.cosRot + x * imuData.sinRot;
+    out[2] = z;
 }
 
 void hmc5983Decode(void) {
     volatile uint8_t *d = hmc5983Data.rxBuf;
     int32_t mag[3];
     float divisor;
-    float x, y, z;
-    float a, b, c;
     int i;
 
     mag[0] = 0;
@@ -69,25 +94,7 @@ void hmc5983Decode(void) {
     divisor = 1.0f / divisor;
 
     hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
-
-    // bias
-    a = +(hmc5983Data.rawMag[0] + p[IMU_MAG_BIAS_X] + p[IMU_MAG_BIAS1_X]*dImuData.dTemp + p[IMU_MAG_BIAS2_X]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_X]*dImuData.dTemp3);
-    b = +(hmc5983Data.rawMag[1] + p[IMU_MAG_BIAS_Y] + p[IMU_MAG_BIAS1_Y]*dImuData.dTemp + p[IMU_MAG_BIAS2_Y]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_Y]*dImuData.dTemp3);
-    c = -(hmc5983Data.rawMag[2] + p[IMU_MAG_BIAS_Z] + p[IMU_MAG_BIAS1_Z]*dImuData.dTemp + p[IMU_MAG_BIAS2_Z]*dImuData.dTemp2 + p[IMU_MAG_BIAS3_Z]*dImuData.dTemp3);
-
-    // misalignment
-    x = a + b*p[IMU_MAG_ALGN_XY] + c*p[IMU_MAG_ALGN_XZ];
-    y = a*p[IMU_MAG_ALGN_YX] + b + c*p[IMU_MAG_ALGN_YZ];
-    z = a*p[IMU_MAG_ALGN_ZX] + b*p[IMU_MAG_ALGN_ZY] + c;
-
-    // scale
-    x /= (p[IMU_MAG_SCAL_X] + p[IMU_MAG_SCAL1_X]*dImuData.dTemp + p[IMU_MAG_SCAL2_X]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_X]*dImuData.dTemp3);
-    y /= (p[IMU_MAG_SCAL_Y] + p[IMU_MAG_SCAL1_Y]*dImuData.dTemp + p[IMU_MAG_SCAL2_Y]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_Y]*dImuData.dTemp3);
-    z /= (p[IMU_MAG_SCAL_Z] + p[IMU_MAG_SCAL1_Z]*dImuData.dTemp + p[IMU_MAG_SCAL2_Z]*dImuData.dTemp2 + p[IMU_MAG_SCAL3_Z]*dImuData.dTemp3);
-
-    hmc5983Data.mag[0] = x * imuData.cosRot - y * imuData.sinRot;
-    hmc5983Data.mag[1] = y * imuData.cosRot + x * imuData.sinRot;
-    hmc5983Data.mag[2] = z;
+    hmc5983CalibMag(hmc5983Data.rawMag, hmc5983Data.mag);
 
     hmc5983Data.lastUpdate = timerMicros();
 }
@@ -162,7 +169,10 @@ void hmc5983Init(void) {
     hmc5983ReliablySetReg(0x00, 0b11111000);
     delay(10);
 
-    hmc5983ReliablySetReg(0x01, 0b00000000);
+//    // highest gain (+-0.88 Ga)
+//    hmc5983ReliablySetReg(0x01, 0b00000000);
+    // gain (+-2.5 Ga)
+    hmc5983ReliablySetReg(0x01, 0b01100000);
     delay(10);
 
     hmc5983ReliablySetReg(0x02, 0b00000000);
