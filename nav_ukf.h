@@ -28,7 +28,7 @@
 
 #define SIM_S                   17		// states
 #define SIM_M                   3		// max measurements
-#define SIM_V                   16		// process noise
+#define SIM_V                   12//16		// process noise
 #define SIM_N                   3		// max observation noise
 
 #define UKF_GYO_AVG_NUM		40
@@ -60,13 +60,9 @@
 #define UKF_V_NOISE_RATE_X	6
 #define UKF_V_NOISE_RATE_Y	7
 #define UKF_V_NOISE_RATE_Z	8
-#define UKF_V_NOISE_PRES_ALT	9
-#define UKF_V_NOISE_VELN	10
-#define UKF_V_NOISE_VELE	11
-#define UKF_V_NOISE_VELD	12
-#define UKF_V_NOISE_POSN	13
-#define UKF_V_NOISE_POSE	14
-#define UKF_V_NOISE_POSD	15
+#define UKF_V_NOISE_VELN	9
+#define UKF_V_NOISE_VELE	10
+#define UKF_V_NOISE_VELD	11
 
 #define UKF_VELN		navUkfData.x[UKF_STATE_VELN]
 #define UKF_VELE		navUkfData.x[UKF_STATE_VELE]
@@ -151,6 +147,7 @@ extern void navUkfZeroRate(float zRate, int axis);
 extern void navUkfFinish(void);
 extern void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q);
 extern void navUkfResetBias(void);
+extern void navUkfResetVels(void);
 extern void navUkfZeroPos(void);
 extern void navUkfZeroVel(void);
 

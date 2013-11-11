@@ -170,6 +170,7 @@ void dIMUTare(void) {
     p[IMU_GYO_BIAS_Z] = -(gyo[2] / samples);
 
     navUkfResetBias();
+    navUkfResetVels();
 }
 
 static void dIMUCalcTempDiff(void) {
@@ -302,7 +303,7 @@ void dIMUInit(void) {
 #endif
 #ifdef DIMU_HAVE_EEPROM
     eepromInit();
-//	dIMUWriteCalib();
+//    dIMUWriteCalib();
     dIMUReadCalib();
 #endif
 #ifdef DIMU_HAVE_HMC5983

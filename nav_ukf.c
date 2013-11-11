@@ -281,12 +281,12 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, i
 
     for (i = 0; i < n; i++) {
 	// pos
-	out[UKF_STATE_POSN*n + i] = in[UKF_STATE_POSN*n + i] + in[UKF_STATE_VELN*n + i] * dt + noise[UKF_V_NOISE_POSN*n + i];
-	out[UKF_STATE_POSE*n + i] = in[UKF_STATE_POSE*n + i] + in[UKF_STATE_VELE*n + i] * dt + noise[UKF_V_NOISE_POSE*n + i];
-	out[UKF_STATE_POSD*n + i] = in[UKF_STATE_POSD*n + i] - in[UKF_STATE_VELD*n + i] * dt + noise[UKF_V_NOISE_POSD*n + i];
+	out[UKF_STATE_POSN*n + i] = in[UKF_STATE_POSN*n + i] + in[UKF_STATE_VELN*n + i] * dt;
+	out[UKF_STATE_POSE*n + i] = in[UKF_STATE_POSE*n + i] + in[UKF_STATE_VELE*n + i] * dt;
+	out[UKF_STATE_POSD*n + i] = in[UKF_STATE_POSD*n + i] - in[UKF_STATE_VELD*n + i] * dt;
 
 	// pres alt
-	out[UKF_STATE_PRES_ALT*n + i] = in[UKF_STATE_PRES_ALT*n + i] - in[UKF_STATE_VELD*n + i] * dt + noise[UKF_V_NOISE_PRES_ALT*n + i];
+	out[UKF_STATE_PRES_ALT*n + i] = in[UKF_STATE_PRES_ALT*n + i] - in[UKF_STATE_VELD*n + i] * dt;
 
 	// create rot matrix from current quat
 	q[0] = in[UKF_STATE_Q1*n + i];
@@ -962,13 +962,9 @@ void navUkfInit(void) {
     V[UKF_V_NOISE_RATE_X] = UKF_RATE_V;
     V[UKF_V_NOISE_RATE_Y] = UKF_RATE_V;
     V[UKF_V_NOISE_RATE_Z] = UKF_RATE_V;
-    V[UKF_V_NOISE_PRES_ALT] = UKF_PRES_ALT_V;
     V[UKF_V_NOISE_VELN] = UKF_VEL_V;
     V[UKF_V_NOISE_VELE] = UKF_VEL_V;
     V[UKF_V_NOISE_VELD] = UKF_ALT_VEL_V;
-    V[UKF_V_NOISE_POSN] = UKF_POS_V;
-    V[UKF_V_NOISE_POSE] = UKF_POS_V;
-    V[UKF_V_NOISE_POSD] = UKF_ALT_POS_V;
 
     srcdkfSetVariance(navUkfData.kf, Q, V, 0, 0);
 
