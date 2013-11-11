@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef GETBUILDNUM_H
@@ -21,7 +21,7 @@
 
 #include "buildnum.h"
 
-#define FIMRWARE_VERSION "6.8 - BETA"
+#define FIMRWARE_VERSION "6.9 - EXPR"
 
 extern unsigned long  getBuildNumber(void);
 extern unsigned long  getRevisionNumber(void);
