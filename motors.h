@@ -30,6 +30,10 @@
 
 #define MOTORS_CAN_GROUP_SIZE	    4
 
+#define MOTORS_COMP_PRELOAD_TAU	    0.4f
+#define MOTORS_COMP_PRELOAD_PTERM   3.0f
+#define MOTORS_COMP_PRELOAD_NFACT   10.0f
+
 typedef struct {
     float throttle;
     float pitch;
@@ -45,6 +49,7 @@ typedef struct {
     pwmPortStruct_t *pwm[PWM_NUM_PORTS];
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];
+    float oldValues[MOTORS_NUM];
     float pitch, roll, yaw;
     float throttle;
     float throttleLimiter;
@@ -60,5 +65,8 @@ extern void motorsSendValues(void);
 extern void motorsOff(void);
 extern void motorsArm(void);
 extern void motorsDisarm(void);
+extern float motorsPwm2Thrust(float pwm);
+extern void motorsSendThrust(void);
+extern float motorsMax(void);
 
 #endif

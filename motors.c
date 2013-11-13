@@ -29,11 +29,31 @@
 #include "can.h"
 #include "esc32.h"
 #include "supervisor.h"
+#include "imu.h"
+#ifndef __CC_ARM
+#include <intrinsics.h>
+#endif
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
+
+static float motorsThrust2Value(float thrust) {
+    return (-p[MOT_VALUE2T_A1] + __sqrtf(p[MOT_VALUE2T_A1]*p[MOT_VALUE2T_A1] + p[MOT_VALUE2T_A2] * 4.0f * thrust)) * (1.0f / (2.0f * p[MOT_VALUE2T_A2]));
+}
+
+float motorsPwm2Thrust(float pwm) {
+    float value;
+
+    value = p[MOT_VALUE_SCAL] * pwm / MOTORS_SCALE;
+
+    return p[MOT_VALUE2T_A1]*value + p[MOT_VALUE2T_A2]*value*value;
+}
+
+float motorsMax(void) {
+    return MOTORS_SCALE;
+}
 
 static void motorsCanSendGroups(void) {
     int i;
@@ -68,6 +88,47 @@ void motorsSendValues(void) {
 	}
 
     motorsCanSendGroups();
+}
+
+// thrust in gram-force
+void motorsSendThrust(void) {
+    float value;
+#ifdef HAS_ONBOARD_ESC
+    float nominalBatVolts, voltageFactor;
+#endif
+    int i;
+
+    for (i = 0; i < MOTORS_NUM; i++) {
+	if (motorsData.active[i]) {
+	    value = motorsThrust2Value(motorsData.thrust[i]);
+
+#ifdef HAS_ONBOARD_ESC
+	    // preload the request to accelerate setpoint changes
+	    if (motorsData.oldValues[i] != value) {
+		float v = (value -  motorsData.oldValues[i]);
+
+		// increase
+		if (v > 0.0f)
+		    value += v * MOTORS_COMP_PRELOAD_PTERM;
+		// decrease
+		else
+		    value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
+
+		// slowly follow setpoint
+		motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
+	    }
+
+	    // battery voltage compensation
+	    nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
+	    voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
+	    value *= voltageFactor;
+#endif
+
+	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE / p[MOT_VALUE_SCAL], 0, MOTORS_SCALE);
+	}
+    }
+
+    motorsSendValues();
 }
 
 void motorsOff(void) {
@@ -151,7 +212,7 @@ static void motorsCanInit(int i) {
 }
 
 static void motorsPwmInit(int i) {
-#ifdef USE_L1_ATTITUDE
+#if defined(USE_L1_ATTITUDE) && !defined(HAS_ONBOARD_ESC)
     motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
 #else
     motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 0);	    // open loop mode

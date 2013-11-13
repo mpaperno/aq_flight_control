@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -95,6 +95,9 @@ const char *configParameterStrings[] = {
     "MOT_ARM",
     "MOT_START",
     "MOT_MIN",
+    "MOT_VALUE2T_A1",
+    "MOT_VALUE2T_A2",
+    "MOT_VALUE_SCALE",
     "MOT_MAX",
     "MOT_PWRD_01_T",
     "MOT_PWRD_01_P",
@@ -317,8 +320,6 @@ const char *configParameterStrings[] = {
     "L1_ATT_J_YAW",
     "L1_ATT_AM1",
     "L1_ATT_AM2",
-    "L1_ATT_T2R_A1",
-    "L1_ATT_T2R_A2",
     "L1_ATT_PROP_K1",
     "L1_ATT_M_TLT_RT",
     "L1_ATT_M_YAW_RT",
@@ -326,7 +327,6 @@ const char *configParameterStrings[] = {
     "L1_ATT_QUAT_TAU",
     "L1_ATT_L1_ASP",
     "L1_ATT_L1_K1",
-    "L1_ATT_PWM_SCAL",
     "L1_ATT_AM1_KNOB",
     "L1_ATT_AM2_KNOB",
     "L1_ATT_K1_KNOB",
@@ -452,6 +452,9 @@ void configLoadDefault(void) {
     p[MOT_FRAME] = DEFAULT_MOT_FRAME;
     p[MOT_ARM] = DEFAULT_MOT_ARM;
     p[MOT_MIN] = DEFAULT_MOT_MIN;
+    p[MOT_VALUE2T_A1] = DEFAULT_MOT_VALUE2T_A1;
+    p[MOT_VALUE2T_A2] = DEFAULT_MOT_VALUE2T_A2;
+    p[MOT_VALUE_SCAL] = DEFAULT_MOT_VALUE_SCAL;
     p[MOT_MAX] = DEFAULT_MOT_MAX;
     p[MOT_PWRD_01_T] = DEFAULT_MOT_PWRD_01_T;
     p[MOT_PWRD_01_P] = DEFAULT_MOT_PWRD_01_P;
@@ -674,8 +677,6 @@ void configLoadDefault(void) {
     p[L1_ATT_J_YAW] = DEFAULT_L1_ATT_J_YAW;
     p[L1_ATT_AM1] = DEFAULT_L1_ATT_AM1;
     p[L1_ATT_AM2] = DEFAULT_L1_ATT_AM2;
-    p[L1_ATT_T2R_A1] = DEFAULT_L1_ATT_T2R_A1;
-    p[L1_ATT_T2R_A2] = DEFAULT_L1_ATT_T2R_A2;
     p[L1_ATT_PROP_K1] = DEFAULT_L1_ATT_PROP_K1;
     p[L1_ATT_M_TLT_RT] = DEFAULT_L1_ATT_M_TLT_RT;
     p[L1_ATT_M_YAW_RT] = DEFAULT_L1_ATT_M_YAW_RT;
@@ -683,7 +684,6 @@ void configLoadDefault(void) {
     p[L1_ATT_QUAT_TAU] = DEFAULT_L1_ATT_QUAT_TAU;
     p[L1_ATT_L1_ASP] = DEFAULT_L1_ATT_L1_ASP;
     p[L1_ATT_L1_K1] = DEFAULT_L1_ATT_L1_K1;
-    p[L1_ATT_PWM_SCAL] = DEFAULT_L1_ATT_PWM_SCAL;
     p[L1_ATT_AM1_KNOB] = DEFAULT_L1_ATT_AM1_KNOB;
     p[L1_ATT_AM2_KNOB] = DEFAULT_L1_ATT_AM2_KNOB;
     p[L1_ATT_K1_KNOB] = DEFAULT_L1_ATT_K1_KNOB;

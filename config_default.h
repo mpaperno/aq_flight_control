@@ -16,7 +16,7 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    120
+#define DEFAULT_CONFIG_VERSION	    121
 
 #define DEFAULT_RADIO_TYPE	    0		// 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -98,6 +98,9 @@
 #define DEFAULT_MOT_ARM		    975
 #define DEFAULT_MOT_MIN		    1000
 #define DEFAULT_MOT_MAX		    1950
+#define DEFAULT_MOT_VALUE2T_A1	    0.0f
+#define DEFAULT_MOT_VALUE2T_A2	    0.0f
+#define DEFAULT_MOT_VALUE_SCAL	    0.0f
 
 #define DEFAULT_MOT_PWRD_01_T	    0.0
 #define DEFAULT_MOT_PWRD_01_P	    0.0
@@ -352,8 +355,6 @@
 #define DEFAULT_L1_ATT_J_YAW		0.024661f	    // J matrix
 #define DEFAULT_L1_ATT_AM1		-10.0f
 #define DEFAULT_L1_ATT_AM2		-25.0f
-#define DEFAULT_L1_ATT_T2R_A1		0.0
-#define DEFAULT_L1_ATT_T2R_A2		0.0
 #define DEFAULT_L1_ATT_PROP_K1		14.62f
 #define DEFAULT_L1_ATT_M_TLT_RT		1.0f		    // rads/s
 #define DEFAULT_L1_ATT_M_YAW_RT		1.0f		    // rads/s
@@ -361,9 +362,6 @@
 #define DEFAULT_L1_ATT_QUAT_TAU		0.05f
 #define DEFAULT_L1_ATT_L1_ASP		-10.0f
 #define DEFAULT_L1_ATT_L1_K1		18.6f
-//#define DEFAULT_L1_ATT_PWM_LO		1000.0f		    // us
-//#define DEFAULT_L1_ATT_PWM_HI		1950.0f		    // us
-#define DEFAULT_L1_ATT_PWM_SCAL 	6500.0f		    // RPM
 #define DEFAULT_L1_ATT_AM1_KNOB		0.0f		    // AM1
 #define DEFAULT_L1_ATT_AM2_KNOB		0.0f		    // AM2
 #define DEFAULT_L1_ATT_K1_KNOB		0.0f		    // L1_K1

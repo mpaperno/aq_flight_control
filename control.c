@@ -181,7 +181,7 @@ void controlTaskCode(void *unused) {
 
 		l1Attitude(quat, rates, overrides);
 		l1AttitudePowerDistribution(throttle);
-		motorsSendValues();
+		motorsSendThrust();
 		motorsData.throttle = throttle;
 #else
 
