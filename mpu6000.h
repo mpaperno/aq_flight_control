@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _mpu6000_h
@@ -33,11 +33,14 @@
 
 #ifdef USE_L1_ATTITUDE
     #define MPU6000_SLOTS	    80						    // 100Hz bandwidth
-    #define MPU6000_DRATE_SLOTS	    (MPU6000_SLOTS * 100.0f * DIMU_INNER_DT)	    // variable
+    #define MPU6000_DRATE_SLOTS	    (MPU6000_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
 #else
     #define MPU6000_SLOTS	    80						    // 100Hz bandwidth
-    #define MPU6000_DRATE_SLOTS	    80						    // 100Hz
+    #define MPU6000_DRATE_SLOTS	    40						    // 200Hz
 #endif
+
+#define MPU6000_ACC_SCALE           8     // g      (2, 4, 8, 16)
+#define MPU6000_GYO_SCALE           1000  // deg/s  (250, 500, 1000, 2000)
 
 typedef struct {
     utilFilter_t tempFilter;

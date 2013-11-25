@@ -78,17 +78,23 @@ static void mpu6000CalibAcc(float *in, volatile float *out) {
 }
 
 static void mpu6000ScaleGyo(int32_t *in, float *out, float divisor) {
-    // 500 deg/s
-    out[0] = DIMU_ORIENT_GYO_X * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[1] = DIMU_ORIENT_GYO_Y * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
-    out[2] = DIMU_ORIENT_GYO_Z * divisor * (1.0f / 65.5f) * DEG_TO_RAD;
+    float scale;
+
+    scale = 1.0f / ((1<<16) / (MPU6000_GYO_SCALE * 2.0f));
+
+    out[0] = DIMU_ORIENT_GYO_X * divisor * scale * DEG_TO_RAD;
+    out[1] = DIMU_ORIENT_GYO_Y * divisor * scale * DEG_TO_RAD;
+    out[2] = DIMU_ORIENT_GYO_Z * divisor * scale * DEG_TO_RAD;
 }
 
 static void mpu6000ScaleAcc(int32_t *in, float *out, float divisor) {
-    // 4g
-    out[0] = DIMU_ORIENT_ACC_X * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[1] = DIMU_ORIENT_ACC_Y * divisor * (1.0f / 8192.0f) * GRAVITY;
-    out[2] = DIMU_ORIENT_ACC_Z * divisor * (1.0f / 8192.0f) * GRAVITY;
+    float scale;
+
+    scale = 1.0f / ((1<<16) / (MPU6000_ACC_SCALE * 2.0f));
+
+    out[0] = DIMU_ORIENT_ACC_X * divisor * scale * GRAVITY;
+    out[1] = DIMU_ORIENT_ACC_Y * divisor * scale * GRAVITY;
+    out[2] = DIMU_ORIENT_ACC_Z * divisor * scale * GRAVITY;
 }
 
 static void mpu6000CalibGyo(float *in, volatile float *out) {
@@ -272,11 +278,33 @@ void mpu6000Init(void) {
     while (mpu6000GetReg(117) != 0x68)
 	delay(10);
 
-    // GYO scale - 500 deg/s
+    // GYO scale
+#if MPU6000_GYO_SCALE == 250
+    mpu6000ReliablySetReg(27, 0b00000);
+#endif
+#if MPU6000_GYO_SCALE == 500
     mpu6000ReliablySetReg(27, 0b01000);
+#endif
+#if MPU6000_GYO_SCALE == 1000
+    mpu6000ReliablySetReg(27, 0b10000);
+#endif
+#if MPU6000_GYO_SCALE == 2000
+    mpu6000ReliablySetReg(27, 0b11000);
+#endif
 
-    // ACC scale - 4g
+    // ACC scale
+#if MPU6000_ACC_SCALE == 2
+    mpu6000ReliablySetReg(28, 0b00000);
+#endif
+#if MPU6000_ACC_SCALE == 4
     mpu6000ReliablySetReg(28, 0b01000);
+#endif
+#if MPU6000_ACC_SCALE == 8
+    mpu6000ReliablySetReg(28, 0b10000);
+#endif
+#if MPU6000_ACC_SCALE == 16
+    mpu6000ReliablySetReg(28, 0b11000);
+#endif
 
     // Sample rate
     mpu6000ReliablySetReg(25, 0x00);
