@@ -275,6 +275,10 @@ enum pwmPorts {
 #define CAN_AF_PORT		    GPIO_AF_CAN1
 #define CAN_RX_SOURCE		    GPIO_PinSource0
 #define CAN_TX_SOURCE		    GPIO_PinSource1
+#define CAN_RX0_IRQ		    CAN1_RX0_IRQn
+#define CAN_RX0_HANDLER		    CAN1_RX0_IRQHandler
+#define CAN_TX_IRQ		    CAN1_TX_IRQn
+#define CAN_TX_HANDLER		    CAN1_TX_IRQHandler
 
 //#define SPI_SPI1_CLOCK		    RCC_APB2Periph_SPI1
 //#define SPI_SPI1_AF		    GPIO_AF_SPI1

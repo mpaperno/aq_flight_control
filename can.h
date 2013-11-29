@@ -65,6 +65,7 @@
 #define CAN_SEQ_MASK	    ((uint32_t)0x3f<<3)
 
 #define CAN_TIMEOUT	    1000			    // ms
+#define CAN_BUF_SIZE	    16				    // depth of the application layer FIFO
 
 enum {
     CAN_TYPE_ESC = 1,
@@ -153,11 +154,21 @@ typedef struct {
 } canNodes_t;
 
 typedef struct {
-    uint32_t mailboxFull;
+    uint32_t TIR;
+    uint32_t TDLR;
+    uint32_t TDHR;
+    uint8_t TDTR;
+} canTxBuf_t;
+
+typedef struct {
+    CanRxMsg rxMsgs[CAN_BUF_SIZE];
+    canTxBuf_t txMsgs[CAN_BUF_SIZE];
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
     volatile uint8_t responses[64];
+    volatile uint8_t rxHead, rxTail;
+    volatile uint8_t txHead, txTail;
     uint8_t responseData[64*8];
-    uint8_t nextNode;
+    uint8_t nextNodeSlot;
     uint8_t seqId;
     uint8_t initialized;
 } canStruct_t;

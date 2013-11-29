@@ -51,38 +51,34 @@ static int8_t canGetFreeMailbox(void) {
 }
 
 static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
-    int8_t mailbox;
     uint32_t seqId;
     uint32_t *d = data;
+    canTxBuf_t *txPtr;
 
-    mailbox = canGetFreeMailbox();
+    txPtr = &canData.txMsgs[canData.txHead];
 
-    if (mailbox >= 0) {
-	seqId = canGetSeqId();
+    seqId = canGetSeqId();
 
-	CANx->sTxMailBox[mailbox].TIR = id | ((tid & 0x1f)<<9) | (seqId<<3) | CAN_Id_Extended;
+    txPtr->TIR = id | ((tid & 0x1f)<<9) | (seqId<<3) | CAN_Id_Extended;
 
-	n = n & 0xf;
-	CANx->sTxMailBox[mailbox].TDTR = n;
+    n = n & 0xf;
+    txPtr->TDTR = n;
 
-	if (n) {
-	    CANx->sTxMailBox[mailbox].TDLR = *d++;
-	    CANx->sTxMailBox[mailbox].TDHR = *d;
-	}
-
-	canData.responses[seqId] = 0;
-
-	// go
-	CANx->sTxMailBox[mailbox].TIR |= 0x1;
-
-	return (int8_t)seqId;
+    if (n) {
+	txPtr->TDLR = *d++;
+	txPtr->TDHR = *d;
     }
-    else {
-	canData.mailboxFull++;
 
-	return -1;
-    }
+    canData.responses[seqId] = 0;
+
+    canData.txHead = (canData.txHead + 1) % CAN_BUF_SIZE;
+
+    // trigger transmit ISR
+    NVIC->STIR = CAN_TX_IRQ;
+
+    return (int8_t)seqId;
 }
+
 
 static uint8_t *canSendWaitResponse(uint32_t extId, uint8_t tid, uint8_t n, uint8_t *data) {
     int16_t seqId;
@@ -179,28 +175,29 @@ static void canResetBus(void) {
 }
 
 static void canGrantAddr(CanRxMsg *rx) {
-    uint32_t *uuid;
+    uint32_t *uuidPtr = (uint32_t *)&rx->Data[0];
+    uint32_t uuid;
     int i;
 
-    uuid = (uint32_t *)&rx->Data[0];
+    uuid = *uuidPtr;
 
     // look for this UUID in our address table
-    for (i = 0; i < canData.nextNode; i++)
-	if (canData.nodes[i].uuid == *uuid)
+    for (i = 0; i < canData.nextNodeSlot; i++)
+	if (canData.nodes[i].uuid == uuid)
 	    break;
 
-    if (i == canData.nextNode)
-	canData.nextNode++;
+    if (i == canData.nextNodeSlot)
+	canData.nextNodeSlot++;
 
     if (i < (CAN_TID_MASK>>9)) {
 	// store in table
 	canData.nodes[i].nodeId = i+1;
-	canData.nodes[i].uuid = *uuid;
+	canData.nodes[i].uuid = uuid;
 	canData.nodes[i].type = rx->Data[4];
 	canData.nodes[i].canId = rx->Data[5];
 
 	// respond
-	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 4, (uint8_t *)uuid);
+	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 4, (uint8_t *)&uuid);
     }
 }
 
@@ -226,15 +223,17 @@ static void canProcessMessage(CanRxMsg *rx) {
 }
 
 void canCheckMessage(void) {
-    CanRxMsg rx;
+    CanRxMsg *rx;
 
     if (canData.initialized) {
-	while (CAN_MessagePending(CANx, CAN_FIFO0) > 0) {
-	    CAN_Receive(CANx, CAN_FIFO0, &rx);
+	while (canData.rxHead != canData.rxTail) {
+	    rx = &canData.rxMsgs[canData.rxTail];
 
 	    // ignore standard id messages
-	    if (rx.IDE != CAN_Id_Standard)
-		canProcessMessage(&rx);
+	    if (rx->IDE != CAN_Id_Standard)
+		canProcessMessage(rx);
+
+	    canData.rxTail = (canData.rxTail + 1) % CAN_BUF_SIZE;
 	}
     }
 }
@@ -287,14 +286,23 @@ void canLowLevelInit(void) {
     CAN_InitStructure.CAN_Prescaler = 3;
     CAN_Init(CANx, &CAN_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = CAN_RX0_IRQ;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+
+    NVIC_InitStructure.NVIC_IRQChannel = CAN_TX_IRQ;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
     // Enable FIFO 0 message pending Interrupt
-//    CAN_ITConfig(CANx, CAN_IT_FMP0, ENABLE);
+    CAN_ITConfig(CANx, CAN_IT_FMP0, ENABLE);
+
+    // Enable TX FIFO empty Interrupt
+    CAN_ITConfig(CANx, CAN_IT_TME, ENABLE);
 }
 
 void canInit(void) {
@@ -304,7 +312,10 @@ void canInit(void) {
     canLowLevelInit();
 
     // only packets targeted at us (bus master)
-    CAN_FilterInitStructure.CAN_FilterNumber = 0;
+    if (CANx == CAN1)
+	CAN_FilterInitStructure.CAN_FilterNumber = 0;
+    else
+	CAN_FilterInitStructure.CAN_FilterNumber = 14;
     CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;
     CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;
     CAN_FilterInitStructure.CAN_FilterIdHigh = 0x0000;
@@ -323,4 +334,30 @@ void canInit(void) {
     micros = timerMicros();
     while (timerMicros() - micros < 50000)
 	canCheckMessage();
+}
+
+void CAN_RX0_HANDLER(void) {
+    CAN_Receive(CANx, CAN_FIFO0, &canData.rxMsgs[canData.rxHead]);
+    canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE;
+}
+
+void CAN_TX_HANDLER(void) {
+    int8_t mailbox;
+    canTxBuf_t *txPtr;
+
+    CAN_ClearITPendingBit(CANx, CAN_IT_TME);
+
+    while (canData.txHead != canData.txTail && (mailbox = canGetFreeMailbox()) >= 0) {
+	txPtr = &canData.txMsgs[canData.txTail];
+
+	CANx->sTxMailBox[mailbox].TDTR = txPtr->TDTR;
+
+	CANx->sTxMailBox[mailbox].TDLR = txPtr->TDLR;
+	CANx->sTxMailBox[mailbox].TDHR = txPtr->TDHR;
+
+	// go
+	CANx->sTxMailBox[mailbox].TIR = txPtr->TIR | 0x1;
+
+	canData.txTail = (canData.txTail + 1) % CAN_BUF_SIZE;
+    }
 }
