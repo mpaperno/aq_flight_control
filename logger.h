@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _logger_h
@@ -23,8 +23,6 @@
 #include <CoOS.h>
 
 #define LOGGER_FNAME			"AQL"
-#define LOGGER_ERRORS			3
-#define LOGGER_BUF_SIZE			200
 
 enum {
     LOG_LASTUPDATE = 0,
@@ -157,6 +155,7 @@ typedef struct {
 
 typedef struct {
     TCHAR *loggerBuf;
+    uint32_t bufSize;
     fieldData_t *fp;
     uint16_t packetSize;
     uint8_t numFields;

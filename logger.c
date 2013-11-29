@@ -182,6 +182,10 @@ void loggerDoHeader(void) {
     char ckA, ckB;
     int i;
 
+    // make sure we can proceed
+    if (!filerAvailable())
+	return;
+
     head = filerGetHead(loggerData.logHandle);
     buf = loggerData.loggerBuf + head;
 
@@ -207,7 +211,7 @@ void loggerDoHeader(void) {
     buf[i++] = ckB;
 
     // block size is the actual data packet size
-    filerSetHead(loggerData.logHandle, (head + loggerData.packetSize) % (LOGGER_BUF_SIZE * loggerData.packetSize));
+    filerSetHead(loggerData.logHandle, (head + loggerData.packetSize) % loggerData.bufSize);
 }
 
 void loggerDo(void) {
@@ -215,6 +219,10 @@ void loggerDo(void) {
     char *buf;
     char ckA, ckB;
     int i;
+
+    // make sure we can proceed
+    if (!filerAvailable())
+	return;
 
     head = filerGetHead(loggerData.logHandle);
     buf = loggerData.loggerBuf + head;
@@ -237,7 +245,7 @@ void loggerDo(void) {
     buf[i++] = ckA;
     buf[i++] = ckB;
 
-    filerSetHead(loggerData.logHandle, (head + loggerData.packetSize) % (LOGGER_BUF_SIZE * loggerData.packetSize));
+    filerSetHead(loggerData.logHandle, (head + loggerData.packetSize) % loggerData.bufSize);
 }
 
 void loggerSetup(void) {
@@ -629,8 +637,6 @@ void loggerSetup(void) {
 		break;
 	}
     }
-
-    loggerData.loggerBuf = (TCHAR *)aqCalloc(LOGGER_BUF_SIZE, loggerData.packetSize);
 }
 
 void loggerInit(void) {
@@ -638,8 +644,12 @@ void loggerInit(void) {
 
     loggerSetup();
 
+    // skip the first 512 bytes (used exclusively by the USB MSC driver)
+    loggerData.loggerBuf = (TCHAR *)(filerBuf + 512);
+    loggerData.bufSize = ((FILER_BUF_SIZE-512) / loggerData.packetSize / FILER_FLUSH_THRESHOLD) * loggerData.packetSize * FILER_FLUSH_THRESHOLD;
+
     loggerData.logHandle = filerGetHandle(LOGGER_FNAME);
-    filerStream(loggerData.logHandle, loggerData.loggerBuf, LOGGER_BUF_SIZE * loggerData.packetSize);
+    filerStream(loggerData.logHandle, loggerData.loggerBuf, loggerData.bufSize);
 
     loggerDoHeader();
 }

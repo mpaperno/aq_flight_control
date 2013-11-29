@@ -20,6 +20,7 @@
 #define _sdio_h
 
 #include "digital.h"
+#include "diskio.h"
 
 #define SDIO_FIFO_ADDRESS                ((uint32_t)0x40012c80)
 #define SDIO_INIT_CLK_DIV                ((uint8_t)0xB2)	// SDIO Intialization Frequency (400KHz max)
@@ -327,6 +328,8 @@ typedef struct {
     uint8_t CardType;
 } SD_CardInfo;
 
+typedef void sdioCallback_t(uint32_t);
+
 typedef struct {
     volatile unsigned char initialized;
     unsigned long cardRemovalMicros;
@@ -340,8 +343,19 @@ typedef struct {
     SD_CardInfo SDCardInfo;
     SD_CardStatus SDCardStatus;
     uint32_t errCount;
+    sdioCallback_t *callbackFunc;
+    uint32_t callbackParam;
 } sdioStruct_t;
 
 extern void sdioLowLevelInit(void);
+extern void sdioSetCallback(sdioCallback_t *func, uint32_t param);
+extern DSTATUS disk_initialize(BYTE drv);
+extern DSTATUS disk_status(BYTE drv);
+extern DRESULT disk_ioctl(BYTE drv, BYTE ctrl, void *buff);
+extern SDTransferState SD_GetStatus(void);
+extern SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadSector, uint16_t BlockSize, uint32_t NumberOfBlocks);
+extern SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteSector, uint16_t BlockSize, uint32_t NumberOfBlocks);
+extern int SD_Initialized(void);
+extern int SD_TransferComplete(void);
 
 #endif

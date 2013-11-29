@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -23,12 +23,15 @@
 #include "aq_mavlink.h"
 #include "util.h"
 #include "supervisor.h"
+#include "sdio.h"
+#include "usb.h"
 #include <string.h>
 #include <stdio.h>
 
 filerStruct_t filerData;
-
 OS_STK *filerTaskStack;
+// buffer used by logger and USB MSC drivers
+uint8_t filerBuf[FILER_BUF_SIZE] __attribute__ ((aligned (16)));
 
 static int32_t filerProcessWrite(filerFileStruct_t *f) {
     uint32_t res;
@@ -104,7 +107,7 @@ static int32_t filerProcessSync(filerFileStruct_t *f) {
     return 0;
 }
 
-static int32_t filerProcessStream(filerFileStruct_t *f) {
+static int32_t filerProcessStream(filerFileStruct_t *f, uint8_t final) {
     uint32_t res;
     UINT bytes = 0;
     uint32_t size;
@@ -119,7 +122,7 @@ static int32_t filerProcessStream(filerFileStruct_t *f) {
     }
 
     // enough new to write?
-    while (f->tail > f->head || (f->head - f->tail) >= f->length/4 || (f->length <= 512 && f->head != f->tail)) {
+    while (f->tail > f->head || (f->head - f->tail) >= f->length/FILER_FLUSH_THRESHOLD || ((f->length <= 512 || final) && f->head != f->tail)) {
 	if (f->head > f->tail)
 	    size = f->head - f->tail;
 	else
@@ -151,7 +154,7 @@ static int32_t filerProcessClose(filerFileStruct_t *f) {
 
 static void filerProcessRequest(filerFileStruct_t *f) {
     if (f->function == FILER_FUNC_STREAM)
-	f->status = filerProcessStream(f);
+	f->status = filerProcessStream(f, 0);
     else if (f->function == FILER_FUNC_READ)
 	f->status = filerProcessRead(f);
     else if (f->function == FILER_FUNC_WRITE)
@@ -230,6 +233,29 @@ void filerTaskCode(void *p) {
 
     filerRestart:
 
+#ifdef HAS_USB
+    // does USB MSC want or have the uSD card?
+    if (filerData.mscState >= FILER_STATE_MSC_REQUEST) {
+	if (filerData.mscState == FILER_STATE_MSC_REQUEST) {
+	    if (disk_status(0) != SD_OK) {
+		if (disk_initialize(0) == SD_OK)
+		    filerData.mscState = FILER_STATE_MSC_ACTIVE;
+	    }
+	    else {
+		filerData.mscState = FILER_STATE_MSC_ACTIVE;
+	    }
+	}
+
+	// check for USB suspend - TODO: clean this up
+	if (usbIsSuspend())
+	    // reset MSC state
+	    filerData.mscState = FILER_STATE_MSC_DISABLE;
+
+	yield(1000);
+	goto filerRestart;
+    }
+#endif
+
     filerData.initialized = 0;
     supervisorDiskWait(0);
 
@@ -254,8 +280,35 @@ void filerTaskCode(void *p) {
     }
 
     while (1) {
+#ifdef HAS_USB
+	// have we been disabled for USB MSC?
+	if (filerData.mscState == FILER_STATE_MSC_REQUEST) {
+	    if (filerData.initialized) {
+		AQ_NOTICE("USB MSC detected - closing all files\n");
+
+		// sync & close all open files
+		for (i = 0; i < FILER_MAX_FILES; i++) {
+		    if (filerData.files[i].function == FILER_FUNC_STREAM)
+			filerData.files[i].status = filerProcessStream(&filerData.files[i], 1);
+		    filerProcessClose(&filerData.files[i]);
+		    filerData.files[i].head = 0;
+		    filerData.files[i].tail = 0;
+		}
+
+		supervisorDiskWait(0);
+		filerData.initialized = 0;
+	    }
+
+	    goto filerRestart;
+	}
+#endif
+
 	if (!filerData.initialized) {
 	    if (filerInitFS() < 0) {
+#ifdef HAS_USB
+		// probably no card, reset MSC state
+		filerData.mscState = FILER_STATE_MSC_DISABLE;
+#endif
 		yield(1000);
 		goto filerRestart;
 	    }
@@ -405,4 +458,8 @@ int32_t filerStream(int8_t handle, void *buf, uint32_t length) {
     f->status = 0;
 
     return 1;
+}
+
+int8_t filerAvailable(void) {
+    return filerData.initialized;
 }

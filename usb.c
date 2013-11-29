@@ -1,5 +1,5 @@
 #include "usb.h"
-#include "usbd_cdc_core.h"
+#include "usbd_cdc_msc_core.h"
 #include "usb_conf.h"
 #include "usbd_desc.h"
 #include "usbd_ioreq.h"
@@ -57,7 +57,7 @@ void usbInit(void) {
 			    USB_OTG_FS_CORE_ID,
 #endif
 			    &USR_desc,
-			    &USBD_CDC_cb,
+			    &USBD_CDC_MSC_cb,
 			    &USR_cb);
 }
 
@@ -181,6 +181,10 @@ uint8_t usbRx(void) {
     }
 
     return ch;
+}
+
+uint8_t usbIsSuspend(void) {
+    return (USB_OTG_dev.regs.DREGS->DSTS & 1);
 }
 
 extern USB_OTG_CORE_HANDLE           USB_OTG_dev;

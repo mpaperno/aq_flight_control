@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _filer_h
@@ -28,6 +28,8 @@
 #define FILER_SESS_FNAME	"session.txt"
 #define FILER_MAX_FILES		4
 #define FILER_STREAM_SYNC	200		// ~ 1s
+#define FILER_BUF_SIZE		(1<<16)		// 64KB
+#define FILER_FLUSH_THRESHOLD	4
 
 #define FILER_FUNC_NONE		0x00
 #define FILER_FUNC_READ		0x01
@@ -35,6 +37,17 @@
 #define FILER_FUNC_STREAM	0x03
 #define FILER_FUNC_SYNC		0x04
 #define FILER_FUNC_CLOSE	0x05
+
+enum {
+    FILER_STATE_MSC_DISABLE = 0,
+    FILER_STATE_MSC_EJECT,
+    FILER_STATE_MSC_REQUEST,
+    FILER_STATE_MSC_ACTIVE
+};
+
+#define filerEnableMSC()	{if (filerData.mscState == FILER_STATE_MSC_DISABLE) filerData.mscState = FILER_STATE_MSC_REQUEST;}
+#define filerEjectMSC()		{filerData.mscState = FILER_STATE_MSC_EJECT;}
+#define filerGetMSCState()	(filerData.mscState)
 
 typedef struct {
     OS_FlagID completeFlag;
@@ -62,8 +75,12 @@ typedef struct {
     char buf[64];
     uint32_t session;
     uint32_t loops;
-    int initialized;
+    uint8_t initialized;
+    volatile uint8_t mscState;
 } filerStruct_t;
+
+extern filerStruct_t filerData;
+extern uint8_t filerBuf[FILER_BUF_SIZE] ;
 
 extern void filerInit(void);
 extern int8_t filerGetHandle(char *fileName);
@@ -74,5 +91,6 @@ extern int32_t filerGetHead(int8_t handle);
 extern void filerSetHead(int8_t handle, int32_t head);
 extern int32_t filerSync(int8_t handle);
 extern int32_t filerClose(int8_t handle);
+extern int8_t filerAvailable(void);
 
 #endif

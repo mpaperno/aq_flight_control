@@ -30,29 +30,10 @@
 #define __USB_CONF__H__
 
 #include "aq.h"
+#include "filer.h"
 
-/* Includes ------------------------------------------------------------------*/
-//#if defined (USE_STM322xG_EVAL)
-// #include "stm322xg_eval.h"
-// #include "stm322xg_eval_lcd.h"
-// #include "stm322xg_eval_ioe.h"
-// #include "stm322xg_eval_sdio_sd.h"
-//#elif defined(USE_STM324xG_EVAL)
-// #include "stm32f4xx.h"
-// #include "stm324xg_eval.h"
-// #include "stm324xg_eval_lcd.h"
-// #include "stm324xg_eval_ioe.h"
-// #include "stm324xg_eval_sdio_sd.h"
-//#elif defined (USE_STM3210C_EVAL)
-// #include "stm32f10x.h"
-// #include "stm3210c_eval.h"
-// #include "stm3210c_eval_lcd.h"
-// #include "stm3210c_eval_ioe.h"
-// #include "stm3210c_eval_spi_sd.h"
-//#else
-// #error "Missing define: Evaluation board (ie. USE_STM322xG_EVAL)"
-//#endif
-
+#define MSC_MEDIA_PACKET		FILER_BUF_SIZE
+#define USB_SUPPORT_USER_STRING_DESC
 
 /** @addtogroup USB_OTG_DRIVER
   * @{
@@ -185,11 +166,11 @@
 
 /****************** USB OTG FS CONFIGURATION **********************************/
 #ifdef USB_OTG_FS_CORE
- #define RX_FIFO_FS_SIZE                          128
- #define TX0_FIFO_FS_SIZE                          32
- #define TX1_FIFO_FS_SIZE                         128
- #define TX2_FIFO_FS_SIZE                          32
- #define TX3_FIFO_FS_SIZE                           0
+ #define RX_FIFO_FS_SIZE			    128
+ #define TX0_FIFO_FS_SIZE			    32	// command
+ #define TX1_FIFO_FS_SIZE			    64	// VCP
+ #define TX2_FIFO_FS_SIZE			    32	// CDC control
+ #define TX3_FIFO_FS_SIZE			    64	// MSC BOT
 
 // #define USB_OTG_FS_LOW_PWR_MGMT_SUPPORT
 // #define USB_OTG_FS_SOF_OUTPUT_ENABLED

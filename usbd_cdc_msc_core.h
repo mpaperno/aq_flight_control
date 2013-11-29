@@ -16,14 +16,14 @@
   *
   *        http://www.st.com/software_license_agreement_liberty_v2
   *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   * See the License for the specific language governing permissions and
   * limitations under the License.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 
@@ -35,18 +35,18 @@
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
-  
+
 /** @defgroup usbd_cdc
   * @brief This file is the Header file for USBD_cdc.c
   * @{
-  */ 
+  */
 
 
 /** @defgroup usbd_cdc_Exported_Defines
   * @{
-  */ 
-#define USB_CDC_CONFIG_DESC_SIZ                (67)
-#define USB_CDC_DESC_SIZ                       (67-9)
+  */
+#define USB_CDC_MSC_CONFIG_DESC_SIZ                (98)//(90)
+#define USB_CDC_MSC_DESC_SIZ                       (98-9)//(90-9)
 
 #define CDC_DESCRIPTOR_TYPE                     0x21
 
@@ -63,8 +63,14 @@
 #define STANDARD_ENDPOINT_DESC_SIZE             0x09
 
 #define CDC_DATA_IN_PACKET_SIZE                CDC_DATA_MAX_PACKET_SIZE
-        
+
 #define CDC_DATA_OUT_PACKET_SIZE               CDC_DATA_MAX_PACKET_SIZE
+
+#define BOT_GET_MAX_LUN              0xFE
+#define BOT_RESET                    0xFF
+
+#define MSC_EPIN_SIZE                MSC_MAX_PACKET
+#define MSC_EPOUT_SIZE               MSC_MAX_PACKET
 
 /*---------------------------------------------------------------------*/
 /*  CDC definitions                                                    */
@@ -86,7 +92,7 @@
 
 /**
   * @}
-  */ 
+  */
 
 
 /** @defgroup USBD_CORE_Exported_TypesDefinitions
@@ -94,8 +100,8 @@
   */
 typedef struct _CDC_IF_PROP
 {
-  uint16_t (*pIf_Init)     (void);   
-  uint16_t (*pIf_DeInit)   (void);   
+  uint16_t (*pIf_Init)     (void);
+  uint16_t (*pIf_DeInit)   (void);
   uint16_t (*pIf_Ctrl)     (uint32_t Cmd, uint8_t* Buf, uint32_t Len);
   uint16_t (*pIf_DataTx)   (uint8_t* Buf, uint32_t Len);
   uint16_t (*pIf_DataRx)   (uint8_t* Buf, uint32_t Len);
@@ -103,41 +109,41 @@ typedef struct _CDC_IF_PROP
 CDC_IF_Prop_TypeDef;
 /**
   * @}
-  */ 
+  */
 
 
 
 /** @defgroup USBD_CORE_Exported_Macros
   * @{
-  */ 
-  
+  */
+
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USBD_CORE_Exported_Variables
   * @{
-  */ 
+  */
 
-extern USBD_Class_cb_TypeDef  USBD_CDC_cb;
+extern USBD_Class_cb_TypeDef  USBD_CDC_MSC_cb;
 /**
   * @}
-  */ 
+  */
 
 /** @defgroup USB_CORE_Exported_Functions
   * @{
   */
 /**
   * @}
-  */ 
+  */
 
 #endif  // __USB_CDC_CORE_H_
 /**
   * @}
-  */ 
+  */
 
 /**
   * @}
-  */ 
-  
+  */
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

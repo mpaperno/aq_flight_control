@@ -13,12 +13,11 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #include "aq.h"
 #include "sdio.h"
-#include "diskio.h"
 #include "util.h"
 #include "aq_timer.h"
 #include "comm.h"
@@ -1049,14 +1048,14 @@ void sdioLowLevelInit(void) {
 
     // SDIO Interrupt ENABLE
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
     // DMA2 STREAMx Interrupt ENABLE
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_DMA_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
@@ -1104,11 +1103,12 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
 
     // DMA2 Stream3 Config
     DMA_DeInit(SDIO_DMA_STREAM);
+
     SDDMA_InitStructure.DMA_Channel = SDIO_DMA_CHANNEL;
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferSRC;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-    SDDMA_InitStructure.DMA_BufferSize = BufferSize;
+//    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     SDDMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     SDDMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
@@ -1123,14 +1123,14 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
 
     DMA_FlowControllerConfig(SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
 
+//    DMA_ITConfig(SDIO_DMA_STREAM, DMA_IT_TC, ENABLE);
+
     // DMA2 Stream3 enable
     DMA_Cmd(SDIO_DMA_STREAM, ENABLE);
 }
 
 void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     DMA_InitTypeDef SDDMA_InitStructure;
-
-    DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
 
     // DMA2 Stream3 disable
     DMA_Cmd(SDIO_DMA_STREAM, DISABLE);
@@ -1142,7 +1142,7 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferDST;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    SDDMA_InitStructure.DMA_BufferSize = BufferSize;
+//    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     SDDMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     SDDMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
@@ -1156,6 +1156,10 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     DMA_Init(SDIO_DMA_STREAM, &SDDMA_InitStructure);
 
     DMA_FlowControllerConfig(SDIO_DMA_STREAM, DMA_FlowCtrl_Peripheral);
+
+    DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
+
+//    DMA_ITConfig(SDIO_DMA_STREAM, DMA_IT_TC, ENABLE);
 
     // DMA2 Stream3 enable
     DMA_Cmd(SDIO_DMA_STREAM, ENABLE);
@@ -1169,7 +1173,7 @@ SD_Error sdioInit(void) {
     sdioData.RCA = 0;
     sdioData.StopCondition = 0;
     sdioData.TransferError = SD_OK;
-    sdioData.TransferEnd = 0;
+    sdioData.TransferEnd = 1;
 
 #ifdef SDIO_POWER_PORT
     // power on LDO
@@ -1237,10 +1241,8 @@ SD_Error SD_ReadBlock(uint8_t *readbuff, uint32_t ReadSector, uint16_t BlockSize
   SD_LowLevel_DMA_RxConfig((uint32_t *)readbuff, BlockSize);
 #endif
 
-    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
+    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD)
 	BlockSize = 512;
-//	ReadAddr /= 512;
-    }
 
     // Set Block Size for Card
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t) BlockSize;
@@ -1347,10 +1349,8 @@ SD_Error SD_ReadMultiBlocks(uint8_t *readbuff, uint32_t ReadSector, uint16_t Blo
     SD_LowLevel_DMA_RxConfig((uint32_t *)readbuff, (NumberOfBlocks * BlockSize));
     SDIO_DMACmd(ENABLE);
 
-    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
+    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD)
 	BlockSize = 512;
-//	ReadAddr /= 512;
-    }
 
     // Set Block Size for Card
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t) BlockSize;
@@ -1413,10 +1413,8 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteSector, uint16_t BlockS
     SDIO_DMACmd(ENABLE);
 #endif
 
-    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
+    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD)
 	BlockSize = 512;
-//	WriteAddr /= 512;
-    }
 
     // Set Block Size for Card
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t) BlockSize;
@@ -1440,9 +1438,6 @@ SD_Error SD_WriteBlock(uint8_t *writebuff, uint32_t WriteSector, uint16_t BlockS
     SDIO_SendCommand(&SDIO_CmdInitStructure);
 
     errorstatus = CmdResp1Error(SD_CMD_WRITE_SINGLE_BLOCK);
-
-    if (errorstatus != SD_OK)
-	return(errorstatus);
 
     SDIO_DataInitStructure.SDIO_DataTimeOut = SD_DATATIMEOUT;
     SDIO_DataInitStructure.SDIO_DataLength = BlockSize;
@@ -1523,10 +1518,8 @@ SD_Error SD_WriteMultiBlocks(uint8_t *writebuff, uint32_t WriteSector, uint16_t 
     SD_LowLevel_DMA_TxConfig((uint32_t *)writebuff, (NumberOfBlocks * BlockSize));
     SDIO_DMACmd(ENABLE);
 
-    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD) {
+    if (sdioData.CardType == SDIO_HIGH_CAPACITY_SD_CARD)
 	BlockSize = 512;
-//	WriteAddr /= 512;
-    }
 
     // Set Block Size for Card
     SDIO_CmdInitStructure.SDIO_Argument = (uint32_t) BlockSize;
@@ -1603,26 +1596,8 @@ uint32_t SD_DMAEndOfTransferStatus(void) {
 SD_Error SD_WaitWriteOperation(void) {
     SD_Error errorstatus = SD_OK;
 
-    while ((sdioData.DMAEndOfTransfer == 0x00) && (sdioData.TransferEnd == 0) && (sdioData.TransferError == SD_OK)) {
+    while (sdioData.TransferEnd == 0 && sdioData.TransferError == SD_OK)
 	yield(1);
-//	if (SD_Detect() != SD_PRESENT) {
-//	    sdioData.TransferError = SD_NOT_PRESENT;
-//	    break;
-//	}
-    }
-
-    sdioData.DMAEndOfTransfer = 0x00;
-
-    while(SDIO->STA & SDIO_FLAG_TXACT)
-	yield(1);
-
-    if (sdioData.StopCondition == 1) {
-	errorstatus = SD_StopTransfer();
-	sdioData.StopCondition = 0;
-    }
-
-    // Clear all the static flags
-    SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
     if (sdioData.TransferError != SD_OK)
 	return(sdioData.TransferError);
@@ -1638,27 +1613,8 @@ SD_Error SD_WaitWriteOperation(void) {
 SD_Error SD_WaitReadOperation(void) {
     SD_Error errorstatus = SD_OK;
 
-    while ((sdioData.DMAEndOfTransfer == 0x00) && (sdioData.TransferEnd == 0) && (sdioData.TransferError == SD_OK)) {
+    while (sdioData.TransferEnd == 0 && sdioData.TransferError == SD_OK)
 	yield(1);
-//	if (SD_Detect() != SD_PRESENT) {
-//	    sdioData.TransferError = SD_NOT_PRESENT;
-//	    break;
-//	}
-    }
-
-    sdioData.DMAEndOfTransfer = 0x00;
-
-    while(SDIO->STA & SDIO_FLAG_TXACT) {
-	yield(1);
-    }
-
-    if (sdioData.StopCondition == 1) {
-	errorstatus = SD_StopTransfer();
-	sdioData.StopCondition = 0;
-    }
-
-    // Clear all the static flags
-    SDIO_ClearFlag(SDIO_STATIC_FLAGS);
 
     if (sdioData.TransferError != SD_OK)
 	return(sdioData.TransferError);
@@ -1927,10 +1883,10 @@ DSTATUS disk_initialize(BYTE drv) {
 
     sdioData.initialized = 1;
 
-    return 0;
+    return SD_OK;
 }
 
-DSTATUS disk_status (BYTE drv) {
+DSTATUS disk_status(BYTE drv) {
     if (drv)
 	return STA_NOINIT;	// Supports only single drive
 
@@ -1940,17 +1896,16 @@ DSTATUS disk_status (BYTE drv) {
     if (!sdioData.initialized)
 	return STA_NOINIT;
 
-    return 0;
+    return SD_OK;
 }
 
-DRESULT disk_read (
+DRESULT disk_read(
 	BYTE drv,		// Physical drive number (0)
 	BYTE *buff,		// Pointer to the data buffer to store read data
 	DWORD sector,		// Start sector number (LBA)
 	BYTE count		// Sector count (1..255)
 	) {
     SD_Error error = SD_OK;
-//    char s[32];
     int tries = 0;
 
     if (drv || !count)
@@ -1995,7 +1950,6 @@ DRESULT disk_write (
 	BYTE count			// Sector count (1..255)
 	) {
     SD_Error error = SD_OK;
-//    char s[32];
     int tries = 0;
 
     if (drv || !count)
@@ -2085,12 +2039,15 @@ DRESULT disk_ioctl (
     return res;
 }
 
-void SD_ProcessDMAIRQ(void) {
-    if (DMA2->LISR & SDIO_DMA_FLAG_TCIF) {
-	sdioData.DMAEndOfTransfer = 0x01;
-    }
+void sdioSetCallback(sdioCallback_t *func, uint32_t param) {
+    sdioData.callbackFunc = func;
+    sdioData.callbackParam = param;
+}
 
+void SD_ProcessDMAIRQ(void) {
     DMA_ClearFlag(SDIO_DMA_STREAM, SDIO_DMA_FLAG_FEIF | SDIO_DMA_FLAG_DMEIF | SDIO_DMA_FLAG_TEIF | SDIO_DMA_FLAG_HTIF | SDIO_DMA_FLAG_TCIF);
+
+    sdioData.DMAEndOfTransfer = 0x01;
 }
 
 // Allows to process all the interrupts that are high.
@@ -2098,7 +2055,6 @@ SD_Error SD_ProcessIRQSrc(void) {
     if (SDIO_GetITStatus(SDIO_IT_DATAEND) != RESET) {
 	sdioData.TransferError = SD_OK;
 	SDIO_ClearITPendingBit(SDIO_IT_DATAEND);
-	sdioData.TransferEnd = 1;
     }
     else if (SDIO_GetITStatus(SDIO_IT_DCRCFAIL) != RESET) {
 	SDIO_ClearITPendingBit(SDIO_IT_DCRCFAIL);
@@ -2125,7 +2081,31 @@ SD_Error SD_ProcessIRQSrc(void) {
 		    SDIO_IT_TXFIFOHE | SDIO_IT_RXFIFOHF | SDIO_IT_TXUNDERR |
 		    SDIO_IT_RXOVERR | SDIO_IT_STBITERR, DISABLE);
 
+    if (sdioData.StopCondition == 1) {
+	SD_StopTransfer();
+	sdioData.StopCondition = 0;
+    }
+
+    sdioData.TransferEnd = 1;
+
+    if (sdioData.callbackFunc) {
+	if (sdioData.TransferError == SD_OK)
+	    sdioData.callbackFunc(sdioData.callbackParam);
+	else
+	    sdioData.callbackFunc(0);
+
+	sdioData.callbackFunc = 0;
+    }
+
     return (sdioData.TransferError);
+}
+
+int SD_Initialized(void) {
+    return sdioData.initialized;
+}
+
+int SD_TransferComplete(void) {
+    return sdioData.TransferEnd;
 }
 
 // Process All SDIO Interrupt Sources
@@ -2142,6 +2122,6 @@ void SDIO_DETECT_HANDLER(void) {
     EXTI_ClearITPendingBit(SDIO_DETECT_EXTI_LINE);
 }
 
-void SDIO_SDIO_DMA_IRQHANDLER(void) {
+void SDIO_DMA_IRQHANDLER(void) {
     SD_ProcessDMAIRQ();
 }

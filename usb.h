@@ -29,6 +29,7 @@ extern void usbInit(void);
 extern void usbTx(uint8_t* buf, uint32_t len);
 extern uint8_t usbRx();
 extern uint8_t usbAvailable(void);
+extern uint8_t usbIsSuspend(void);
 
 void USBD_USR_Init(void);
 void USBD_USR_DeviceReset (uint8_t speed);
