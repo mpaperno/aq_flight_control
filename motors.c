@@ -39,10 +39,13 @@
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
 
-void motorsReceiveTelem(uint8_t nodeId, void *p) {
-    esc32CanStatus_t *status = (esc32CanStatus_t *)p;
+void motorsReceiveTelem(uint8_t canId, void *p) {
+    uint32_t *data = (uint32_t *)p;
+    uint32_t *storage = (uint32_t *)&motorsData.canStatus[canId-1];
 
-    // TODO
+    // copy status data to our storage (8 bytes)
+    storage[0] = data[0];
+    storage[1] = data[1];
 }
 
 static float motorsThrust2Value(float thrust) {

@@ -22,6 +22,7 @@
 #include "aq.h"
 #include "can.h"
 #include "pwm.h"
+#include "esc32.h"
 
 #define MOTORS_CELL_VOLTS	    3.7f
 #define MOTORS_THROTTLE_LIMITER	    0.15f
@@ -47,6 +48,7 @@ typedef struct {
     canNodes_t *can[MOTORS_NUM];
     uint16_t *canPtrs[MOTORS_NUM];
     canGroup16_t canGroups[MOTORS_NUM/MOTORS_CAN_GROUP_SIZE];
+    esc32CanStatus_t canStatus[MOTORS_NUM];
     pwmPortStruct_t *pwm[PWM_NUM_PORTS];
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];

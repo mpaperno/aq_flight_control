@@ -232,8 +232,8 @@ static void canProcessMessage(CanRxMsg *rx) {
 
 	// telemetry callbacks
 	case CAN_FID_TELEM:
-	    if (canData.telemFuncs[canData.nodes[sid].type])
-		canData.telemFuncs[canData.nodes[sid].type](canData.nodes[sid].nodeId, data);
+	    if (canData.telemFuncs[canData.nodes[sid-1].type])
+		canData.telemFuncs[canData.nodes[sid-1].type](canData.nodes[sid-1].canId, data);
 	    break;
 
 	case CAN_FID_ACK:
