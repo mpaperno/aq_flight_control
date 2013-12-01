@@ -87,6 +87,16 @@ enum esc32States {
     ESC32_STATE_RUNNING
 };
 
+typedef struct {
+    unsigned int state :    3;
+    unsigned int vin :	    12;	// x 100
+    unsigned int amps :	    14;	// x 100
+    unsigned int rpm :	    15;
+    unsigned int duty :	    8;	// x (255/100)
+    unsigned int errors :   9;
+    unsigned int errCode :  3;
+} esc32CanStatus_t;
+
 extern void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode);
 extern void esc32SetupCan(canNodes_t *canNode, uint8_t mode);
 

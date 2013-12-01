@@ -39,6 +39,12 @@
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
 
+void motorsReceiveTelem(uint8_t nodeId, void *p) {
+    esc32CanStatus_t *status = (esc32CanStatus_t *)p;
+
+    // TODO
+}
+
 static float motorsThrust2Value(float thrust) {
     return (-p[MOT_VALUE2T_A1] + __sqrtf(p[MOT_VALUE2T_A1]*p[MOT_VALUE2T_A1] + p[MOT_VALUE2T_A2] * 4.0f * thrust)) * (1.0f / (2.0f * p[MOT_VALUE2T_A2]));
 }
@@ -208,6 +214,11 @@ static void motorsCanInit(int i) {
 #else
 	esc32SetupCan(motorsData.can[i], 0);
 #endif
+
+#if MOTORS_CAN_TELEM_RATE > 0
+	canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->nodeId, 0, CAN_TELEM_STATUS);
+	canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->nodeId, MOTORS_CAN_TELEM_RATE);
+#endif
     }
 }
 
@@ -327,4 +338,5 @@ void motorsInit(void) {
 
     motorsSetCanGroup();
     motorsOff();
+    canTelemRegister(motorsReceiveTelem, CAN_TYPE_ESC);
 }

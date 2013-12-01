@@ -162,6 +162,23 @@ uint8_t *canCommandConfigWrite(uint32_t tt, uint8_t tid) {
     return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_CFG_WRITE<<19), tid, 0, 0);
 }
 
+uint8_t *canSetTelemetryValue(uint32_t tt, uint8_t tid, uint8_t index, uint8_t value) {
+    uint8_t data[2];
+
+    data[0] = index;
+    data[1] = value;
+
+    return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_VALUE<<19), tid, 2, data);
+}
+
+uint8_t *canSetTelemetryRate(uint32_t tt, uint8_t tid, uint16_t rate) {
+    uint16_t data;
+
+    data = rate;
+
+    return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_RATE<<19), tid, 2, (uint8_t *)&data);
+}
+
 void canCommandSetpoint16(uint8_t tid, uint8_t *data) {
     canSend(CAN_LCC_HIGH | CAN_TT_GROUP | CAN_FID_CMD | (CAN_CMD_SETPOINT16<<19), tid, 8, data);
 }
@@ -206,10 +223,17 @@ static void canProcessMessage(CanRxMsg *rx) {
     uint32_t *data = (uint32_t *)&rx->Data;
     uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
     uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
+    uint8_t sid = (id & CAN_SID_MASK)>>14;
 
     switch (id & CAN_FID_MASK) {
 	case CAN_FID_REQ_ADDR:
 	    canGrantAddr(rx);
+	    break;
+
+	// telemetry callbacks
+	case CAN_FID_TELEM:
+	    if (canData.telemFuncs[canData.nodes[sid].type])
+		canData.telemFuncs[canData.nodes[sid].type](canData.nodes[sid].nodeId, data);
 	    break;
 
 	case CAN_FID_ACK:
@@ -246,6 +270,10 @@ canNodes_t *canFindNode(uint8_t type, uint8_t canId) {
 	    return &canData.nodes[i];
 
     return 0;
+}
+
+void canTelemRegister(canTelemCallback_t *func, uint8_t type) {
+    canData.telemFuncs[type] = func;
 }
 
 void canLowLevelInit(void) {

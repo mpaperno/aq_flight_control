@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _motors_h
@@ -29,10 +29,11 @@
 #define MOTORS_NUM		    16
 
 #define MOTORS_CAN_GROUP_SIZE	    4
+#define MOTORS_CAN_TELEM_RATE	    200		    // Hz
 
 #define MOTORS_COMP_PRELOAD_TAU	    0.4f
-#define MOTORS_COMP_PRELOAD_PTERM   3.0f
-#define MOTORS_COMP_PRELOAD_NFACT   10.0f
+#define MOTORS_COMP_PRELOAD_PTERM   3.5f
+#define MOTORS_COMP_PRELOAD_NFACT   3.0f
 
 typedef struct {
     float throttle;

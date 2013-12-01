@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _can_h
@@ -47,6 +47,7 @@
 #define CAN_FID_GRANT_ADDR  ((uint32_t)0x8<<25)
 #define CAN_FID_ERROR	    ((uint32_t)0x9<<25)
 #define CAN_FID_PING	    ((uint32_t)0xa<<25)
+#define CAN_FID_TELEM	    ((uint32_t)0xb<<25)
 
 // Data Object Code
 // 6 bits [21:16]
@@ -67,6 +68,7 @@
 #define CAN_TIMEOUT	    1000			    // ms
 #define CAN_BUF_SIZE	    16				    // depth of the application layer FIFO
 
+// types
 enum {
     CAN_TYPE_ESC = 1,
     CAN_TYPE_SERVO,
@@ -74,9 +76,11 @@ enum {
     CAN_TYPE_LED,
     CAN_TYPE_OSD,
     CAN_TYPE_UART,
-    CAN_TYPE_HUB
+    CAN_TYPE_HUB,
+    CAN_TYPE_NUM
 };
 
+// commands
 enum {
     CAN_CMD_DISARM = 1,
     CAN_CMD_ARM,
@@ -97,6 +101,7 @@ enum {
     CAN_CMD_RESET
 };
 
+// data types
 enum {
     CAN_DATA_GROUP = 1,
     CAN_DATA_TYPE,
@@ -107,6 +112,19 @@ enum {
     CAN_DATA_PARAM,
     CAN_DATA_TELEM,
     CAN_DATA_VERSION
+};
+
+// telemetry values
+enum {
+    CAN_TELEM_NONE = 0,
+    CAN_TELEM_STATUS,
+    CAN_TELEM_STATE,
+    CAN_TELEM_TEMP,
+    CAN_TELEM_VIN,
+    CAN_TELEM_AMPS,
+    CAN_TELEM_RPM,
+    CAN_TELEM_ERRORS,
+    CAN_TELEM_NUM
 };
 
 typedef struct {
@@ -160,10 +178,13 @@ typedef struct {
     uint8_t TDTR;
 } canTxBuf_t;
 
+typedef void canTelemCallback_t(uint8_t nodeId, void *p);
+
 typedef struct {
     CanRxMsg rxMsgs[CAN_BUF_SIZE];
     canTxBuf_t txMsgs[CAN_BUF_SIZE];
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
+    canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;
     volatile uint8_t txHead, txTail;
@@ -193,5 +214,8 @@ extern uint8_t *canCommandStart(uint32_t tt, uint8_t tid);
 extern uint8_t *canCommandStop(uint32_t tt, uint8_t tid);
 extern canNodes_t *canFindNode(uint8_t type, uint8_t canId);
 extern void canCommandSetpoint16(uint8_t tid, uint8_t *data);
+extern uint8_t *canSetTelemetryValue(uint32_t tt, uint8_t tid, uint8_t index, uint8_t value);
+extern uint8_t *canSetTelemetryRate(uint32_t tt, uint8_t tid, uint16_t rate);
+extern void canTelemRegister(canTelemCallback_t *func, uint8_t type);
 
 #endif
