@@ -109,6 +109,7 @@
         <file file_name="eeprom.c"/>
         <file file_name="board_dimu_v1.h"/>
         <file file_name="board_dimu_v2.h"/>
+        <file file_name="board_dimu_v3.h"/>
       </folder>
       <folder Name="USB" file_name="">
         <file file_name="usbd_conf.h"/>
@@ -183,10 +184,7 @@
         <file file_name="stm32f4xx_hash.h"/>
       </folder>
     </folder>
-    <folder Name="mavlink" filter="*.h" path="../mavlink/include" recurse="No">
-      <folder Name="common" filter="*.h" path="../mavlink/include/common" recurse="No"/>
-      <folder Name="autoquad" filter="*.h" path="../mavlink/include/autoquad" recurse="No"/>
-    </folder>
+    <folder Name="mavlink" filter="*.h" path="../mavlink/include" recurse="No"/>
     <folder Name="CoOS" file_name="">
       <folder Name="kernel">
         <file file_name="CoOS.h"/>
