@@ -97,7 +97,7 @@ const char *configParameterStrings[] = {
     "MOT_MIN",
     "MOT_VALUE2T_A1",
     "MOT_VALUE2T_A2",
-    "MOT_VALUE_SCALE",
+    "MOT_VALUE_SCAL",
     "MOT_MAX",
     "MOT_PWRD_01_T",
     "MOT_PWRD_01_P",
