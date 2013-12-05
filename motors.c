@@ -71,6 +71,9 @@ static void motorsCanSendGroups(void) {
 	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
 }
 
+//    for (i = 0; i < motorsData.numGroups; i++)
+//	canCommandArm(CAN_TT_GROUP, i+1);
+
 void motorsSendValues(void) {
     int i;
 
@@ -88,11 +91,20 @@ void motorsSendValues(void) {
 	    }
 	    // CAN
 	    else if (motorsData.can[i]) {
-		if (supervisorData.state & STATE_ARMED)
+		if (supervisorData.state & STATE_ARMED) {
+#if MOTORS_CAN_TELEM_RATE > 0
+		    // if ESC is reporting as being disarmed
+		    if (motorsData.canStatus[i].state == ESC32_STATE_DISARMED) {
+			// send an arm command
+			canCommandArm(CAN_TT_NODE, motorsData.can[i]->nodeId);
+		    }
+#endif
 		    // convert to 16 bit
 		    *motorsData.canPtrs[i] = constrainInt(motorsData.value[i], MOTORS_SCALE * 0.1f, MOTORS_SCALE)<<4;
-		else
+		}
+		else {
 		    *motorsData.canPtrs[i] = 0;
+		}
 	    }
 	}
 
