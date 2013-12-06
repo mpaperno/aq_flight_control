@@ -34,7 +34,7 @@
 
 #define MOTORS_COMP_PRELOAD_TAU	    0.4f
 #define MOTORS_COMP_PRELOAD_PTERM   3.5f
-#define MOTORS_COMP_PRELOAD_NFACT   3.0f
+#define MOTORS_COMP_PRELOAD_NFACT   2.5f
 
 typedef struct {
     float throttle;
@@ -49,6 +49,7 @@ typedef struct {
     uint16_t *canPtrs[MOTORS_NUM];
     canGroup16_t canGroups[MOTORS_NUM/MOTORS_CAN_GROUP_SIZE];
     esc32CanStatus_t canStatus[MOTORS_NUM];
+    uint32_t canStatusTime[MOTORS_NUM];
     pwmPortStruct_t *pwm[PWM_NUM_PORTS];
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];

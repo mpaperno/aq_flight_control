@@ -46,6 +46,9 @@ void motorsReceiveTelem(uint8_t canId, void *p) {
     // copy status data to our storage (8 bytes)
     storage[0] = data[0];
     storage[1] = data[1];
+
+    // record reception time
+    motorsData.canStatusTime[canId-1] = timerMicros();
 }
 
 static float motorsThrust2Value(float thrust) {
@@ -71,8 +74,34 @@ static void motorsCanSendGroups(void) {
 	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
 }
 
-//    for (i = 0; i < motorsData.numGroups; i++)
-//	canCommandArm(CAN_TT_GROUP, i+1);
+static void motorsCanRequestTelem(int i) {
+#if MOTORS_CAN_TELEM_RATE > 0
+    // request telemetry
+    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->nodeId, 0, CAN_TELEM_STATUS);
+    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->nodeId, MOTORS_CAN_TELEM_RATE);
+
+    motorsData.canStatusTime[i] = timerMicros();
+#endif
+}
+
+static void motorsCheckCanStatus(int i) {
+#if MOTORS_CAN_TELEM_RATE > 0
+    // no status report within the last second?
+    if (timerMicros() - motorsData.canStatusTime[i] > 1e6f) {
+	// clear status information
+	uint32_t *storage = (uint32_t *)&motorsData.canStatus[i];
+	storage[0] = 0;
+	storage[1] = 0;
+
+	motorsCanRequestTelem(i);
+    }
+    // if ESC is reporting as being disarmed (and should not be)
+    else if (motorsData.canStatus[i].state == ESC32_STATE_DISARMED && (supervisorData.state & STATE_ARMED)) {
+	// send an arm command
+	canCommandArm(CAN_TT_NODE, motorsData.can[i]->nodeId);
+    }
+#endif
+}
 
 void motorsSendValues(void) {
     int i;
@@ -91,20 +120,13 @@ void motorsSendValues(void) {
 	    }
 	    // CAN
 	    else if (motorsData.can[i]) {
-		if (supervisorData.state & STATE_ARMED) {
-#if MOTORS_CAN_TELEM_RATE > 0
-		    // if ESC is reporting as being disarmed
-		    if (motorsData.canStatus[i].state == ESC32_STATE_DISARMED) {
-			// send an arm command
-			canCommandArm(CAN_TT_NODE, motorsData.can[i]->nodeId);
-		    }
-#endif
+		motorsCheckCanStatus(i);
+
+		if (supervisorData.state & STATE_ARMED)
 		    // convert to 16 bit
 		    *motorsData.canPtrs[i] = constrainInt(motorsData.value[i], MOTORS_SCALE * 0.1f, MOTORS_SCALE)<<4;
-		}
-		else {
+		else
 		    *motorsData.canPtrs[i] = 0;
-		}
 	    }
 	}
 
@@ -160,11 +182,14 @@ void motorsOff(void) {
 	    motorsData.value[i] = 0;
 
 	    // PWM
-	    if (i < PWM_NUM_PORTS && motorsData.pwm[i])
+	    if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
 		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
+	    }
 	    // CAN
-	    else if (motorsData.can[i])
+	    else if (motorsData.can[i]) {
+		motorsCheckCanStatus(i);
 		*motorsData.canPtrs[i] = 0;
+	    }
 	}
 
     motorsCanSendGroups();
@@ -230,10 +255,7 @@ static void motorsCanInit(int i) {
 	esc32SetupCan(motorsData.can[i], 0);
 #endif
 
-#if MOTORS_CAN_TELEM_RATE > 0
-	canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->nodeId, 0, CAN_TELEM_STATUS);
-	canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->nodeId, MOTORS_CAN_TELEM_RATE);
-#endif
+    	motorsCanRequestTelem(i);
     }
 }
 

@@ -213,8 +213,12 @@ static void canGrantAddr(CanRxMsg *rx) {
 	canData.nodes[i].type = rx->Data[4];
 	canData.nodes[i].canId = rx->Data[5];
 
+	// send groupId & subgroupId in bytes 5 & 6
+	rx->Data[4] = canData.nodes[i].groupId;
+	rx->Data[5] = canData.nodes[i].subgroupId;
+
 	// respond
-	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 4, (uint8_t *)&uuid);
+	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 6, rx->Data);
     }
 }
 
