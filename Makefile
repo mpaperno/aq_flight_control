@@ -183,7 +183,7 @@ AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mf
 
 # linker (ld) options
 LINKER_OPTS = -ereset_handler --omagic -defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
-	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(STMLIB_PATH)/STM32f4.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
+	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(STMLIB_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
 
 # eabi linker libs
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
@@ -222,7 +222,8 @@ DSPLIB_OBJ_FILES = arm_fill_f32.o arm_copy_f32.o arm_mat_init_f32.o arm_mat_inve
 	
 # USB functions/drivers
 USB_OBJ_FILES = usb.o usb_bsp.o usb_core.o usb_dcd.o usb_dcd_int.o \
-	usbd_cdc_core.o  usbd_core.o  usbd_desc.o  usbd_ioreq.o  usbd_req.o
+	usbd_core.o  usbd_desc.o  usbd_ioreq.o  usbd_req.o usbd_storage_msd.o \
+	usbd_cdc_msc_core.o usbd_msc_bot.o usbd_msc_data.o usbd_msc_scsi.o
 #  usb_hcd.o usb_hcd_int.o
 
 
