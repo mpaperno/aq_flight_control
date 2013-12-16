@@ -95,9 +95,11 @@ void runTaskCode(void *unused) {
 	else if (!((loops+7) % 20)) {
 	   simDoPresUpdate(runData.sumPres*(1.0f / (float)RUN_SENSOR_HIST));
 	}
+#ifndef USE_DIGITAL_IMU
 	else if (!((loops+13) % 20)) {
 	   simDoMagUpdate(runData.sumMag[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
+#endif
 	// optical flow update
 	else if (navUkfData.flowCount >= 10 && !navUkfData.flowLock) {
 	    navUkfFlowUpdate();
@@ -117,11 +119,11 @@ void runTaskCode(void *unused) {
 	    CoClearFlag(gpsData.gpsVelFlag);
 	}
 	// observe zero position
-	else if (!((loops+4) % 20) && (gpsData.hAcc >= NAV_MIN_GPS_ACC || gpsData.tDOP == 0.0f)) {
+	else if (!((loops+4) % 20) && (gpsData.hAcc >= NAV_MIN_GPS_ACC || gpsData.tDOP == 0.0f) && navUkfData.flowQuality == 0.0f) {
 	    navUkfZeroPos();
 	}
 	// observer zero velocity
-	else if (!((loops+10) % 20) && (gpsData.sAcc >= NAV_MIN_GPS_ACC/2 || gpsData.tDOP == 0.0f)) {
+	else if (!((loops+10) % 20) && (gpsData.sAcc >= NAV_MIN_GPS_ACC/2 || gpsData.tDOP == 0.0f) && navUkfData.flowQuality == 0.0f) {
 	    navUkfZeroVel();
 	}
 	// observe that the rates are exactly 0 if not flying or moving

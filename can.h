@@ -164,7 +164,7 @@ typedef struct {
 
 typedef struct {
     uint32_t uuid;
-    uint8_t nodeId;
+    uint8_t nodeId; // network id
     uint8_t type;
     uint8_t canId;
     uint8_t groupId;

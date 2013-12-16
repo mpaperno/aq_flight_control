@@ -39,9 +39,6 @@
     #define MPU6000_DRATE_SLOTS	    40						    // 200Hz
 #endif
 
-#define MPU6000_ACC_SCALE           8     // g      (2, 4, 8, 16)
-#define MPU6000_GYO_SCALE           1000  // deg/s  (250, 500, 1000, 2000)
-
 typedef struct {
     utilFilter_t tempFilter;
     spiClient_t *spi;

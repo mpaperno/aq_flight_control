@@ -34,7 +34,7 @@
 
 #define MOTORS_COMP_PRELOAD_TAU	    0.4f
 #define MOTORS_COMP_PRELOAD_PTERM   3.5f
-#define MOTORS_COMP_PRELOAD_NFACT   2.5f
+#define MOTORS_COMP_PRELOAD_NFACT   3.0f//2.5f
 
 typedef struct {
     float throttle;

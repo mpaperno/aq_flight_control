@@ -22,8 +22,8 @@
 #include "aq.h"
 #include "srcdkf.h"
 
-//#define UKF_LOG_SIZE		(10*sizeof(float))
-//#define UKF_LOG_BUF_SIZE	(UKF_LOG_SIZE*40)
+#define UKF_LOG_SIZE		(17*sizeof(float))
+#define UKF_LOG_BUF_SIZE	(UKF_LOG_SIZE*40)
 //#define UKF_LOG_FNAME		"UKF"		// comment out to disable logging
 
 #define SIM_S                   17		// states
