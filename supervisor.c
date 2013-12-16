@@ -257,7 +257,7 @@ void supervisorTaskCode(void *unused) {
 	}
 
 	// smooth vIn readings
-	supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * (0.5f / SUPERVISOR_RATE);
+	supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * (0.1f / SUPERVISOR_RATE);
 
 	// determine battery state of charge
 	supervisorData.soc = supervisorSOCTableLookup(supervisorData.vInLPF);
