@@ -267,10 +267,10 @@ void controlInit(void) {
     l1AttitudeInit();
 #endif
 
-    utilFilterInit3(controlData.userPitchFilter, 1.0f/400.0f, 0.1f, 0.0f);
-    utilFilterInit3(controlData.userRollFilter, 1.0f/400.0f, 0.1f, 0.0f);
-    utilFilterInit3(controlData.navPitchFilter, 1.0f/400.0f, 0.125f, 0.0f);
-    utilFilterInit3(controlData.navRollFilter, 1.0f/400.0f, 0.125f, 0.0f);
+    utilFilterInit3(controlData.userPitchFilter, AQ_INNER_TIMESTEP, 0.1f, 0.0f);
+    utilFilterInit3(controlData.userRollFilter, AQ_INNER_TIMESTEP, 0.1f, 0.0f);
+    utilFilterInit3(controlData.navPitchFilter, AQ_INNER_TIMESTEP, 0.125f, 0.0f);
+    utilFilterInit3(controlData.navRollFilter, AQ_INNER_TIMESTEP, 0.125f, 0.0f);
 
     controlData.pitchRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
     controlData.rollRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
