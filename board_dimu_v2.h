@@ -28,6 +28,9 @@
 #define DIMU_HAVE_HMC5983
 #define DIMU_HAVE_MS5611
 
+#define MPU6000_ACC_SCALE           8     // g      (2, 4, 8, 16)
+#define MPU6000_GYO_SCALE           1000  // deg/s  (250, 500, 1000, 2000)
+
 #define DIMU_ORIENT_ACC_X	    (+in[0])
 #define DIMU_ORIENT_ACC_Y	    (+in[1])
 #define DIMU_ORIENT_ACC_Z	    (+in[2])
