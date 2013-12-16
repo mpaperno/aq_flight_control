@@ -108,8 +108,8 @@
         <file file_name="eeprom.h"/>
         <file file_name="eeprom.c"/>
         <file file_name="board_dimu_v1.h"/>
+        <file file_name="board_dimu_v1_1.h"/>
         <file file_name="board_dimu_v2.h"/>
-        <file file_name="board_dimu_v3.h"/>
       </folder>
       <folder Name="USB" file_name="">
         <file file_name="usbd_conf.h"/>

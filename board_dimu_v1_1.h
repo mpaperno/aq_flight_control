@@ -16,8 +16,8 @@
     Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#ifndef _board_dimu_v3_h
-#define _board_dimu_v3_h
+#ifndef _board_dimu_v1_1_h
+#define _board_dimu_v1_1_h
 
 #define HAS_DIGITAL_IMU
 #define USE_DIGITAL_IMU
