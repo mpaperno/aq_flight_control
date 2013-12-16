@@ -508,17 +508,17 @@ void navUkfZeroPos(void) {
 
     y[0] = 0.0f;
     y[1] = 0.0f;
-    y[2] = UKF_PRES_ALT;
+    y[2] = navUkfPresToAlt(AQ_PRESSURE);
 
     if (supervisorData.state & STATE_FLYING) {
 	noise[0] = 1e1f;
 	noise[1] = 1e1f;
-	noise[2] = 1e2f;
+	noise[2] = 1e1f;
     }
     else {
 	noise[0] = 1e-7f;
 	noise[1] = 1e-7f;
-	noise[2] = 1e2f;
+	noise[2] = 1.0f;
     }
 
     srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfPosUpdate);
@@ -699,8 +699,8 @@ void navUkfFlowUpdate(void) {
     // valid altitudes?
     if (navUkfData.flowAltCount > 0) {
 	flowAlt = navUkfData.flowSumAlt / navUkfData.flowAltCount;
-	if (fabsf(navUkfData.flowAlt - flowAlt) < 0.5f)
-	    noise[2] = 0.1f;
+	if (fabsf(navUkfData.flowAlt - flowAlt) < 1.0f)
+	    noise[2] = 0.0025f;
 
 	navUkfData.flowAlt = flowAlt;
     }
@@ -746,7 +746,7 @@ void navUkfFlowUpdate(void) {
 	navUkfData.flowVelY = flowY / dt;
 
 	// TODO: properly estimate noise
-	noise[0] = (UKF_GPS_POS_N + UKF_GPS_POS_M_N);
+	noise[0] = (UKF_GPS_POS_N + UKF_GPS_POS_M_N) * 0.5f;
 	noise[1] = noise[0];
 
 	navUkfCalcLocalDistance(navUkfData.flowPosN, navUkfData.flowPosE, &y[0], &y[1]);
@@ -763,7 +763,14 @@ void navUkfFlowUpdate(void) {
 	    log[i++] = flowY;
 	    log[i++] = navUkfData.flowVelX;
 	    log[i++] = navUkfData.flowVelY;
+	    log[i++] = navUkfData.flowPosN;
+	    log[i++] = navUkfData.flowPosE;
 	    log[i++] = flowAlt;
+	    log[i++] = UKF_POSN;
+	    log[i++] = UKF_POSE;
+	    log[i++] = UKF_POSD;
+	    log[i++] = UKF_PRES_ALT;
+	    log[i++] = UKF_VELD;
 	    log[i++] = navUkfData.flowQuality;
 	    log[i++] = (AQ_PITCH - oldPitch);
 	    log[i++] = (AQ_ROLL  - oldRoll);
@@ -898,7 +905,7 @@ void navUkfInitState(void) {
 	rotError[2] = -(acc[1] * estAcc[0] - estAcc[1] * acc[0]) * 1.0f;
 
 	// add in mag vector
-	if (i < UKF_GYO_AVG_NUM*4) {
+	if (i < UKF_GYO_AVG_NUM*2) {
 	    rotError[0] += -(mag[2] * estMag[1] - estMag[2] * mag[1]) * 0.50f;
 	    rotError[1] += -(mag[0] * estMag[2] - estMag[0] * mag[2]) * 0.50f;
 	    rotError[2] += -(mag[1] * estMag[0] - estMag[1] * mag[0]) * 0.50f;
