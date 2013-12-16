@@ -29,7 +29,7 @@
 #define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING			// uncomment to use external signaling events and ports
 
-//#define USE_L1_ATTITUDE
+//#define USE_QUATOS
 
 #ifndef BOARD_VERSION
     #define BOARD_VERSION	6

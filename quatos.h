@@ -13,18 +13,18 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
-#ifndef _l1_attitude_h
-#define _l1_attitude_h
+#ifndef _quatos_h
+#define _quatos_h
 
 #include "aq_math.h"
 
-extern void l1AttitudeInit(void);
-extern void l1AttitudeReset(float32_t *quat);
-extern void l1Attitude(float32_t *quatD, float32_t *rates, uint16_t *override);
-extern void l1AttitudeRate(float32_t *rates);
-extern void l1AttitudePowerDistribution(float32_t hoverThrot);
+extern void quatosInit(void);
+extern void quatosReset(float32_t *quat);
+extern void quatos(float32_t *quatD, float32_t *rates, uint16_t *override);
+extern void quatosRate(float32_t *rates);
+extern void quatosPowerDistribution(float32_t hoverThrot);
 
 #endif

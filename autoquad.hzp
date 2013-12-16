@@ -82,7 +82,7 @@
       <file file_name="config_default.h"/>
       <file file_name="board_6_1.h"/>
       <file file_name="board_6_1a.h"/>
-      <file file_name="l1_attitude.h"/>
+      <file file_name="quatos.h"/>
       <file file_name="1wire.c"/>
       <file file_name="1wire.h"/>
       <file file_name="esc32.h"/>

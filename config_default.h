@@ -350,71 +350,71 @@
 #define DEFAULT_SPVR_FS_ADD_ALT     0.0f        // meters to add to home alt. for falisafe stg.2 action == 2
 
 
-#define DEFAULT_L1_ATT_J_ROLL		0.0127f		    // J matrix
-#define DEFAULT_L1_ATT_J_PITCH		0.0127f		    // J matrix
-#define DEFAULT_L1_ATT_J_YAW		0.024661f	    // J matrix
-#define DEFAULT_L1_ATT_AM1		-10.0f
-#define DEFAULT_L1_ATT_AM2		-25.0f
-#define DEFAULT_L1_ATT_PROP_K1		14.62f
-#define DEFAULT_L1_ATT_M_TLT_RT		1.0f		    // rads/s
-#define DEFAULT_L1_ATT_M_YAW_RT		1.0f		    // rads/s
-#define DEFAULT_L1_ATT_MAX_OUT		4.0f		    // total moment demand allowed (n_a + n_b)
-#define DEFAULT_L1_ATT_QUAT_TAU		0.05f
-#define DEFAULT_L1_ATT_L1_ASP		-10.0f
-#define DEFAULT_L1_ATT_L1_K1		18.6f
-#define DEFAULT_L1_ATT_AM1_KNOB		0.0f		    // AM1
-#define DEFAULT_L1_ATT_AM2_KNOB		0.0f		    // AM2
-#define DEFAULT_L1_ATT_K1_KNOB		0.0f		    // L1_K1
-#define DEFAULT_L1_ATT_PT_KNOB		0.0f		    // prop torque
+#define DEFAULT_QUATOS_J_ROLL		0.0127f		    // J matrix
+#define DEFAULT_QUATOS_J_PITCH		0.0127f		    // J matrix
+#define DEFAULT_QUATOS_J_YAW		0.024661f	    // J matrix
+#define DEFAULT_QUATOS_AM1		-10.0f
+#define DEFAULT_QUATOS_AM2		-25.0f
+#define DEFAULT_QUATOS_PROP_K1		14.62f
+#define DEFAULT_QUATOS_M_TLT_RT		1.0f		    // rads/s
+#define DEFAULT_QUATOS_M_YAW_RT		1.0f		    // rads/s
+#define DEFAULT_QUATOS_MAX_OUT		4.0f		    // total moment demand allowed (n_a + n_b)
+#define DEFAULT_QUATOS_QUAT_TAU		0.05f
+#define DEFAULT_QUATOS_L1_ASP		-10.0f
+#define DEFAULT_QUATOS_L1_K1		18.6f
+#define DEFAULT_QUATOS_AM1_KNOB		0.0f		    // AM1
+#define DEFAULT_QUATOS_AM2_KNOB		0.0f		    // AM2
+#define DEFAULT_QUATOS_K1_KNOB		0.0f		    // L1_K1
+#define DEFAULT_QUATOS_PT_KNOB		0.0f		    // prop torque
 
-#define DEFAULT_L1_ATT_MM_R01		0.0f
-#define DEFAULT_L1_ATT_MM_P01		0.0f
-#define DEFAULT_L1_ATT_MM_Y01		0.0f
-#define DEFAULT_L1_ATT_MM_R02		0.0f
-#define DEFAULT_L1_ATT_MM_P02		0.0f
-#define DEFAULT_L1_ATT_MM_Y02		0.0f
-#define DEFAULT_L1_ATT_MM_R03		0.0f
-#define DEFAULT_L1_ATT_MM_P03		0.0f
-#define DEFAULT_L1_ATT_MM_Y03		0.0f
-#define DEFAULT_L1_ATT_MM_R04		0.0f
-#define DEFAULT_L1_ATT_MM_P04		0.0f
-#define DEFAULT_L1_ATT_MM_Y04		0.0f
-#define DEFAULT_L1_ATT_MM_R05		0.0f
-#define DEFAULT_L1_ATT_MM_P05		0.0f
-#define DEFAULT_L1_ATT_MM_Y05		0.0f
-#define DEFAULT_L1_ATT_MM_R06		0.0f
-#define DEFAULT_L1_ATT_MM_P06		0.0f
-#define DEFAULT_L1_ATT_MM_Y06		0.0f
-#define DEFAULT_L1_ATT_MM_R07		0.0f
-#define DEFAULT_L1_ATT_MM_P07		0.0f
-#define DEFAULT_L1_ATT_MM_Y07		0.0f
-#define DEFAULT_L1_ATT_MM_R08		0.0f
-#define DEFAULT_L1_ATT_MM_P08		0.0f
-#define DEFAULT_L1_ATT_MM_Y08		0.0f
-#define DEFAULT_L1_ATT_MM_R09		0.0f
-#define DEFAULT_L1_ATT_MM_P09		0.0f
-#define DEFAULT_L1_ATT_MM_Y09		0.0f
-#define DEFAULT_L1_ATT_MM_R10		0.0f
-#define DEFAULT_L1_ATT_MM_P10		0.0f
-#define DEFAULT_L1_ATT_MM_Y10		0.0f
-#define DEFAULT_L1_ATT_MM_R11		0.0f
-#define DEFAULT_L1_ATT_MM_P11		0.0f
-#define DEFAULT_L1_ATT_MM_Y11		0.0f
-#define DEFAULT_L1_ATT_MM_R12		0.0f
-#define DEFAULT_L1_ATT_MM_P12		0.0f
-#define DEFAULT_L1_ATT_MM_Y12		0.0f
-#define DEFAULT_L1_ATT_MM_R13		0.0f
-#define DEFAULT_L1_ATT_MM_P13		0.0f
-#define DEFAULT_L1_ATT_MM_Y13		0.0f
-#define DEFAULT_L1_ATT_MM_R14		0.0f
-#define DEFAULT_L1_ATT_MM_P14		0.0f
-#define DEFAULT_L1_ATT_MM_Y14		0.0f
-#define DEFAULT_L1_ATT_MM_R15		0.0f
-#define DEFAULT_L1_ATT_MM_P15		0.0f
-#define DEFAULT_L1_ATT_MM_Y15		0.0f
-#define DEFAULT_L1_ATT_MM_R16		0.0f
-#define DEFAULT_L1_ATT_MM_P16		0.0f
-#define DEFAULT_L1_ATT_MM_Y16		0.0f
+#define DEFAULT_QUATOS_MM_R01		0.0f
+#define DEFAULT_QUATOS_MM_P01		0.0f
+#define DEFAULT_QUATOS_MM_Y01		0.0f
+#define DEFAULT_QUATOS_MM_R02		0.0f
+#define DEFAULT_QUATOS_MM_P02		0.0f
+#define DEFAULT_QUATOS_MM_Y02		0.0f
+#define DEFAULT_QUATOS_MM_R03		0.0f
+#define DEFAULT_QUATOS_MM_P03		0.0f
+#define DEFAULT_QUATOS_MM_Y03		0.0f
+#define DEFAULT_QUATOS_MM_R04		0.0f
+#define DEFAULT_QUATOS_MM_P04		0.0f
+#define DEFAULT_QUATOS_MM_Y04		0.0f
+#define DEFAULT_QUATOS_MM_R05		0.0f
+#define DEFAULT_QUATOS_MM_P05		0.0f
+#define DEFAULT_QUATOS_MM_Y05		0.0f
+#define DEFAULT_QUATOS_MM_R06		0.0f
+#define DEFAULT_QUATOS_MM_P06		0.0f
+#define DEFAULT_QUATOS_MM_Y06		0.0f
+#define DEFAULT_QUATOS_MM_R07		0.0f
+#define DEFAULT_QUATOS_MM_P07		0.0f
+#define DEFAULT_QUATOS_MM_Y07		0.0f
+#define DEFAULT_QUATOS_MM_R08		0.0f
+#define DEFAULT_QUATOS_MM_P08		0.0f
+#define DEFAULT_QUATOS_MM_Y08		0.0f
+#define DEFAULT_QUATOS_MM_R09		0.0f
+#define DEFAULT_QUATOS_MM_P09		0.0f
+#define DEFAULT_QUATOS_MM_Y09		0.0f
+#define DEFAULT_QUATOS_MM_R10		0.0f
+#define DEFAULT_QUATOS_MM_P10		0.0f
+#define DEFAULT_QUATOS_MM_Y10		0.0f
+#define DEFAULT_QUATOS_MM_R11		0.0f
+#define DEFAULT_QUATOS_MM_P11		0.0f
+#define DEFAULT_QUATOS_MM_Y11		0.0f
+#define DEFAULT_QUATOS_MM_R12		0.0f
+#define DEFAULT_QUATOS_MM_P12		0.0f
+#define DEFAULT_QUATOS_MM_Y12		0.0f
+#define DEFAULT_QUATOS_MM_R13		0.0f
+#define DEFAULT_QUATOS_MM_P13		0.0f
+#define DEFAULT_QUATOS_MM_Y13		0.0f
+#define DEFAULT_QUATOS_MM_R14		0.0f
+#define DEFAULT_QUATOS_MM_P14		0.0f
+#define DEFAULT_QUATOS_MM_Y14		0.0f
+#define DEFAULT_QUATOS_MM_R15		0.0f
+#define DEFAULT_QUATOS_MM_P15		0.0f
+#define DEFAULT_QUATOS_MM_Y15		0.0f
+#define DEFAULT_QUATOS_MM_R16		0.0f
+#define DEFAULT_QUATOS_MM_P16		0.0f
+#define DEFAULT_QUATOS_MM_Y16		0.0f
 
 
 #define DEFAULT_LIC_KEY1		0.0f

@@ -33,8 +33,8 @@
 #include "aq_mavlink.h"
 #include "supervisor.h"
 #include "gps.h"
-#ifdef USE_L1_ATTITUDE
-#include "l1_attitude.h"
+#ifdef USE_QUATOS
+#include "quatos.h"
 #endif
 #include <CoOS.h>
 #include <string.h>
@@ -49,12 +49,12 @@ void controlTaskCode(void *unused) {
     float throttle;
     float rates[3];
     uint16_t overrides[3];
-#ifdef USE_L1_ATTITUDE
+#ifdef USE_QUATOS
     float quat[4];
 #else
     float pitch, roll;
     float pitchCommand, rollCommand, ruddCommand;
-#endif	// USE_L1_ATTITUDE
+#endif	// USE_QUATOS
 
     AQ_NOTICE("Control task started\n");
 
@@ -160,7 +160,7 @@ void controlTaskCode(void *unused) {
 		    }
 		}
 
-#ifdef USE_L1_ATTITUDE
+#ifdef USE_QUATOS
 		// determine which frame of reference to control from
 		if (navData.mode <= NAV_STATUS_ALTHOLD)
 		    // craft frame - manual
@@ -175,12 +175,11 @@ void controlTaskCode(void *unused) {
 		    quat[1] = UKF_Q2;
 		    quat[2] = UKF_Q3;
 		    quat[3] = UKF_Q4;
-		    l1AttitudeReset(quat);
+		    quatosReset(quat);
 		}
 
-
-		l1Attitude(quat, rates, overrides);
-		l1AttitudePowerDistribution(throttle);
+		quatos(quat, rates, overrides);
+		quatosPowerDistribution(throttle);
 		motorsSendThrust();
 		motorsData.throttle = throttle;
 #else
@@ -263,8 +262,8 @@ void controlInit(void) {
 
     memset((void *)&controlData, 0, sizeof(controlData));
 
-#ifdef USE_L1_ATTITUDE
-    l1AttitudeInit();
+#ifdef USE_QUATOS
+    quatosInit();
 #endif
 
     utilFilterInit3(controlData.userPitchFilter, AQ_INNER_TIMESTEP, 0.1f, 0.0f);
