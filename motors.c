@@ -114,7 +114,7 @@ void motorsSendValues(void) {
 	    // PWM
 	    if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
 		if (supervisorData.state & STATE_ARMED)
-		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] -  p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
+		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] -  p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_MIN], p[MOT_MAX]);
 		else
 		    *motorsData.pwm[i]->ccr = 0;
 	    }

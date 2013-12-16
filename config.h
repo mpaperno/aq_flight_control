@@ -92,7 +92,6 @@ enum configParameters {
     MOT_FRAME,
     MOT_ARM,
     MOT_MIN,
-    MOT_START,
     MOT_VALUE2T_A1,
     MOT_VALUE2T_A2,
     MOT_VALUE_SCAL,

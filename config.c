@@ -93,7 +93,6 @@ const char *configParameterStrings[] = {
     "MOT_CAN",
     "MOT_FRAME",
     "MOT_ARM",
-    "MOT_START",
     "MOT_MIN",
     "MOT_VALUE2T_A1",
     "MOT_VALUE2T_A2",
