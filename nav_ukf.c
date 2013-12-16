@@ -905,7 +905,7 @@ void navUkfInitState(void) {
 	rotError[2] = -(acc[1] * estAcc[0] - estAcc[1] * acc[0]) * 1.0f;
 
 	// add in mag vector
-	if (i < UKF_GYO_AVG_NUM*2) {
+	if (AQ_MAG_ENABLED && i < UKF_GYO_AVG_NUM*2) {
 	    rotError[0] += -(mag[2] * estMag[1] - estMag[2] * mag[1]) * 0.50f;
 	    rotError[1] += -(mag[0] * estMag[2] - estMag[0] * mag[2]) * 0.50f;
 	    rotError[2] += -(mag[1] * estMag[0] - estMag[1] * mag[0]) * 0.50f;

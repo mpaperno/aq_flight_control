@@ -96,7 +96,7 @@ void runTaskCode(void *unused) {
 	   simDoPresUpdate(runData.sumPres*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 #ifndef USE_DIGITAL_IMU
-	else if (!((loops+13) % 20)) {
+	else if (!((loops+13) % 20) && AQ_MAG_ENABLED) {
 	   simDoMagUpdate(runData.sumMag[0]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[1]*(1.0f / (float)RUN_SENSOR_HIST), runData.sumMag[2]*(1.0f / (float)RUN_SENSOR_HIST));
 	}
 #endif

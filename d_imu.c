@@ -307,7 +307,8 @@ void dIMUInit(void) {
     dIMUReadCalib();
 #endif
 #ifdef DIMU_HAVE_HMC5983
-    hmc5983Init();
+    if (hmc5983Init() == 0)
+      AQ_NOTICE("DIMU: MAG sensor init failed!\n");
 #endif
 #ifdef DIMU_HAVE_MS5611
     ms5611Init();

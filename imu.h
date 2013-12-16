@@ -52,6 +52,7 @@
 #define AQ_OUTER_TIMESTEP	DIMU_OUTER_DT
 #define AQ_INNER_TIMESTEP	DIMU_INNER_DT
 #define AQ_PRESSURE		ms5611Data.pres
+#define AQ_MAG_ENABLED          hmc5983Data.enabled
 #endif	// USE_DIGITAL_IMU
 
 #ifndef USE_DIGITAL_IMU
@@ -73,6 +74,7 @@
 #define AQ_OUTER_TIMESTEP	adcData.dt
 #define AQ_INNER_TIMESTEP	(adcData.dt * 0.5f)
 #define AQ_PRESSURE		adcData.pressure
+#define AQ_MAG_ENABLED          1
 #endif
 
 typedef struct {

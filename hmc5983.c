@@ -145,7 +145,8 @@ static void hmc5983StartTransfer(void) {
 }
 
 inline void hmc5983Enable(void) {
-    hmc5983Data.enabled = 1;
+    if (hmc5983Data.initialized)
+      hmc5983Data.enabled = 1;
 }
 
 inline void hmc5983Disable(void) {
@@ -156,52 +157,63 @@ void hmc5983PreInit(void) {
     hmc5983Data.spi = spiClientInit(DIMU_HMC5983_SPI, HMC5983_SPI_BAUD, DIMU_HMC5983_CS_PORT, DIMU_HMC5983_CS_PIN, &hmc5983Data.spiFlag, 0);
 }
 
-void hmc5983Init(void) {
+uint8_t hmc5983Init(void) {
+    int i = HMC5983_RETRIES;
+
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
     // wait for a valid response
-    while (hmc5983GetReg(0x0a) != 'H')
+    while (--i && hmc5983GetReg(0x0a) != 'H')
 	delay(100);
 
-    // 75Hz, 8x oversample
-    hmc5983ReliablySetReg(0x00, 0b11111000);
-    delay(10);
+    if (i > 0) {
+      // 75Hz, 8x oversample
+      hmc5983ReliablySetReg(0x00, 0b11111000);
+      delay(10);
 
-//    // highest gain (+-0.88 Ga)
-//    hmc5983ReliablySetReg(0x01, 0b00000000);
-    // gain (+-2.5 Ga)
-    hmc5983ReliablySetReg(0x01, 0b01100000);
-    delay(10);
+  //    // highest gain (+-0.88 Ga)
+  //    hmc5983ReliablySetReg(0x01, 0b00000000);
+      // gain (+-2.5 Ga)
+      hmc5983ReliablySetReg(0x01, 0b01100000);
+      delay(10);
 
-    hmc5983ReliablySetReg(0x02, 0b00000000);
-    delay(10);
+      hmc5983ReliablySetReg(0x02, 0b00000000);
+      delay(10);
 
-    hmc5983Data.readCmd = HMC5983_READ_MULT_BIT | 0x03;
+      hmc5983Data.readCmd = HMC5983_READ_MULT_BIT | 0x03;
 
-    spiChangeCallback(hmc5983Data.spi, hmc5983TransferComplete);
+      spiChangeCallback(hmc5983Data.spi, hmc5983TransferComplete);
 
-    // External Interrupt line for data ready
-    GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = DIMU_HMC5983_INT_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DIMU_HMC5983_INT_PORT, &GPIO_InitStructure);
+      // External Interrupt line for data ready
+      GPIO_StructInit(&GPIO_InitStructure);
+      GPIO_InitStructure.GPIO_Pin = DIMU_HMC5983_INT_PIN;
+      GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+      GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+      GPIO_Init(DIMU_HMC5983_INT_PORT, &GPIO_InitStructure);
 
-    SYSCFG_EXTILineConfig(DIMU_HMC5983_INT_EXTI_PORT, DIMU_HMC5983_INT_EXTI_PIN);
+      SYSCFG_EXTILineConfig(DIMU_HMC5983_INT_EXTI_PORT, DIMU_HMC5983_INT_EXTI_PIN);
 
-    EXTI_InitStructure.EXTI_Line = DIMU_HMC5983_INT_EXTI_LINE;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+      EXTI_InitStructure.EXTI_Line = DIMU_HMC5983_INT_EXTI_LINE;
+      EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+      EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+      EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+      EXTI_Init(&EXTI_InitStructure);
 
-    NVIC_InitStructure.NVIC_IRQChannel = DIMU_HMC5983_INT_EXTI_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+      NVIC_InitStructure.NVIC_IRQChannel = DIMU_HMC5983_INT_EXTI_IRQ;
+      NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+      NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+      NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+      NVIC_Init(&NVIC_InitStructure);
+
+      hmc5983Data.initialized = 1;
+  }
+  else {
+      hmc5983Data.initialized = 0;
+  }
+
+  return hmc5983Data.initialized;
 }
 
 void DIMU_HMC5983_INT_ISR(void) {
