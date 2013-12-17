@@ -24,18 +24,10 @@
 #include "rcc.h"
 #include <CoOS.h>
 
-#ifdef DIMU_HAVE_MPU6000
 #include "mpu6000.h"
-#endif
-#ifdef DIMU_HAVE_EEPROM
 #include "eeprom.h"
-#endif
-#ifdef DIMU_HAVE_HMC5983
 #include "hmc5983.h"
-#endif
-#ifdef DIMU_HAVE_MS5611
 #include "ms5611.h"
-#endif
 
 #define DIMU_STACK_SIZE	    250
 #define DIMU_PRIORITY	    11

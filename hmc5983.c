@@ -72,31 +72,33 @@ void hmc5983Decode(void) {
     float divisor;
     int i;
 
-    mag[0] = 0;
-    mag[1] = 0;
-    mag[2] = 0;
+    if (hmc5983Data.enabled) {
+      mag[0] = 0;
+      mag[1] = 0;
+      mag[2] = 0;
 
-    divisor = (float)HMC5983_SLOTS;
-    for (i = 0; i < HMC5983_SLOTS; i++) {
-	int j = i*HMC5983_SLOT_SIZE;
+      divisor = (float)HMC5983_SLOTS;
+      for (i = 0; i < HMC5983_SLOTS; i++) {
+          int j = i*HMC5983_SLOT_SIZE;
 
-	// check if we are in the middle of a transaction for this slot
-	if (i == hmc5983Data.slot && hmc5983Data.spiFlag == 0)	{
-	    divisor -= 1.0f;
-	}
-	else {
-	    mag[1] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
-	    mag[2] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
-	    mag[0] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
-	}
+          // check if we are in the middle of a transaction for this slot
+          if (i == hmc5983Data.slot && hmc5983Data.spiFlag == 0)	{
+              divisor -= 1.0f;
+          }
+          else {
+              mag[1] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
+              mag[2] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
+              mag[0] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
+          }
+      }
+
+      divisor = 1.0f / divisor;
+
+      hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
+      hmc5983CalibMag(hmc5983Data.rawMag, hmc5983Data.mag);
+
+      hmc5983Data.lastUpdate = timerMicros();
     }
-
-    divisor = 1.0f / divisor;
-
-    hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
-    hmc5983CalibMag(hmc5983Data.rawMag, hmc5983Data.mag);
-
-    hmc5983Data.lastUpdate = timerMicros();
 }
 
 static uint8_t hmc5983GetReg(uint8_t reg) {

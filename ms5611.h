@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011, 2012, 2013  Bill Nesbitt
+    Copyright © 2011, 2012, 2013  Bill Nesbitt
 */
 
 #ifndef _ms5611_h
@@ -26,6 +26,7 @@
 #define MS5611_SPI_BAUD		    SPI_BaudRatePrescaler_4	// 10.5Mhz
 
 #define MS5611_SLOTS		    8				// ~13 Hz
+#define MS5611_RETRIES              5
 
 typedef struct {
     utilFilter_t tempFilter;
@@ -40,17 +41,17 @@ typedef struct {
     uint8_t startTempConv;
     uint8_t startPresConv;
     uint8_t adcRead;
+    uint8_t initialized;
     float rawTemp;
     volatile float temp;
     volatile float pres;
-    float alt;
     volatile uint32_t lastUpdate;
 } ms5611Struct_t;
 
 extern ms5611Struct_t ms5611Data;
 
 extern void ms5611PreInit(void);
-extern void ms5611Init(void);
+extern uint8_t ms5611Init(void);
 extern void ms5611InitialBias(void);
 extern void ms5611Result(int unused);
 extern void ms5611Conversion(int unused);

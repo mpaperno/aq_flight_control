@@ -182,8 +182,10 @@ static void dIMUCalcTempDiff(void) {
     i++;
 #endif
 #ifdef DIMU_HAVE_MS5611
-    temp += ms5611Data.temp;
-    i++;
+    if (ms5611Data.enabled) {
+      temp += ms5611Data.temp;
+      i++;
+    }
 #endif
     dImuData.temp = temp / (float)i;
 
@@ -212,9 +214,6 @@ static void dIMUTaskCode(void *unused) {
 	if (!(loops % (DIMU_OUTER_PERIOD/DIMU_INNER_PERIOD))) {
 #ifdef DIMU_HAVE_MPU6000
 	    mpu6000Decode();
-#endif
-#ifdef DIMU_HAVE_ADXL362
-	    adxl362Decode();
 #endif
 #ifdef DIMU_HAVE_HMC5983
 	    hmc5983Decode();
@@ -311,7 +310,8 @@ void dIMUInit(void) {
       AQ_NOTICE("DIMU: MAG sensor init failed!\n");
 #endif
 #ifdef DIMU_HAVE_MS5611
-    ms5611Init();
+    if (ms5611Init() == 0)
+      AQ_NOTICE("DIMU: PRES sensor init failed!\n");
 #endif
     dIMUTaskStack = aqStackInit(DIMU_STACK_SIZE, "DIMU");
 
