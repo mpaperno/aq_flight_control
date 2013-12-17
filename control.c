@@ -76,6 +76,10 @@ void controlTaskCode(void *unused) {
 		if (navData.mode > NAV_STATUS_MANUAL) {
 		    // override throttle with nav's request
 		    throttle = pidUpdate(navData.altSpeedPID, navData.holdSpeedAlt, -UKF_VELD) * MOTORS_SCALE / RADIO_MID_THROTTLE;
+
+                    // don't allow negative throttle to be built up
+                    if (navData.altSpeedPID->iState < 0.0f)
+                      navData.altSpeedPID->iState = 0.0f;
 		}
 		else {
 		    throttle = ((uint32_t)RADIO_THROT - p[CTRL_MIN_THROT]) * MOTORS_SCALE / RADIO_MID_THROTTLE * p[CTRL_FACT_THRO];
