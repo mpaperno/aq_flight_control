@@ -1108,7 +1108,7 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferSRC;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-//    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
+    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     SDDMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     SDDMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
@@ -1142,7 +1142,7 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
     SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferDST;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
-//    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
+    SDDMA_InitStructure.DMA_BufferSize = BufferSize / 4;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     SDDMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
     SDDMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
