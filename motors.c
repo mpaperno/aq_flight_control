@@ -249,7 +249,7 @@ static void motorsCanInit(int i) {
 	AQ_PRINTF("Motors: cannot find CAN id [%d]\n", i+1);
     }
     else {
-#ifdef USE_L1_ATTITUDE
+#ifdef USE_QUATOS
 	esc32SetupCan(motorsData.can[i], 1);
 #else
 	esc32SetupCan(motorsData.can[i], 0);
@@ -260,7 +260,7 @@ static void motorsCanInit(int i) {
 }
 
 static void motorsPwmInit(int i) {
-#if defined(USE_L1_ATTITUDE) && !defined(HAS_ONBOARD_ESC)
+#if defined(USE_QUATOS) && !defined(HAS_ONBOARD_ESC)
     motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
 #else
     motorsData.pwm[i] = pwmInitOut(i, PWM_PRESCALE/MOTORS_PWM_FREQ, 0, 0);	    // open loop mode

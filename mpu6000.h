@@ -31,7 +31,7 @@
 #define MPU6000_BYTES		    15
 #define MPU6000_SLOT_SIZE	    ((MPU6000_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 
-#ifdef USE_L1_ATTITUDE
+#ifdef USE_QUATOS
     #define MPU6000_SLOTS	    80						    // 100Hz bandwidth
     #define MPU6000_DRATE_SLOTS	    (MPU6000_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
 #else
