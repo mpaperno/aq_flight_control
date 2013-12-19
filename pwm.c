@@ -82,7 +82,7 @@ void pwmICInit(const TIM_TypeDef *tim, uint16_t channel, uint16_t polarity) {
     TIM_ICInitStructure.TIM_ICPolarity = polarity;
     TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
     TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-    TIM_ICInitStructure.TIM_ICFilter = 0x0;
+    TIM_ICInitStructure.TIM_ICFilter = 0x08;
 
     TIM_ICInit((TIM_TypeDef *)tim, &TIM_ICInitStructure);
 }
