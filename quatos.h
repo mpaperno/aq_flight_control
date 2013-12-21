@@ -21,7 +21,7 @@
 
 #include "aq_math.h"
 
-extern void quatosInit(void);
+extern void quatosInit(float32_t innerDt, float32_t outerDt);
 extern void quatosReset(float32_t *quat);
 extern void quatos(float32_t *quatD, float32_t *rates, uint16_t *override);
 extern void quatosRate(float32_t *rates);

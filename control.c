@@ -267,7 +267,7 @@ void controlInit(void) {
     memset((void *)&controlData, 0, sizeof(controlData));
 
 #ifdef USE_QUATOS
-    quatosInit();
+    quatosInit(AQ_INNER_TIMESTEP, AQ_OUTER_TIMESTEP);
 #endif
 
     utilFilterInit3(controlData.userPitchFilter, AQ_INNER_TIMESTEP, 0.1f, 0.0f);
