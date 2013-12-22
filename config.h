@@ -406,5 +406,6 @@ extern int8_t configWriteFile(char *fname);
 extern void configSetParamByID(int id, float value);
 extern int8_t configFormatParam(char *buf, int n);
 extern int configParseParams(char *fileBuf, int size, int p1);
+extern int configGetParamIdByName(char *name);
 
 #endif

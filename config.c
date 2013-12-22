@@ -911,3 +911,16 @@ int8_t configWriteFile(char *fname) {
 void configSetParamByID(int id, float value) {
     p[id] = value;
 }
+
+int configGetParamIdByName(char *name) {
+    int i = -1;
+
+    for (i = 0; i < CONFIG_NUM_PARAMS; i++)
+	if (!strncmp(name, configParameterStrings[i], 16))
+	    break;
+
+    if (i == -1)
+	AQ_PRINTF("config: cannot find parmeter '%s'\n", name);
+
+    return i;
+}
