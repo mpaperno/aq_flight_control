@@ -34,7 +34,7 @@ gimbalStruct_t gimbalData __attribute__((section(".ccm")));
 
 void gimbalInit(void) {
     uint16_t pwmPeriod;
-    int8_t initPitchPort, initRollPort, initTiltPort, initTrigPort, initPsthrPort;
+    int8_t chkTim, initPitchPort, initRollPort, initTiltPort, initTrigPort, initPsthrPort;
 
     AQ_NOTICE("Gimbal init\n");
 
@@ -53,13 +53,15 @@ void gimbalInit(void) {
 	return;
     }
 
-    pwmPeriod = 200.0f / p[GMBL_PWM_FREQ] * 5000;
+    chkTim = ((int)p[GMBL_PWM_FREQ] != MOTORS_PWM_FREQ);
 
-    initPitchPort = (p[GMBL_PITCH_PORT] && !pwmCheckTimer(p[GMBL_PITCH_PORT]-1));
-    initRollPort = (p[GMBL_ROLL_PORT] && !pwmCheckTimer(p[GMBL_ROLL_PORT]-1));
-    initTiltPort = (p[GMBL_TILT_PORT] && p[GMBL_TILT_PORT] != p[GMBL_PITCH_PORT] && !pwmCheckTimer(p[GMBL_TILT_PORT]-1));
-    initTrigPort = (p[GMBL_TRIG_PORT] && !pwmCheckTimer(p[GMBL_TRIG_PORT]-1));
-    initPsthrPort = (p[GMBL_PSTHR_PORT] && !pwmCheckTimer(p[GMBL_PSTHR_PORT]-1) && p[GMBL_PSTHR_CHAN] && (int)p[GMBL_PSTHR_CHAN] <= RADIO_MAX_CHANNELS);
+    initPitchPort = (p[GMBL_PITCH_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_PITCH_PORT]-1)));
+    initRollPort = (p[GMBL_ROLL_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_ROLL_PORT]-1)));
+    initTiltPort = (p[GMBL_TILT_PORT] && p[GMBL_TILT_PORT] != p[GMBL_PITCH_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_TILT_PORT]-1)));
+    initTrigPort = (p[GMBL_TRIG_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_TRIG_PORT]-1)));
+    initPsthrPort = (p[GMBL_PSTHR_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_PSTHR_PORT]-1)) && p[GMBL_PSTHR_CHAN] && (int)p[GMBL_PSTHR_CHAN] <= RADIO_MAX_CHANNELS);
+
+    pwmPeriod = PWM_PRESCALE / (int)p[GMBL_PWM_FREQ];
 
     if (initPitchPort) {
 	gimbalData.pitchPort = pwmInitOut(p[GMBL_PITCH_PORT]-1, pwmPeriod, p[GMBL_NTRL_PITCH], -1);
