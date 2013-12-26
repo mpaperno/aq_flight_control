@@ -52,6 +52,8 @@ typedef struct {
 typedef struct {
     unsigned char state;
     unsigned char dataCount;
+    unsigned char validFrame;
+    unsigned long lastCharReceived;
 
     union {
 	uint8_t rawBuf[23];

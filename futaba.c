@@ -22,12 +22,14 @@
 #include "aq_mavlink.h"
 #include "imu.h"
 #include "util.h"
+#include "aq_timer.h"
 #include <string.h>
 
 futabaStruct_t futabaData __attribute__((section(".ccm")));
 
 int futabaDecode(void) {
     if (futabaData.u.rawBuf[22] & 0b0100) {
+	radioData.errorCount++;
 	return -1;
     }
     else {
@@ -56,11 +58,21 @@ int futabaDecode(void) {
 }
 
 int futabaCharIn(unsigned char c) {
+
+    // force top of frame if its been more than 3ms since last input
+    // this is a safeguard in case we started receiving bytes in the middle of a frame
+    // shortest Futaba frame = 7ms - 3ms for data = 4ms minimum gap
+    if (timerMicros() - futabaData.lastCharReceived > 3000)
+	futabaData.state = FUTABA_WAIT_SYNC;
+
+    futabaData.lastCharReceived = timerMicros();
+
     switch (futabaData.state) {
     case FUTABA_WAIT_SYNC:
 	if (c == FUTABA_START_CHAR) {
 	    futabaData.state = FUTABA_WAIT_DATA;
 	    futabaData.dataCount = 0;
+	    futabaData.validFrame = 0;
 	}
 	break;
 
@@ -68,13 +80,16 @@ int futabaCharIn(unsigned char c) {
 	futabaData.u.rawBuf[futabaData.dataCount++] = c;
 	if (futabaData.dataCount == 23)
 	    futabaData.state = FUTABA_WAIT_END;
+	// make sure at least one channel value byte is > 0
+	// all zeros means something is wrong with Rx (observed in the wild)
+	if (c)
+	    futabaData.validFrame = 1;
 	break;
 
     case FUTABA_WAIT_END:
 	futabaData.state = FUTABA_WAIT_SYNC;
-	if ((c & FUTABA_END_CHAR) == 0) {
+	if ((c & FUTABA_END_CHAR) == 0 && futabaData.validFrame)
 	    return futabaDecode();
-	}
 	break;
     }
 
@@ -82,21 +97,9 @@ int futabaCharIn(unsigned char c) {
 }
 
 void futabaInit(void) {
-//    USART_InitTypeDef USART_InitStructure;
-
     memset((void *)&futabaData, 0, sizeof(futabaData));
 
     radioData.serialPort = serialOpen(FUTABA_UART, FUTABA_BAUD, USART_HardwareFlowControl_None, FUTABA_RXBUF_SIZE, 0);
-
-    // modify default serial configuration
-//    USART_StructInit(&USART_InitStructure);
-//    USART_InitStructure.USART_BaudRate = FUTABA_BAUD;
-//    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-//    USART_InitStructure.USART_StopBits = USART_StopBits_2;
-//    USART_InitStructure.USART_Parity = USART_Parity_Even;
-//    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-//    USART_InitStructure.USART_Mode = USART_Mode_Rx;
-//    USART_Init(RC1_UART, &USART_InitStructure);
-//
-//    USART_Cmd(RC1_UART, ENABLE);
+    serialChangeParity(radioData.serialPort, USART_Parity_Even);
+    serialChangeStopBits(radioData.serialPort, USART_StopBits_2);
 }
