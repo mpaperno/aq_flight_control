@@ -160,6 +160,7 @@ void info(void) {
     AQ_PRINTF("%u/%u heap used/high water\n", heapUsed, heapHighWater);
     AQ_PRINTF("%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
 
+    yield(50);
     utilVersionString();
 }
 
