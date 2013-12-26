@@ -89,8 +89,8 @@ void serialOpenUART(serialPort_t *s) {
     USART_StructInit(&USART_InitStructure);
     USART_InitStructure.USART_BaudRate = s->baudRate;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_StopBits = s->stopBits;
+    USART_InitStructure.USART_Parity = s->parity;
     USART_InitStructure.USART_HardwareFlowControl = s->flowControl;
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
     USART_Init(s->USARTx, &USART_InitStructure);
@@ -633,6 +633,8 @@ serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, uint16_t flow
     s->txHead = s->txTail = 0;
     s->baudRate = baud;
     s->flowControl = flowControl;
+    s->parity = USART_Parity_No;
+    s->stopBits = USART_StopBits_1;
 
     serialOpenUART(s);
 
@@ -746,6 +748,16 @@ void serialPrint(serialPort_t *s, const char *str) {
 
 void serialChangeBaud(serialPort_t *s, unsigned int baud) {
     s->baudRate = baud;
+    serialOpenUART(s);
+}
+
+void serialChangeParity(serialPort_t *s, uint16_t parity) {
+    s->parity = parity;
+    serialOpenUART(s);
+}
+
+void serialChangeStopBits(serialPort_t *s, uint16_t stopBits) {
+    s->stopBits = stopBits;
     serialOpenUART(s);
 }
 

@@ -29,6 +29,8 @@ typedef void serialTxDMACallback_t(void *s);
 typedef struct {
     unsigned int baudRate;
     uint16_t flowControl;
+    uint16_t parity;
+    uint16_t stopBits;
 
     unsigned int txBufSize;
     volatile unsigned char *txBuf;
@@ -54,6 +56,8 @@ typedef struct {
 
 extern serialPort_t *serialOpen(USART_TypeDef *USARTx, unsigned int baud, uint16_t flowControl, unsigned int rxBufSize, unsigned int txBufSize);
 extern void serialChangeBaud(serialPort_t *s, unsigned int baud);
+extern void serialChangeParity(serialPort_t *s, uint16_t parity);
+extern void serialChangeStopBits(serialPort_t *s, uint16_t stopBits);
 extern void serialSetSTDIO(serialPort_t *s);
 extern void serialWrite(serialPort_t *s, unsigned char ch);
 extern void serialWatch(void);
