@@ -102,7 +102,7 @@ void navSetHfReference(uint8_t refType) {
 	navData.hfReferenceCos = navUkfData.yawCos;
 	navData.hfReferenceSin = navUkfData.yawSin;
 	navData.hfUseStoredReference = 1;
-    } else if (navData.fixType) {
+    } else if (navData.navCapable) {
 	// use current bearing from home position
 	float homeBearing = navCalcBearing(navData.homeLeg.targetLat, navData.homeLeg.targetLon, gpsData.lat, gpsData.lon);
 	if (fabsf(homeBearing - navData.bearingToHome) > NAV_HF_HOME_BRG_D_MAX) {
@@ -225,6 +225,25 @@ void navLoadLeg(uint8_t leg) {
 #endif
 }
 
+// Set fixType as a rough indication of GPS data quality
+void navSetFixType(void) {
+    unsigned long posTimeDlta = IMU_LASTUPD - gpsData.lastPosUpdate;
+    float hAccMsk = gpsData.hAcc + runData.accMask;
+
+    if (posTimeDlta < NAV_MAX_GPS_AGE && hAccMsk < NAV_MIN_GPS_ACC)
+	navData.fixType = 3;
+    else if (posTimeDlta < NAV_MAX_FIX_AGE && hAccMsk < NAV_MIN_FIX_ACC)
+	navData.fixType = 2;
+    else
+	navData.fixType = 0;
+
+    if (navData.fixType == 3) {
+	digitalHi(gpsData.gpsLed);
+    } else {
+	digitalLo(gpsData.gpsLed);
+    }
+}
+
 void navNavigate(void) {
     unsigned long currentTime;
     unsigned char leg = navData.missionLeg;
@@ -232,20 +251,14 @@ void navNavigate(void) {
 
     currentTime = IMU_LASTUPD;
 
-    // de-activate GPS LED
-    digitalLo(gpsData.gpsLed);
+    navSetFixType();
 
-    // do we have a sufficient, recent fix?
-    if ((currentTime - gpsData.lastPosUpdate) < NAV_MAX_FIX_AGE && (gpsData.hAcc + runData.accMask) < NAV_MIN_GPS_ACC) {
-	// activate GPS LED
-	digitalHi(gpsData.gpsLed);
+    // is there sufficient position accuracy to navigate?
+    if (navData.fixType == 3)
 	navData.navCapable = 1;
-    }
     // do not drop out of mission due to (hopefully) temporary GPS degradation
-    else if (navData.mode < NAV_STATUS_POSHOLD) {
-	// Cannot Navigate
+    else if (navData.mode < NAV_STATUS_POSHOLD)
 	navData.navCapable = 0;
-    }
 
     // Can we navigate && do we want to be in mission mode?
     if (supervisorData.state > STATE_DISARMED && navData.navCapable && RADIO_FLAPS > 250) {
@@ -575,13 +588,6 @@ void navNavigate(void) {
 	if (navData.missionLegs[leg].type == NAV_LEG_LAND && IMU_ACCZ < NAV_LANDING_DECEL)
 	    // shut everything down (sure hope we are really on the ground :)
 	    supervisorDisarm();
-    }
-
-    if (gpsData.lat != (double)0.0 && gpsData.lon != (double)0.0) {
-	if (navData.navCapable)
-	    navData.fixType = 3;
-	else
-	    navData.fixType = 2;
     }
 
     navData.lastUpdate = currentTime;

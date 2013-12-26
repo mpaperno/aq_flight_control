@@ -22,10 +22,11 @@
 #include <CoOS.h>
 #include "pid.h"
 
-#define NAV_MIN_GPS_ACC		3.0f
-#define NAV_MAX_FIX_AGE		((int)1e6f)				    // 1 second
+#define NAV_MIN_GPS_ACC		3.0f					    // minimum gps hAcc needed to enter auto nav modes, in meters
+#define NAV_MAX_GPS_AGE		1e6					    // maximum age of position update needed to enter auto nav modes, in microseconds
+#define NAV_MIN_FIX_ACC		4.0f					    // minimum gps hAcc still considered a valid "2D" fix, in meters
+#define NAV_MAX_FIX_AGE		10e6					    // maximum age of position update still considered a valid "2D" fix, in microseconds
 
-//#define NAV_LANDING_VEL		0.33f					    // default landing/takeoff vertical velocity
 #define NAV_LANDING_DECEL	(-1.5f * GRAVITY)			    // deceleration needed to indicate a landing (1.5g)
 
 #define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
