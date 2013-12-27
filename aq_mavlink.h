@@ -55,13 +55,18 @@
 #define AQMAVLINK_STREAM_RATE_EXTRA3		0
 
 typedef struct {
+    unsigned long interval;
+    unsigned long dfltInterval;
+    unsigned long next;
+    uint8_t enable;
+} mavlinkStreams_t;
+
+typedef struct {
     mavlink_status_t mavlinkStatus;
+    mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;
-
-    unsigned long streamInterval[AQMAVLINK_TOTAL_STREAMS];
-    unsigned long streamNext[AQMAVLINK_TOTAL_STREAMS];
 
     // this is a temporary implementation until we adopt mavlink completely
     int numParams;
@@ -78,10 +83,7 @@ typedef struct {
 
     unsigned long lastCounter;
 
-    uint8_t sendTelemetry;  // enable/disable telemetry messages
     uint8_t indexTelemetry; // current index in telemetry sequence
-    unsigned long telemetryFrequency; // how often to send data, in us
-    unsigned long nextTelemetry; // micros counter for next data send
 
 } mavlinkStruct_t;
 
