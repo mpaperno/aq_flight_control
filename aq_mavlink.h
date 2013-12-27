@@ -73,7 +73,6 @@ typedef struct {
 
     uint16_t packetDrops;
     uint16_t idlePercent;
-    uint32_t nav_mode;		// TODO: move to mavlink_system, pending submitted mavlink project patch.
     uint8_t wpTargetSysId;
     uint8_t wpTargetCompId;
     uint8_t wpCount;
