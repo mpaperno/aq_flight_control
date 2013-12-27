@@ -32,7 +32,9 @@
 
 #define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    // 1Hz
 #define MAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
-#define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second
+#define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second - retry frequency for waypoint requests to planner
+#define MAVLINK_WP_MAX_ATTEMPTS		    20			    // maximum number of retries for wpnt. requests
+
 #define MAVLINK_NOTICE_DEPTH		    25
 #define MAVLINK_PARAMID_LEN		    16
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
@@ -72,6 +74,7 @@ typedef struct {
     uint8_t wpCount;
     uint8_t wpCurrent;
     uint32_t wpNext;
+    uint8_t wpAttempt;
 
     unsigned long lastCounter;
 
