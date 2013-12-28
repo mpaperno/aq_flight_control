@@ -23,8 +23,7 @@
 
 extern void quatosInit(float32_t innerDt, float32_t outerDt);
 extern void quatosReset(float32_t *quat);
-extern void quatos(float32_t *quatD, float32_t *rates, uint16_t *override);
-extern void quatosRate(float32_t *rates);
+extern void quatos(float32_t *quatActual, float32_t *quatDesired, float32_t *ratesActual, float32_t *ratesDesired, uint16_t *overrides);
 extern void quatosPowerDistribution(float32_t hoverThrot);
 
 #endif

@@ -47,10 +47,11 @@ OS_STK *controlTaskStack;
 void controlTaskCode(void *unused) {
     float yaw;
     float throttle;
-    float rates[3];
+    float ratesDesired[3];
     uint16_t overrides[3];
 #ifdef USE_QUATOS
-    float quat[4];
+    float quatDesired[4];
+    float ratesActual[3];
 #else
     float pitch, roll;
     float pitchCommand, rollCommand, ruddCommand;
@@ -135,12 +136,12 @@ void controlTaskCode(void *unused) {
 		if (RADIO_RUDD > p[CTRL_DEAD_BAND] || RADIO_RUDD < -p[CTRL_DEAD_BAND]) {
 		    // fisrt remove dead band
 		    if (RADIO_RUDD > p[CTRL_DEAD_BAND])
-			rates[2] = (RADIO_RUDD - p[CTRL_DEAD_BAND]);
+			ratesDesired[2] = (RADIO_RUDD - p[CTRL_DEAD_BAND]);
 		    else
-			rates[2] = (RADIO_RUDD + p[CTRL_DEAD_BAND]);
+			ratesDesired[2] = (RADIO_RUDD + p[CTRL_DEAD_BAND]);
 
 		    // calculate desired rate based on full stick scale
-		    rates[2] = rates[2] * p[CTRL_MAN_YAW_RT] * DEG_TO_RAD * (1.0f / 700.0f);
+		    ratesDesired[2] = ratesDesired[2] * p[CTRL_MAN_YAW_RT] * DEG_TO_RAD * (1.0f / 700.0f);
 
 		    // keep up with actual craft heading
 		    controlData.yaw = AQ_YAW;
@@ -153,7 +154,7 @@ void controlTaskCode(void *unused) {
 		    // currently overriding?
 		    if (overrides[2] > 0) {
 			// request zero rate
-			rates[2] = 0.0f;
+			ratesDesired[2] = 0.0f;
 
 			// follow actual craft heading
 			controlData.yaw = AQ_YAW;
@@ -168,21 +169,25 @@ void controlTaskCode(void *unused) {
 		// determine which frame of reference to control from
 		if (navData.mode <= NAV_STATUS_ALTHOLD)
 		    // craft frame - manual
-		    eulerToQuatYPR(quat, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
+		    eulerToQuatYPR(quatDesired, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
 		else
 		    // world frame - autonomous
-		    eulerToQuatRPY(quat, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
+		    eulerToQuatRPY(quatDesired, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
 
 		// reset controller on startup
 		if (motorsData.throttle == 0) {
-		    quat[0] = UKF_Q1;
-		    quat[1] = UKF_Q2;
-		    quat[2] = UKF_Q3;
-		    quat[3] = UKF_Q4;
-		    quatosReset(quat);
+		    quatDesired[0] = UKF_Q1;
+		    quatDesired[1] = UKF_Q2;
+		    quatDesired[2] = UKF_Q3;
+		    quatDesired[3] = UKF_Q4;
+		    quatosReset(quatDesired);
 		}
 
-		quatos(quat, rates, overrides);
+		ratesActual[0] = IMU_DRATEX + UKF_GYO_BIAS_X;
+		ratesActual[1] = IMU_DRATEY + UKF_GYO_BIAS_Y;
+		ratesActual[2] = IMU_DRATEZ + UKF_GYO_BIAS_Z;
+		quatos(&UKF_Q1, quatDesired, ratesActual, ratesDesired, overrides);
+
 		quatosPowerDistribution(throttle);
 		motorsSendThrust();
 		motorsData.throttle = throttle;
@@ -231,7 +236,7 @@ void controlTaskCode(void *unused) {
 		// yaw rate override?
 		if (overrides[2] > 0)
 		    // manual yaw rate
-		    ruddCommand = pidUpdate(controlData.yawRatePID, rates[2], IMU_DRATEZ);
+		    ruddCommand = pidUpdate(controlData.yawRatePID, ratesDesired[2], IMU_DRATEZ);
 		else
 		    // seek a 0 deg difference between hold heading and actual yaw
 		    ruddCommand = pidUpdate(controlData.yawRatePID, pidUpdate(controlData.yawAnglePID, 0.0f, compassDifference(controlData.yaw, AQ_YAW)), IMU_DRATEZ);
