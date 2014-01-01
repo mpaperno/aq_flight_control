@@ -48,7 +48,7 @@
 #define AQMAVLINK_STREAM_RATE_RC_CHANNELS	1e6	    // channels and outputs at 1Hz
 #define AQMAVLINK_STREAM_RATE_RAW_CONTROLLER	(1e6/10)    // attitude at 10Hz
 #define AQMAVLINK_STREAM_RATE_POSITION		1e6	    // position at 1Hz
-#define AQMAVLINK_STREAM_RATE_EXTRA1		0	    // home position data
+#define AQMAVLINK_STREAM_RATE_EXTRA1		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA2		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA3		0	    // AQ custom telemetry options
 
@@ -90,6 +90,7 @@ extern void mavlinkInit(void);
 extern void mavlinkSendNotice(const char *s);
 extern void mavlinkWpReached(uint16_t seqId);
 extern void mavlinkWpAnnounceCurrent(uint16_t seqId);
+extern void mavlinkAnnounceHome(void);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 extern void mavlinkDo(void);
 extern void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len);

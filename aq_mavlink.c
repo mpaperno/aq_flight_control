@@ -72,6 +72,17 @@ void mavlinkWpAnnounceCurrent(uint16_t seqId) {
     mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
 }
 
+// send new home position coordinates
+void mavlinkAnnounceHome(void) {
+    mavlink_msg_gps_global_origin_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7f, navData.homeLeg.targetLon*(double)1e7, (navData.homeLeg.targetAlt + navUkfData.presAltOffset)*1e3);
+    // announce ceiling altitude if any
+    float ca = navData.ceilingAlt;
+    if (ca)
+	// convert to GPS altitude
+	ca += navUkfData.presAltOffset;
+    mavlink_msg_safety_allowed_area_send(MAVLINK_COMM_0, MAV_FRAME_GLOBAL, 0, 0, ca, 0, 0, 0);
+}
+
 void mavlinkSendNotice(const char *s) {
     mavlink_msg_statustext_send(MAVLINK_COMM_0, 0, (const char *)s);
 }
@@ -216,12 +227,6 @@ void mavlinkDo(void) {
 		(IMU_RATEY - UKF_GYO_BIAS_Y)*DEG_TO_RAD, (IMU_RATEZ - UKF_GYO_BIAS_Z)*DEG_TO_RAD);
 	mavlink_msg_nav_controller_output_send(MAVLINK_COMM_0, navData.holdTiltE, navData.holdTiltN, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, 0, 0);
 	mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].interval;
-    }
-    // EXTRA1 stream -- home position data
-    if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].next < micros)) {
-	mavlink_msg_vfr_hud_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7, navData.homeLeg.targetLon*(double)1e7, navData.homeLeg.targetAlt*1e3,
-		UKF_ALTITUDE*1e3, navData.ceilingAlt*1e3, gpsData.velD*1e3);
-	mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].next = micros + mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].interval;
     }
     // EXTRA3 stream -- AQ custom telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next < micros)) {
