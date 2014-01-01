@@ -628,13 +628,22 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 		case MAVLINK_MSG_ID_REQUEST_DATA_STREAM:
 		    if (mavlink_msg_request_data_stream_get_target_system(&msg) == mavlink_system.sysid) {
 			uint16_t rate;
-			uint8_t stream_id;
+			uint8_t stream_id, enable;
 
 			stream_id = mavlink_msg_request_data_stream_get_req_stream_id(&msg);
 			rate = mavlink_msg_request_data_stream_get_req_message_rate(&msg);
 			rate = constrainInt(rate, 0, 200);
+			enable = mavlink_msg_request_data_stream_get_start_stop(&msg);
+
+			// STREAM_ALL is special:
+			// to disable all streams entirely (except heartbeat), set STREAM_ALL start = 0
+			// to enable literally all streams at a certain rate, set STREAM_ALL rate > 0 and start = 1;
+			// set rate = 0 and start = 1 to disable sending all data and return back to your regularly scheduled streams :)
+			if (stream_id == MAV_DATA_STREAM_ALL)
+			    mavlinkToggleStreams(enable);
+
 			if (stream_id < AQMAVLINK_TOTAL_STREAMS) {
-			    mavlinkData.streams[stream_id].enable = rate && mavlink_msg_request_data_stream_get_start_stop(&msg);
+			    mavlinkData.streams[stream_id].enable = rate && enable;
 			    mavlinkData.streams[stream_id].interval = rate ? 1e6 / rate : 0;
 			    mavlink_msg_data_stream_send(MAVLINK_COMM_0, stream_id, rate, mavlinkData.streams[stream_id].enable);
 			}
