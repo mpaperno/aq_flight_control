@@ -31,60 +31,55 @@
 #pragma GCC diagnostic pop
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
-#define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
+#define MAVLINK_SEND_UART_BYTES			mavlinkSendPacket
 
-#define AQMAVLINK_HEARTBEAT_INTERVAL	    1e6f		    // 1Hz
-#define AQMAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
-#define AQMAVLINK_WP_TIMEOUT		    1e6f		    // 1 second - retry frequency for waypoint requests to planner
-#define AQMAVLINK_WP_MAX_ATTEMPTS		    20			    // maximum number of retries for wpnt. requests
-
-//#define MAVLINK_NOTICE_DEPTH		    25
-#define AQMAVLINK_PARAMID_LEN		    16
+#define AQMAVLINK_HEARTBEAT_INTERVAL		1e6f		    // 1Hz
+#define AQMAVLINK_PARAM_INTERVAL		(1e6f / 150.0f)	    // 150Hz
+#define AQMAVLINK_WP_TIMEOUT			1e6f		    // 1 second - retry frequency for waypoint requests to planner
+#define AQMAVLINK_WP_MAX_ATTEMPTS		20		    // maximum number of retries for wpnt. requests
+#define AQMAVLINK_CUSTOM_TELEM_TYPE_DFLT	1		    // default mavlinkData.customTelemType
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
-#define AQMAVLINK_TOTAL_STREAMS		    13
-
+#define AQMAVLINK_TOTAL_STREAMS			13
 // default stream rates in microseconds
 #define AQMAVLINK_STREAM_RATE_ALL		0
-#define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0
-#define AQMAVLINK_STREAM_RATE_EXTENDED_STATUS	0
+#define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0	    // IMU and baro
+#define AQMAVLINK_STREAM_RATE_EXTENDED_STATUS	1e6	    // system status at 1Hz
 #define AQMAVLINK_STREAM_RATE_RC_CHANNELS	1e6	    // channels and outputs at 1Hz
 #define AQMAVLINK_STREAM_RATE_RAW_CONTROLLER	(1e6/10)    // attitude at 10Hz
 #define AQMAVLINK_STREAM_RATE_POSITION		1e6	    // position at 1Hz
-#define AQMAVLINK_STREAM_RATE_EXTRA1		0
-#define AQMAVLINK_STREAM_RATE_EXTRA2		0
-#define AQMAVLINK_STREAM_RATE_EXTRA3		0
+#define AQMAVLINK_STREAM_RATE_EXTRA1		0	    // home position data
+#define AQMAVLINK_STREAM_RATE_EXTRA2		0	    // unused
+#define AQMAVLINK_STREAM_RATE_EXTRA3		0	    // AQ custom telemetry options
 
 typedef struct {
-    unsigned long interval;
-    unsigned long dfltInterval;
-    unsigned long next;
-    uint8_t enable;
+    unsigned long interval;	    // how often to send stream in us (zero to disable)
+    unsigned long dfltInterval;	    // default stream interval at startup
+    unsigned long next;		    // when to send next stream data
+    uint8_t enable;		    // enable/disable stream
 } mavlinkStreams_t;
 
 typedef struct {
     mavlink_status_t mavlinkStatus;
     mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
+
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;
 
-    // this is a temporary implementation until we adopt mavlink completely
-    int numParams;
-
-    uint16_t packetDrops;
-    uint16_t idlePercent;
-    uint8_t wpTargetSysId;
-    uint8_t wpTargetCompId;
-    uint8_t wpCount;
-    uint8_t wpCurrent;
-    uint32_t wpNext;
-    uint8_t wpAttempt;
-
-    unsigned long lastCounter;
-
+    uint16_t packetDrops;	// global packet drop counter
+    uint16_t idlePercent;	// MCU idle time
+    unsigned long lastCounter;	// used to calculate idle time
     uint8_t indexPort;		// current port # in channels/servo outputs sequence
     uint8_t indexTelemetry;	// current index in telemetry sequence
+
+    // waypoint programming from mission planner
+    uint8_t wpTargetSysId;
+    uint8_t wpTargetCompId;
+    uint8_t wpCount;		// total waypoints to expect from planner after mission_count msg
+    uint8_t wpCurrent;		// current wpt sequence # requested/expected from planner
+    uint32_t wpNext;		// when to send the next wpt request to planner
+    uint8_t wpAttempt;		// count of consecutive wpt requests for same sequence #
 
 } mavlinkStruct_t;
 
