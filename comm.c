@@ -63,7 +63,7 @@ uint8_t commStreamUsed(uint8_t streamType) {
 void commRegisterNoticeFunc(commNoticeCallback_t *func) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+    for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
 	if (commData.noticeFuncs[i] == 0) {
 	    commData.noticeFuncs[i] = func;
 	    break;
@@ -74,7 +74,7 @@ void commRegisterNoticeFunc(commNoticeCallback_t *func) {
 void commRegisterTelemFunc(commTelemCallback_t *func) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+    for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
 	if (commData.telemFuncs[i] == 0) {
 	    commData.telemFuncs[i] = func;
 	    break;
@@ -85,7 +85,7 @@ void commRegisterTelemFunc(commTelemCallback_t *func) {
 void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func) {
     int i;
 
-    for (i = 0; i < COMM_MAX_PROTOCOLS; i++) {
+    for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
 	if (commData.streamRcvrs[i] == 0) {
 	    commData.streamRcvrs[i] = streamType;
 	    commData.rcvrFuncs[i] = func;
@@ -293,7 +293,7 @@ static void commCheckNotices(void) {
 	filerSetHead(commData.logHandle, commData.logPointer);
 #endif
 
-	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
+	for (i = 0; i < COMM_MAX_CONSUMERS; i++)
 	    if (commData.noticeFuncs[i])
 		commData.noticeFuncs[i](s);
     }
@@ -303,7 +303,7 @@ static void commCheckTelem(void) {
     int i;
 
     if (CoAcceptSingleFlag(runData.runFlag) == E_OK)
-	for (i = 0; i < COMM_MAX_PROTOCOLS; i++)
+	for (i = 0; i < COMM_MAX_CONSUMERS; i++)
 	    if (commData.telemFuncs[i])
 		commData.telemFuncs[i]();
 }
@@ -313,10 +313,10 @@ static void commCheckRcvr(void) {
     int i, j;
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
-	if (commData.portStreams[i] && serialAvailable(commData.serialPorts[i])) {
-	    for (j = 0; j < COMM_MAX_PROTOCOLS; j++) {
+        r.s = commData.serialPorts[i];
+	if (commData.portStreams[i] && commAvailable(&r)) {
+	    for (j = 0; j < COMM_MAX_CONSUMERS; j++) {
 		if (commData.streamRcvrs[j] == commData.portStreams[i]) {
-		    r.s = commData.serialPorts[i];
 		    commData.rcvrFuncs[j](&r);
 		}
 	    }

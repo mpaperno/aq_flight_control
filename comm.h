@@ -47,7 +47,7 @@
 #define COMM_STACK_DEPTH	32			// number of outstanding requests allowed (per port)
 #define COMM_TX_NUM_SIZES	6
 
-#define COMM_MAX_PROTOCOLS	3
+#define COMM_MAX_CONSUMERS	5
 
 #define AQ_NOTICE		commNotice
 #define AQ_PRINTF(fmt, args...)	{char *sTemp = commGetNoticeBuf(); snprintf(sTemp, COMM_NOTICE_LENGTH, fmt, args); commNotice(sTemp);}
@@ -106,10 +106,10 @@ typedef struct {
 
     serialPort_t *serialPorts[COMM_NUM_PORTS];		    // serial port handles
 
-    commNoticeCallback_t *noticeFuncs[COMM_MAX_PROTOCOLS];  // notice callbacks
-    commTelemCallback_t *telemFuncs[COMM_MAX_PROTOCOLS];    // telemetry callbacks
-    uint8_t streamRcvrs[COMM_MAX_PROTOCOLS];
-    commRcvrCallback_t *rcvrFuncs[COMM_MAX_PROTOCOLS];
+    commNoticeCallback_t *noticeFuncs[COMM_MAX_CONSUMERS];  // notice callbacks
+    commTelemCallback_t *telemFuncs[COMM_MAX_CONSUMERS];    // telemetry callbacks
+    uint8_t streamRcvrs[COMM_MAX_CONSUMERS];
+    commRcvrCallback_t *rcvrFuncs[COMM_MAX_CONSUMERS];
 
     commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
 
