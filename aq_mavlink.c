@@ -40,6 +40,7 @@
 #include "nav_ukf.h"
 #include "analog.h"
 #include "comm.h"
+#include "gimbal.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -149,7 +150,7 @@ void mavlinkDo(void) {
     static unsigned long mavCounter;
     static unsigned long lastMicros = 0;
     unsigned long micros, statusInterval;
-    int8_t battRemainPct, streamAll;
+    int8_t battRemainPct, streamAll, i;
 
     micros = timerMicros();
 
@@ -230,24 +231,50 @@ void mavlinkDo(void) {
     }
     // EXTRA3 stream -- AQ custom telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next < micros)) {
-	if ( mavlinkData.indexTelemetry == 0 ) {
-	    mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,0,AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
-		    navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, analogData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
+	for (i=0; i < AQMAV_DATASET_ENUM_END; ++i) {
+	    if (!mavlinkData.customDatasets[i])
+		continue;
+	    switch(i) {
+	    case AQMAV_DATASET_LEGACY1 :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
+			navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, analogData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
+		break;
+	    case AQMAV_DATASET_LEGACY2 :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,
+			navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, UKF_VELD,
+			RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, RADIO_ERROR_COUNT);
+		break;
+	    case AQMAV_DATASET_LEGACY3 :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, RADIO_FLAPS, RADIO_AUX2,
+			motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6],
+			motorsData.value[7], motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13]);
+		break;
+	    case AQMAV_DATASET_GPS_XTRA :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, gpsData.pDOP, gpsData.tDOP, gpsData.sAcc, gpsData.cAcc, gpsData.velN, gpsData.velE, gpsData.velD,
+			gpsData.lastPosUpdate, gpsData.lastMessage, 0,0,0,0,0,0,0,0,0,0,0);
+		break;
+	    case AQMAV_DATASET_UKF_XTRA :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, UKF_GYO_BIAS_X, UKF_GYO_BIAS_Y, UKF_GYO_BIAS_Z, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, UKF_Q1, UKF_Q2, UKF_Q3, UKF_Q4,
+			0,0,0,0,0,0,0,0,0,0);
+		break;
+	    case AQMAV_DATASET_SUPERVISOR :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, supervisorData.state, supervisorData.flightTime, supervisorData.flightTimeRemaining, supervisorData.flightSecondsAvg,
+			supervisorData.vInLPF, supervisorData.soc, supervisorData.lastGoodRadioMicros, 0,0,0,0,0,0,0,0,0,0,0,0,0);
+		break;
+	    case AQMAV_DATASET_STACKSFREE :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, utilGetStackFree("INIT"), utilGetStackFree("FILER"), utilGetStackFree("SUPERVISOR"), utilGetStackFree("ADC"),
+			utilGetStackFree("RADIO"), utilGetStackFree("CONTROL"), utilGetStackFree("GPS"), utilGetStackFree("RUN"), utilGetStackFree("COMM"), utilGetStackFree("DIMU"),
+			0,0,0,0,0,0,0,0,0,0);
+		break;
+	    case AQMAV_DATASET_GIMBAL :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, *gimbalData.pitchPort->ccr, *gimbalData.tiltPort->ccr, *gimbalData.rollPort->ccr, *gimbalData.triggerPort->ccr,
+			*gimbalData.passthroughPort->ccr, gimbalData.tilt, gimbalData.trigger, gimbalData.triggerLastTime, gimbalData.triggerLastLat, gimbalData.triggerLastLon,
+			gimbalData.triggerCount, 0,0,0,0,0,0,0,0,0);
+		break;
+	    }
 	}
-	else if ( mavlinkData.indexTelemetry == 1 ) {
-	    mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,1,gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,
-		    navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, UKF_VELD,
-		    RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, RADIO_ERROR_COUNT);
-	}
-	else if ( mavlinkData.indexTelemetry == 2 ) {
-	    mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,2,RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, RADIO_FLAPS, RADIO_AUX2,
-		    motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6],
-		    motorsData.value[7], motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13]);
-	}
-	if (++mavlinkData.indexTelemetry > 2) {
-	    mavlinkData.indexTelemetry = 0;
-	    mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next = micros + mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval;
-	}
+
+	mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next = micros + mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval;
     }
     // end streams
 
@@ -280,8 +307,9 @@ void mavlinkDo(void) {
 
 void mavlinkDoCommand(mavlink_message_t *msg) {
     uint16_t command;
-    float param, param2;
-    uint8_t ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
+    float param, param2, param3;
+    uint8_t enable, i,
+	ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
 
     command = mavlink_msg_command_long_get_command(msg);
 
@@ -312,16 +340,40 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 	    break;
 
-	// enable/disable diagnostic telemetry data message and set frequency
-	// TODO: this is for legacy client code, remove or improve at some point
-	// now can request diag. telemetry directly via EXTRA3 stream.
+	// enable/disable AQ custom dataset messages and set frequency
 	case MAV_CMD_AQ_TELEMETRY:
             param = mavlink_msg_command_long_get_param1(msg);	// start/stop
             param2 = mavlink_msg_command_long_get_param2(msg);	// interval in us
-            mavlinkToggleStreams(!param || !param2);
-            mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval = (unsigned long)param2;
-            mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable = param && param2;
-            ack = MAV_CMD_ACK_OK;
+            param3 = mavlink_msg_command_long_get_param3(msg);	// dataset id
+
+            if (param3 < AQMAV_DATASET_ENUM_END) {
+        	enable = (uint8_t)param;
+		mavlinkData.customDatasets[(uint8_t)param3] = enable;
+		// "legacy" diagnostic telemetry mode
+		if ((uint8_t)param3 == AQMAV_DATASET_LEGACY1) {
+		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY2] = enable;
+		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY3] = enable;
+		    // toggle all other streams because legacy mode sends a lot of data
+		    mavlinkToggleStreams(!enable);
+		}
+		// check if any datasets are active and enable/disable EXTRA3 stream accordingly
+		// AQMAV_DATASET_ALL is special and toggles all datasets
+		if (!enable && (uint8_t)param3 != AQMAV_DATASET_ALL) {
+		    for (i=0; i < AQMAV_DATASET_ENUM_END; ++i)
+			if (mavlinkData.customDatasets[i]) {
+			    enable = 1;
+			    break;
+			}
+		}
+		mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable = enable;
+		// note that specified interval currently affects all custom datasets in the EXTRA3 stream
+		if (param2)
+		    mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval = (unsigned long)param2;
+
+		ack = MAV_CMD_ACK_OK;
+            } else {
+        	ack = MAV_CMD_ACK_ERR_FAIL;
+            }
             break;
 
 	// send firmware version number;

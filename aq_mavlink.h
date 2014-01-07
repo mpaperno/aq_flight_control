@@ -52,6 +52,19 @@
 #define AQMAVLINK_STREAM_RATE_EXTRA2		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA3		0	    // AQ custom telemetry options
 
+enum mavlinkCustomDataSets {
+    AQMAV_DATASET_LEGACY1 = 0,	// legacy sets can eventually be phased out
+    AQMAV_DATASET_LEGACY2,
+    AQMAV_DATASET_LEGACY3,
+    AQMAV_DATASET_ALL,		// use this to toggle all datasets at once
+    AQMAV_DATASET_GPS_XTRA,
+    AQMAV_DATASET_UKF_XTRA,
+    AQMAV_DATASET_SUPERVISOR,
+    AQMAV_DATASET_STACKSFREE,
+    AQMAV_DATASET_GIMBAL,
+    AQMAV_DATASET_ENUM_END
+};
+
 typedef struct {
     unsigned long interval;	    // how often to send stream in us (zero to disable)
     unsigned long dfltInterval;	    // default stream interval at startup
@@ -62,6 +75,7 @@ typedef struct {
 typedef struct {
     mavlink_status_t mavlinkStatus;
     mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
+    uint8_t customDatasets[AQMAV_DATASET_ENUM_END];
 
     unsigned long nextHeartbeat;
     unsigned long nextParam;
@@ -71,7 +85,6 @@ typedef struct {
     uint16_t idlePercent;	// MCU idle time
     unsigned long lastCounter;	// used to calculate idle time
     uint8_t indexPort;		// current port # in channels/servo outputs sequence
-    uint8_t indexTelemetry;	// current index in telemetry sequence
 
     // waypoint programming from mission planner
     uint8_t wpTargetSysId;
