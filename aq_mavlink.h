@@ -30,15 +30,16 @@
 #include "../mavlink_types.h"
 #pragma GCC diagnostic pop
 
-#define MAVLINK_HEARTBEAT_INTERVAL	    1e6f		    // 1Hz
-#define MAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
-#define MAVLINK_WP_TIMEOUT		    1e6f		    // 1 second - retry frequency for waypoint requests to planner
-#define MAVLINK_WP_MAX_ATTEMPTS		    20			    // maximum number of retries for wpnt. requests
-
-#define MAVLINK_NOTICE_DEPTH		    25
-#define MAVLINK_PARAMID_LEN		    16
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
+
+#define AQMAVLINK_HEARTBEAT_INTERVAL	    1e6f		    // 1Hz
+#define AQMAVLINK_PARAM_INTERVAL		    (1e6f / 150.0f)	    // 150Hz
+#define AQMAVLINK_WP_TIMEOUT		    1e6f		    // 1 second - retry frequency for waypoint requests to planner
+#define AQMAVLINK_WP_MAX_ATTEMPTS		    20			    // maximum number of retries for wpnt. requests
+
+//#define MAVLINK_NOTICE_DEPTH		    25
+#define AQMAVLINK_PARAMID_LEN		    16
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
 #define AQMAVLINK_TOTAL_STREAMS		    13

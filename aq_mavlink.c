@@ -156,13 +156,13 @@ void mavlinkDo(void) {
 
 	// calculate idle time
 	mavCounter = counter;
-	mavlinkData.idlePercent = (mavCounter - mavlinkData.lastCounter) * minCycles * 1000.0f / (MAVLINK_HEARTBEAT_INTERVAL * rccClocks.SYSCLK_Frequency / 1e6f);
+	mavlinkData.idlePercent = (mavCounter - mavlinkData.lastCounter) * minCycles * 1000.0f / (AQMAVLINK_HEARTBEAT_INTERVAL * rccClocks.SYSCLK_Frequency / 1e6f);
 	mavlinkData.lastCounter = mavCounter;
 	battRemainPct = (analogData.vIn - p[SPVR_LOW_BAT2] * analogData.batCellCount) / ((4.2 - p[SPVR_LOW_BAT2]) * analogData.batCellCount) * 100;
 
 	mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, analogData.vIn * 1000, -1, battRemainPct, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
 
-	mavlinkData.nextHeartbeat = micros + MAVLINK_HEARTBEAT_INTERVAL;
+	mavlinkData.nextHeartbeat = micros + AQMAVLINK_HEARTBEAT_INTERVAL;
     }
 
     // send streams
@@ -242,21 +242,21 @@ void mavlinkDo(void) {
     if (mavlinkData.currentParam < mavlinkData.numParams && mavlinkData.nextParam < micros) {
 	mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[mavlinkData.currentParam], p[mavlinkData.currentParam], MAVLINK_TYPE_FLOAT, mavlinkData.numParams, mavlinkData.currentParam);
 	mavlinkData.currentParam++;
-	mavlinkData.nextParam = micros + MAVLINK_PARAM_INTERVAL;
+	mavlinkData.nextParam = micros + AQMAVLINK_PARAM_INTERVAL;
     }
 
     // request announced waypoints from mission planner
-    if (mavlinkData.wpCurrent < mavlinkData.wpCount && mavlinkData.wpAttempt <= MAVLINK_WP_MAX_ATTEMPTS && mavlinkData.wpNext < micros) {
+    if (mavlinkData.wpCurrent < mavlinkData.wpCount && mavlinkData.wpAttempt <= AQMAVLINK_WP_MAX_ATTEMPTS && mavlinkData.wpNext < micros) {
 	mavlinkData.wpAttempt++;
 	mavlink_msg_mission_request_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, mavlinkData.wpCurrent);
-	mavlinkData.wpNext = micros + MAVLINK_WP_TIMEOUT;
+	mavlinkData.wpNext = micros + AQMAVLINK_WP_TIMEOUT;
     }
     // or ack that last waypoint received
     else if (mavlinkData.wpCurrent == mavlinkData.wpCount) {
 	mavlink_msg_mission_ack_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, 0);
 	mavlinkData.wpCurrent++;
 	AQ_PRINTF("%u waypoints loaded.", mavlinkData.wpCount);
-    } else if (mavlinkData.wpAttempt > MAVLINK_WP_MAX_ATTEMPTS) {
+    } else if (mavlinkData.wpAttempt > AQMAVLINK_WP_MAX_ATTEMPTS) {
 	AQ_NOTICE("Error: Waypoint request timeout!");
     }
 
@@ -603,7 +603,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 
 			mavlink_msg_param_set_get_param_id(&msg, paramId);
 			for (i = 0; i < mavlinkData.numParams; i++) {
-			    if (!strncmp(paramId, configParameterStrings[i], MAVLINK_PARAMID_LEN)) {
+			    if (!strncmp(paramId, configParameterStrings[i], AQMAVLINK_PARAMID_LEN)) {
 				paramIndex = i;
 				break;
 			    }
