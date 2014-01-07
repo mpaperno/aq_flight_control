@@ -38,25 +38,35 @@
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #define MAVLINK_SEND_UART_BYTES		    mavlinkSendPacket
 
+// this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
+#define AQMAVLINK_TOTAL_STREAMS		    13
+
+// default stream rates in microseconds
+#define AQMAVLINK_STREAM_RATE_ALL		0
+#define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0
+#define AQMAVLINK_STREAM_RATE_EXTENDED_STATUS	0
+#define AQMAVLINK_STREAM_RATE_RC_CHANNELS	1e6	    // channels and outputs at 1Hz
+#define AQMAVLINK_STREAM_RATE_RAW_CONTROLLER	(1e6/10)    // attitude at 10Hz
+#define AQMAVLINK_STREAM_RATE_POSITION		1e6	    // position at 1Hz
+#define AQMAVLINK_STREAM_RATE_EXTRA1		0
+#define AQMAVLINK_STREAM_RATE_EXTRA2		0
+#define AQMAVLINK_STREAM_RATE_EXTRA3		0
+
 typedef struct {
     mavlink_status_t mavlinkStatus;
     unsigned long nextHeartbeat;
     unsigned long nextParam;
     unsigned int currentParam;
 
-    // TODO: pull actual count from header files
-    // the array lengths should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
-    unsigned long streamInterval[13];
-    unsigned long streamNext[13];
+    unsigned long streamInterval[AQMAVLINK_TOTAL_STREAMS];
+    unsigned long streamNext[AQMAVLINK_TOTAL_STREAMS];
 
     // this is a temporary implementation until we adopt mavlink completely
     int numParams;
 
     uint16_t packetDrops;
     uint16_t idlePercent;
-    uint8_t mode;
-    uint32_t nav_mode;
-    uint8_t status;
+    uint32_t nav_mode;		// TODO: move to mavlink_system, pending submitted mavlink project patch.
     uint8_t wpTargetSysId;
     uint8_t wpTargetCompId;
     uint8_t wpCount;
