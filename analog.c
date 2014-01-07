@@ -94,11 +94,11 @@ void analogInit(void) {
     ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_VIN, 1, ANALOG_SAMPLE_TIME);
     ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_EXT_VOLT, 2, ANALOG_SAMPLE_TIME);
     ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_EXT_AMP, 3, ANALOG_SAMPLE_TIME);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_13, 4, ANALOG_SAMPLE_TIME);
+    ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_SPARE4, 4, ANALOG_SAMPLE_TIME);
 
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_2, 5, ANALOG_SAMPLE_TIME);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_3, 6, ANALOG_SAMPLE_TIME);
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_14, 7, ANALOG_SAMPLE_TIME);
+    ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_SPARE5, 5, ANALOG_SAMPLE_TIME);
+    ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_SPARE6, 6, ANALOG_SAMPLE_TIME);
+    ADC_RegularChannelConfig(ADC1, ANALOG_CHANNEL_SPARE7, 7, ANALOG_SAMPLE_TIME);
 
     ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
 
