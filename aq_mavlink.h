@@ -82,7 +82,8 @@ typedef struct {
 
     unsigned long lastCounter;
 
-    uint8_t indexTelemetry; // current index in telemetry sequence
+    uint8_t indexPort;		// current port # in channels/servo outputs sequence
+    uint8_t indexTelemetry;	// current index in telemetry sequence
 
 } mavlinkStruct_t;
 

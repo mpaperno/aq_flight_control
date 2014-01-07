@@ -191,15 +191,19 @@ void mavlinkDo(void) {
 //	}
     // rc channels and pwm outputs
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].enable && mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next < micros)) {
-	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024, \
-		RADIO_GEAR+1024, RADIO_FLAPS+1024, RADIO_AUX2+1024, RADIO_AUX3+1024, RADIO_QUALITY);
-	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, RADIO_AUX4+1024, RADIO_AUX5+1024, RADIO_AUX6+1024, RADIO_AUX7+1024, \
-		radioData.channels[12]+1024, radioData.channels[13]+1024, radioData.channels[14]+1024, radioData.channels[15]+1024, RADIO_QUALITY);
-	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], \
-		motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
-	mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 1, motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], \
-		motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15]);
-	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].interval;
+	if (!mavlinkData.indexPort++) {
+	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024,
+		    RADIO_GEAR+1024, RADIO_FLAPS+1024, RADIO_AUX2+1024, RADIO_AUX3+1024, RADIO_QUALITY);
+	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3],
+		    motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
+	} else {
+	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, RADIO_AUX4+1024, RADIO_AUX5+1024, RADIO_AUX6+1024, RADIO_AUX7+1024,
+		    radioData.channels[12]+1024, radioData.channels[13]+1024, radioData.channels[14]+1024, radioData.channels[15]+1024, RADIO_QUALITY);
+	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 1, motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11],
+		    motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15]);
+	    mavlinkData.indexPort = 0;
+	}
+	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].interval / 2;
     }
     // raw controller
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].enable && mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next < micros)) {
@@ -298,9 +302,9 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 	case MAV_CMD_AQ_TELEMETRY:
             param = mavlink_msg_command_long_get_param1(msg);
             unsigned long rate = (unsigned long)mavlink_msg_command_long_get_param2(msg);
+            mavlinkToggleStreams(!param || !rate);
             mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval = rate;
             mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable = param && rate;
-            mavlinkToggleStreams(!mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable);
             ack = MAV_CMD_ACK_OK;
             break;
 
