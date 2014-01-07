@@ -222,19 +222,26 @@ void mavlinkDo(void) {
 	}
     }
 
-    // list all parameters
+    // list all requested/remaining parameters
     if (mavlinkData.currentParam < mavlinkData.numParams && mavlinkData.nextParam < micros) {
 	mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[mavlinkData.currentParam], p[mavlinkData.currentParam], MAVLINK_TYPE_FLOAT, mavlinkData.numParams, mavlinkData.currentParam);
 	mavlinkData.currentParam++;
 	mavlinkData.nextParam = micros + MAVLINK_PARAM_INTERVAL;
     }
-    if (mavlinkData.wpCurrent < mavlinkData.wpCount && mavlinkData.wpNext < micros) {
+
+    // request announced waypoints from mission planner
+    if (mavlinkData.wpCurrent < mavlinkData.wpCount && mavlinkData.wpAttempt <= MAVLINK_WP_MAX_ATTEMPTS && mavlinkData.wpNext < micros) {
+	mavlinkData.wpAttempt++;
 	mavlink_msg_mission_request_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, mavlinkData.wpCurrent);
 	mavlinkData.wpNext = micros + MAVLINK_WP_TIMEOUT;
     }
+    // or ack that last waypoint received
     else if (mavlinkData.wpCurrent == mavlinkData.wpCount) {
 	mavlink_msg_mission_ack_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, 0);
 	mavlinkData.wpCurrent++;
+	AQ_PRINTF("%u waypoints loaded.", mavlinkData.wpCount);
+    } else if (mavlinkData.wpAttempt > MAVLINK_WP_MAX_ATTEMPTS) {
+	AQ_NOTICE("Error: Waypoint request timeout!");
     }
 
     supervisorSendDataStop();
@@ -414,12 +421,13 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 			if (count > NAV_MAX_MISSION_LEGS || navClearWaypoints() != 1) {
 			    // NACK
 			    ack = 1;
+			    AQ_PRINTF("Error: %u waypoints exceeds system maximum of %u.", count, NAV_MAX_MISSION_LEGS);
 			}
 			else {
 			    mavlinkData.wpTargetSysId = msg.sysid;
 			    mavlinkData.wpTargetCompId = msg.compid;
 			    mavlinkData.wpCount = count;
-			    mavlinkData.wpCurrent = 0;
+			    mavlinkData.wpCurrent = mavlinkData.wpAttempt = 0;
 			    mavlinkData.wpNext = timerMicros();
 			    ack = 0;
 			}
@@ -551,6 +559,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 			}
 
 			mavlinkData.wpCurrent = seqId + 1;
+			mavlinkData.wpAttempt = 0;
 			mavlinkData.wpNext = timerMicros();
 			mavlink_msg_mission_ack_send(MAVLINK_COMM_0, mavlink_system.sysid, mavlink_system.compid, ack);
 		    }
@@ -604,10 +613,10 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 			stream_id = mavlink_msg_request_data_stream_get_req_stream_id(&msg);
 			rate = mavlink_msg_request_data_stream_get_req_message_rate(&msg);
 
-			if (rate > 0 && rate < 200 && stream_id < MAV_DATA_STREAM_ENUM_END && mavlink_msg_request_data_stream_get_start_stop(&msg)) {
+			if (rate > 0 && rate <= 200 && stream_id < AQMAVLINK_TOTAL_STREAMS && mavlink_msg_request_data_stream_get_start_stop(&msg)) {
 			    mavlinkData.streamInterval[stream_id] = 1e6 / rate;
 			}
-			else {
+			else if (stream_id < AQMAVLINK_TOTAL_STREAMS) {
 			    mavlinkData.streamInterval[stream_id] = 0;
 			}
 		    }
