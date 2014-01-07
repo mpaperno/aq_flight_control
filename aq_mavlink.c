@@ -178,18 +178,14 @@ void mavlinkDo(void) {
 	mavlink_msg_scaled_pressure_send(MAVLINK_COMM_0, micros, AQ_PRESSURE*0.01f, 0.0f, IMU_TEMP*100);
 	mavlinkData.streams[MAV_DATA_STREAM_RAW_SENSORS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RAW_SENSORS].interval;
     }
-    // position
+    // position -- gps and ukf
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_POSITION].enable && mavlinkData.streams[MAV_DATA_STREAM_POSITION].next < micros)) {
-	mavlink_msg_gps_raw_int_send(MAVLINK_COMM_0, micros, navData.fixType, gpsData.lat*(double)1e7, gpsData.lon*(double)1e7, gpsData.height*1e3, \
+	mavlink_msg_gps_raw_int_send(MAVLINK_COMM_0, micros, navData.fixType, gpsData.lat*(double)1e7, gpsData.lon*(double)1e7, gpsData.height*1e3,
 		gpsData.hAcc*100, gpsData.vAcc*100, gpsData.speed*100, gpsData.heading, 255);
-	//mavlink_msg_gps_raw_send(MAVLINK_COMM_0, micros, 3, gpsData.lat, gpsData.lon, gpsData.height, gpsData.hDOP, gpsData.vDOP, gpsData.speed, gpsData.heading);
+	mavlink_msg_local_position_ned_send(MAVLINK_COMM_0, micros, UKF_POSN, UKF_POSE, UKF_POSD, UKF_VELN, UKF_VELE, UKF_VELD);
 	mavlinkData.streams[MAV_DATA_STREAM_POSITION].next = micros + mavlinkData.streams[MAV_DATA_STREAM_POSITION].interval;
     }
-    // extended status
-//	else if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTENDED_STATUS].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTENDED_STATUS].next < micros)) {
-//	    mavlinkData.streams[MAV_DATA_STREAM_EXTENDED_STATUS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_EXTENDED_STATUS].interval;
-//	}
-    // rc channels and pwm outputs
+    // rc channels and pwm outputs (would be nice to separate these)
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].enable && mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next < micros)) {
 	if (!mavlinkData.indexPort++) {
 	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024,
@@ -205,13 +201,20 @@ void mavlinkDo(void) {
 	}
 	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].interval / 2;
     }
-    // raw controller
+    // raw controller -- attitude and nav data
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].enable && mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next < micros)) {
 	mavlink_msg_attitude_send(MAVLINK_COMM_0, micros, AQ_ROLL*DEG_TO_RAD, AQ_PITCH*DEG_TO_RAD, AQ_YAW*DEG_TO_RAD, -(IMU_RATEX - UKF_GYO_BIAS_X)*DEG_TO_RAD,
 		(IMU_RATEY - UKF_GYO_BIAS_Y)*DEG_TO_RAD, (IMU_RATEZ - UKF_GYO_BIAS_Z)*DEG_TO_RAD);
+	mavlink_msg_nav_controller_output_send(MAVLINK_COMM_0, navData.holdTiltE, navData.holdTiltN, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, 0, 0);
 	mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].interval;
     }
-    // AQ custom telemetry
+    // EXTRA1 stream -- home position data
+    if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].next < micros)) {
+	mavlink_msg_vfr_hud_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7, navData.homeLeg.targetLon*(double)1e7, navData.homeLeg.targetAlt*1e3,
+		UKF_ALTITUDE*1e3, navData.ceilingAlt*1e3, gpsData.velD*1e3);
+	mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].next = micros + mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].interval;
+    }
+    // EXTRA3 stream -- AQ custom telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next < micros)) {
 	if ( mavlinkData.indexTelemetry == 0 ) {
 	    mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0,0,AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
