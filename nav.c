@@ -79,11 +79,7 @@ void navSetHomeCurrent(void) {
     if (p[NAV_CEILING])
 	navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
 
-    // notify ground
     AQ_NOTICE("Home position set\n");
-#ifdef USE_MAVLINK
-    mavlinkAnnounceHome();
-#endif
 }
 
 void navRecallHome(void) {
