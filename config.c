@@ -94,6 +94,7 @@ const char *configParameterStrings[] = {
     "MOT_FRAME",
     "MOT_ARM",
     "MOT_MIN",
+    "MOT_START",
     "MOT_VALUE2T_A1",
     "MOT_VALUE2T_A2",
     "MOT_VALUE_SCAL",
@@ -451,6 +452,7 @@ void configLoadDefault(void) {
     p[MOT_FRAME] = DEFAULT_MOT_FRAME;
     p[MOT_ARM] = DEFAULT_MOT_ARM;
     p[MOT_MIN] = DEFAULT_MOT_MIN;
+    p[MOT_START] = DEFAULT_MOT_START;
     p[MOT_VALUE2T_A1] = DEFAULT_MOT_VALUE2T_A1;
     p[MOT_VALUE2T_A2] = DEFAULT_MOT_VALUE2T_A2;
     p[MOT_VALUE_SCAL] = DEFAULT_MOT_VALUE_SCAL;

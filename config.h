@@ -92,6 +92,7 @@ enum configParameters {
     MOT_FRAME,
     MOT_ARM,
     MOT_MIN,
+    MOT_START,
     MOT_VALUE2T_A1,
     MOT_VALUE2T_A2,
     MOT_VALUE_SCAL,
@@ -404,8 +405,8 @@ extern unsigned int configParameterWrite(void *data);
 extern int8_t configReadFile(char *fname);
 extern int8_t configWriteFile(char *fname);
 extern void configSetParamByID(int id, float value);
+extern int configGetParamIdByName(char *name);
 extern int8_t configFormatParam(char *buf, int n);
 extern int configParseParams(char *fileBuf, int size, int p1);
-extern int configGetParamIdByName(char *name);
 
 #endif
