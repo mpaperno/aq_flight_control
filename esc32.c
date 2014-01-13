@@ -26,10 +26,6 @@
 #include <string.h>
 #include <math.h>
 
-#ifndef NAN
-#define NAN	__float32_nan
-#endif
-
 const char *esc32ParameterStrings[] = {
     "CONFIG_VERSION",
     "STARTUP_MODE",
@@ -124,7 +120,7 @@ static float esc32ReadParam(uint8_t paramId, canNodes_t *canNode) {
     }
     // CAN
     else {
-	value = *canGetParam(canNode->nodeId, paramId);
+	value = *canGetParam(canNode->networkId, paramId);
 
 	return value;
     }
@@ -149,7 +145,7 @@ static float esc32WriteParam(uint8_t paramId, float value, canNodes_t *canNode) 
     }
     // CAN
     else {
-	canSetParam(CAN_TT_NODE, canNode->nodeId, paramId, value);
+	canSetParam(CAN_TT_NODE, canNode->networkId, paramId, value);
     }
 
     // moment to update
@@ -187,7 +183,7 @@ static uint8_t esc32SetMode(uint8_t mode, canNodes_t *canNode) {
     }
     // CAN
     else {
-	if (*canSetRunMode(CAN_TT_NODE, canNode->nodeId, mode) != 0)
+	if (*canSetRunMode(CAN_TT_NODE, canNode->networkId, mode) != 0)
 	    return mode;
 	else
 	    return -1;
@@ -207,7 +203,7 @@ static uint32_t esc32ConfigWrite(canNodes_t *canNode) {
     }
     // CAN
     else {
-	ret = (uint32_t)canCommandConfigWrite(CAN_TT_NODE, canNode->nodeId);
+	ret = (uint32_t)canCommandConfigWrite(CAN_TT_NODE, canNode->networkId);
     }
 
     // wait for flash to finish

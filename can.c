@@ -23,8 +23,20 @@
 #include "imu.h"
 #include "aq_timer.h"
 #include "util.h"
+#include "comm.h"
 
 canStruct_t canData;
+
+const char *canTypeStrings[] = {
+    "NONE",
+    "ESC",
+    "SERVO",
+    "SENSOR",
+    "LED",
+    "OSD",
+    "UART",
+    "HUB"
+};
 
 static uint32_t canGetSeqId(void) {
     uint32_t seqId;
@@ -208,7 +220,7 @@ static void canGrantAddr(CanRxMsg *rx) {
 
     if (i < (CAN_TID_MASK>>9)) {
 	// store in table
-	canData.nodes[i].nodeId = i+1;
+	canData.nodes[i].networkId = i+1;
 	canData.nodes[i].uuid = uuid;
 	canData.nodes[i].type = rx->Data[4];
 	canData.nodes[i].canId = rx->Data[5];
@@ -250,20 +262,25 @@ static void canProcessMessage(CanRxMsg *rx) {
     }
 }
 
-void canCheckMessage(void) {
+int canCheckMessage(void) {
     CanRxMsg *rx;
+    int ret = 0;
 
     if (canData.initialized) {
 	while (canData.rxHead != canData.rxTail) {
 	    rx = &canData.rxMsgs[canData.rxTail];
 
 	    // ignore standard id messages
-	    if (rx->IDE != CAN_Id_Standard)
+	    if (rx->IDE != CAN_Id_Standard) {
 		canProcessMessage(rx);
+		ret = 1;
+	    }
 
 	    canData.rxTail = (canData.rxTail + 1) % CAN_BUF_SIZE;
 	}
     }
+
+    return ret;
 }
 
 canNodes_t *canFindNode(uint8_t type, uint8_t canId) {
@@ -337,6 +354,22 @@ void canLowLevelInit(void) {
     CAN_ITConfig(CANx, CAN_IT_TME, ENABLE);
 }
 
+void canDiscoverySummary(void) {
+    int num;
+    int i, j;
+
+    for (i = 1; i < CAN_TYPE_NUM; i++) {
+	num = 0;
+
+	for (j = 0; j < (CAN_TID_MASK>>9)+1; j++)
+	    if (canData.nodes[j].type == i)
+		num++;
+
+	if (num > 0)
+	    AQ_PRINTF("CAN: Found %d node type %s\n", num, canTypeStrings[i]);
+    }
+}
+
 void canInit(void) {
     CAN_FilterInitTypeDef CAN_FilterInitStructure;
     uint32_t micros;
@@ -365,7 +398,11 @@ void canInit(void) {
     // wait 50ms for nodes to report in
     micros = timerMicros();
     while (timerMicros() - micros < 50000)
-	canCheckMessage();
+	// extend wait period if more nodes found
+	if (canCheckMessage())
+	    micros = timerMicros();
+
+    canDiscoverySummary();
 }
 
 void CAN_RX0_HANDLER(void) {

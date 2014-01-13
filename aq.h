@@ -66,6 +66,10 @@
 #define	AQ_64_NOPS		{AQ_16_NOPS; AQ_16_NOPS; AQ_16_NOPS; AQ_16_NOPS;}
 #define	AQ_256_NOPS		{AQ_64_NOPS; AQ_64_NOPS; AQ_64_NOPS; AQ_64_NOPS;}
 
+#ifndef NAN
+#define NAN	__float32_nan
+#endif
+
 //#define CAN_CALIB   // transmit IMU data over CAN
 
 extern volatile unsigned long counter;

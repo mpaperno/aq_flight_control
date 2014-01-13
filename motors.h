@@ -32,9 +32,9 @@
 #define MOTORS_CAN_GROUP_SIZE	    4
 #define MOTORS_CAN_TELEM_RATE	    200		    // Hz
 
-#define MOTORS_COMP_PRELOAD_TAU	    0.4f
-#define MOTORS_COMP_PRELOAD_PTERM   3.5f
-#define MOTORS_COMP_PRELOAD_NFACT   3.0f//2.5f
+#define MOTORS_COMP_PRELOAD_TAU	    0.3f//0.4f
+#define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
+#define MOTORS_COMP_PRELOAD_NFACT   2.0f//3.0f
 
 typedef struct {
     float throttle;
@@ -50,6 +50,7 @@ typedef struct {
     canGroup16_t canGroups[MOTORS_NUM/MOTORS_CAN_GROUP_SIZE];
     esc32CanStatus_t canStatus[MOTORS_NUM];
     uint32_t canStatusTime[MOTORS_NUM];
+    uint32_t canTelemReqTime[MOTORS_NUM];
     pwmPortStruct_t *pwm[PWM_NUM_PORTS];
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];

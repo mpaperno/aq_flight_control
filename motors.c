@@ -77,17 +77,17 @@ static void motorsCanSendGroups(void) {
 static void motorsCanRequestTelem(int i) {
 #if MOTORS_CAN_TELEM_RATE > 0
     // request telemetry
-    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->nodeId, 0, CAN_TELEM_STATUS);
-    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->nodeId, MOTORS_CAN_TELEM_RATE);
+    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->networkId, 0, CAN_TELEM_STATUS);
+    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->networkId, MOTORS_CAN_TELEM_RATE);
 
-    motorsData.canStatusTime[i] = timerMicros();
+    motorsData.canTelemReqTime[i] = timerMicros();
 #endif
 }
 
 static void motorsCheckCanStatus(int i) {
 #if MOTORS_CAN_TELEM_RATE > 0
     // no status report within the last second?
-    if (timerMicros() - motorsData.canStatusTime[i] > 1e6f) {
+    if ((timerMicros() - motorsData.canTelemReqTime[i]) > 1e6f && (timerMicros() - motorsData.canStatusTime[i]) > 1e6f) {
 	// clear status information
 	uint32_t *storage = (uint32_t *)&motorsData.canStatus[i];
 	storage[0] = 0;
@@ -98,7 +98,7 @@ static void motorsCheckCanStatus(int i) {
     // if ESC is reporting as being disarmed (and should not be)
     else if (motorsData.canStatus[i].state == ESC32_STATE_DISARMED && (supervisorData.state & STATE_ARMED)) {
 	// send an arm command
-	canCommandArm(CAN_TT_NODE, motorsData.can[i]->nodeId);
+	canCommandArm(CAN_TT_NODE, motorsData.can[i]->networkId);
     }
 #endif
 }
@@ -277,7 +277,7 @@ void motorsArm(void) {
     // wait for all to arm
     for (i = 0; i < MOTORS_NUM; i++)
 	if (motorsData.can[i])
-	    while (*canGetState(motorsData.can[i]->nodeId) == ESC32_STATE_DISARMED)
+	    while (*canGetState(motorsData.can[i]->networkId) == ESC32_STATE_DISARMED)
 		yield(1);
 }
 
@@ -298,7 +298,7 @@ static void motorsSetCanGroup(void) {
     subGroup = 0;
     for (i = 0; i < MOTORS_NUM; i++) {
 	if (motorsData.can[i]) {
-	    canSetGroup(motorsData.can[i]->nodeId, group+1, subGroup+1);
+	    canSetGroup(motorsData.can[i]->networkId, group+1, subGroup+1);
 
 	    switch (subGroup) {
 		case 0:

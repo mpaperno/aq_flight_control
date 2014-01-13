@@ -66,7 +66,7 @@
 #define CAN_SEQ_MASK	    ((uint32_t)0x3f<<3)
 
 #define CAN_TIMEOUT	    1000			    // ms
-#define CAN_BUF_SIZE	    16				    // depth of the application layer FIFO
+#define CAN_BUF_SIZE	    32				    // depth of the application layer FIFO
 
 // types
 enum {
@@ -98,7 +98,8 @@ enum {
     CAN_CMD_BEEP,
     CAN_CMD_POS,
     CAN_CMD_USER_DEFINED,
-    CAN_CMD_RESET
+    CAN_CMD_RESET,
+    CAN_CMD_STREAM
 };
 
 // data types
@@ -164,7 +165,7 @@ typedef struct {
 
 typedef struct {
     uint32_t uuid;
-    uint8_t nodeId; // network id
+    uint8_t networkId;
     uint8_t type;
     uint8_t canId;
     uint8_t groupId;
@@ -198,7 +199,7 @@ extern canStruct_t canData;
 
 extern void canInit(void);
 extern void canLowLevelInit(void);
-extern void canCheckMessage(void);
+extern int canCheckMessage(void);
 extern char *canGetVersion(uint8_t tid);
 extern float *canGetParam(uint8_t tid, uint16_t paramId);
 extern uint8_t *canSetParam(uint32_t tt, uint8_t tid, uint16_t paramId, float value);
