@@ -343,12 +343,6 @@ void dIMUInit(void) {
     TIM_OC2Init(DIMU_TIM, &TIM_OCInitStructure);
     TIM_OC2PreloadConfig(DIMU_TIM, TIM_OCPreload_Disable);
 
-    TIM_OC3Init(DIMU_TIM, &TIM_OCInitStructure);
-    TIM_OC3PreloadConfig(DIMU_TIM, TIM_OCPreload_Disable);
-
-    TIM_OC4Init(DIMU_TIM, &TIM_OCInitStructure);
-    TIM_OC4PreloadConfig(DIMU_TIM, TIM_OCPreload_Disable);
-
     // Enable the global Interrupt
     NVIC_InitStructure.NVIC_IRQChannel = DIMU_IRQ_CH;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
@@ -360,8 +354,6 @@ void dIMUInit(void) {
     TIM_SetCounter(DIMU_TIM, 0);
 
     dIMUCancelAlarm1();
-    dIMUCancelAlarm2();
-    dIMUCancelAlarm3();
 
     // go...
     TIM_Cmd(DIMU_TIM, ENABLE);
@@ -377,9 +369,9 @@ void dIMUInit(void) {
 #endif
 
     // setup IMU timestep alarm
-    dImuData.nextPeriod = DIMU_TIM->CCR4 + DIMU_INNER_PERIOD;
-    DIMU_TIM->CCR4 = dImuData.nextPeriod;
-    DIMU_TIM->DIER |= TIM_IT_CC4;
+    dImuData.nextPeriod = DIMU_TIM->CCR2 + DIMU_INNER_PERIOD;
+    DIMU_TIM->CCR2 = dImuData.nextPeriod;
+    DIMU_TIM->DIER |= TIM_IT_CC2;
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6600InitialBias();
@@ -394,16 +386,6 @@ void dIMUCancelAlarm1(void) {
     TIM_ClearITPendingBit(DIMU_TIM, TIM_IT_CC1);
 }
 
-void dIMUCancelAlarm2(void) {
-    DIMU_TIM->DIER &= (uint16_t)~TIM_IT_CC2;
-    TIM_ClearITPendingBit(DIMU_TIM, TIM_IT_CC2);
-}
-
-void dIMUCancelAlarm3(void) {
-    DIMU_TIM->DIER &= (uint16_t)~TIM_IT_CC3;
-    TIM_ClearITPendingBit(DIMU_TIM, TIM_IT_CC3);
-}
-
 void dIMUSetAlarm1(int32_t us, dIMUCallback_t *callback, int parameter) {
     // schedule it
     dImuData.alarm1Callback = callback;
@@ -414,34 +396,15 @@ void dIMUSetAlarm1(int32_t us, dIMUCallback_t *callback, int parameter) {
     DIMU_TIM->DIER |= TIM_IT_CC1;
 }
 
-void dIMUSetAlarm2(int32_t us, dIMUCallback_t *callback, int parameter) {
-    // schedule it
-    dImuData.alarm2Callback = callback;
-    dImuData.alarm2Parameter = parameter;
-
-    DIMU_TIM->SR = (uint16_t)~TIM_IT_CC2;
-    DIMU_TIM->CCR2 = DIMU_TIM->CNT + us;
-    DIMU_TIM->DIER |= TIM_IT_CC2;
-}
-
-void dIMUSetAlarm3(int32_t us, dIMUCallback_t *callback, int parameter) {
-    // schedule it
-    dImuData.alarm3Callback = callback;
-    dImuData.alarm3Parameter = parameter;
-
-    DIMU_TIM->SR = (uint16_t)~TIM_IT_CC3;
-    DIMU_TIM->CCR3 = DIMU_TIM->CNT + us;
-    DIMU_TIM->DIER |= TIM_IT_CC3;
-}
 
 void DIMU_ISR(void) {
-    // CC4 is used for IMU period timing
-    if (TIM_GetITStatus(DIMU_TIM, TIM_IT_CC4) != RESET) {
-	DIMU_TIM->SR = (uint16_t)~TIM_IT_CC4;
+    // CC2 is used for IMU period timing
+    if (TIM_GetITStatus(DIMU_TIM, TIM_IT_CC2) != RESET) {
+	DIMU_TIM->SR = (uint16_t)~TIM_IT_CC2;
 
 	// set next alarm
 	dImuData.nextPeriod += DIMU_INNER_PERIOD;
-	DIMU_TIM->CCR4 = dImuData.nextPeriod;
+	DIMU_TIM->CCR2 = dImuData.nextPeriod;
 
 	CoEnterISR();
 	isr_SetFlag(dImuData.flag);
@@ -454,22 +417,6 @@ void DIMU_ISR(void) {
 	DIMU_TIM->DIER &= (uint16_t)~TIM_IT_CC1;
 
 	dImuData.alarm1Callback(dImuData.alarm1Parameter);
-    }
-    else if (TIM_GetITStatus(DIMU_TIM, TIM_IT_CC2) != RESET) {
-	DIMU_TIM->SR = (uint16_t)~TIM_IT_CC2;
-
-	// Disable the Interrupt
-	DIMU_TIM->DIER &= (uint16_t)~TIM_IT_CC2;
-
-	dImuData.alarm2Callback(dImuData.alarm2Parameter);
-    }
-    else if (TIM_GetITStatus(DIMU_TIM, TIM_IT_CC3) != RESET) {
-	DIMU_TIM->SR = (uint16_t)~TIM_IT_CC3;
-
-	// Disable the Interrupt
-	DIMU_TIM->DIER &= (uint16_t)~TIM_IT_CC3;
-
-	dImuData.alarm3Callback(dImuData.alarm3Parameter);
     }
 }
 #endif

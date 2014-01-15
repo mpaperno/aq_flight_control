@@ -38,11 +38,11 @@
 #define DIMU_INNER_DT	    ((float)DIMU_INNER_PERIOD / 1e6f)
 #define DIMU_TEMP_TAU	    5.0f
 
-#define DIMU_TIM	    TIM8
-#define DIMU_CLOCK	    (rccClocks.PCLK2_Frequency * 2)
-#define DIMU_EN		    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE)
-#define DIMU_IRQ_CH	    TIM8_CC_IRQn
-#define DIMU_ISR	    TIM8_CC_IRQHandler
+#define DIMU_TIM	    TIM12
+#define DIMU_CLOCK	    (rccClocks.PCLK1_Frequency * 2)
+#define DIMU_EN		    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE)
+#define DIMU_IRQ_CH	    TIM8_BRK_TIM12_IRQn
+#define DIMU_ISR	    TIM8_BRK_TIM12_IRQHandler
 
 #ifndef __rev16
     #define __rev16 __REV16
@@ -57,8 +57,8 @@ typedef struct {
     float temp;
     float dTemp, dTemp2, dTemp3;
 
-    dIMUCallback_t *alarm1Callback, *alarm2Callback, *alarm3Callback;
-    int alarm1Parameter, alarm2Parameter, alarm3Parameter;
+    dIMUCallback_t *alarm1Callback;
+    int alarm1Parameter;
 
     uint16_t nextPeriod;
     volatile uint32_t lastUpdate;
@@ -69,10 +69,7 @@ extern dImuStruct_t dImuData;
 extern void dIMUInit(void);
 extern void dIMUTare(void);
 extern void dIMUCancelAlarm1(void);
-extern void dIMUCancelAlarm2(void);
-extern void dIMUCancelAlarm3(void);
 extern void dIMUSetAlarm1(int32_t us, dIMUCallback_t *callback, int parameter);
-extern void dIMUSetAlarm2(int32_t us, dIMUCallback_t *callback, int parameter);
-extern void dIMUSetAlarm3(int32_t us, dIMUCallback_t *callback, int parameter);
+
 
 #endif
