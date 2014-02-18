@@ -19,6 +19,7 @@
 #include "aq.h"
 #include "config.h"
 #include "can.h"
+#include "canSensors.h"
 #include "supervisor.h"
 #include "imu.h"
 #include "aq_timer.h"
@@ -67,7 +68,10 @@ static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     uint32_t *d = data;
     canTxBuf_t *txPtr;
 
-    txPtr = &canData.txMsgs[canData.txHead];
+    if ((id & CAN_LCC_MASK) < CAN_LCC_NORMAL)
+        txPtr = &canData.txMsgsHi[canData.txHeadHi];
+    else
+        txPtr = &canData.txMsgsLo[canData.txHeadLo];
 
     seqId = canGetSeqId();
 
@@ -77,13 +81,16 @@ static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     txPtr->TDTR = n;
 
     if (n) {
-	txPtr->TDLR = *d++;
-	txPtr->TDHR = *d;
+        txPtr->TDLR = *d++;
+        txPtr->TDHR = *d;
     }
 
     canData.responses[seqId] = 0;
 
-    canData.txHead = (canData.txHead + 1) % CAN_BUF_SIZE;
+    if ((id & CAN_LCC_MASK) < CAN_LCC_NORMAL)
+        canData.txHeadHi = (canData.txHeadHi + 1) % CAN_BUF_SIZE;
+    else
+        canData.txHeadLo = (canData.txHeadLo + 1) % CAN_BUF_SIZE;
 
     // trigger transmit ISR
     NVIC->STIR = CAN_TX_IRQ;
@@ -403,6 +410,7 @@ void canInit(void) {
 	    micros = timerMicros();
 
     canDiscoverySummary();
+	canSensorsInit();
 }
 
 void CAN_RX0_HANDLER(void) {
@@ -410,23 +418,32 @@ void CAN_RX0_HANDLER(void) {
     canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE;
 }
 
+static void canTxMsg(canTxBuf_t *tx, uint8_t mailbox) {
+    CANx->sTxMailBox[mailbox].TDTR = tx->TDTR;
+
+    CANx->sTxMailBox[mailbox].TDLR = tx->TDLR;
+    CANx->sTxMailBox[mailbox].TDHR = tx->TDHR;
+
+    // go
+    CANx->sTxMailBox[mailbox].TIR = tx->TIR | 0x1;
+}
+
 void CAN_TX_HANDLER(void) {
     int8_t mailbox;
-    canTxBuf_t *txPtr;
 
     CAN_ClearITPendingBit(CANx, CAN_IT_TME);
 
-    while (canData.txHead != canData.txTail && (mailbox = canGetFreeMailbox()) >= 0) {
-	txPtr = &canData.txMsgs[canData.txTail];
+    // high priority
+    while (canData.txHeadHi != canData.txTailHi && (mailbox = canGetFreeMailbox()) >= 0) {
+        canTxMsg(&canData.txMsgsHi[canData.txTailHi], mailbox);
 
-	CANx->sTxMailBox[mailbox].TDTR = txPtr->TDTR;
+        canData.txTailHi = (canData.txTailHi + 1) % CAN_BUF_SIZE;
+    }
 
-	CANx->sTxMailBox[mailbox].TDLR = txPtr->TDLR;
-	CANx->sTxMailBox[mailbox].TDHR = txPtr->TDHR;
+    // low priority
+    while (canData.txHeadLo != canData.txTailLo && (mailbox = canGetFreeMailbox()) >= 0) {
+        canTxMsg(&canData.txMsgsLo[canData.txTailLo], mailbox);
 
-	// go
-	CANx->sTxMailBox[mailbox].TIR = txPtr->TIR | 0x1;
-
-	canData.txTail = (canData.txTail + 1) % CAN_BUF_SIZE;
+        canData.txTailLo = (canData.txTailLo + 1) % CAN_BUF_SIZE;
     }
 }

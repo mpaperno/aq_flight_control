@@ -90,6 +90,8 @@
       <file file_name="buildnum.h"/>
       <file file_name="can.h"/>
       <file file_name="can.c"/>
+      <file file_name="canSensors.h"/>
+      <file file_name="canSensors.c"/>
       <file file_name="spi.h"/>
       <file file_name="spi.c"/>
       <file file_name="signaling.h"/>

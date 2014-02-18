@@ -19,6 +19,9 @@
 #ifndef _can_h
 #define _can_h
 
+#include "stm32f4xx_can.h"
+#include <stdint.h>
+
 // Logical Communications Channel
 // 2 bits [28:27]
 #define CAN_LCC_MASK	    ((uint32_t)0x3<<30)
@@ -65,8 +68,8 @@
 // 6 bits [5:0]
 #define CAN_SEQ_MASK	    ((uint32_t)0x3f<<3)
 
-#define CAN_TIMEOUT	    1000			    // ms
-#define CAN_BUF_SIZE	    32				    // depth of the application layer FIFO
+#define CAN_TIMEOUT         1000				// ms
+#define CAN_BUF_SIZE        32					// depth of the application layer FIFO
 
 // types
 enum {
@@ -125,6 +128,7 @@ enum {
     CAN_TELEM_AMPS,
     CAN_TELEM_RPM,
     CAN_TELEM_ERRORS,
+    CAN_TELEM_VALUE,
     CAN_TELEM_NUM
 };
 
@@ -183,12 +187,14 @@ typedef void canTelemCallback_t(uint8_t nodeId, void *p);
 
 typedef struct {
     CanRxMsg rxMsgs[CAN_BUF_SIZE];
-    canTxBuf_t txMsgs[CAN_BUF_SIZE];
+    canTxBuf_t txMsgsLo[CAN_BUF_SIZE];	// low priority
+    canTxBuf_t txMsgsHi[CAN_BUF_SIZE];	// high priority
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
     canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;
-    volatile uint8_t txHead, txTail;
+    volatile uint8_t txHeadLo, txTailLo;
+    volatile uint8_t txHeadHi, txTailHi;
     uint8_t responseData[64*8];
     uint8_t nextNodeSlot;
     uint8_t seqId;
