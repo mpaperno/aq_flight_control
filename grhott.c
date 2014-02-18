@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2013  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
 
     Author: Frederic Guichard
 */
