@@ -184,7 +184,7 @@ static void commSchedule(void) {
     int i;
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
-	if (!commData.serialPorts[i]->txDmaRunning)
+	if (commData.serialPorts[i] && !commData.serialPorts[i]->txDmaRunning)
 	    _commSchedule(i);
     }
 }
