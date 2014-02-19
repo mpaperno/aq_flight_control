@@ -224,5 +224,7 @@ extern void canCommandSetpoint16(uint8_t tid, uint8_t *data);
 extern uint8_t *canSetTelemetryValue(uint32_t tt, uint8_t tid, uint8_t index, uint8_t value);
 extern uint8_t *canSetTelemetryRate(uint32_t tt, uint8_t tid, uint16_t rate);
 extern void canTelemRegister(canTelemCallback_t *func, uint8_t type);
+extern int8_t canSendBulk(uint32_t id, uint8_t tid, uint8_t n, void *data);
+extern void canSendBulkFinish(void);
 
 #endif

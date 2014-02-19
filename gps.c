@@ -178,7 +178,7 @@ void gpsInit(void) {
     filerStream(gpsData.logHandle, gpsLog, GPS_LOG_BUF);
 #endif
 
-    commRegisterRcvrFunc(COMM_TYPE_GPS, gpsPassThrough);
+    commRegisterRcvrFunc(COMM_STREAM_TYPE_GPS, gpsPassThrough);
 }
 
 void gpsSendPacket(unsigned char len, char *buf) {

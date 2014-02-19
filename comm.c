@@ -23,6 +23,7 @@
 #include "util.h"
 #include "filer.h"
 #include "can.h"
+#include "canUart.h"
 #include "usb.h"
 #include <CoOS.h>
 #include <string.h>
@@ -95,27 +96,52 @@ void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func) {
 }
 
 uint8_t commReadChar(commRcvrStruct_t *r) {
-    if (r->s)
-	return serialRead(r->s);
+    uint8_t port = r->port;
+
+    switch (commData.portTypes[port]) {
+        case COMM_PORT_TYPE_SERIAL:
+            if (commData.portHandles[port])
+                return serialRead(commData.portHandles[port]);
+            break;
+
+        case COMM_PORT_TYPE_CAN:
+            if (commData.portHandles[port])
+                return canUartReadChar(commData.portHandles[port]);
+            break;
+
 #ifdef HAS_USB
-    else
-	return usbRx();
-#else
-    else
-	return 0;
+        case COMM_PORT_TYPE_USB:
+            return usbRx();
+            break;
 #endif
+    }
+
+    return 0;
 }
 
+    uint8_t port;
 uint8_t commAvailable(commRcvrStruct_t *r) {
-    if (r->s)
-	return serialAvailable(r->s);
+//    uint8_t port = r->port;
+port = r->port;
+    switch (commData.portTypes[port]) {
+        case COMM_PORT_TYPE_SERIAL:
+            if (commData.portHandles[port])
+                return serialAvailable(commData.portHandles[port]);
+            break;
+
+        case COMM_PORT_TYPE_CAN:
+            if (commData.portHandles[port])
+                return canUartAvailable(commData.portHandles[port]);
+            break;
+
 #ifdef HAS_USB
-    else
-	return usbAvailable();
-#else
-    else
-	return 0;
+        case COMM_PORT_TYPE_USB:
+            return usbAvailable();
+            break;
 #endif
+    }
+
+    return 0;
 }
 
 // return 0 if none are available
@@ -174,26 +200,40 @@ commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize) {
 
 static void _commSchedule(uint8_t port) {
     uint8_t tail = commData.txStackTails[port];
+    commTxStack_t *stack = &commData.txStack[port][tail];
 
     if (commData.txStackHeads[port] != tail)
-	if (_serialStartTxDMA(commData.serialPorts[port], commData.txStack[port][tail].memory, commData.txStack[port][tail].size, commTxDMAFinished, &commData.txStack[port][tail]))
-	    commData.txStackTails[port] = (tail + 1) % COMM_STACK_DEPTH;
+        switch (commData.portTypes[port]) {
+            case COMM_PORT_TYPE_SERIAL:
+                if (!((serialPort_t *)(commData.portHandles[port]))->txDmaRunning && _serialStartTxDMA(commData.portHandles[port], stack->memory, stack->size, commTxFinished, stack))
+                    commData.txStackTails[port] = (tail + 1) % COMM_STACK_DEPTH;
+                break;
+
+            case COMM_PORT_TYPE_CAN:
+                if (((canUartStruct_t*)(commData.portHandles[port]))->txTail == ((canUartStruct_t*)(commData.portHandles[port]))->txHead) {
+                    canUartTxBuf(commData.portHandles[port], stack->memory, stack->size, commTxFinished, stack);
+                    commData.txStackTails[port] = (tail + 1) % COMM_STACK_DEPTH;
+                }
+                break;
+        }
 }
 
 static void commSchedule(void) {
     int i;
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
-	if (commData.serialPorts[i] && !commData.serialPorts[i]->txDmaRunning)
+	if (commData.portHandles[i])
 	    _commSchedule(i);
     }
 }
 
-void commTxDMAFinished(void *param) {
+void commTxFinished(void *param) {
     commTxStack_t *txStackPtr = (commTxStack_t *)param;
     commTxBuf_t *txBuf = (commTxBuf_t *)txStackPtr->txBuf;
 
-    txBuf->status--;
+//    txBuf->status--;
+    __sync_sub_and_fetch(&txBuf->status, 1);
+
     // if no pending tx's for this buffer, free it
     if (txBuf->status == COMM_TX_BUF_SENDING)
 	txBuf->status = COMM_TX_BUF_FREE;
@@ -220,7 +260,7 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
 	    toBeScheduled[i] = 0;
 
 	    // singleplex case
-	    if (commData.portStreams[i] == txBuf->type && commData.serialPorts[i]) {
+	    if (commData.portStreams[i] == txBuf->type && commData.portTypes[i] != COMM_PORT_TYPE_USB && commData.portTypes[i] != COMM_PORT_TYPE_NONE) {
 		head = commData.txStackHeads[i];
 		newHeads[i] = (head + 1) % COMM_STACK_DEPTH;
 
@@ -262,7 +302,7 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
 
 	CoLeaveMutexSection(commData.txBufferMutex);
 
-#ifdef HAS_USB
+#ifdef COMM_USB_PORT
 	if (commData.portStreams[COMM_USB_PORT] == txBuf->type)
 	    usbTx(&txBuf->buf, size);
 #endif
@@ -313,11 +353,12 @@ static void commCheckRcvr(void) {
     int i, j;
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
-        r.s = commData.serialPorts[i];
-	if (commData.portStreams[i] && commAvailable(&r)) {
+        r.port = i;
+	if (commAvailable(&r) && commData.portStreams[i] > COMM_STREAM_TYPE_NONE) {
 	    for (j = 0; j < COMM_MAX_CONSUMERS; j++) {
 		if (commData.streamRcvrs[j] == commData.portStreams[i]) {
 		    commData.rcvrFuncs[j](&r);
+                    break;
 		}
 	    }
 	}
@@ -332,6 +373,7 @@ void commTaskCode(void *unused) {
 	commCheckNotices();
 	commCheckTelem();
 	commCheckRcvr();
+        canUartStream();
     }
 }
 
@@ -368,8 +410,9 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portHandles[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
     commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYP1];
+    commData.portTypes[0] = COMM_PORT_TYPE_SERIAL;
 #endif
 
 #ifdef COMM_PORT2
@@ -378,8 +421,9 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portHandles[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
     commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYP2];
+    commData.portTypes[1] = COMM_PORT_TYPE_SERIAL;
 #endif
 
 #ifdef COMM_PORT3
@@ -388,8 +432,9 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portHandles[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
     commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYP3];
+    commData.portTypes[2] = COMM_PORT_TYPE_SERIAL;
 #endif
 
 #ifdef COMM_PORT4
@@ -398,8 +443,9 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.serialPorts[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
+    commData.portHandles[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
     commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYP4];
+    commData.portTypes[3] = COMM_PORT_TYPE_SERIAL;
 #endif
 
     // record which stream types that we are working with
@@ -441,10 +487,17 @@ void commInit(void) {
 
     commData.commTask = CoCreateTask(commTaskCode, (void *)0, 5, &commTaskStack[COMM_STACK_SIZE-1], COMM_STACK_SIZE);
 
-#ifdef HAS_USB
+#ifdef COMM_USB_PORT
     usbInit();
+    commData.portTypes[COMM_USB_PORT] = COMM_PORT_TYPE_USB;
 #endif
     commData.initialized = 1;
+}
+
+void commRegisterCanUart(void *ptr, uint8_t type, uint8_t n) {
+    commData.portHandles[COMM_CAN_PORT+n] = ptr;
+    commData.portTypes[COMM_CAN_PORT+n] = type;
+    commData.portStreams[COMM_CAN_PORT+n] = (uint8_t)p[COMM_STREAM_TYP5+n];
 }
 
 void CRYP_IRQHandler(void) {

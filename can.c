@@ -20,6 +20,7 @@
 #include "config.h"
 #include "can.h"
 #include "canSensors.h"
+#include "canUart.h"
 #include "supervisor.h"
 #include "imu.h"
 #include "aq_timer.h"
@@ -63,7 +64,7 @@ static int8_t canGetFreeMailbox(void) {
     return mailbox;
 }
 
-static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
+static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     uint32_t seqId;
     uint32_t *d = data;
     canTxBuf_t *txPtr;
@@ -92,12 +93,31 @@ static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     else
         canData.txHeadLo = (canData.txHeadLo + 1) % CAN_BUF_SIZE;
 
+    return (int8_t)seqId;
+}
+
+void canSendBulkFinish(void) {
     // trigger transmit ISR
     NVIC->STIR = CAN_TX_IRQ;
+}
+
+static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
+    uint8_t seqId;
+
+    seqId = _canSend(id, tid, n, data);
+
+    canSendBulkFinish();
 
     return (int8_t)seqId;
 }
 
+int8_t canSendBulk(uint32_t id, uint8_t tid, uint8_t n, void *data) {
+    uint8_t seqId;
+
+    seqId = _canSend(id, tid, n, data);
+
+    return (int8_t)seqId;
+}
 
 static uint8_t *canSendWaitResponse(uint32_t extId, uint8_t tid, uint8_t n, uint8_t *data) {
     int16_t seqId;
@@ -241,12 +261,21 @@ static void canGrantAddr(CanRxMsg *rx) {
     }
 }
 
+static void canProcessCmd(uint8_t doc, uint8_t canId, uint32_t *data, uint8_t n) {
+    switch (doc) {
+        case CAN_CMD_STREAM:
+            canUartRxChar(canId, n, (uint8_t *)data);
+            break;
+    }
+}
+
 static void canProcessMessage(CanRxMsg *rx) {
     uint32_t id = rx->ExtId<<3;
     uint32_t *data = (uint32_t *)&rx->Data;
     uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
     uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
     uint8_t sid = (id & CAN_SID_MASK)>>14;
+    uint8_t doc = (id & CAN_DOC_MASK)>>19;
 
     switch (id & CAN_FID_MASK) {
 	case CAN_FID_REQ_ADDR:
@@ -258,6 +287,10 @@ static void canProcessMessage(CanRxMsg *rx) {
 	    if (canData.telemFuncs[canData.nodes[sid-1].type])
 		canData.telemFuncs[canData.nodes[sid-1].type](canData.nodes[sid-1].canId, data);
 	    break;
+
+        case CAN_FID_CMD:
+            canProcessCmd(doc, canData.nodes[sid-1].canId, data, rx->DLC);
+            break;
 
 	case CAN_FID_ACK:
 	case CAN_FID_NACK:
@@ -410,7 +443,8 @@ void canInit(void) {
 	    micros = timerMicros();
 
     canDiscoverySummary();
-	canSensorsInit();
+    canSensorsInit();
+    canUartInit();
 }
 
 void CAN_RX0_HANDLER(void) {
@@ -433,16 +467,16 @@ void CAN_TX_HANDLER(void) {
 
     CAN_ClearITPendingBit(CANx, CAN_IT_TME);
 
-    // high priority
+    // high priority - pick of any mailbox
     while (canData.txHeadHi != canData.txTailHi && (mailbox = canGetFreeMailbox()) >= 0) {
         canTxMsg(&canData.txMsgsHi[canData.txTailHi], mailbox);
 
         canData.txTailHi = (canData.txTailHi + 1) % CAN_BUF_SIZE;
     }
 
-    // low priority
-    while (canData.txHeadLo != canData.txTailLo && (mailbox = canGetFreeMailbox()) >= 0) {
-        canTxMsg(&canData.txMsgsLo[canData.txTailLo], mailbox);
+    // low priority - only if box 3 is available
+    if (canData.txHeadLo != canData.txTailLo && ((CANx->TSR&CAN_TSR_TME2) == CAN_TSR_TME2)) {
+        canTxMsg(&canData.txMsgsLo[canData.txTailLo], 2);
 
         canData.txTailLo = (canData.txTailLo + 1) % CAN_BUF_SIZE;
     }

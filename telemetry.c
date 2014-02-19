@@ -88,7 +88,7 @@ void telemetryDo(void) {
 	telemetryData.lastAqCounter = aqCounter;
 
 	if (telemetryData.telemetryEnable) {
-	    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, 256);
+	    txBuf = commGetTxBuf(COMM_STREAM_TYPE_TELEMETRY, 256);
 
 	    // fail as we cannot block
 	    if (txBuf != 0) {
@@ -172,7 +172,7 @@ void telemetrySendNotice(const char *s) {
     uint8_t ckA, ckB;
     uint8_t *ptr;
 
-    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, 64);
+    txBuf = commGetTxBuf(COMM_STREAM_TYPE_TELEMETRY, 64);
 
     if (txBuf > 0) {
 	ptr = &txBuf->buf;

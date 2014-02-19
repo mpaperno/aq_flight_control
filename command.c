@@ -50,7 +50,7 @@ static void commandResponseSend(commandBufStruct_t *r, uint8_t len) {
     uint8_t *ptr;
     char *c = (char *)r;
 
-    txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, len + 3 + 5 + 2);
+    txBuf = commGetTxBuf(COMM_STREAM_TYPE_TELEMETRY, len + 3 + 5 + 2);
     if (txBuf != 0) {
 	ptr = &txBuf->buf;
 
@@ -333,7 +333,7 @@ void commandInit(void) {
 
     memset((void *)&commandData, 0, sizeof(commandData));
 
-    commRegisterRcvrFunc(COMM_TYPE_TELEMETRY, commandTaskCode);
+    commRegisterRcvrFunc(COMM_STREAM_TYPE_TELEMETRY, commandTaskCode);
 
     commandData.state = COMMAND_WAIT_SYNC1;
 }

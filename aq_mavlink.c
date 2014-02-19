@@ -53,7 +53,7 @@ void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len)
     uint8_t *ptr;
     int i;
 
-    txBuf = commGetTxBuf(COMM_TYPE_MAVLINK, len);
+    txBuf = commGetTxBuf(COMM_STREAM_TYPE_MAVLINK, len);
     // cannot block, must fail
     if (txBuf != 0) {
 	ptr = &txBuf->buf;
@@ -764,7 +764,7 @@ void mavlinkInit(void) {
     // register notice function with comm module
     commRegisterNoticeFunc(mavlinkSendNotice);
     commRegisterTelemFunc(mavlinkDo);
-    commRegisterRcvrFunc(COMM_TYPE_MAVLINK, mavlinkRecvTaskCode);
+    commRegisterRcvrFunc(COMM_STREAM_TYPE_MAVLINK, mavlinkRecvTaskCode);
 
     AQ_NOTICE("Mavlink init\n");
 

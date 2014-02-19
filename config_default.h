@@ -16,7 +16,7 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    123
+#define DEFAULT_CONFIG_VERSION	    124
 
 #define DEFAULT_RADIO_TYPE	    -1		// -1 = none, 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -173,11 +173,16 @@
 #define DEFAULT_COMM_BAUD2	    230400
 #define DEFAULT_COMM_BAUD3	    3000000
 #define DEFAULT_COMM_BAUD4	    460800
-#define DEFAULT_COMM_STREAM_TYP1    COMM_TYPE_MAVLINK
+#define DEFAULT_COMM_BAUD5	    115200                       // CAN UART stream ID 1
+#define DEFAULT_COMM_BAUD6	    115200                       // CAN UART stream ID 2
+#define DEFAULT_COMM_BAUD7	    115200                       // CAN UART stream ID 3
+#define DEFAULT_COMM_STREAM_TYP1    COMM_STREAM_TYPE_MAVLINK
 #define DEFAULT_COMM_STREAM_TYP2    0
 #define DEFAULT_COMM_STREAM_TYP3    0
 #define DEFAULT_COMM_STREAM_TYP4    0
-
+#define DEFAULT_COMM_STREAM_TYP5    COMM_STREAM_TYPE_MAVLINK    // CAN UART stream ID 1
+#define DEFAULT_COMM_STREAM_TYP6    0                           // CAN UART stream ID 2
+#define DEFAULT_COMM_STREAM_TYP7    0                           // CAN UART stream ID 3
 
 #define DEFAULT_TELEMETRY_RATE	    20		// loops between reports
 

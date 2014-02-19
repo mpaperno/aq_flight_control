@@ -372,16 +372,16 @@ unsigned char ubloxPublish(void) {
 
     gpsData.lastMessage = IMU_LASTUPD;
 
-    if (commStreamUsed(COMM_TYPE_GPS))
-	ubloxSendPacket(COMM_TYPE_GPS);
+    if (commStreamUsed(COMM_STREAM_TYPE_GPS))
+	ubloxSendPacket(COMM_STREAM_TYPE_GPS);
 
     // TODO
-    if (1 && commStreamUsed(COMM_TYPE_TELEMETRY)) {
+    if (1 && commStreamUsed(COMM_STREAM_TYPE_TELEMETRY)) {
 	commTxBuf_t *txBuf;
 	uint8_t *ptr;
 	int i;
 
-	txBuf = commGetTxBuf(COMM_TYPE_TELEMETRY, ubloxData.length + 3 + 2 + 6 + 2 + 2);
+	txBuf = commGetTxBuf(COMM_STREAM_TYPE_TELEMETRY, ubloxData.length + 3 + 2 + 6 + 2 + 2);
 
 	if (txBuf) {
 	    ptr = &txBuf->buf;

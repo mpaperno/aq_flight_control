@@ -131,6 +131,8 @@
       <file file_name="grhott.h"/>
       <file file_name="mlinkrx.c"/>
       <file file_name="mlinkrx.h"/>
+      <file file_name="canUart.c"/>
+      <file file_name="canUart.h"/>
     </folder>
     <folder Name="System Files" file_name="">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>

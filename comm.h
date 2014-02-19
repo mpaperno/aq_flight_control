@@ -31,11 +31,12 @@
 #define COMM_LOG_FNAME		"MSG"		// comment out to disable logging
 
 #ifdef HAS_USB
-#define COMM_NUM_PORTS		5
-#define COMM_USB_PORT		4
+#define COMM_NUM_PORTS		8
+#define COMM_USB_PORT		7
 #else
-#define COMM_NUM_PORTS		4
+#define COMM_NUM_PORTS		7
 #endif
+#define COMM_CAN_PORT		4
 
 //#define COMM_DISABLE_FLOW_CONTROL1
 #define COMM_DISABLE_FLOW_CONTROL2
@@ -53,15 +54,22 @@
 #define AQ_PRINTF(fmt, args...)	{char *sTemp = commGetNoticeBuf(); snprintf(sTemp, COMM_NOTICE_LENGTH, fmt, args); commNotice(sTemp);}
 
 enum commStreamTypes {
-    COMM_TYPE_NONE	    = 0,
-    COMM_TYPE_MULTIPLEX	    = (1<<0),
-    COMM_TYPE_MAVLINK	    = (1<<1),
-    COMM_TYPE_TELEMETRY	    = (1<<2),
-    COMM_TYPE_GPS	    = (1<<3),
-    COMM_TYPE_FILEIO	    = (1<<4),
-    COMM_TYPE_CLI	    = (1<<5),
-    COMM_TYPE_OMAP_CONSOLE  = (1<<6),
-    COMM_TYPE_OMAP_PPP	    = (1<<7)
+    COMM_STREAM_TYPE_NONE	    = 0,
+    COMM_STREAM_TYPE_MULTIPLEX	    = (1<<0),
+    COMM_STREAM_TYPE_MAVLINK	    = (1<<1),
+    COMM_STREAM_TYPE_TELEMETRY	    = (1<<2),
+    COMM_STREAM_TYPE_GPS	    = (1<<3),
+    COMM_STREAM_TYPE_FILEIO	    = (1<<4),
+    COMM_STREAM_TYPE_CLI	    = (1<<5),
+    COMM_STREAM_TYPE_OMAP_CONSOLE   = (1<<6),
+    COMM_STREAM_TYPE_OMAP_PPP	    = (1<<7)
+};
+
+enum commPortTypes {
+    COMM_PORT_TYPE_NONE     = 0,
+    COMM_PORT_TYPE_SERIAL,
+    COMM_PORT_TYPE_CAN,
+    COMM_PORT_TYPE_USB
 };
 
 enum commTxBufferStatus {
@@ -90,7 +98,7 @@ typedef struct {
 } commTxStack_t;
 
 typedef struct {
-    serialPort_t *s;
+    uint8_t port;
 } commRcvrStruct_t;
 
 typedef void commNoticeCallback_t(const char *s);
@@ -104,7 +112,7 @@ typedef struct {
     void *noticeQueue[COMM_NOTICE_DEPTH*2];
     char noticeStrings[COMM_NOTICE_DEPTH][COMM_NOTICE_LENGTH];
 
-    serialPort_t *serialPorts[COMM_NUM_PORTS];		    // serial port handles
+    void *portHandles[COMM_NUM_PORTS];		    // serial port handles
 
     commNoticeCallback_t *noticeFuncs[COMM_MAX_CONSUMERS];  // notice callbacks
     commTelemCallback_t *telemFuncs[COMM_MAX_CONSUMERS];    // telemetry callbacks
@@ -114,6 +122,7 @@ typedef struct {
     commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
 
     uint8_t portStreams[COMM_NUM_PORTS];		    // stream assignments for each port
+    uint8_t portTypes[COMM_NUM_PORTS];                      // type of port (serial, CAN, USB)
 
     uint8_t txStackHeads[COMM_NUM_PORTS];		    // stack heads
     volatile uint8_t txStackTails[COMM_NUM_PORTS];	    // stack tails
@@ -140,6 +149,7 @@ extern void commInit(void);
 extern void commRegisterNoticeFunc(commNoticeCallback_t *func);
 extern void commRegisterTelemFunc(commTelemCallback_t *func);
 extern void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func);
+extern void commRegisterCanUart(void *ptr, uint8_t type, uint8_t n);
 extern void commNotice(const char *s);
 extern char *commGetNoticeBuf(void);
 extern commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize);
@@ -147,7 +157,7 @@ extern void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size);
 extern uint8_t commAvailable(commRcvrStruct_t *r);
 extern uint8_t commReadChar(commRcvrStruct_t *r);
 extern uint8_t commStreamUsed(uint8_t streamType);
-extern void commTxDMAFinished(void *param);
+extern void commTxFinished(void *param);
 extern void commSetStreamType(uint8_t port, uint8_t type);
 
 #endif
