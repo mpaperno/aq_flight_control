@@ -119,10 +119,9 @@ uint8_t commReadChar(commRcvrStruct_t *r) {
     return 0;
 }
 
-    uint8_t port;
 uint8_t commAvailable(commRcvrStruct_t *r) {
-//    uint8_t port = r->port;
-port = r->port;
+    uint8_t port = r->port;
+
     switch (commData.portTypes[port]) {
         case COMM_PORT_TYPE_SERIAL:
             if (commData.portHandles[port])

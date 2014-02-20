@@ -181,21 +181,21 @@ typedef struct {
     uint32_t TDLR;
     uint32_t TDHR;
     uint8_t TDTR;
-} canTxBuf_t;
+} canBuf_t;
 
 typedef void canTelemCallback_t(uint8_t nodeId, void *p);
 
 typedef struct {
-    CanRxMsg rxMsgs[CAN_BUF_SIZE];
-    canTxBuf_t txMsgsLo[CAN_BUF_SIZE];	// low priority
-    canTxBuf_t txMsgsHi[CAN_BUF_SIZE];	// high priority
+    canBuf_t rxMsgs[CAN_BUF_SIZE];
+    canBuf_t txMsgsLo[CAN_BUF_SIZE];	// low priority
+    canBuf_t txMsgsHi[CAN_BUF_SIZE];	// high priority
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
     canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
+    uint8_t responseData[64*8];
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;
     volatile uint8_t txHeadLo, txTailLo;
     volatile uint8_t txHeadHi, txTailHi;
-    uint8_t responseData[64*8];
     uint8_t nextNodeSlot;
     uint8_t seqId;
     uint8_t initialized;

@@ -67,7 +67,7 @@ static int8_t canGetFreeMailbox(void) {
 static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     uint32_t seqId;
     uint32_t *d = data;
-    canTxBuf_t *txPtr;
+    canBuf_t *txPtr;
 
     if ((id & CAN_LCC_MASK) < CAN_LCC_NORMAL)
         txPtr = &canData.txMsgsHi[canData.txHeadHi];
@@ -230,8 +230,9 @@ static void canResetBus(void) {
     canSend(CAN_LCC_EXCEPTION | CAN_TT_GROUP | CAN_FID_RESET_BUS, 0, 0, 0);
 }
 
-static void canGrantAddr(CanRxMsg *rx) {
-    uint32_t *uuidPtr = (uint32_t *)&rx->Data[0];
+static void canGrantAddr(canBuf_t *rx) {
+    uint32_t *uuidPtr = &rx->TDLR;
+    uint8_t *data = (uint8_t *)uuidPtr;
     uint32_t uuid;
     int i;
 
@@ -249,15 +250,15 @@ static void canGrantAddr(CanRxMsg *rx) {
 	// store in table
 	canData.nodes[i].networkId = i+1;
 	canData.nodes[i].uuid = uuid;
-	canData.nodes[i].type = rx->Data[4];
-	canData.nodes[i].canId = rx->Data[5];
+	canData.nodes[i].type = data[4];
+	canData.nodes[i].canId = data[5];
 
 	// send groupId & subgroupId in bytes 5 & 6
-	rx->Data[4] = canData.nodes[i].groupId;
-	rx->Data[5] = canData.nodes[i].subgroupId;
+	data[4] = canData.nodes[i].groupId;
+	data[5] = canData.nodes[i].subgroupId;
 
 	// respond
-	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 6, rx->Data);
+	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 6, data);
     }
 }
 
@@ -269,14 +270,22 @@ static void canProcessCmd(uint8_t doc, uint8_t canId, uint32_t *data, uint8_t n)
     }
 }
 
-static void canProcessMessage(CanRxMsg *rx) {
-    uint32_t id = rx->ExtId<<3;
-    uint32_t *data = (uint32_t *)&rx->Data;
-    uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
-    uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
-    uint8_t sid = (id & CAN_SID_MASK)>>14;
+static void canProcessMessage(canBuf_t *rx) {
+    uint32_t id = rx->TIR;
     uint8_t doc = (id & CAN_DOC_MASK)>>19;
+    uint8_t sid = (id & CAN_SID_MASK)>>14;
+    uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
+    uint32_t *data = &rx->TDLR;
+    uint8_t n = rx->TDTR;
+    uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
 
+//    uint32_t id = rx->ExtId<<3;
+//    uint32_t *data = (uint32_t *)&rx->Data;
+//    uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
+//    uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
+//    uint8_t sid = (id & CAN_SID_MASK)>>14;
+//    uint8_t doc = (id & CAN_DOC_MASK)>>19;
+//
     switch (id & CAN_FID_MASK) {
 	case CAN_FID_REQ_ADDR:
 	    canGrantAddr(rx);
@@ -289,7 +298,7 @@ static void canProcessMessage(CanRxMsg *rx) {
 	    break;
 
         case CAN_FID_CMD:
-            canProcessCmd(doc, canData.nodes[sid-1].canId, data, rx->DLC);
+            canProcessCmd(doc, canData.nodes[sid-1].canId, data, n);
             break;
 
 	case CAN_FID_ACK:
@@ -303,18 +312,15 @@ static void canProcessMessage(CanRxMsg *rx) {
 }
 
 int canCheckMessage(void) {
-    CanRxMsg *rx;
+    canBuf_t *rx;
     int ret = 0;
 
     if (canData.initialized) {
 	while (canData.rxHead != canData.rxTail) {
 	    rx = &canData.rxMsgs[canData.rxTail];
 
-	    // ignore standard id messages
-	    if (rx->IDE != CAN_Id_Standard) {
-		canProcessMessage(rx);
-		ret = 1;
-	    }
+            canProcessMessage(rx);
+            ret = 1;
 
 	    canData.rxTail = (canData.rxTail + 1) % CAN_BUF_SIZE;
 	}
@@ -448,11 +454,20 @@ void canInit(void) {
 }
 
 void CAN_RX0_HANDLER(void) {
-    CAN_Receive(CANx, CAN_FIFO0, &canData.rxMsgs[canData.rxHead]);
+    canBuf_t *rx = &canData.rxMsgs[canData.rxHead];
+
+    rx->TIR = (CANx->sFIFOMailBox[CAN_FIFO0].RIR>>3)<<3;
+    rx->TDLR = CANx->sFIFOMailBox[CAN_FIFO0].RDLR;
+    rx->TDHR = CANx->sFIFOMailBox[CAN_FIFO0].RDHR;
+    rx->TDTR = CANx->sFIFOMailBox[CAN_FIFO0].RDTR & (uint8_t)0x0F;
+
+    // release FIFO
+    CANx->RF0R |= CAN_RF0R_RFOM0;
+
     canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE;
 }
 
-static void canTxMsg(canTxBuf_t *tx, uint8_t mailbox) {
+static void canTxMsg(canBuf_t *tx, uint8_t mailbox) {
     CANx->sTxMailBox[mailbox].TDTR = tx->TDTR;
 
     CANx->sTxMailBox[mailbox].TDLR = tx->TDLR;
