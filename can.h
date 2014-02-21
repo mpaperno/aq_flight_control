@@ -191,7 +191,7 @@ typedef struct {
     canBuf_t txMsgsHi[CAN_BUF_SIZE];	// high priority
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
     canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
-    uint8_t responseData[64*8];
+    uint8_t responseData[64*8];         // must be word aligned
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;
     volatile uint8_t txHeadLo, txTailLo;

@@ -74,31 +74,34 @@ static void motorsCanSendGroups(void) {
 	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
 }
 
-static void motorsCanRequestTelem(int i) {
+static void motorsCanRequestTelem(int motorId) {
 #if MOTORS_CAN_TELEM_RATE > 0
     // request telemetry
-    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[i]->networkId, 0, CAN_TELEM_STATUS);
-    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[i]->networkId, MOTORS_CAN_TELEM_RATE);
+    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[motorId]->networkId, 0, CAN_TELEM_STATUS);
+    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[motorId]->networkId, MOTORS_CAN_TELEM_RATE);
 
-    motorsData.canTelemReqTime[i] = timerMicros();
+    motorsData.canTelemReqTime[motorId] = timerMicros();
 #endif
 }
 
-static void motorsCheckCanStatus(int i) {
+static void motorsCheckCanStatus(int motorId) {
 #if MOTORS_CAN_TELEM_RATE > 0
     // no status report within the last second?
-    if ((timerMicros() - motorsData.canTelemReqTime[i]) > 1e6f && (timerMicros() - motorsData.canStatusTime[i]) > 1e6f) {
-	// clear status information
-	uint32_t *storage = (uint32_t *)&motorsData.canStatus[i];
-	storage[0] = 0;
-	storage[1] = 0;
+    if ((timerMicros() - motorsData.canStatusTime[motorId]) > 1e6f) {
+        // has it been more than 1 second since our last request?
+        if ((timerMicros() - motorsData.canTelemReqTime[motorId]) > 1e6f) {
+            // clear status information
+            uint32_t *storage = (uint32_t *)&motorsData.canStatus[motorId];
+            storage[0] = 0;
+            storage[1] = 0;
 
-	motorsCanRequestTelem(i);
+            motorsCanRequestTelem(motorId);
+        }
     }
     // if ESC is reporting as being disarmed (and should not be)
-    else if (motorsData.canStatus[i].state == ESC32_STATE_DISARMED && (supervisorData.state & STATE_ARMED)) {
+    else if (motorsData.canStatus[motorId].state == ESC32_STATE_DISARMED && (supervisorData.state & STATE_ARMED)) {
 	// send an arm command
-	canCommandArm(CAN_TT_NODE, motorsData.can[i]->networkId);
+	canCommandArm(CAN_TT_NODE, motorsData.can[motorId]->networkId);
     }
 #endif
 }
@@ -245,17 +248,23 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 }
 
 static void motorsCanInit(int i) {
-    if ((motorsData.can[i] = canFindNode(CAN_TYPE_ESC, i+1)) == 0) {
+    uint8_t motorId = i;
+
+    // canId's 17-32 map to motorId's 1-16
+    if (motorId >= 16)
+        motorId -= 16;
+
+    if ((motorsData.can[motorId] = canFindNode(CAN_TYPE_ESC, i+1)) == 0) {
 	AQ_PRINTF("Motors: cannot find CAN id [%d]\n", i+1);
     }
     else {
 #ifdef USE_QUATOS
-	esc32SetupCan(motorsData.can[i], 1);
+	esc32SetupCan(motorsData.can[motorId], 1);
 #else
-	esc32SetupCan(motorsData.can[i], 0);
+	esc32SetupCan(motorsData.can[motorId], 0);
 #endif
 
-    	motorsCanRequestTelem(i);
+    	motorsCanRequestTelem(motorId);
     }
 }
 
@@ -349,9 +358,12 @@ void motorsInit(void) {
 
 	if (d->throttle != 0.0f || d->pitch != 0.0f || d->roll != 0.0f || d->yaw != 0.0f) {
 
-	    // CAN
-	    if (((uint32_t)p[MOT_CAN]) & (1<<i))
+	    // CAN LO
+	    if (((uint32_t)p[MOT_CANL]) & (1<<i))
 		motorsCanInit(i);
+            // CAN HI (PDB)
+	    else if (((uint32_t)p[MOT_CANH]) & (1<<i))
+		motorsCanInit(i+16);
 	    // PWM
 	    else if (i < PWM_NUM_PORTS)
 		motorsPwmInit(i);

@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -497,6 +497,8 @@ void commRegisterCanUart(void *ptr, uint8_t type, uint8_t n) {
     commData.portHandles[COMM_CAN_PORT+n] = ptr;
     commData.portTypes[COMM_CAN_PORT+n] = type;
     commData.portStreams[COMM_CAN_PORT+n] = (uint8_t)p[COMM_STREAM_TYP5+n];
+
+    commSetTypesUsed();
 }
 
 void CRYP_IRQHandler(void) {

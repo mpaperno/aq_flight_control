@@ -90,7 +90,8 @@ const char *configParameterStrings[] = {
     "CTRL_YAW_ANG_IM",
     "CTRL_YAW_ANG_DM",
     "CTRL_YAW_ANG_OM",
-    "MOT_CAN",
+    "MOT_CANL",
+    "MOT_CANH",
     "MOT_FRAME",
     "MOT_ARM",
     "MOT_MIN",
@@ -454,7 +455,8 @@ void configLoadDefault(void) {
     p[CTRL_YAW_ANG_IM] = DEFAULT_CTRL_YAW_ANG_IM;
     p[CTRL_YAW_ANG_DM] = DEFAULT_CTRL_YAW_ANG_DM;
     p[CTRL_YAW_ANG_OM] = DEFAULT_CTRL_YAW_ANG_OM;
-    p[MOT_CAN] = DEFAULT_MOT_CAN;
+    p[MOT_CANL] = DEFAULT_MOT_CANL;
+    p[MOT_CANH] = DEFAULT_MOT_CANH;
     p[MOT_FRAME] = DEFAULT_MOT_FRAME;
     p[MOT_ARM] = DEFAULT_MOT_ARM;
     p[MOT_MIN] = DEFAULT_MOT_MIN;

@@ -279,13 +279,6 @@ static void canProcessMessage(canBuf_t *rx) {
     uint8_t n = rx->TDTR;
     uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
 
-//    uint32_t id = rx->ExtId<<3;
-//    uint32_t *data = (uint32_t *)&rx->Data;
-//    uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
-//    uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
-//    uint8_t sid = (id & CAN_SID_MASK)>>14;
-//    uint8_t doc = (id & CAN_DOC_MASK)>>19;
-//
     switch (id & CAN_FID_MASK) {
 	case CAN_FID_REQ_ADDR:
 	    canGrantAddr(rx);
