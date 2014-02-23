@@ -107,7 +107,7 @@ void canUartInit(void) {
     for (i = 0; i < CAN_UART_NUM; i++) {
         if ((canUartData[i].node = canFindNode(CAN_TYPE_UART, i+1)) != 0) {
             commRegisterCanUart((void *)&canUartData[i], COMM_PORT_TYPE_CAN, i);
-            canSetParam(CAN_TT_NODE, canUartData[i].node->networkId, CAN_UART_PARAM_BAUD, p[COMM_BAUD5+i]);
+            canSetParamByName(canUartData[i].node->networkId, (uint8_t *)"BAUD_RATE", p[COMM_BAUD5+i]);
             canCommandArm(CAN_TT_NODE, canUartData[i].node->networkId);
         }
     }

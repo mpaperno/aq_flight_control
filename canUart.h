@@ -25,11 +25,6 @@
 #define CAN_UART_BUF_SIZE       128
 #define CAN_UART_BLOCK_SIZE     16      // max number of packets to send at once
 
-enum {
-    CAN_UART_PARAM_BAUD = 0,
-    CAN_UART_PARAM_NUM
-};
-
 typedef void canUartTxCallback_t(void *ptr);
 
 typedef struct {

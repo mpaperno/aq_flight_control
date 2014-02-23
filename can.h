@@ -113,9 +113,12 @@ enum {
     CAN_DATA_INPUT_MODE,
     CAN_DATA_RUN_MODE,
     CAN_DATA_STATE,
-    CAN_DATA_PARAM,
+    CAN_DATA_PARAM_ID,
     CAN_DATA_TELEM,
-    CAN_DATA_VERSION
+    CAN_DATA_VERSION,
+    CAN_DATA_VALUE,
+    CAN_DATA_PARAM_NAME1,
+    CAN_DATA_PARAM_NAME2
 };
 
 // telemetry values
@@ -207,8 +210,11 @@ extern void canInit(void);
 extern void canLowLevelInit(void);
 extern int canCheckMessage(void);
 extern char *canGetVersion(uint8_t tid);
-extern float *canGetParam(uint8_t tid, uint16_t paramId);
-extern uint8_t *canSetParam(uint32_t tt, uint8_t tid, uint16_t paramId, float value);
+extern float canGetParamById(uint8_t tid, uint16_t paramId);
+extern uint8_t *canSetParamById(uint8_t tid, uint16_t paramId, float value);
+extern uint8_t *canSetParamByName(uint8_t tid, uint8_t *name, float value);
+extern int16_t canGetParamIdByName(uint8_t tid, uint8_t *name);
+extern float canGetParamByName(uint8_t tid, uint8_t *name);
 extern uint8_t *canGetState(uint8_t tid);
 extern uint8_t *canSetGroup(uint8_t tid, uint8_t gid, uint8_t sgid);
 extern void canCommandPos(uint8_t tid, float angle);

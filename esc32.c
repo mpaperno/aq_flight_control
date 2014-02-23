@@ -120,7 +120,7 @@ static float esc32ReadParam(uint8_t paramId, canNodes_t *canNode) {
     }
     // CAN
     else {
-	value = *canGetParam(canNode->networkId, paramId);
+	value = canGetParamById(canNode->networkId, paramId);
 
 	return value;
     }
@@ -145,7 +145,7 @@ static float esc32WriteParam(uint8_t paramId, float value, canNodes_t *canNode) 
     }
     // CAN
     else {
-	canSetParam(CAN_TT_NODE, canNode->networkId, paramId, value);
+	canSetParamById(canNode->networkId, paramId, value);
     }
 
     // moment to update

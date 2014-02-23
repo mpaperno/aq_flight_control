@@ -26,6 +26,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "comm.h"
+#include <math.h>
 
 canStruct_t canData;
 
@@ -131,7 +132,7 @@ static uint8_t *canSendWaitResponse(uint32_t extId, uint8_t tid, uint8_t n, uint
 	    timeout--;
 	} while (timeout && canData.responses[seqId] == 0);
 
-	if (timeout != 0)
+	if (timeout != 0 && canData.responses[seqId] != (CAN_FID_NACK>>25))
 	    return &canData.responseData[seqId*8];
     }
 
@@ -146,8 +147,40 @@ uint8_t *canGetState(uint8_t tid) {
     return (uint8_t *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_STATE<<19), tid, 0, 0);
 }
 
-float *canGetParam(uint8_t tid, uint16_t paramId) {
-    return (float *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM<<19), tid, 2, (uint8_t *)&paramId);
+int16_t canGetParamIdByName(uint8_t tid, uint8_t *name) {
+    int16_t *paramId;
+
+    // first half of name
+    canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM_NAME1<<19), tid, 8, (uint8_t *)&name[0]);
+    // second half of name
+    paramId = (int16_t *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM_NAME2<<19), tid, 8, (uint8_t *)&name[8]);
+
+    if (paramId)
+        return *paramId;
+    else
+        return -1;
+}
+
+float canGetParamById(uint8_t tid, uint16_t paramId) {
+    float *value;
+
+    value = (float *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM_ID<<19), tid, 2, (uint8_t *)&paramId);
+
+    if (value)
+        return *value;
+    else
+        return NAN;
+}
+
+float canGetParamByName(uint8_t tid, uint8_t *name) {
+    int16_t paramId;
+
+    paramId = canGetParamIdByName(tid, name);
+
+    if (paramId >= 0)
+        return canGetParamById(tid, paramId);
+    else
+        return NAN;
 }
 
 uint8_t *canSetRunMode(uint32_t tt, uint8_t tid, uint8_t mode) {
@@ -162,14 +195,25 @@ uint8_t *canSetGroup(uint8_t tid, uint8_t gid, uint8_t sgid) {
     return canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_SET | (CAN_DATA_GROUP<<19), tid, 2, &canData.nodes[tid-1].groupId);
 }
 
-uint8_t *canSetParam(uint32_t tt, uint8_t tid, uint16_t paramId, float value) {
+uint8_t *canSetParamById(uint8_t tid, uint16_t paramId, float value) {
     uint32_t data[2];
     float *fPtr = (float *)&data[1];
 
     data[0] = paramId;
     *fPtr = value;
 
-    return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_SET | (CAN_DATA_PARAM<<19), tid, 8, (uint8_t *)&data);
+    return canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_SET | (CAN_DATA_PARAM_ID<<19), tid, 8, (uint8_t *)&data);
+}
+
+uint8_t *canSetParamByName(uint8_t tid, uint8_t *name, float value) {
+    int16_t paramId;
+
+    paramId = canGetParamIdByName(tid, name);
+
+    if (paramId >= 0)
+        return canSetParamById(tid, paramId, value);
+    else
+        return 0;
 }
 
 uint8_t *canCommandBeep(uint32_t tt, uint8_t tid, uint16_t freq, uint16_t dur) {
