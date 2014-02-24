@@ -493,6 +493,8 @@ void canInit(void) {
 void CAN_RX0_HANDLER(void) {
     canBuf_t *rx = &canData.rxMsgs[canData.rxHead];
 
+    CAN_ClearITPendingBit(CANx, CAN_IT_FMP0);
+
     rx->TIR = (CANx->sFIFOMailBox[CAN_FIFO0].RIR>>3)<<3;
     rx->TDLR = CANx->sFIFOMailBox[CAN_FIFO0].RDLR;
     rx->TDHR = CANx->sFIFOMailBox[CAN_FIFO0].RDHR;
