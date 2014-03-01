@@ -220,8 +220,12 @@ static void ubloxPollVersion(void) {
 }
 
 static void ubloxVersionSpecific(int ver) {
-    if (ver > 6) {
-	// 10Hz for ver 7+
+    if (ver > 7) {
+	// 10Hz for ver 8
+	ubloxSetRate((uint16_t)100);
+    }
+    else if (ver > 6) {
+	// 10Hz for ver 7
 	ubloxSetRate((uint16_t)100);
 	// SBAS screwed up on v7 modules w/ v1 firmware
 	ubloxSetSBAS(0);					// disable SBAS

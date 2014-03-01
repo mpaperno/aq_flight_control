@@ -59,7 +59,7 @@
 #define UBLOX_SBAS_MSAS	    0x00020200
 #define UBLOX_SBAS_GAGAN    0x00000108
 
-#define UBLOX_MAX_PAYLOAD   384
+#define UBLOX_MAX_PAYLOAD   512
 #define UBLOX_WAIT_MS	    20
 
 enum ubloxStates {
