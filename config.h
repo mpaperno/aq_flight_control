@@ -21,6 +21,18 @@
 
 #include "aq.h"
 
+#if BOARD_VERSION == 6 && defined DIMU_VERSION
+    #if DIMU_VERSION == 10
+	#include "board_dimu_v1.h"
+    #elif DIMU_VERSION == 11
+	#include "board_dimu_v1_1.h"
+    #elif DIMU_VERSION == 20
+	#include "board_dimu_v2.h"
+    #else
+	#error "Unknown DIMU_VERSION for BOARD_VERSION == 6"
+    #endif
+#endif
+
 #include "config_default.h"
 
 #define CONFIG_FILE_NAME	    "params.txt"

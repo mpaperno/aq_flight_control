@@ -26,6 +26,8 @@ SRC_PATH ?= .
 BOARD_VER ?= 6
 # Board revision to build for (0 = v6 initial release revision, 1 = v6 Oct. 2012 revision)
 BOARD_REV ?= 0
+# Specify a DIMU version number to enable DIMU support in AQ, zero to disable (eg. DIMU_VER=1.1)
+DIMU_VER ?= 0
 # Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
 # Use the single-folder source file organization from AQ repo? (0|1)
@@ -38,8 +40,6 @@ ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 else 
 	DEBUG_BUILD ?= 0
 endif
-# Build with HW flow control disabled on COM port1? (0|1)
-HW_FC_NONE ?= 0
 # Flashing interface (Linux only)
 USB_DEVICE ?= /dev/ttyUSB0
 
@@ -51,25 +51,29 @@ USB_DEVICE ?= /dev/ttyUSB0
 # System-specific folder paths and commands
 #
 # compiler base path
-CC_PATH ?= /usr/share/crossworks_for_arm_2.2
-#CC_PATH ?= C:/devel/gcc/crossworks_for_arm_2.2
+CC_PATH ?= /usr/share/crossworks_for_arm_2.3
+#CC_PATH ?= C:/devel/gcc/crossworks_for_arm_2.3
 
 # shell commands (Windows needs Cygwin or MSys)
 EXE_AWK ?= gawk 
 EXE_MV ?= mv 
+EXE_MKDIR ?= mkdir -p
+# Windows examples:
 #EXE_AWK := C:/cygwin/bin/gawk
 #EXE_MV := C:/cygwin/bin/mv
+#EXE_MKDIR := mkdir
 
-# Path to mavlink and stm32 includes
+# Path to libraries/includes
+# see "External libraries required by AQ" below
 AQLIB_PATH ?= ..
 #AQLIB_PATH = C:/devel/AQ/lib
 
 # Where to put the built objects and binaries.
-# A sub-folder is created along this path, named as the BUILD_TYPE.
-BUILD_PATH ?= .
-#BUILD_PATH ?= ..
+# A sub-folder is created along this path, named as the BUILD_TYPE (eg. build/Release).
+#BUILD_PATH ?= .
+BUILD_PATH ?= ../build
 
-# Add preprocessor definitions here (eg. -DCOMM_DISABLE_FLOW_CONTROL2 to disable flow control on COM port 2)
+# Add preprocessor definitions here (eg. CC_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
 CC_VARS ?=
 
 
@@ -102,6 +106,9 @@ ifeq ($(DEBUG_BUILD), 1)
 	INCR_BUILDNUM = 0
 else
 	BIN_NAME := $(BIN_NAME)v$(FW_VER).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
+	ifneq ($(DIMU_VER), 0)
+		BIN_NAME := $(BIN_NAME)-dimu$(DIMU_VER)
+	endif
 	ifdef BIN_SUFFIX
 		BIN_NAME := $(BIN_NAME)-$(BIN_SUFFIX)
 	endif
@@ -116,47 +123,33 @@ AS = $(CC_BIN_PATH)/as
 LD = $(CC_BIN_PATH)/ld
 OBJCP = $(CC_BIN_PATH)/objcopy
 
-# External libraries required by AQ
+## External libraries required by AQ
+# Generated MAVLink header files (https://github.com/AutoQuad/mavlink/tree/master/include)
 MAVINC_PATH = $(AQLIB_PATH)/mavlink/include/autoquad
+# Files from Crossworks SMT32 package: autoquad.ld (STM32f4.ld), STM32F40_41xxx.vec, STM32_Startup.s, & the /include folder
 STMLIB_PATH = $(AQLIB_PATH)/STM32
-# also STM32f4.ld should be here
-
-# Some supporting files/libraries are kept within the working source code base for now.
-# (see corresponding object lists below for which files live in these folders)
-# It can be convenient to break up these source files into actual subfolders.
-# The official AQ source repo keeps everything in one folder since CrossWorks
-# Studio uses virtual folders for code organization.
-ifeq ($(FLAT_SRC), 1)
-	STM32SYS_PATH = $(SRC_PATH)
-	COOS_PATH = $(SRC_PATH)
-	DSP_PATH = $(SRC_PATH)
-	USB_PATH = $(SRC_PATH)
-	AQINC_PATHS = $(SRC_PATH)
-else
-	AQINC_PATH = .
-	STM32SYS_PATH = $(AQINC_PATH)/STM32_System
-	COOS_PATH = $(AQINC_PATH)/CoOS
-	DSP_PATH = $(AQINC_PATH)/DSPLIB
-	USB_PATH = $(SRC_PATH)/USB
-	AQINC_PATHS = $(SRC_PATH) $(COOS_PATH) $(DSP_PATH) $(USB_PATH) $(STM32SYS_PATH)
-endif
+# STM32F4 libs from ST (http://www.st.com/web/en/catalog/tools/PF257901)
+STM32DRIVER_PATH = $(AQLIB_PATH)/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/STM32F4xx_StdPeriph_Driver
+STM32CMSIS_PATH = $(AQLIB_PATH)/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/CMSIS
 
 # all include flags for the compiler
-CC_INCLUDES :=  $(addprefix -I, $(AQINC_PATHS)) -I$(STMLIB_PATH)/include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
+CC_INCLUDES :=  -I$(SRC_PATH) -I$(STMLIB_PATH)/include -I$(STM32DRIVER_PATH)/inc -I$(STM32CMSIS_PATH)/Include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
 
 # compiler flags
 CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -Wall -finline-functions -Wdouble-promotion -std=c99 \
-	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet -MD $(basename $@).d -MQ $@
+	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet
 
 # macro definitions to pass via compiler command line
 #
 CC_VARS += -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG -D__TARGET_F4XX= -DSTM32F4XX= -DSTM32F40_41xxx -D__FPU_PRESENT \
-	-DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER 
-
+	-DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER
+	
+# set AQ hardware version and revision
 CC_VARS += -DBOARD_VERSION=$(BOARD_VER) -DBOARD_REVISION=$(BOARD_REV)
 
-ifeq ($(HW_FC_NONE),1)
-	CC_VARS += -DCOMM_DISABLE_FLOW_CONTROL1
+# build AQ with specific digital IMU version, if specified (fall back to AIMU on v6 hardware)
+ifneq ($(DIMU_VER), 0)
+	CC_VARS += -DDIMU_VERSION=$(subst .,,$(DIMU_VER))
 endif
 
 # Additional target(s) to build based on conditionals
@@ -169,7 +162,8 @@ endif
 # build type flags/defs (debug vs. release)
 # (exclude STARTUP_FROM_RESET in debug builds if using Rowley debugger)
 ifeq ($(DEBUG_BUILD), 1)
-	BT_CFLAGS = -DDEBUG -DSTARTUP_FROM_RESET -DUSE_FULL_ASSERT -O1 -ggdb -g2
+	BT_CFLAGS = -DDEBUG -DUSE_FULL_ASSERT -O1 -ggdb -g2
+	BT_CFLAGS += -DSTARTUP_FROM_RESET
 else
 	BT_CFLAGS = -DNDEBUG -DSTARTUP_FROM_RESET -O2
 endif
@@ -194,8 +188,9 @@ EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 
 
 # AQ code objects to create (correspond to .c source to compile)
-AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
-	comm.o command.o compass.o config.o control.o can.o canCalib.o \
+AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
+	comm.o command.o compass.o config.o control.o \
+	can.o canCalib.o canSensors.o canUart.o \
 	d_imu.o digital.o esc32.o eeprom.o \
 	ff.o filer.o flash.o fpu.o futaba.o \
 	gimbal.o gps.o getbuildnum.o grhott.o hmc5983.o \
@@ -204,56 +199,34 @@ AQV6_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o 
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
 	sdio.o serial.o signaling.o spektrum.o spi.o srcdkf.o supervisor.o \
-	telemetry.o ublox.o
-
-## other objects to create
-
-# STM32 related including preprocessor and startup 
-STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_hash.o stm32f4xx_hash_md5.o \
-	stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o \
+	telemetry.o ublox.o \
 	system_stm32f4xx.o STM32_Startup.o thumb_crt0.o
-	
+
 # CoOS
-COOS_OBJ_FILES = arch.o core.o event.o flag.o kernelHeap.o mbox.o mm.o mutex.o port.o queue.o sem.o serviceReq.o task.o time.o timer.o utility.o
-	
-# ARM
-DSPLIB_OBJ_FILES = arm_fill_f32.o arm_copy_f32.o arm_mat_init_f32.o arm_mat_inverse_f32.o arm_mat_trans_f32.o arm_mat_mult_f32.o \
-	arm_mat_add_f32.o arm_mat_sub_f32.o arm_mean_f32.o arm_scale_f32.o arm_std_f32.o
-	
+COOS_OBJS = arch.o core.o event.o flag.o kernelHeap.o mbox.o mm.o mutex.o port.o queue.o sem.o serviceReq.o task.o time.o timer.o utility.o
+
 # USB functions/drivers
-USB_OBJ_FILES = usb.o usb_bsp.o usb_core.o usb_dcd.o usb_dcd_int.o \
+USB_OBJS = usb.o usb_bsp.o usb_core.o usb_dcd.o usb_dcd_int.o \
 	usbd_core.o  usbd_desc.o  usbd_ioreq.o  usbd_req.o usbd_storage_msd.o \
 	usbd_cdc_msc_core.o usbd_msc_bot.o usbd_msc_data.o usbd_msc_scsi.o
 #  usb_hcd.o usb_hcd_int.o
 
+# STM32 drivers from STM32F4xx_StdPeriph_Driver/src/
+STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_hash.o stm32f4xx_hash_md5.o \
+	stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o
+STM32_SYS_OBJS := $(addprefix STM32SYS/, $(STM32_SYS_OBJ_FILES))
 
-## assemble object lists
+# ARM drivers from CMSIS/DSP_Lib/Source/
+DSPLIB_OBJ_FILES = BasicMathFunctions/arm_scale_f32.o \
+	SupportFunctions/arm_fill_f32.o SupportFunctions/arm_copy_f32.o \
+	MatrixFunctions/arm_mat_init_f32.o MatrixFunctions/arm_mat_inverse_f32.o MatrixFunctions/arm_mat_trans_f32.o \
+	MatrixFunctions/arm_mat_mult_f32.o MatrixFunctions/arm_mat_add_f32.o MatrixFunctions/arm_mat_sub_f32.o \
+	StatisticsFunctions/arm_mean_f32.o StatisticsFunctions/arm_std_f32.o
+DSPLIB_OBJS := $(addprefix STM32DSPLIB/, $(DSPLIB_OBJ_FILES))
 
-ifeq ($(STM32SYS_PATH),$(SRC_PATH))
-	STM32_SYS_OBJS := $(STM32_SYS_OBJ_FILES)
-	STM32_OBJ_TARGET := $(OBJ_PATH)
-else
-	STM32_SYS_OBJS := $(addprefix $(STM32SYS_PATH)/, $(STM32_SYS_OBJ_FILES))
-	STM32_OBJ_TARGET := $(OBJ_PATH)/$(STM32SYS_PATH)
-endif
-ifeq ($(COOS_PATH),$(SRC_PATH))
-	COOS_OBJS := $(COOS_OBJ_FILES)
-else
-	COOS_OBJS := $(addprefix $(COOS_PATH)/, $(COOS_OBJ_FILES))
-endif
-ifeq ($(DSP_PATH),$(SRC_PATH))
-	DSPLIB_OBJS := $(DSPLIB_OBJ_FILES)
-else
-	DSPLIB_OBJS := $(addprefix $(DSP_PATH)/, $(DSPLIB_OBJ_FILES))
-endif
-ifeq ($(USB_PATH),$(SRC_PATH))
-	USB_OBJS := $(USB_OBJ_FILES)
-else
-	USB_OBJS := $(addprefix $(USB_PATH)/, $(USB_OBJ_FILES))
-endif
 
 # all objects
-C_OBJECTS := $(addprefix $(OBJ_PATH)/, $(AQV6_OBJS) $(STM32_SYS_OBJS) $(COOS_OBJS) $(DSPLIB_OBJS) $(USB_OBJS))
+C_OBJECTS := $(addprefix $(OBJ_PATH)/, $(AQ_OBJS) $(STM32_SYS_OBJS) $(DSPLIB_OBJS) $(COOS_OBJS) $(USB_OBJS))
 
 # dependency files generated by previous make runs
 DEPS := $(C_OBJECTS:.o=.d)
@@ -268,54 +241,65 @@ DEPS := $(C_OBJECTS:.o=.d)
 all: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex
 
 clean:
-	rm -fr $(OBJ_PATH)
+	-rm -fr $(OBJ_PATH)
 #	rm -f $(BIN_PATH)/*.*
 
 # include auto-generated depenency targets
 -include $(DEPS)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
-	@echo ""
 	@echo "## Compiling $< -> $@ ##"
-	$(CC) $(CFLAGS) $< -o $(basename $@).lst
+	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ $< -o $(basename $@).lst
 	@echo "## Assembling --> $@ ##"
 	$(AS) $(AS_OPTS) $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
-$(STM32_OBJ_TARGET)/STM32_Startup.o: $(STMLIB_PATH)/STM32_Startup.s
-	@echo ""
+$(OBJ_PATH)/STM32SYS/%.o: $(STM32DRIVER_PATH)/src/%.c
 	@echo "## Compiling $< -> $@ ##"
-	$(CC) $(CFLAGS) -E -lang-asm $< -o $(basename $@).lst
+	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ $< -o $(basename $@).lst
+	@echo "## Assembling --> $@ ##"
+	$(AS) $(AS_OPTS) $(basename $@).lst -o $@
+	@rm -f $(basename $@).lst
+
+$(OBJ_PATH)/STM32DSPLIB/%.o: $(STM32CMSIS_PATH)/DSP_Lib/Source/%.c
+	-$(EXE_MKDIR) $(@D)
+	@echo "## Compiling $< -> $@ ##"
+	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ $< -o $(basename $@).lst
+	@echo "## Assembling --> $@ ##"
+	$(AS) $(AS_OPTS) $(basename $@).lst -o $@
+	@rm -f $(basename $@).lst
+
+$(OBJ_PATH)/STM32_Startup.o: $(STMLIB_PATH)/STM32_Startup.s
+	@echo "## Compiling $< -> $@ ##"
+	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ -E -lang-asm $< -o $(basename $@).lst
 	@echo "## Assembling --> $@ ##"
 	$(AS) $(AS_OPTS) -gdwarf-2 $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
-$(STM32_OBJ_TARGET)/thumb_crt0.o: $(STM32SYS_PATH)/thumb_crt0.s
-	@echo ""
+$(OBJ_PATH)/thumb_crt0.o: $(SRC_PATH)/thumb_crt0.s
 	@echo "## Compiling $< -> $@ ##"
-	$(CC) $(CFLAGS) -E -lang-asm $< -o $(basename $@).lst
+	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ -E -lang-asm $< -o $(basename $@).lst
 	@echo "## Assembling --> $@ ##"
 	$(AS) $(AS_OPTS) -gdwarf-2 $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
 $(BIN_PATH)/$(BIN_NAME).elf: $(C_OBJECTS)
-	@echo ""
 	@echo "## Linking --> $@ ##"
 	$(LD) -X $(LINKER_OPTS) -o $@ --start-group $(C_OBJECTS) $(EXTRA_LIBS) --end-group
 
 $(BIN_PATH)/$(BIN_NAME).bin: $(BIN_PATH)/$(BIN_NAME).elf
-	@echo ""
 	@echo "## Objcopy $< --> $@ ##"
 	$(OBJCP) -O binary $< $@
 
 $(BIN_PATH)/$(BIN_NAME).hex: $(BIN_PATH)/$(BIN_NAME).elf
-	@echo ""
 	@echo "## Objcopy $< --> $@ ##"
 	$(OBJCP) -O ihex $< $@
 
 CREATE_BUILD_FOLDER :
 	@echo "Creating Build folders if necessary"
-	@mkdir -p $(OBJ_PATH)
+	-$(EXE_MKDIR) $(OBJ_PATH)
+	-$(EXE_MKDIR) $(OBJ_PATH)/STM32SYS
+	-$(EXE_MKDIR) $(OBJ_PATH)/STM32DSPLIB
 
 BUILDNUMBER :
 	@echo "Incrementing Build Number"
