@@ -26,60 +26,7 @@
 #include <string.h>
 #include <math.h>
 
-const char *esc32ParameterStrings[] = {
-    "CONFIG_VERSION",
-    "STARTUP_MODE",
-    "BAUD_RATE",
-    "PTERM",
-    "ITERM",
-    "FF1TERM",
-    "FF2TERM",
-    "CL1TERM",
-    "CL2TERM",
-    "CL3TERM",
-    "CL4TERM",
-    "CL5TERM",
-    "SHUNT_RESISTANCE",
-    "MIN_PERIOD",
-    "MAX_PERIOD",
-    "BLANKING_MICROS",
-    "ADVANCE",
-    "START_VOLTAGE",
-    "GOOD_DETECTS_START",
-    "BAD_DETECTS_DISARM",
-    "MAX_CURRENT",
-    "SWITCH_FREQ",
-    "MOTOR_POLES",
-    "PWM_MIN_PERIOD",
-    "PWM_MAX_PERIOD",
-    "PWM_MIN_VALUE",
-    "PWM_LO_VALUE",
-    "PWM_HI_VALUE",
-    "PWM_MAX_VALUE",
-    "PWM_MIN_START",
-    "PWM_RPM_SCALE",
-    "FET_BRAKING",
-    "PNFAC",
-    "INFAC",
-    "THR1TERM",
-    "THR2TERM",
-    "START_ALIGN_TIME",
-    "START_ALIGN_VOLTAGE",
-    "START_STEPS_NUM",
-    "START_STEPS_PERIOD",
-    "START_STEPS_ACCEL",
-    "PWM_LOWPASS",
-    "RPM_MEAS_LP",
-    "SERVO_DUTY",
-    "SERVO_P",
-    "SERVO_D",
-    "SERVO_MAX_RATE",
-    "SERVO_SCALE",
-    "ESC_ID",
-    "DIRECTION"
-};
-
-static float esc32ReadParamTransaction(uint8_t paramId) {
+static float esc32OwReadParamTransaction(uint8_t paramId) {
     uint8_t *p;
     float value;
 
@@ -98,119 +45,87 @@ static float esc32ReadParamTransaction(uint8_t paramId) {
     return value;
 }
 
-// require parameter to be read twice the same
-static float esc32ReadParam(uint8_t paramId, canNodes_t *canNode) {
-    float value = NAN;
+static int16_t esc32OwGetParamId(char *name) {
+    uint8_t *p;
+    int16_t value;
+    int i;
 
-    // OW
-    if (canNode == 0) {
-	float tmp;
-	int i;
+    owData.buf[0] = OW_GET_PARAM_ID;
 
-	i = 0;
-	while (i < 10) {
-	    i++;
-	    tmp = esc32ReadParamTransaction(paramId);
+    for (i = 0; i < 16; i++)
+        owData.buf[1+i] = name[i];
 
-	    if (tmp != NAN && tmp != value)
-		value = tmp;
-	    else
-		return value;
-	}
-    }
-    // CAN
-    else {
-	value = canGetParamById(canNode->networkId, paramId);
+    owTransaction(17, 3);
 
-	return value;
-    }
+    p = (uint8_t *)&value;
+    p[0] = owData.buf[1];
+    p[1] = owData.buf[2];
 
-    return NAN;
+    return value;
 }
 
-static float esc32WriteParam(uint8_t paramId, float value, canNodes_t *canNode) {
+// require parameter to be read twice the same
+static float esc32OwReadParamById(uint8_t paramId) {
+    float value = NAN;
+    float tmp;
+    int i;
+
+    i = 0;
+    while (i < 10) {
+        i++;
+        tmp = esc32OwReadParamTransaction(paramId);
+
+        if (tmp != NAN && tmp != value)
+            value = tmp;
+        else
+            return value;
+    }
+
+    return value;
+}
+
+static float esc32OwWriteParam(uint8_t paramId, float value) {
     uint8_t *p;
 
-    // OW
-    if (canNode == 0) {
-	owData.buf[0] = OW_PARAM_WRITE;
-	owData.buf[1] = paramId;
+    owData.buf[0] = OW_PARAM_WRITE;
+    owData.buf[1] = paramId;
 
-	p = (uint8_t *)&value;
-	owData.buf[2] = p[0];
-	owData.buf[3] = p[1];
-	owData.buf[4] = p[2];
-	owData.buf[5] = p[3];
-	owTransaction(6, 6);
-    }
-    // CAN
-    else {
-	canSetParamById(canNode->networkId, paramId, value);
-    }
+    p = (uint8_t *)&value;
+    owData.buf[2] = p[0];
+    owData.buf[3] = p[1];
+    owData.buf[4] = p[2];
+    owData.buf[5] = p[3];
+    owTransaction(6, 6);
 
     // moment to update
     yield(5);
 
-    return esc32ReadParam(paramId, canNode);
-}
-
-static int8_t esc32ParamIdByName(char *param) {
-    int i;
-
-    for (i = 0; i < ESC32_CONFIG_NUM_PARAMS; i++)
-	if (!strncasecmp(param, esc32ParameterStrings[i], strlen(esc32ParameterStrings[i])))
-	    return i;
-
-    return -1;
+    return esc32OwReadParamById(paramId);
 }
 
 // set ESC32 mode
-static uint8_t esc32SetMode(uint8_t mode, canNodes_t *canNode) {
-    // OW
-    if (canNode == 0) {
-	owData.buf[0] = OW_SET_MODE;
-	owData.buf[1] = mode;
-	owTransaction(2, 2);
+static uint8_t esc32OwSetMode(uint8_t mode) {
+    owData.buf[0] = OW_SET_MODE;
+    owData.buf[1] = mode;
+    owTransaction(2, 2);
 
-	owData.buf[0] = OW_GET_MODE;
-	owData.buf[1] = 0;
-	owTransaction(1, 2);
+    owData.buf[0] = OW_GET_MODE;
+    owData.buf[1] = 0;
+    owTransaction(1, 2);
 
-	if (owData.buf[0] != OW_GET_MODE)
-	    return -1;
-	else
-	    return owData.buf[1];
-    }
-    // CAN
-    else {
-	if (*canSetRunMode(CAN_TT_NODE, canNode->networkId, mode) != 0)
-	    return mode;
-	else
-	    return -1;
-    }
+    if (owData.buf[0] != OW_GET_MODE)
+        return -1;
+    else
+        return owData.buf[1];
 }
 
-static uint32_t esc32ConfigWrite(canNodes_t *canNode) {
-    uint32_t ret = 0;
-
-    // OW
-    if (canNode == 0) {
-	// write to flash
-	owData.buf[0] = OW_CONFIG_WRITE;
-	owTransaction(1, 0);
-
-	ret = 1;
-    }
-    // CAN
-    else {
-	ret = (uint32_t)canCommandConfigWrite(CAN_TT_NODE, canNode->networkId);
-    }
+static void esc32OwConfigWrite(void) {
+    // write to flash
+    owData.buf[0] = OW_CONFIG_WRITE;
+    owTransaction(1, 0);
 
     // wait for flash to finish
-    if (ret)
-	yield(100);
-
-    return ret;
+    yield(100);
 }
 
 // read esc32 params from uSD
@@ -231,7 +146,7 @@ static int8_t esc32ReadFile(char *fname, canNodes_t *canNode) {
 	fname = ESC32_FILE_NAME;
 
     if ((fh = filerGetHandle(fname)) < 0) {
-	AQ_NOTICE("esc32: cannot get read file handle\n");
+	AQ_NOTICE("ESC32: cannot get read file handle\n");
 	return -1;
     }
 
@@ -260,26 +175,39 @@ static int8_t esc32ReadFile(char *fname, canNodes_t *canNode) {
 
 		    if (n == 2) {
 			// lookup parameter id
-			paramId = esc32ParamIdByName(param);
+                        if (canNode)
+                            paramId = canGetParamIdByName(canNode->networkId, (uint8_t *)param);
+                        else
+                            paramId = esc32OwGetParamId(param);
 
 			// valid id?
 			if (paramId >= 0) {
 			    // read
-			    retValue = esc32ReadParam(paramId, canNode);
+                            if (canNode)
+                                retValue = canGetParamById(canNode->networkId, paramId);
+                            else
+                                retValue = esc32OwReadParamById(paramId);
 
 			    // current value differs from ours?
 			    if (retValue != value) {
 				// write
-				esc32WriteParam(paramId, value, canNode);
+                                if (canNode)
+                                    canSetParamById(canNode->networkId, paramId, value);
+                                else
+                                    esc32OwWriteParam(paramId, value);
+
 				// read back
-				retValue = esc32ReadParam(paramId, canNode);
+                                if (canNode)
+                                    retValue = canGetParamById(canNode->networkId, paramId);
+                                else
+                                    retValue = esc32OwReadParamById(paramId);
 
 				// successful write?
 				if (retValue == value) {
 				    needsConfigWrite++;
 				}
 				else {
-				    AQ_NOTICE("esc32: parameter write failed!\n");
+				    AQ_NOTICE("ESC32: parameter write failed!\n");
 				}
 			    }
 			}
@@ -290,7 +218,6 @@ static int8_t esc32ReadFile(char *fname, canNodes_t *canNode) {
 		    lineBuf[p1++] = c;
 		}
 	    }
-
 	} while (ret > 0);
 
 	filerClose(fh);
@@ -306,27 +233,34 @@ static int8_t esc32ReadFile(char *fname, canNodes_t *canNode) {
 
 void esc32SetupCan(canNodes_t *canNode, uint8_t mode) {
     char *s;
+    int16_t paramId;
     int i = 0;
 
-    if ((s = canGetVersion(1)) != 0) {
-	AQ_PRINTF("ESC32: CAN ID: %d, ver: %s\n", canNode->canId, s);
+    if ((s = canGetVersion(canNode->networkId)) != 0) {
+	AQ_PRINTF("ESC32: CAN ID: %2d, ver: %s\n", canNode->canId, s);
 
-	// set parameters
-	if (esc32ReadParam(ESC32_STARTUP_MODE, canNode) != (float)mode) {
-	    if (esc32SetMode(mode, canNode) != mode)
-		AQ_NOTICE("ESC32: failed to set run mode\n");
+        paramId = canGetParamIdByName(canNode->networkId, (uint8_t *)"STARTUP_MODE");
 
-	    esc32WriteParam(ESC32_STARTUP_MODE, (float)mode, canNode);
-	    i++;
+        if (paramId < 0) {
+            AQ_NOTICE("ESC32: CAN cannot read parameters\n");
+        }
+        else if (canGetParamById(canNode->networkId, paramId) != (float)mode) {
+	    if (*canSetRunMode(CAN_TT_NODE, canNode->networkId, mode) == 0)
+		AQ_NOTICE("ESC32: CAN failed to set run mode\n");
+
+	    if (*canSetParamById(canNode->networkId, paramId, (float)mode) == 0)
+                AQ_NOTICE("ESC32: CAN failed to set parameter\n");
+            else
+                i++;
 	}
 
 	i += esc32ReadFile(0, canNode);
 	if (i > 0) {
-	    if (esc32ConfigWrite(canNode)) {
-		AQ_PRINTF("ESC32: updated %d param(s) in flash\n", i);
+	    if (canCommandConfigWrite(CAN_TT_NODE, canNode->networkId)) {
+		AQ_PRINTF("ESC32: CAN updated %d param(s) in flash\n", i);
 	    }
 	    else {
-		AQ_NOTICE("ESC32: failed to flash params\n");
+		AQ_NOTICE("ESC32: CAN failed to flash params\n");
 	    }
 	}
     }
@@ -336,6 +270,7 @@ void esc32SetupCan(canNodes_t *canNode, uint8_t mode) {
 }
 
 void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
+    int16_t paramId;
     int i = 0;
 
     owInit((GPIO_TypeDef *)port, pin);
@@ -347,23 +282,25 @@ void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {
     if (owData.status != OW_STATUS_NO_PRESENSE) {
 	AQ_PRINTF("ESC32: OW ver: %s\n", owData.buf);
 
-	// set parameters
-	if (esc32ReadParam(ESC32_STARTUP_MODE, 0) != (float)mode) {
-	    if (esc32SetMode(mode, 0) != mode)
-		AQ_NOTICE("ESC32: failed to set run mode\n");
+        paramId = esc32OwGetParamId("STARTUP_MODE");
 
-	    esc32WriteParam(ESC32_STARTUP_MODE, (float)mode, 0);
-	    i++;
+        if (paramId < 0) {
+            AQ_NOTICE("ESC32: OW cannot read parameters\n");
+        }
+	else if (esc32OwReadParamById(paramId) != (float)mode) {
+	    if (esc32OwSetMode(mode) != mode)
+		AQ_NOTICE("ESC32: OW failed to set run mode\n");
+
+	    if (esc32OwWriteParam(paramId, (float)mode) != (float)mode)
+                AQ_NOTICE("ESC32: OW failed to write parameter\n");
+            else
+                i++;
 	}
 
 	i += esc32ReadFile(0, 0);
 	if (i > 0) {
-	    if (esc32ConfigWrite(0)) {
-		AQ_PRINTF("ESC32: updated %d param(s) in flash\n", i);
-	    }
-	    else {
-		AQ_NOTICE("ESC32: failed to flash params\n");
-	    }
+	    esc32OwConfigWrite();
+            AQ_PRINTF("ESC32: OW updated %d param(s) in flash\n", i);
 	}
     }
     else {

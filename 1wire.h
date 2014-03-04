@@ -39,6 +39,7 @@
 #define OW_CONFIG_DEFAULT   0x08
 #define OW_SET_MODE	    0x09
 #define OW_GET_MODE	    0x0A
+#define OW_GET_PARAM_ID     0x0B
 
 enum {
     OW_STATE_0,

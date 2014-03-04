@@ -30,7 +30,7 @@
 #define MOTORS_NUM		    16
 
 #define MOTORS_CAN_GROUP_SIZE	    4
-#define MOTORS_CAN_TELEM_RATE	    200		    // Hz
+#define MOTORS_CAN_TELEM_RATE	    100		    // Hz
 
 #define MOTORS_COMP_PRELOAD_TAU	    0.3f//0.4f
 #define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
