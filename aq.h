@@ -25,10 +25,8 @@
 #define _aq_h
 
 #define USE_MAVLINK
-
-#define USE_PRES_ALT		1	// uncomment to use pressure altitude instead of GPS
-#define USE_SIGNALING			// uncomment to use external signaling events and ports
-
+#define USE_PRES_ALT		 	// uncomment to use pressure altitude instead of GPS
+#define USE_SIGNALING                   // uncomment to use external signaling events and ports
 //#define USE_QUATOS
 
 #ifndef BOARD_VERSION
@@ -58,19 +56,13 @@
 
 #define GRAVITY			9.80665f	// m/s^2
 
-#define AQ_US_PER_SEC		1001567		// originally calibrated by GPS timepulse
-
-#define	AQ_NOP			{__asm volatile ("nop\n\t");}
-#define	AQ_4_NOPS		{AQ_NOP; AQ_NOP; AQ_NOP; AQ_NOP;}
-#define	AQ_16_NOPS		{AQ_4_NOPS; AQ_4_NOPS; AQ_4_NOPS; AQ_4_NOPS;}
-#define	AQ_64_NOPS		{AQ_16_NOPS; AQ_16_NOPS; AQ_16_NOPS; AQ_16_NOPS;}
-#define	AQ_256_NOPS		{AQ_64_NOPS; AQ_64_NOPS; AQ_64_NOPS; AQ_64_NOPS;}
+#define AQ_US_PER_SEC		1000000
 
 #ifndef NAN
 #define NAN	__float32_nan
 #endif
 
-//#define CAN_CALIB   // transmit IMU data over CAN
+//#define CAN_CALIB	// transmit IMU data over CAN
 
 extern volatile unsigned long counter;
 extern volatile unsigned long minCycles;

@@ -137,7 +137,7 @@ void delayMicros(unsigned long t) {
     t = t + timerMicros();
 
     while (timerMicros() < t)
-	AQ_64_NOPS;
+	__NOP;
 }
 
 // delay for given milli seconds
