@@ -70,7 +70,7 @@ void gpsTaskCode(void *p) {
     ubloxInit();
 
     while (1) {
-	yield(10);
+	yield(1);
 	gpsCheckBaud(s);
 
 	ledOn = digitalGet(gpsData.gpsLed);

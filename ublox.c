@@ -205,6 +205,30 @@ static void ubloxSetSBAS(uint8_t enable) {
     yield(UBLOX_WAIT_MS);
 }
 
+void ubloxInitGps(void) {
+    ubloxSendPreamble();
+
+    ubloxWriteU1(UBLOX_CFG_CLASS);  // CFG
+    ubloxWriteU1(UBLOX_CFG_PRT);    // PRT
+
+    ubloxWriteU1(0x14);		    // length lsb
+    ubloxWriteU1(0x00);		    // length msb
+
+    ubloxWriteU1(0x01);             // portId
+    ubloxWriteU1(0x00);             // reserved
+    ubloxWriteU2(0x00);             // txRead
+    ubloxWriteU4(0x000008D0);       // mode
+    ubloxWriteU4(GPS_BAUD_RATE);    // baudRate
+    ubloxWriteU2(0x0007);           // inProtoMask
+    ubloxWriteU2(0x0001);           // outProtoMask
+    ubloxWriteU2(0x00);             // flags
+    ubloxWriteU2(0x00);             // reserved
+
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    yield(200);
+}
+
 static void ubloxPollVersion(void) {
     ubloxSendPreamble();
 
@@ -221,8 +245,8 @@ static void ubloxPollVersion(void) {
 
 static void ubloxVersionSpecific(int ver) {
     if (ver > 7) {
-	// 10Hz for ver 8
-	ubloxSetRate((uint16_t)100);
+	// 5Hz for ver 8 using multiple GNSS
+	ubloxSetRate((uint16_t)200);
     }
     else if (ver > 6) {
 	// 10Hz for ver 7
@@ -266,11 +290,6 @@ void ubloxInit(void) {
     ubloxData.state = UBLOX_WAIT_SYNC1;
 
     ubloxSendSetup();
-}
-
-void ubloxInitGps(void) {
-    serialPrint(gpsData.gpsPort, "$PUBX,41,1,0007,0001,230400,0*18\n");
-    yield(200);
 }
 
 static void ubloxSendPacket(uint8_t commType) {
@@ -480,16 +499,23 @@ unsigned char ubloxCharIn(unsigned char c) {
 	break;
 
     case UBLOX_CHECK1:
-	if (c == ubloxData.ubloxRxCK_A)
+	if (c == ubloxData.ubloxRxCK_A) {
 	    ubloxData.state = UBLOX_CHECK2;
-	else
+        }
+	else {
 	    ubloxData.state = UBLOX_WAIT_SYNC1;
+            ubloxData.checksumErrors++;
+        }
 	break;
 
     case UBLOX_CHECK2:
 	ubloxData.state = UBLOX_WAIT_SYNC1;
-	if (c == ubloxData.ubloxRxCK_B)
+	if (c == ubloxData.ubloxRxCK_B) {
 	    return ubloxPublish();
+        }
+        else {
+            ubloxData.checksumErrors++;
+        }
 	break;
 
     default:

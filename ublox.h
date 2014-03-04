@@ -47,6 +47,7 @@
 
 #define UBLOX_TIM_TP	    0x01
 
+#define UBLOX_CFG_PRT       0x00
 #define UBLOX_CFG_MSG	    0x01
 #define UBLOX_CFG_TP	    0x07
 #define UBLOX_CFG_RTATE	    0x08
@@ -195,6 +196,7 @@ typedef struct {
     unsigned char class;
     unsigned char id;
     unsigned int length;
+    unsigned int checksumErrors;
 
     unsigned char ubloxRxCK_A;
     unsigned char ubloxRxCK_B;
