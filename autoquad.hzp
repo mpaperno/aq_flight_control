@@ -88,16 +88,22 @@
       <file file_name="esc32.h"/>
       <file file_name="esc32.c"/>
       <file file_name="buildnum.h"/>
-      <file file_name="can.h"/>
-      <file file_name="can.c"/>
-      <file file_name="canSensors.h"/>
-      <file file_name="canSensors.c"/>
       <file file_name="spi.h"/>
       <file file_name="spi.c"/>
       <file file_name="signaling.h"/>
       <file file_name="signaling.c"/>
-      <file file_name="canCalib.c"/>
-      <file file_name="canCalib.h"/>
+      <folder Name="CAN" file_name="">
+        <file file_name="can.h"/>
+        <file file_name="can.c"/>
+        <file file_name="canSensors.h"/>
+        <file file_name="canSensors.c"/>
+        <file file_name="canCalib.c"/>
+        <file file_name="canCalib.h"/>
+        <file file_name="canUart.c"/>
+        <file file_name="canUart.h"/>
+        <file file_name="canOSD.c"/>
+        <file file_name="canOSD.h"/>
+      </folder>
       <folder Name="digitalIMU" file_name="">
         <file file_name="mpu6000.c"/>
         <file file_name="mpu6000.h"/>
@@ -131,8 +137,6 @@
       <file file_name="grhott.h"/>
       <file file_name="mlinkrx.c"/>
       <file file_name="mlinkrx.h"/>
-      <file file_name="canUart.c"/>
-      <file file_name="canUart.h"/>
     </folder>
     <folder Name="System Files" file_name="">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>

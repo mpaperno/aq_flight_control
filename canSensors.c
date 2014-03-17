@@ -21,7 +21,7 @@
 
 canSensorsStruct_t canSensorsData;
 
-void canSensorsReceiveTelem(uint8_t canId, void *data) {
+void canSensorsReceiveTelem(uint8_t canId, uint8_t doc, void *data) {
     canSensorsData.values[canId] = *(float *)data;
 
     // record reception time

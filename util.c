@@ -45,14 +45,14 @@ void utilStackCheck(void) {
     int i, j;
 
     for (i = 0; i < numStacks; i++) {
-	for (j = 0; j < stackSizes[i]; j++)
-	    if (*(char *)(stackPointers[i]+j) != 0xFF)
-		break;
-	if (stackFrees[i] > j)
-	    stackFrees[i] = j;
-	if (j < 16) {
-	    AQ_PRINTF("Possible stack overflow [%s]!\n", stackNames[i]);
-	}
+        for (j = 0; j < stackSizes[i]; j++)
+            if (*(char *)(stackPointers[i]+j) != 0xFF)
+                break;
+        if (stackFrees[i] > j)
+            stackFrees[i] = j;
+        if (j < 16) {
+            AQ_PRINTF("Possible stack overflow [%s]!\n", stackNames[i]);
+        }
     }
 }
 
@@ -60,10 +60,10 @@ uint16_t utilGetStackFree(const char *stackName) {
     uint16_t stkFree = 0, i;
 
     for (i=0; i < numStacks; i++) {
-	if ( !strncmp(stackName, stackNames[i], 20) ) {
-	    stkFree = stackFrees[i];
-	    break;
-	}
+        if ( !strncmp(stackName, stackNames[i], 20) ) {
+            stkFree = stackFrees[i];
+            break;
+        }
     }
 
     return stkFree;
@@ -75,14 +75,14 @@ void *aqCalloc(size_t count, size_t size) {
     char *addr = 0;
 
     if (count * size) {
-	addr = calloc(count, size);
+        addr = calloc(count, size);
 
-	heapUsed += count * size;
-	if (heapUsed > heapHighWater)
-	    heapHighWater = heapUsed;
+        heapUsed += count * size;
+        if (heapUsed > heapHighWater)
+            heapHighWater = heapUsed;
 
-	if (addr == 0)
-	    AQ_NOTICE("Out of heap memory!\n");
+        if (addr == 0)
+            AQ_NOTICE("Out of heap memory!\n");
     }
 
     return addr;
@@ -90,8 +90,8 @@ void *aqCalloc(size_t count, size_t size) {
 
 void aqFree(void *ptr, size_t count, size_t size) {
     if (ptr) {
-	free(ptr);
-	heapUsed -= count * size;
+        free(ptr);
+        heapUsed -= count * size;
     }
 }
 
@@ -103,10 +103,10 @@ void *aqDataCalloc(uint16_t count, uint16_t size) {
     words = (count*size + sizeof(int)-1) / sizeof(int);
 
     if ((dataSramUsed + words) > UTIL_CCM_HEAP_SIZE) {
-	AQ_NOTICE("Out of data SRAM!\n");
+        AQ_NOTICE("Out of data SRAM!\n");
     }
     else {
-	dataSramUsed += words;
+        dataSramUsed += words;
     }
 
     return (void *)(ccmHeap + dataSramUsed - words);
@@ -137,7 +137,7 @@ void delayMicros(unsigned long t) {
     t = t + timerMicros();
 
     while (timerMicros() < t)
-	__NOP;
+        ;
 }
 
 // delay for given milli seconds
@@ -209,42 +209,42 @@ int ftoa(char *buf, float f, unsigned int digits) {
 
     // handle sign
     if (f < 0.0f) {
-	buf[index++] = '-';
-	f = -f;
+        buf[index++] = '-';
+        f = -f;
     }
 
     // handle infinite values
     if (isinf(f)) {
-	strcpy(&buf[index], "INF");
-	return 3;
+        strcpy(&buf[index], "INF");
+        return 3;
     }
     // handle Not a Number
     else if (isnan(f)) {
-	strcpy(&buf[index], "NaN");
-	return 3;
+        strcpy(&buf[index], "NaN");
+        return 3;
     }
     else {
-	// max digits
-	if (digits > 6)
-	    digits = 6;
-	multiplier = powf(10.0f, digits);     // fix int => long
+        // max digits
+        if (digits > 6)
+            digits = 6;
+        multiplier = powf(10.0f, digits);     // fix int => long
 
-	if (f > 0.0f)
-	    exponent = (int)log10f(f);
-	else
-	    exponent = 0;
+        if (f > 0.0f)
+            exponent = (int)log10f(f);
+        else
+            exponent = 0;
 
-	g = f / powf(10.0f, exponent);
-	if ((g < 1.0f) && (g != 0.0f)) {
-	    g *= 10.0f;
-	    exponent--;
-	}
+        g = f / powf(10.0f, exponent);
+        if ((g < 1.0f) && (g != 0.0f)) {
+            g *= 10.0f;
+            exponent--;
+        }
 
-	whole = (long)(g);                     // single digit
-	part = (long)((g-whole)*multiplier);   // # digits
+        whole = (long)(g);                     // single digit
+        part = (long)((g-whole)*multiplier);   // # digits
 
-	sprintf(format, "%%ld.%%0%dldE%%+.2d", digits);
-	sprintf(&buf[index], format, whole, part, exponent);
-	return strlen(buf);
+        sprintf(format, "%%ld.%%0%dldE%%+.2d", digits);
+        sprintf(&buf[index], format, whole, part, exponent);
+        return strlen(buf);
     }
 }

@@ -67,6 +67,10 @@ void canUartStream(void) {
     for (j = 0; j < CAN_UART_BLOCK_SIZE; j++) {
         sent2 = 0;
 
+        // try to prevent overflows
+        if ((canData.txHeadLo + 1) == canData.txTailLo)
+            break;
+
         // round robin
         for (i = 0; i < CAN_UART_NUM; i++) {
             // anything to send?

@@ -39,7 +39,7 @@
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
 
-void motorsReceiveTelem(uint8_t canId, void *p) {
+void motorsReceiveTelem(uint8_t canId, uint8_t doc, void *p) {
     uint32_t *data = (uint32_t *)p;
     uint32_t *storage = (uint32_t *)&motorsData.canStatus[canId-1];
 

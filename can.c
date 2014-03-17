@@ -21,6 +21,7 @@
 #include "can.h"
 #include "canSensors.h"
 #include "canUart.h"
+#include "canOSD.h"
 #include "supervisor.h"
 #include "imu.h"
 #include "aq_timer.h"
@@ -54,19 +55,18 @@ static int8_t canGetFreeMailbox(void) {
     int8_t mailbox;
 
     if ((CANx->TSR&CAN_TSR_TME0) == CAN_TSR_TME0)
-	mailbox = 0;
+        mailbox = 0;
     else if ((CANx->TSR&CAN_TSR_TME1) == CAN_TSR_TME1)
-	mailbox = 1;
+        mailbox = 1;
     else if ((CANx->TSR&CAN_TSR_TME2) == CAN_TSR_TME2)
-	mailbox = 2;
+        mailbox = 2;
     else
-	mailbox = -1;
+        mailbox = -1;
 
     return mailbox;
 }
 
-static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
-    uint32_t seqId;
+static void __canSend(uint32_t id, uint8_t tid, uint8_t seqId, uint8_t n, void *data) {
     uint32_t *d = data;
     canBuf_t *txPtr;
 
@@ -74,8 +74,6 @@ static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
         txPtr = &canData.txMsgsHi[canData.txHeadHi];
     else
         txPtr = &canData.txMsgsLo[canData.txHeadLo];
-
-    seqId = canGetSeqId();
 
     txPtr->TIR = id | ((tid & 0x1f)<<9) | (seqId<<3) | CAN_Id_Extended;
 
@@ -87,12 +85,27 @@ static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
         txPtr->TDHR = *d;
     }
 
-    canData.responses[seqId] = 0;
+    if ((id & CAN_LCC_MASK) < CAN_LCC_NORMAL) {
+        canData.txHeadHi = (canData.txHeadHi + 1) % CAN_BUF_SIZE_HI;
+    }
+    else {
+        uint8_t head = (canData.txHeadLo + 1) % CAN_BUF_SIZE_LO;
 
-    if ((id & CAN_LCC_MASK) < CAN_LCC_NORMAL)
-        canData.txHeadHi = (canData.txHeadHi + 1) % CAN_BUF_SIZE;
-    else
-        canData.txHeadLo = (canData.txHeadLo + 1) % CAN_BUF_SIZE;
+        if (head == canData.txTailLo)
+            canData.txOverflows++;
+        else
+            canData.txHeadLo = head;
+    }
+}
+
+static int8_t _canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
+    uint32_t seqId;
+
+    seqId = canGetSeqId();
+
+    __canSend(id, tid, seqId, n, data);
+
+    canData.responses[seqId] = 0;
 
     return (int8_t)seqId;
 }
@@ -102,7 +115,7 @@ void canSendBulkFinish(void) {
     NVIC->STIR = CAN_TX_IRQ;
 }
 
-static int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
+int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     uint8_t seqId;
 
     seqId = _canSend(id, tid, n, data);
@@ -120,27 +133,52 @@ int8_t canSendBulk(uint32_t id, uint8_t tid, uint8_t n, void *data) {
     return (int8_t)seqId;
 }
 
+void canAck(uint8_t networkId, uint8_t seqId) {
+    __canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_ACK, networkId, seqId, 0, 0);
+    canSendBulkFinish();
+}
+
+void canNack(uint8_t networkId, uint8_t seqId) {
+    __canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_NACK, networkId, seqId, 0, 0);
+    canSendBulkFinish();
+}
+
 static uint8_t *canSendWaitResponse(uint32_t extId, uint8_t tid, uint8_t n, uint8_t *data) {
     int16_t seqId;
     int timeout = CAN_TIMEOUT;
 
     seqId = canSend(extId, tid, n, data);
 
-    if (seqId >= 0) {
-	do {
-	    yield(1);
-	    timeout--;
-	} while (timeout && canData.responses[seqId] == 0);
+    do {
+        yield(1);
+        timeout--;
+    } while (timeout && canData.responses[seqId] == 0);
 
-	if (timeout != 0 && canData.responses[seqId] != (CAN_FID_NACK>>25))
-	    return &canData.responseData[seqId*8];
+    if (timeout == 0) {
+        canData.timeouts++;
+        return 0;
     }
-
-    return 0;
+    else if (canData.responses[seqId] != (CAN_FID_NACK>>25)) {
+        return &canData.responseData[seqId*8];
+    }
+    // NACK
+    else {
+        return 0;
+    }
 }
 
 char *canGetVersion(uint8_t tid) {
-    return (char *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_VERSION<<19), tid, 0, 0);
+    uint8_t *ret;
+    int i;
+
+    for (i = 0 ; i< CAN_RETRIES; i++) {
+        ret = canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_VERSION<<19), tid, 0, 0);
+
+        if (ret)
+            return (char *)ret;
+    }
+
+    return (char *)ret;
 }
 
 uint8_t *canGetState(uint8_t tid) {
@@ -152,6 +190,7 @@ int16_t canGetParamIdByName(uint8_t tid, uint8_t *name) {
 
     // first half of name
     canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM_NAME1<<19), tid, 8, (uint8_t *)&name[0]);
+
     // second half of name
     paramId = (int16_t *)canSendWaitResponse(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GET | (CAN_DATA_PARAM_NAME2<<19), tid, 8, (uint8_t *)&name[8]);
 
@@ -284,84 +323,98 @@ static void canGrantAddr(canBuf_t *rx) {
 
     // look for this UUID in our address table
     for (i = 0; i < canData.nextNodeSlot; i++)
-	if (canData.nodes[i].uuid == uuid)
-	    break;
+        if (canData.nodes[i].uuid == uuid)
+            break;
 
     if (i == canData.nextNodeSlot)
-	canData.nextNodeSlot++;
+        canData.nextNodeSlot++;
 
     if (i < (CAN_TID_MASK>>9)) {
-	// store in table
-	canData.nodes[i].networkId = i+1;
-	canData.nodes[i].uuid = uuid;
-	canData.nodes[i].type = data[4];
-	canData.nodes[i].canId = data[5];
+        // store in table
+        canData.nodes[i].networkId = i+1;
+        canData.nodes[i].uuid = uuid;
+        canData.nodes[i].type = data[4];
+        canData.nodes[i].canId = data[5];
 
-	// send groupId & subgroupId in bytes 5 & 6
-	data[4] = canData.nodes[i].groupId;
-	data[5] = canData.nodes[i].subgroupId;
+        // send groupId & subgroupId in bytes 5 & 6
+        data[4] = canData.nodes[i].groupId;
+        data[5] = canData.nodes[i].subgroupId;
 
-	// respond
-	canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 6, data);
+        // respond
+        canSend(CAN_LCC_HIGH | CAN_TT_NODE | CAN_FID_GRANT_ADDR, i+1, 6, data);
     }
 }
 
-static void canProcessCmd(uint8_t doc, uint8_t canId, uint32_t *data, uint8_t n) {
+static void canProcessCmd(canNodes_t *node, uint8_t doc, uint16_t seqId, uint32_t *data, uint8_t n) {
     switch (doc) {
         case CAN_CMD_STREAM:
-            canUartRxChar(canId, n, (uint8_t *)data);
+            canUartRxChar(node->canId, n, (uint8_t *)data);
+            break;
+
+        case CAN_CMD_TELEM_VALUE:
+            if (node->type == CAN_TYPE_OSD)
+                canOSDRequestValue(node, seqId, (uint8_t *)data);
+            break;
+
+        case CAN_CMD_TELEM_RATE:
+            if (node->type == CAN_TYPE_OSD)
+                canOSDRequstRate(node, seqId, (uint8_t *)data);
             break;
     }
 }
 
-static void canProcessMessage(canBuf_t *rx) {
+static uint8_t canProcessMessage(canBuf_t *rx) {
     uint32_t id = rx->TIR;
     uint8_t doc = (id & CAN_DOC_MASK)>>19;
     uint8_t sid = (id & CAN_SID_MASK)>>14;
-    uint16_t seqId = (id & CAN_SEQ_MASK)>>3;
+    uint8_t seqId = (id & CAN_SEQ_MASK)>>3;
     uint32_t *data = &rx->TDLR;
     uint8_t n = rx->TDTR;
     uint32_t *ptr = (uint32_t *)&canData.responseData[seqId*8];
+    uint8_t ret = 0;
 
     switch (id & CAN_FID_MASK) {
-	case CAN_FID_REQ_ADDR:
-	    canGrantAddr(rx);
-	    break;
-
-	// telemetry callbacks
-	case CAN_FID_TELEM:
-	    if (canData.telemFuncs[canData.nodes[sid-1].type])
-		canData.telemFuncs[canData.nodes[sid-1].type](canData.nodes[sid-1].canId, data);
-	    break;
-
-        case CAN_FID_CMD:
-            canProcessCmd(doc, canData.nodes[sid-1].canId, data, n);
+        case CAN_FID_REQ_ADDR:
+            canGrantAddr(rx);
+            ret = 1;
             break;
 
-	case CAN_FID_ACK:
-	case CAN_FID_NACK:
-	case CAN_FID_REPLY:
-	    canData.responses[seqId] = (id & CAN_FID_MASK)>>25;
-	    *ptr++ = *data++;
-	    *ptr = *data;
-	    break;
+        // telemetry callbacks
+        case CAN_FID_TELEM:
+            if (canData.telemFuncs[canData.nodes[sid-1].type])
+                canData.telemFuncs[canData.nodes[sid-1].type](canData.nodes[sid-1].canId, doc, data);
+            break;
+
+        case CAN_FID_CMD:
+            canProcessCmd(&canData.nodes[sid-1], doc, seqId, data, n);
+            break;
+
+        case CAN_FID_ACK:
+        case CAN_FID_NACK:
+        case CAN_FID_REPLY:
+            canData.responses[seqId] = (id & CAN_FID_MASK)>>25;
+            *ptr++ = *data++;
+            *ptr = *data;
+            break;
     }
+
+    return ret;
 }
 
-int canCheckMessage(void) {
+// called at 1KHz
+int canCheckMessage(uint32_t loop) {
     canBuf_t *rx;
     int ret = 0;
 
-    if (canData.initialized) {
-	while (canData.rxHead != canData.rxTail) {
-	    rx = &canData.rxMsgs[canData.rxTail];
+    while (canData.rxHead != canData.rxTail) {
+        rx = &canData.rxMsgs[canData.rxTail];
+        canData.rxTail = (canData.rxTail + 1) % CAN_BUF_SIZE_RX;
 
-            canProcessMessage(rx);
-            ret = 1;
-
-	    canData.rxTail = (canData.rxTail + 1) % CAN_BUF_SIZE;
-	}
+        ret = canProcessMessage(rx);
     }
+
+    if (canData.initialized)
+        canOSDTelemetry(loop);
 
     return ret;
 }
@@ -370,8 +423,8 @@ canNodes_t *canFindNode(uint8_t type, uint8_t canId) {
     int i;
 
     for (i = 0; i <= (CAN_TID_MASK>>9); i++)
-	if (canData.nodes[i].type == type && canData.nodes[i].canId == canId)
-	    return &canData.nodes[i];
+        if (canData.nodes[i].type == type && canData.nodes[i].canId == canId)
+            return &canData.nodes[i];
 
     return 0;
 }
@@ -442,14 +495,14 @@ void canDiscoverySummary(void) {
     int i, j;
 
     for (i = 1; i < CAN_TYPE_NUM; i++) {
-	num = 0;
+        num = 0;
 
-	for (j = 0; j < (CAN_TID_MASK>>9)+1; j++)
-	    if (canData.nodes[j].type == i)
-		num++;
+        for (j = 0; j < (CAN_TID_MASK>>9)+1; j++)
+            if (canData.nodes[j].type == i)
+                num++;
 
-	if (num > 0)
-	    AQ_PRINTF("CAN: Found %d node type %s\n", num, canTypeStrings[i]);
+        if (num > 0)
+            AQ_PRINTF("CAN: Found %d node type %s\n", num, canTypeStrings[i]);
     }
 }
 
@@ -461,9 +514,9 @@ void canInit(void) {
 
     // only packets targeted at us (bus master)
     if (CANx == CAN1)
-	CAN_FilterInitStructure.CAN_FilterNumber = 0;
+        CAN_FilterInitStructure.CAN_FilterNumber = 0;
     else
-	CAN_FilterInitStructure.CAN_FilterNumber = 14;
+        CAN_FilterInitStructure.CAN_FilterNumber = 14;
     CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;
     CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;
     CAN_FilterInitStructure.CAN_FilterIdHigh = 0x0000;
@@ -476,24 +529,27 @@ void canInit(void) {
 
     canResetBus();
 
-    canData.initialized = 1;
-
     // wait 50ms for nodes to report in
     micros = timerMicros();
     while (timerMicros() - micros < 50000)
-	// extend wait period if more nodes found
-	if (canCheckMessage())
-	    micros = timerMicros();
+        // extend wait period if more nodes found
+        if (canCheckMessage(0))
+            micros = timerMicros();
 
     canDiscoverySummary();
     canSensorsInit();
     canUartInit();
+    canOSDInit();
+
+    // wait for queue to drain
+    while (canData.txHeadHi != canData.txTailHi)
+        ;
+
+    canData.initialized = 1;
 }
 
 void CAN_RX0_HANDLER(void) {
     canBuf_t *rx = &canData.rxMsgs[canData.rxHead];
-
-    CAN_ClearITPendingBit(CANx, CAN_IT_FMP0);
 
     rx->TIR = (CANx->sFIFOMailBox[CAN_FIFO0].RIR>>3)<<3;
     rx->TDLR = CANx->sFIFOMailBox[CAN_FIFO0].RDLR;
@@ -503,7 +559,7 @@ void CAN_RX0_HANDLER(void) {
     // release FIFO
     CANx->RF0R |= CAN_RF0R_RFOM0;
 
-    canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE;
+    canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE_RX;
 }
 
 static void canTxMsg(canBuf_t *tx, uint8_t mailbox) {
@@ -525,13 +581,13 @@ void CAN_TX_HANDLER(void) {
     while (canData.txHeadHi != canData.txTailHi && (mailbox = canGetFreeMailbox()) >= 0) {
         canTxMsg(&canData.txMsgsHi[canData.txTailHi], mailbox);
 
-        canData.txTailHi = (canData.txTailHi + 1) % CAN_BUF_SIZE;
+        canData.txTailHi = (canData.txTailHi + 1) % CAN_BUF_SIZE_HI;
     }
 
     // low priority - only if box 3 is available
     if (canData.txHeadLo != canData.txTailLo && ((CANx->TSR&CAN_TSR_TME2) == CAN_TSR_TME2)) {
         canTxMsg(&canData.txMsgsLo[canData.txTailLo], 2);
 
-        canData.txTailLo = (canData.txTailLo + 1) % CAN_BUF_SIZE;
+        canData.txTailLo = (canData.txTailLo + 1) % CAN_BUF_SIZE_LO;
     }
 }

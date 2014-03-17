@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -47,19 +47,35 @@ static float esc32OwReadParamTransaction(uint8_t paramId) {
 
 static int16_t esc32OwGetParamId(char *name) {
     uint8_t *p;
-    int16_t value;
+    int16_t value = -1;
+    int16_t tmp;
     int i;
 
-    owData.buf[0] = OW_GET_PARAM_ID;
+    i = 0;
+    while (i < 10) {
+        i++;
 
-    for (i = 0; i < 16; i++)
-        owData.buf[1+i] = name[i];
+        owData.buf[0] = OW_GET_PARAM_ID;
 
-    owTransaction(17, 3);
+        for (i = 0; i < 16; i++)
+            owData.buf[1+i] = name[i];
 
-    p = (uint8_t *)&value;
-    p[0] = owData.buf[1];
-    p[1] = owData.buf[2];
+        owTransaction(17, 3);
+
+        p = (uint8_t *)&tmp;
+        p[0] = owData.buf[1];
+        p[1] = owData.buf[2];
+
+        if (tmp >= 0) {
+            if (tmp != value)
+                value = tmp;
+            else
+                return value;
+        }
+        else {
+            value = -1;
+        }
+    }
 
     return value;
 }

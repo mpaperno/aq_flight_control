@@ -24,52 +24,55 @@
 
 // Logical Communications Channel
 // 2 bits [28:27]
-#define CAN_LCC_MASK	    ((uint32_t)0x3<<30)
+#define CAN_LCC_MASK            ((uint32_t)0x3<<30)
 #define CAN_LCC_EXCEPTION   ((uint32_t)0x0<<30)
-#define CAN_LCC_HIGH	    ((uint32_t)0x1<<30)
-#define CAN_LCC_NORMAL	    ((uint32_t)0x2<<30)
-#define CAN_LCC_INFO	    ((uint32_t)0x3<<30)
+#define CAN_LCC_HIGH            ((uint32_t)0x1<<30)
+#define CAN_LCC_NORMAL            ((uint32_t)0x2<<30)
+#define CAN_LCC_INFO            ((uint32_t)0x3<<30)
 
 // Target Type
 // 1 bit [26:26]
-#define CAN_TT_MASK	    ((uint32_t)0x1<<29)
-#define CAN_TT_GROUP	    ((uint32_t)0x0<<29)
-#define CAN_TT_NODE	    ((uint32_t)0x1<<29)
+#define CAN_TT_MASK            ((uint32_t)0x1<<29)
+#define CAN_TT_GROUP            ((uint32_t)0x0<<29)
+#define CAN_TT_NODE            ((uint32_t)0x1<<29)
 
 // Function ID
 // 4 bits [25:22]
-#define CAN_FID_MASK	    ((uint32_t)0xf<<25)
+#define CAN_FID_MASK            ((uint32_t)0xf<<25)
 #define CAN_FID_RESET_BUS   ((uint32_t)0x0<<25)
-#define CAN_FID_ACK	    ((uint32_t)0x1<<25)
-#define CAN_FID_NACK	    ((uint32_t)0x2<<25)
-#define CAN_FID_CMD	    ((uint32_t)0x3<<25)
-#define CAN_FID_GET	    ((uint32_t)0x4<<25)
-#define CAN_FID_SET	    ((uint32_t)0x5<<25)
-#define CAN_FID_REPLY	    ((uint32_t)0x6<<25)
+#define CAN_FID_ACK            ((uint32_t)0x1<<25)
+#define CAN_FID_NACK            ((uint32_t)0x2<<25)
+#define CAN_FID_CMD            ((uint32_t)0x3<<25)
+#define CAN_FID_GET            ((uint32_t)0x4<<25)
+#define CAN_FID_SET            ((uint32_t)0x5<<25)
+#define CAN_FID_REPLY            ((uint32_t)0x6<<25)
 #define CAN_FID_REQ_ADDR    ((uint32_t)0x7<<25)
 #define CAN_FID_GRANT_ADDR  ((uint32_t)0x8<<25)
-#define CAN_FID_ERROR	    ((uint32_t)0x9<<25)
-#define CAN_FID_PING	    ((uint32_t)0xa<<25)
-#define CAN_FID_TELEM	    ((uint32_t)0xb<<25)
+#define CAN_FID_ERROR            ((uint32_t)0x9<<25)
+#define CAN_FID_PING            ((uint32_t)0xa<<25)
+#define CAN_FID_TELEM            ((uint32_t)0xb<<25)
 
 // Data Object Code
 // 6 bits [21:16]
-#define CAN_DOC_MASK	    ((uint32_t)0x3f<<19)
+#define CAN_DOC_MASK            ((uint32_t)0x3f<<19)
 
 // Source ID
 // 5 bits [15:11]
-#define CAN_SID_MASK	    ((uint32_t)0x1f<<14)
+#define CAN_SID_MASK            ((uint32_t)0x1f<<14)
 
 // Target ID
 // 5 bits [10:6]
-#define CAN_TID_MASK	    ((uint32_t)0x1f<<9)
+#define CAN_TID_MASK            ((uint32_t)0x1f<<9)
 
 // Sequence ID
 // 6 bits [5:0]
-#define CAN_SEQ_MASK	    ((uint32_t)0x3f<<3)
+#define CAN_SEQ_MASK            ((uint32_t)0x3f<<3)
 
-#define CAN_TIMEOUT         1000				// ms
-#define CAN_BUF_SIZE        32					// depth of the application layer FIFO
+#define CAN_TIMEOUT         250                                 // ms
+#define CAN_BUF_SIZE_LO     48                                  // depth of the application layer tx FIFO
+#define CAN_BUF_SIZE_HI     16                                  // depth of the application layer tx FIFO
+#define CAN_BUF_SIZE_RX     32                                  // rx FIFO
+#define CAN_RETRIES         3
 
 // types
 enum {
@@ -186,14 +189,16 @@ typedef struct {
     uint8_t TDTR;
 } canBuf_t;
 
-typedef void canTelemCallback_t(uint8_t nodeId, void *p);
+typedef void canTelemCallback_t(uint8_t nodeId, uint8_t doc, void *p);
 
 typedef struct {
-    canBuf_t rxMsgs[CAN_BUF_SIZE];
-    canBuf_t txMsgsLo[CAN_BUF_SIZE];	// low priority
-    canBuf_t txMsgsHi[CAN_BUF_SIZE];	// high priority
+    canBuf_t rxMsgs[CAN_BUF_SIZE_RX];
+    canBuf_t txMsgsLo[CAN_BUF_SIZE_LO];    // low priority
+    canBuf_t txMsgsHi[CAN_BUF_SIZE_HI];    // high priority
     canNodes_t nodes[(CAN_TID_MASK>>9)+1];
     canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
+    uint32_t timeouts;
+    uint32_t txOverflows;
     uint8_t responseData[64*8];         // must be word aligned
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;
@@ -208,7 +213,7 @@ extern canStruct_t canData;
 
 extern void canInit(void);
 extern void canLowLevelInit(void);
-extern int canCheckMessage(void);
+extern int canCheckMessage(uint32_t loop);
 extern char *canGetVersion(uint8_t tid);
 extern float canGetParamById(uint8_t tid, uint16_t paramId);
 extern uint8_t *canSetParamById(uint8_t tid, uint16_t paramId, float value);
@@ -232,5 +237,8 @@ extern uint8_t *canSetTelemetryRate(uint32_t tt, uint8_t tid, uint16_t rate);
 extern void canTelemRegister(canTelemCallback_t *func, uint8_t type);
 extern int8_t canSendBulk(uint32_t id, uint8_t tid, uint8_t n, void *data);
 extern void canSendBulkFinish(void);
+extern int8_t canSend(uint32_t id, uint8_t tid, uint8_t n, void *data);
+extern void canAck(uint8_t networkId, uint8_t seqId);
+extern void canNack(uint8_t networkId, uint8_t seqId);
 
 #endif

@@ -29,7 +29,7 @@ volatile unsigned long counter;
 volatile unsigned long minCycles = 0xFFFFFFFF;
 
 int main(void) {
-    fpuInit();	    // setup FPU context switching
+    fpuInit();        // setup FPU context switching
 
     rccConfiguration();
 
@@ -58,26 +58,24 @@ void CoIdleTask(void* pdata) {
 
     while (1) {
 #ifdef UTIL_STACK_CHECK
-	utilStackCheck();
-#else
-	AQ_256_NOPS;
+        utilStackCheck();
 #endif
-	counter++;
+        counter++;
 
-	thisCycles = *DWT_CYCCNT;
-	cycles = thisCycles - lastCycles;
-	lastCycles = thisCycles;
+        thisCycles = *DWT_CYCCNT;
+        cycles = thisCycles - lastCycles;
+        lastCycles = thisCycles;
 
-	// record shortest number of instructions for loop
-	if (cycles < minCycles)
-	    minCycles = cycles;
+        // record shortest number of instructions for loop
+        if (cycles < minCycles)
+            minCycles = cycles;
     }
 }
 
 void CoStkOverflowHook(OS_TID taskID) {
     // Process stack overflow here
     while (1)
-	;
+        ;
 }
 
 void HardFault_Handler(void) {
@@ -86,13 +84,13 @@ void HardFault_Handler(void) {
 
     // Go to infinite loop when Hard Fault exception occurs
     while (1)
-	;
+        ;
 }
 
 #ifdef USE_FULL_ASSERT
 void assert_failed(uint8_t* file, uint32_t line) {
 //    printf("Wrong parameters value: file %s on line %d\r\n", file, line);
     while (1)
-	AQ_NOP;
+        ;
 }
 #endif

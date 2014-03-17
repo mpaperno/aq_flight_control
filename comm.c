@@ -49,7 +49,7 @@ char *commGetNoticeBuf(void) {
 void commNotice(const char *s) {
     // post message and leave
     if (commData.initialized)
-	CoPostQueueMail(commData.notices, (void *)s);
+        CoPostQueueMail(commData.notices, (void *)s);
 }
 
 static void commTriggerSchedule(void) {
@@ -65,10 +65,10 @@ void commRegisterNoticeFunc(commNoticeCallback_t *func) {
     int i;
 
     for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
-	if (commData.noticeFuncs[i] == 0) {
-	    commData.noticeFuncs[i] = func;
-	    break;
-	}
+        if (commData.noticeFuncs[i] == 0) {
+            commData.noticeFuncs[i] = func;
+            break;
+        }
     }
 }
 
@@ -76,10 +76,10 @@ void commRegisterTelemFunc(commTelemCallback_t *func) {
     int i;
 
     for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
-	if (commData.telemFuncs[i] == 0) {
-	    commData.telemFuncs[i] = func;
-	    break;
-	}
+        if (commData.telemFuncs[i] == 0) {
+            commData.telemFuncs[i] = func;
+            break;
+        }
     }
 }
 
@@ -87,11 +87,11 @@ void commRegisterRcvrFunc(uint8_t streamType, commRcvrCallback_t *func) {
     int i;
 
     for (i = 0; i < COMM_MAX_CONSUMERS; i++) {
-	if (commData.streamRcvrs[i] == 0) {
-	    commData.streamRcvrs[i] = streamType;
-	    commData.rcvrFuncs[i] = func;
-	    break;
-	}
+        if (commData.streamRcvrs[i] == 0) {
+            commData.streamRcvrs[i] = streamType;
+            commData.rcvrFuncs[i] = func;
+            break;
+        }
     }
 }
 
@@ -151,47 +151,47 @@ commTxBuf_t *commGetTxBuf(uint8_t streamType, uint16_t maxSize) {
 
     // is this stream type even active?
     if (commData.typesUsed & streamType) {
-	// look for smallest size that request will fit in
-	for (i = 0; i < COMM_TX_NUM_SIZES; i++)
-	    if (commData.txPacketBufSizes[i] >= maxSize)
-		break;
+        // look for smallest size that request will fit in
+        for (i = 0; i < COMM_TX_NUM_SIZES; i++)
+            if (commData.txPacketBufSizes[i] >= maxSize)
+                break;
 
-	CoEnterMutexSection(commData.txBufferMutex);
+        CoEnterMutexSection(commData.txBufferMutex);
 
-	commTopOfSearch:
+        commTopOfSearch:
 
-	// not too big?
-	if (i < COMM_TX_NUM_SIZES) {
-	    // look for free buffer in this block
-	    for (j = 0; j < commData.txPacketBufNum[i]; j++) {
-		tmp = (commTxBuf_t *)(commData.txPacketBufs[i] + (commData.txPacketBufSizes[i] + COMM_HEADER_SIZE) * j);
+        // not too big?
+        if (i < COMM_TX_NUM_SIZES) {
+            // look for free buffer in this block
+            for (j = 0; j < commData.txPacketBufNum[i]; j++) {
+                tmp = (commTxBuf_t *)(commData.txPacketBufs[i] + (commData.txPacketBufSizes[i] + COMM_HEADER_SIZE) * j);
 
-		if (tmp->status == COMM_TX_BUF_FREE) {
-		    txBuf = tmp;
-		    txBuf->status = COMM_TX_BUF_ALLOCATED;
-		    txBuf->type = streamType;
-		    break;
-		}
-	    }
+                if (tmp->status == COMM_TX_BUF_FREE) {
+                    txBuf = tmp;
+                    txBuf->status = COMM_TX_BUF_ALLOCATED;
+                    txBuf->type = streamType;
+                    break;
+                }
+            }
 
-	    // need an upgrade?
-	    if (j == commData.txPacketBufNum[i]) {
-		// make a note of this
-		commData.txBufUpgrades[i]++;
-		// next larger size
-		i++;
+            // need an upgrade?
+            if (j == commData.txPacketBufNum[i]) {
+                // make a note of this
+                commData.txBufUpgrades[i]++;
+                // next larger size
+                i++;
 
-		// try again
-		goto commTopOfSearch;
-	    }
-	}
+                // try again
+                goto commTopOfSearch;
+            }
+        }
 
-	CoLeaveMutexSection(commData.txBufferMutex);
+        CoLeaveMutexSection(commData.txBufferMutex);
 
-	if (txBuf == 0)
-	    commData.txBufStarved++;
-	else
-	    commData.txPacketSizeHits[i]++;
+        if (txBuf == 0)
+            commData.txBufStarved++;
+        else
+            commData.txPacketSizeHits[i]++;
     }
 
     return txBuf;
@@ -221,8 +221,8 @@ static void commSchedule(void) {
     int i;
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
-	if (commData.portHandles[i])
-	    _commSchedule(i);
+        if (commData.portHandles[i])
+            _commSchedule(i);
     }
 }
 
@@ -235,7 +235,7 @@ void commTxFinished(void *param) {
 
     // if no pending tx's for this buffer, free it
     if (txBuf->status == COMM_TX_BUF_SENDING)
-	txBuf->status = COMM_TX_BUF_FREE;
+        txBuf->status = COMM_TX_BUF_FREE;
 
     // re-schedule
     _commSchedule(txStackPtr->port);
@@ -249,61 +249,61 @@ void commSendTxBuf(commTxBuf_t *txBuf, uint16_t size) {
     int i;
 
     if (txBuf) {
-	// reset status to sending
-	txBuf->status = COMM_TX_BUF_SENDING;
+        // reset status to sending
+        txBuf->status = COMM_TX_BUF_SENDING;
 
-	CoEnterMutexSection(commData.txBufferMutex);
+        CoEnterMutexSection(commData.txBufferMutex);
 
-	// look for any ports that want this stream
-	for (i = 0; i < COMM_NUM_PORTS; i++) {
-	    toBeScheduled[i] = 0;
+        // look for any ports that want this stream
+        for (i = 0; i < COMM_NUM_PORTS; i++) {
+            toBeScheduled[i] = 0;
 
-	    // singleplex case
-	    if (commData.portStreams[i] == txBuf->type && commData.portTypes[i] != COMM_PORT_TYPE_USB && commData.portTypes[i] != COMM_PORT_TYPE_NONE) {
-		head = commData.txStackHeads[i];
-		newHeads[i] = (head + 1) % COMM_STACK_DEPTH;
+            // singleplex case
+            if (commData.portStreams[i] == txBuf->type && commData.portTypes[i] != COMM_PORT_TYPE_USB && commData.portTypes[i] != COMM_PORT_TYPE_NONE) {
+                head = commData.txStackHeads[i];
+                newHeads[i] = (head + 1) % COMM_STACK_DEPTH;
 
-		// check for stack overruns
-		if (newHeads[i] == commData.txStackTails[i]) {
-		    // record incident
-		    commData.txStackOverruns[i]++;
-		}
-		else {
-		    txBuf->status++;
+                // check for stack overruns
+                if (newHeads[i] == commData.txStackTails[i]) {
+                    // record incident
+                    commData.txStackOverruns[i]++;
+                }
+                else {
+                    txBuf->status++;
 
-		    // prepare to send
-		    commData.txStack[i][head].port = i;
-		    commData.txStack[i][head].txBuf = txBuf;
-		    commData.txStack[i][head].memory = &txBuf->buf;
-		    commData.txStack[i][head].size = size;
+                    // prepare to send
+                    commData.txStack[i][head].port = i;
+                    commData.txStack[i][head].txBuf = txBuf;
+                    commData.txStack[i][head].memory = &txBuf->buf;
+                    commData.txStack[i][head].size = size;
 
-		    toBeScheduled[i] = 1;
-		    sent = 1;
-		}
-	    }
-	    // multiplex case
-	    else if (commData.portStreams[i] & txBuf->type) {
-		// TODO
-	    }
-	}
+                    toBeScheduled[i] = 1;
+                    sent = 1;
+                }
+            }
+            // multiplex case
+            else if (commData.portStreams[i] & txBuf->type) {
+                // TODO
+            }
+        }
 
-	if (!sent) {
-	    // release buffer
-	    txBuf->status = COMM_TX_BUF_FREE;
-	}
-	else {
-	    for (i = 0; i < COMM_NUM_PORTS; i++) {
-		if (toBeScheduled[i])
-		    commData.txStackHeads[i] = newHeads[i];
-		commTriggerSchedule();
-	    }
-	}
+        if (!sent) {
+            // release buffer
+            txBuf->status = COMM_TX_BUF_FREE;
+        }
+        else {
+            for (i = 0; i < COMM_NUM_PORTS; i++) {
+                if (toBeScheduled[i])
+                    commData.txStackHeads[i] = newHeads[i];
+                commTriggerSchedule();
+            }
+        }
 
-	CoLeaveMutexSection(commData.txBufferMutex);
+        CoLeaveMutexSection(commData.txBufferMutex);
 
 #ifdef COMM_USB_PORT
-	if (commData.portStreams[COMM_USB_PORT] == txBuf->type)
-	    usbTx(&txBuf->buf, size);
+        if (commData.portStreams[COMM_USB_PORT] == txBuf->type)
+            usbTx(&txBuf->buf, size);
 #endif
     }
 }
@@ -315,26 +315,26 @@ static void commCheckNotices(void) {
     s = (char *)CoAcceptQueueMail(commData.notices, &result);
 
     if (s) {
-	int i;
+        int i;
 #ifdef COMM_LOG_FNAME
-	// write to disk
-	i = 0;
-	while (s[i] != 0) {
-	    if (s[i] != '\n') {
-		commLog[commData.logPointer] = s[i];
-		commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
-	    }
-	    i++;
-	}
-	commLog[commData.logPointer] = '\n';
-	commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
+        // write to disk
+        i = 0;
+        while (s[i] != 0) {
+            if (s[i] != '\n') {
+                commLog[commData.logPointer] = s[i];
+                commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
+            }
+            i++;
+        }
+        commLog[commData.logPointer] = '\n';
+        commData.logPointer = (commData.logPointer + 1) % COMM_LOG_BUF_SIZE;
 
-	filerSetHead(commData.logHandle, commData.logPointer);
+        filerSetHead(commData.logHandle, commData.logPointer);
 #endif
 
-	for (i = 0; i < COMM_MAX_CONSUMERS; i++)
-	    if (commData.noticeFuncs[i])
-		commData.noticeFuncs[i](s);
+        for (i = 0; i < COMM_MAX_CONSUMERS; i++)
+            if (commData.noticeFuncs[i])
+                commData.noticeFuncs[i](s);
     }
 }
 
@@ -342,9 +342,9 @@ static void commCheckTelem(void) {
     int i;
 
     if (CoAcceptSingleFlag(runData.runFlag) == E_OK)
-	for (i = 0; i < COMM_MAX_CONSUMERS; i++)
-	    if (commData.telemFuncs[i])
-		commData.telemFuncs[i]();
+        for (i = 0; i < COMM_MAX_CONSUMERS; i++)
+            if (commData.telemFuncs[i])
+                commData.telemFuncs[i]();
 }
 
 static void commCheckRcvr(void) {
@@ -353,26 +353,30 @@ static void commCheckRcvr(void) {
 
     for (i = 0; i < COMM_NUM_PORTS; i++) {
         r.port = i;
-	if (commAvailable(&r) && commData.portStreams[i] > COMM_STREAM_TYPE_NONE) {
-	    for (j = 0; j < COMM_MAX_CONSUMERS; j++) {
-		if (commData.streamRcvrs[j] == commData.portStreams[i]) {
-		    commData.rcvrFuncs[j](&r);
+        if (commAvailable(&r) && commData.portStreams[i] > COMM_STREAM_TYPE_NONE) {
+            for (j = 0; j < COMM_MAX_CONSUMERS; j++) {
+                if (commData.streamRcvrs[j] == commData.portStreams[i]) {
+                    commData.rcvrFuncs[j](&r);
                     break;
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 }
 
 void commTaskCode(void *unused) {
-    while (1) {
-	yield(1);
+    uint32_t loops = 0;
 
-	canCheckMessage();
-	commCheckNotices();
-	commCheckTelem();
-	commCheckRcvr();
+    while (1) {
+        yield(1);
+
+        canCheckMessage(loops);
+        commCheckNotices();
+        commCheckTelem();
+        commCheckRcvr();
         canUartStream();
+
+        loops++;
     }
 }
 
@@ -381,7 +385,7 @@ void commSetTypesUsed(void) {
     int i;
 
     for (i = 0; i < COMM_NUM_PORTS; i++)
-	typesUsed |= commData.portStreams[i];
+        typesUsed |= commData.portStreams[i];
 
     commData.typesUsed = typesUsed;
 }
@@ -467,7 +471,7 @@ void commInit(void) {
 
     // allocate transmission buffers' memory
     for (i = 0; i < COMM_TX_NUM_SIZES; i++)
-	commData.txPacketBufs[i] = aqCalloc(commData.txPacketBufNum[i], commData.txPacketBufSizes[i] + COMM_HEADER_SIZE);
+        commData.txPacketBufs[i] = aqCalloc(commData.txPacketBufNum[i], commData.txPacketBufSizes[i] + COMM_HEADER_SIZE);
 
     // Enable CRYP interrupt (for our stack management)
     NVIC_InitStructure.NVIC_IRQChannel = CRYP_IRQn;
