@@ -25,17 +25,17 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define GPS_STACK_SIZE	    140
-#define GPS_PRIORITY	    35
+#define GPS_STACK_SIZE          200
+#define GPS_PRIORITY            35
 
-#define GPS_BAUD_RATE	    230400
+#define GPS_BAUD_RATE           230400
 
-#define GPS_LATENCY	    75000	// us (comment out to use uBlox timepulse)
+#define GPS_LATENCY             75000       // us (comment out to use uBlox timepulse)
 
-//#define GPS_LOG_BUF	    2048	// comment out to disable logging
-//#define GPS_FNAME	    "GPS"
-//#define GPS_DO_RTK			// comment out to disable GPS Raw data reports
-//#define GPS_DEBUG			// uncomment to enable extra GPS messages
+//#define GPS_LOG_BUF             2048        // comment out to disable logging
+//#define GPS_FNAME               "GPS"
+//#define GPS_DO_RTK                          // comment out to disable GPS Raw data reports
+//#define GPS_DEBUG                           // uncomment to enable extra GPS messages
 
 typedef struct {
     OS_TID gpsTask;
@@ -53,17 +53,17 @@ typedef struct {
     unsigned long iTOW;
     double lat;
     double lon;
-    float height;	// above mean sea level (m)
-    float hAcc;		// horizontal accuracy est (m)
-    float vAcc;		// vertical accuracy est (m)
-    float velN;		// north velocity (m/s)
-    float velE;		// east velocity (m/s)
-    float velD;		// down velocity (m/s)
-    float speed;	// ground speed (m/s)
-    float heading;	// deg
-    float sAcc;		// speed accuracy est (m/s)
-    float cAcc;		// course accuracy est (deg)
-    float pDOP;		// position Dilution of Precision
+    float height;   // above mean sea level (m)
+    float hAcc;     // horizontal accuracy est (m)
+    float vAcc;     // vertical accuracy est (m)
+    float velN;     // north velocity (m/s)
+    float velE;     // east velocity (m/s)
+    float velD;     // down velocity (m/s)
+    float speed;    // ground speed (m/s)
+    float heading;  // deg
+    float sAcc;     // speed accuracy est (m/s)
+    float cAcc;     // course accuracy est (deg)
+    float pDOP;     // position Dilution of Precision
     float hDOP;
     float vDOP;
     float tDOP;
@@ -71,7 +71,7 @@ typedef struct {
     float eDOP;
     float gDOP;
 
-    unsigned long TPtowMS;	// timepulse time of week (ms)
+    unsigned long TPtowMS;    // timepulse time of week (ms)
     unsigned long lastReceivedTPtowMS;
 
     unsigned long lastTimepulse;
