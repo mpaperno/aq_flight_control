@@ -4,12 +4,28 @@
 # ! For latest development recommendations, check here: http://autoquad.org/wiki/wiki/development/
 # ! This file is ignored when building with CrossWorks Studio.
 #
-# All paths are relative to Makefile location
+# All paths are relative to Makefile location.  Possible make targets:
+#  all         build firmware .elf and .hex binaries
+#  flash       attempt to build ../ground/loader and flash firmware to board (linux only)
+#  pack        create .zip archive of generated .hex file (requires GNU zip)
+#  clean       delete all built objects (not binaries or archives)
+#  clean-bin   delete all binaries created in build folder (*.elf, *.bin, *.hex)
+#  clean-pack  delete all archives in build folder (*.zip)
+#  clean-all   run all the above clean* steps.
+#
+# Read comments below under "External libraries required by AQ" for dependency details.
+#
 # Usage examples:
-# 		make all											# default Release type builds .hex and .elf binaries
-#		make all BUILD_TYPE=Debug					# build with compiler debugging flags/options enabled
-#		make all BOARD_REV=1 INCR_BUILDNUM=0	# build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
-
+#   make all                              # default Release type builds .hex and .elf binaries
+#   make all BUILD_TYPE=Debug             # build with compiler debugging flags/options enabled
+#   make all BOARD_REV=1 INCR_BUILDNUM=0  # build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
+#
+# Windows needs some core GNU tools in your %PATH% (probably same place your "make" is). 
+#    Required: gawk, mv, echo, rm
+#    Optional: mkdir (auto-create build folders),  zip (to compress hex files using "make pack")
+#   Also see EXE_MKDIR variable below -- due to a naming conflict with the Windows "mkdir", you may need to specify a full path for it.
+#   Recommend GnuWin32 CoreUtils http://gnuwin32.sourceforge.net/packages/coreutils.htm
+#
 
 # Include user-specific settings file, if any, in regular Makefile format.
 # This file can set any default variable values you wish to override (all defaults are listed below).
@@ -22,7 +38,7 @@
 BUILD_TYPE ?= Release
 # Path to source files - no trailing slash
 SRC_PATH ?= .
-# Board version to build for (6)
+# Board version to build for (6|7|8(mx))
 BOARD_VER ?= 6
 # Board revision to build for (0 = v6 initial release revision, 1 = v6 Oct. 2012 revision)
 BOARD_REV ?= 0
@@ -54,14 +70,13 @@ USB_DEVICE ?= /dev/ttyUSB0
 CC_PATH ?= /usr/share/crossworks_for_arm_2.3
 #CC_PATH ?= C:/devel/gcc/crossworks_for_arm_2.3
 
-# shell commands (Windows needs Cygwin or MSys)
+# shell commands
 EXE_AWK ?= gawk 
-EXE_MV ?= mv 
-EXE_MKDIR ?= mkdir -p
-# Windows examples:
-#EXE_AWK := C:/cygwin/bin/gawk
-#EXE_MV := C:/cygwin/bin/mv
-#EXE_MKDIR := mkdir
+EXE_MKDIR ?= mkdir
+#EXE_MKDIR = C:/cygwin/bin/mkdir
+EXE_ZIP ?= zip
+# file extention for compressed files (gz for gzip, etc)
+ZIP_EXT ?= zip
 
 # Path to libraries/includes
 # see "External libraries required by AQ" below
@@ -89,7 +104,7 @@ OBJ_PATH = $(BUILD_PATH)/$(BUILD_TYPE)/obj
 BIN_PATH = $(BUILD_PATH)/$(BUILD_TYPE)
 
 # command to execute (later, if necessary) for increasing build number in buildnum.h
-CMD_BUILDNUMBER = $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{ $$NF=$$NF+1 } 1' $(SRC_PATH)/buildnum.h > $(SRC_PATH)/tmp_buildnum.h && $(EXE_MV) $(SRC_PATH)/tmp_buildnum.h $(SRC_PATH)/buildnum.h)
+CMD_BUILDNUMBER = $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{ $$NF=$$NF+1 } 1' $(SRC_PATH)/buildnum.h > $(SRC_PATH)/tmp_buildnum.h && mv $(SRC_PATH)/tmp_buildnum.h $(SRC_PATH)/buildnum.h)
 
 # get current revision and build numbers
 FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"]+" }$$2 ~ /FI(MR|RM)WARE_VERSION/{print $$3}' $(SRC_PATH)/getbuildnum.h)
@@ -105,7 +120,7 @@ ifeq ($(DEBUG_BUILD), 1)
 	BIN_NAME := $(BIN_NAME)-debug
 	INCR_BUILDNUM = 0
 else
-	BIN_NAME := $(BIN_NAME)v$(FW_VER).r$(REV_NUM).b$(BUILD_NUM)-rev$(BOARD_REV)
+	BIN_NAME := $(BIN_NAME)v$(FW_VER).r$(REV_NUM).b$(BUILD_NUM)-hwv$(BOARD_VER).$(BOARD_REV)
 	ifneq ($(DIMU_VER), 0)
 		BIN_NAME := $(BIN_NAME)-dimu$(DIMU_VER)
 	endif
@@ -123,7 +138,9 @@ AS = $(CC_BIN_PATH)/as
 LD = $(CC_BIN_PATH)/ld
 OBJCP = $(CC_BIN_PATH)/objcopy
 
+#
 ## External libraries required by AQ
+#
 # Generated MAVLink header files (https://github.com/AutoQuad/mavlink/tree/master/include)
 MAVINC_PATH = $(AQLIB_PATH)/mavlink/include/autoquad
 # Files from Crossworks SMT32 package: autoquad.ld (STM32f4.ld), STM32F40_41xxx.vec, STM32_Startup.s, & the /include folder
@@ -190,11 +207,11 @@ EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 # AQ code objects to create (correspond to .c source to compile)
 AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
 	comm.o command.o compass.o config.o control.o \
-	can.o canCalib.o canSensors.o canUart.o canOSD.o \
+	can.o canCalib.o canOSD.o canSensors.o canUart.o \
 	d_imu.o digital.o esc32.o eeprom.o \
 	ff.o filer.o flash.o fpu.o futaba.o \
-	gimbal.o gps.o getbuildnum.o grhott.o hmc5983.o \
-	imu.o util.o logger.o \
+	gimbal.o gps.o getbuildnum.o grhott.o \
+	hmc5983.o imu.o util.o logger.o \
 	main_ctl.o mlinkrx.o motors.o mpu6000.o ms5611.o \
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
@@ -236,13 +253,26 @@ DEPS := $(C_OBJECTS:.o=.d)
 ## Target definitions
 #
 
-.PHONY: all clean
+.PHONY: all clean-all clean clean-bin clean-pack pack CREATE_BUILD_FOLDER BUILDNUMBER
 
 all: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex
 
+clean-all: clean clean-bin clean-pack
+
 clean:
 	-rm -fr $(OBJ_PATH)
-#	rm -f $(BIN_PATH)/*.*
+	
+clean-bin:
+	-rm -f $(BIN_PATH)/*.elf
+	-rm -f $(BIN_PATH)/*.bin
+	-rm -f $(BIN_PATH)/*.hex
+
+clean-pack:
+	-rm -f $(BIN_PATH)/*.$(ZIP_EXT)
+	
+pack:
+	@echo "Compressing binaries... "
+	$(EXE_ZIP) $(BIN_PATH)/$(BIN_NAME).hex.$(ZIP_EXT) $(BIN_PATH)/$(BIN_NAME).hex
 
 # include auto-generated depenency targets
 -include $(DEPS)
@@ -262,7 +292,7 @@ $(OBJ_PATH)/STM32SYS/%.o: $(STM32DRIVER_PATH)/src/%.c
 	@rm -f $(basename $@).lst
 
 $(OBJ_PATH)/STM32DSPLIB/%.o: $(STM32CMSIS_PATH)/DSP_Lib/Source/%.c
-	-$(EXE_MKDIR) $(@D)
+	$(EXE_MKDIR) -p $(@D)
 	@echo "## Compiling $< -> $@ ##"
 	$(CC) $(CFLAGS) -MD $(basename $@).d -MQ $@ $< -o $(basename $@).lst
 	@echo "## Assembling --> $@ ##"
@@ -296,10 +326,10 @@ $(BIN_PATH)/$(BIN_NAME).hex: $(BIN_PATH)/$(BIN_NAME).elf
 	$(OBJCP) -O ihex $< $@
 
 CREATE_BUILD_FOLDER :
-	@echo "Creating Build folders if necessary"
-	-$(EXE_MKDIR) $(OBJ_PATH)
-	-$(EXE_MKDIR) $(OBJ_PATH)/STM32SYS
-	-$(EXE_MKDIR) $(OBJ_PATH)/STM32DSPLIB
+	@echo "Attempting to create build folders..."
+	$(EXE_MKDIR) -p $(OBJ_PATH)
+	$(EXE_MKDIR) -p $(OBJ_PATH)/STM32SYS
+	$(EXE_MKDIR) -p $(OBJ_PATH)/STM32DSPLIB
 
 BUILDNUMBER :
 	@echo "Incrementing Build Number"
