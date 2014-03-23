@@ -34,6 +34,7 @@
 #include "util.h"
 #include "analog.h"
 #include "gimbal.h"
+#include "canSensors.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -148,7 +149,12 @@ loggerFields_t loggerFields[] = {
     {LOG_GMBL_TRIGGER, LOG_TYPE_U16},
     {LOG_ACC_BIAS_X, LOG_TYPE_FLOAT},
     {LOG_ACC_BIAS_Y, LOG_TYPE_FLOAT},
-    {LOG_ACC_BIAS_Z, LOG_TYPE_FLOAT}
+    {LOG_ACC_BIAS_Z, LOG_TYPE_FLOAT},
+    {LOG_CURRENT_PDB, LOG_TYPE_FLOAT},
+#ifdef ANALOG_CHANNEL_EXT_AMP
+    {LOG_CURRENT_EXT, LOG_TYPE_FLOAT},
+#endif
+    {LOG_VIN_PDB, LOG_TYPE_FLOAT},
 };
 
 int loggerCopy8(void *to, void *from) {
@@ -611,6 +617,15 @@ void loggerSetup(void) {
 		break;
 	    case LOG_ACC_BIAS_Z:
 		loggerData.fp[i].fieldPointer = (void *)&UKF_ACC_BIAS_Z;
+		break;
+	    case LOG_CURRENT_PDB:
+		loggerData.fp[i].fieldPointer = (void *)&canSensorsData.values[CAN_SENSORS_PDB_BATA];
+		break;
+	    case LOG_CURRENT_EXT:
+		loggerData.fp[i].fieldPointer = (void *)&analogData.extAmp;
+		break;
+	    case LOG_VIN_PDB:
+		loggerData.fp[i].fieldPointer = (void *)&canSensorsData.values[CAN_SENSORS_PDB_BATV];
 		break;
 	}
 

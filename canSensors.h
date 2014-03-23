@@ -43,7 +43,7 @@ typedef struct {
     uint32_t rcvTimes[CAN_SENSORS_NUM];
 } canSensorsStruct_t;
 
-extern canSensorsStruct_t canSensorData;
+extern canSensorsStruct_t canSensorsData;
 
 extern void canSensorsInit(void);
 
