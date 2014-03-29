@@ -39,7 +39,7 @@ typedef struct {
     unsigned int amps :	    14;	// x 100
     unsigned int rpm :	    15;
     unsigned int duty :	    8;	// x (255/100)
-    unsigned int errors :   9;
+    unsigned int temp :     9;  // (Deg C + 32) * 4
     unsigned int errCode :  3;
 } esc32CanStatus_t;
 

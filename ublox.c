@@ -425,8 +425,9 @@ unsigned char ubloxPublish(void) {
             *ptr = (ubloxData.length & 0xff); ubloxTxChecksum(*ptr++);
             *ptr = ((ubloxData.length & 0xff00) >> 8); ubloxTxChecksum(*ptr++);
 
-            for (i = 0; i < ubloxData.length; i++)
+            for (i = 0; i < ubloxData.length; i++) {
                 *ptr = (*((char *)&ubloxData.payload + i)); ubloxTxChecksum(*ptr++);
+            }
 
             *ptr = (ubloxData.ubloxRxCK_A); ubloxTxChecksum(*ptr++);
             *ptr = (ubloxData.ubloxRxCK_B); ubloxTxChecksum(*ptr++);

@@ -67,11 +67,23 @@ float motorsMax(void) {
     return MOTORS_SCALE;
 }
 
+static int mn = 0;
+
 static void motorsCanSendGroups(void) {
     int i;
 
     for (i = 0; i < motorsData.numGroups; i++)
 	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
+
+// temp
+uint32_t data[2];
+float *fPtr = (float *)&data[1];
+
+data[0] = 3;
+*fPtr = 0.665f + (RADIO_AUX6 * 0.665f * 0.002f);
+
+canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_SET | (CAN_DATA_PARAM_ID<<19), motorsData.can[mn]->networkId, 8, data);
+mn = (mn + 1) % 6;
 }
 
 static void motorsCanRequestTelem(int motorId) {
@@ -248,13 +260,17 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 }
 
 static void motorsCanInit(int i) {
+    uint8_t numTry = CAN_RETRIES;
     uint8_t motorId = i;
 
     // canId's 17-32 map to motorId's 1-16
     if (motorId >= 16)
         motorId -= 16;
 
-    if ((motorsData.can[motorId] = canFindNode(CAN_TYPE_ESC, i+1)) == 0) {
+    while (numTry-- && (motorsData.can[motorId] = canFindNode(CAN_TYPE_ESC, i+1)) == 0)
+        yield(100);
+
+    if (motorsData.can[motorId] == 0) {
 	AQ_PRINTF("Motors: cannot find CAN id [%d]\n", i+1);
     }
     else {
