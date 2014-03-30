@@ -40,9 +40,22 @@
 
 #if BOARD_VERSION == 6
     #if BOARD_REVISION == 0
-	#include "board_6_1.h"
+        #include "board_6_1.h"
     #elif BOARD_REVISION == 1
-	#include "board_6_1a.h"
+        #include "board_6_1a.h"
+    #endif
+#endif
+#if BOARD_VERSION == 7
+    #if BOARD_REVISION == 0
+        #include "board_7_0.h"
+    #endif
+#endif
+#if BOARD_VERSION == 8
+    #if BOARD_REVISION == 1 || BOARD_REVISION == 2
+        #include "board_m4.h"
+    #endif
+    #if BOARD_REVISION == 3
+        #include "board_m4_r3.h"
     #endif
 #endif
 

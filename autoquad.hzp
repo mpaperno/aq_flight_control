@@ -82,6 +82,9 @@
       <file file_name="config_default.h"/>
       <file file_name="board_6_1.h"/>
       <file file_name="board_6_1a.h"/>
+      <file file_name="board_7.h"/>
+      <file file_name="board_m4.h"/>
+      <file file_name="board_m4_r3.h"/>
       <file file_name="quatos.h"/>
       <file file_name="1wire.c"/>
       <file file_name="1wire.h"/>
