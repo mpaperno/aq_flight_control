@@ -529,12 +529,12 @@ void canInit(void) {
 
     canResetBus();
 
-    // wait 50ms for nodes to report in
-    micros = timerMicros();
-    while (timerMicros() - micros < 50000)
+    // wait 100ms for nodes to report in
+    micros = timerMicros() + 100000;
+    while (timerMicros() < micros)
         // extend wait period if more nodes found
         if (canCheckMessage(0))
-            micros = timerMicros();
+            micros = timerMicros() + 100000;
 
     canDiscoverySummary();
     canSensorsInit();

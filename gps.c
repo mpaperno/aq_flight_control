@@ -133,8 +133,7 @@ void gpsInit(void) {
 
     gpsData.baudSlot = 0;
 
-    gpsData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN);
-    digitalLo(gpsData.gpsLed);
+    gpsData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     gpsData.gpsPort = serialOpen(GPS_USART, GPS_BAUD_RATE, USART_HardwareFlowControl_None, 512, 512);
 

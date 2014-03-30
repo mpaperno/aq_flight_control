@@ -18,17 +18,23 @@
 
 #include "digital.h"
 #include "util.h"
-#include <stdlib.h>
 
-digitalPin *digitalInit(GPIO_TypeDef* port, const uint16_t pin) {
-    digitalPin *p;
+uint32_t *digitalInit(GPIO_TypeDef* port, const uint16_t pin, uint8_t initial) {
     GPIO_InitTypeDef GPIO_InitStructure;
+    uint32_t *bbAddr;
+    uint16_t myPin = pin;
+    uint8_t bit;
 
-    p = (digitalPin *)aqDataCalloc(1, sizeof(digitalPin));
-    p->port = port;
-    p->pin = pin;
+    bit = 0;
+    while (myPin >>= 1)
+        bit++;
 
-    digitalLo(p);
+    if (bit < 8)
+        bbAddr = PERIPH2BB((uint32_t)port + 0x14, bit);
+    else
+        bbAddr = PERIPH2BB((uint32_t)port + 0x15, bit-8);
+
+    *bbAddr = initial;
 
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = pin;
@@ -38,14 +44,5 @@ digitalPin *digitalInit(GPIO_TypeDef* port, const uint16_t pin) {
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(port, &GPIO_InitStructure);
 
-    return p;
-}
-
-void digitalTogg(digitalPin *p) {
-    if (digitalGet(p)) {
-	digitalLo(p);
-    }
-    else {
-	digitalHi(p);
-    }
+    return bbAddr;
 }

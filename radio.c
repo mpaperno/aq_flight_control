@@ -93,23 +93,11 @@ void radioTaskCode(void *unused) {
 
 void radioRCSelect(uint8_t level) {
 #ifdef RADIO_RC1_SELECT_PORT
-    radioData.select[0] = digitalInit(RADIO_RC1_SELECT_PORT, RADIO_RC1_SELECT_PIN);
-    if (level) {
-	digitalHi(radioData.select[0]);
-    }
-    else {
-	digitalLo(radioData.select[0]);
-    }
+    radioData.select[0] = digitalInit(RADIO_RC1_SELECT_PORT, RADIO_RC1_SELECT_PIN, level);
 #endif
 
 #ifdef RADIO_RC2_SELECT_PORT
-    radioData.select[1] = digitalInit(RADIO_RC2_SELECT_PORT, RADIO_RC2_SELECT_PIN);
-    if (level) {
-	digitalHi(radioData.select[1]);
-    }
-    else {
-	digitalLo(radioData.select[1]);
-    }
+    radioData.select[1] = digitalInit(RADIO_RC2_SELECT_PORT, RADIO_RC2_SELECT_PIN, level);
 #endif
 }
 

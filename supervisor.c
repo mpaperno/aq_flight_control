@@ -352,12 +352,10 @@ void supervisorConfigRead(void) {
 void supervisorInit(void) {
     memset((void *)&supervisorData, 0, sizeof(supervisorData));
 
-    supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN);
-    digitalLo(supervisorData.readyLed);
+    supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN, 0);
 
 #ifdef SUPERVISOR_DEBUG_PORT
-    supervisorData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN);
-    digitalLo(supervisorData.debugLed);
+    supervisorData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN, 0);
 #endif
 
     supervisorData.state = STATE_INITIALIZING;

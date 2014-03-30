@@ -53,7 +53,7 @@ uint8_t owTransaction(int8_t write, int8_t read) {
 void owInit(GPIO_TypeDef* port, const uint16_t pin) {
     memset((void *)&owData, 0, sizeof(owData));
 
-    owData.dp = digitalInit(port, pin);
+    owData.dp = digitalInit(port, pin, 0);
     owData.port = port;
     owData.pin = pin;
 

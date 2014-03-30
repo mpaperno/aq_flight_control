@@ -1042,8 +1042,7 @@ void sdioLowLevelInit(void) {
 
 #ifdef SDIO_POWER_PORT
     // turn off SDIO power supply
-    sdioData.sdEnable = digitalInit(SDIO_POWER_PORT, SDIO_POWER_PIN);
-    digitalLo(sdioData.sdEnable);
+    sdioData.sdEnable = digitalInit(SDIO_POWER_PORT, SDIO_POWER_PIN, 0);
 #endif
 
     // SDIO Interrupt ENABLE

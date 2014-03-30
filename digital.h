@@ -21,16 +21,13 @@
 
 #include "aq.h"
 
-typedef struct {
-    GPIO_TypeDef* port;
-    uint16_t pin;
-} digitalPin;
+typedef uint32_t digitalPin;
 
-#define digitalHi(p)	{ p->port->BSRRL = p->pin; }
-#define digitalLo(p)	{ p->port->BSRRH = p->pin; }
-#define digitalGet(p)	((p->port->ODR & p->pin) != 0)
+#define digitalHi(p)	*p = 1
+#define digitalLo(p)	*p = 0
+#define digitalGet(p)	(*p)
+#define digitalTogg(p)  *p = !(*p)
 
-extern digitalPin *digitalInit(GPIO_TypeDef* port, const uint16_t pin);
-extern void digitalTogg(digitalPin *p);
+extern uint32_t *digitalInit(GPIO_TypeDef* port, const uint16_t pin, uint8_t initial);
 
 #endif

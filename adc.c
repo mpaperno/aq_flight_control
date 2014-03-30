@@ -327,24 +327,16 @@ void adcInit(void) {
     memset((void *)&adcData, 0, sizeof(adcData));
 
     // energize mag's set/reset circuit
-    adcData.magSetReset = digitalInit(GPIOE, GPIO_Pin_10);
-    digitalHi(adcData.magSetReset);
+    adcData.magSetReset = digitalInit(GPIOE, GPIO_Pin_10, 1);
 
     // use auto-zero function of gyros
-    adcData.rateAutoZero = digitalInit(GPIOE, GPIO_Pin_8);
-//    delay(200);
-//    digitalHi(adcData.rateAutoZero);
-//    delay(20);
-    digitalLo(adcData.rateAutoZero);
-//    delay(20);
+    adcData.rateAutoZero = digitalInit(GPIOE, GPIO_Pin_8, 0);
 
     // bring ACC's SELF TEST line low
-    adcData.accST = digitalInit(GPIOE, GPIO_Pin_12);
-    digitalLo(adcData.accST);
+    adcData.accST = digitalInit(GPIOE, GPIO_Pin_12, 0);
 
     // bring ACC's SCALE line low (ADXL3X5 requires this line be tied to GND or left floating)
-    adcData.accScale = digitalInit(GPIOC, GPIO_Pin_15);
-    digitalLo(adcData.accScale);
+    adcData.accScale = digitalInit(GPIOC, GPIO_Pin_15, 0);
 
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AN;

@@ -55,11 +55,10 @@ OS_STK *aqInitStack;
 void aqInit(void *pdata) {
 #ifdef EEPROM_CS_PORT
     // TODO: clean this up
-    digitalPin *eepromCS = digitalInit(EEPROM_CS_PORT, EEPROM_CS_PIN);
-    digitalHi(eepromCS);
+    digitalPin *eepromCS = digitalInit(EEPROM_CS_PORT, EEPROM_CS_PIN, 1);
 #endif
 #ifdef DAC_TP_PORT
-    tp = digitalInit(DAC_TP_PORT, DAC_TP_PIN);
+    tp = digitalInit(DAC_TP_PORT, DAC_TP_PIN, 0);
 #endif
     rtcInit();	    // have to do this first as it requires our microsecond timer to calibrate
     timerInit();    // now setup the microsecond timer before everything else

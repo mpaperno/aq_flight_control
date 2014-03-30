@@ -579,7 +579,7 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
     }
 #endif
 
-    client->cs = digitalInit(csPort, csPin);
+    client->cs = digitalInit(csPort, csPin, 1);
     spiDeselect(client);
 
     spiChangeBaud(client, baud);
