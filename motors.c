@@ -67,23 +67,11 @@ float motorsMax(void) {
     return MOTORS_SCALE;
 }
 
-static int mn = 0;
-
 static void motorsCanSendGroups(void) {
     int i;
 
     for (i = 0; i < motorsData.numGroups; i++)
 	canCommandSetpoint16(i+1, (uint8_t *)&motorsData.canGroups[i]);
-
-// temp
-uint32_t data[2];
-float *fPtr = (float *)&data[1];
-
-data[0] = 3;
-*fPtr = 0.665f + (RADIO_AUX6 * 0.665f * 0.002f);
-
-canSend(CAN_LCC_NORMAL | CAN_TT_NODE | CAN_FID_SET | (CAN_DATA_PARAM_ID<<19), motorsData.can[mn]->networkId, 8, data);
-mn = (mn + 1) % 6;
 }
 
 static void motorsCanRequestTelem(int motorId) {
