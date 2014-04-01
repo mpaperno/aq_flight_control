@@ -209,7 +209,7 @@ static void _commSchedule(uint8_t port) {
                 break;
 
             case COMM_PORT_TYPE_CAN:
-                if (((canUartStruct_t*)(commData.portHandles[port]))->txTail == ((canUartStruct_t*)(commData.portHandles[port]))->txHead) {
+                if (((canUartStruct_t *)(commData.portHandles[port]))->txTail == ((canUartStruct_t *)(commData.portHandles[port]))->txHead) {
                     canUartTxBuf(commData.portHandles[port], stack->memory, stack->size, commTxFinished, stack);
                     commData.txStackTails[port] = (tail + 1) % COMM_STACK_DEPTH;
                 }
@@ -370,9 +370,9 @@ void commTaskCode(void *unused) {
     while (1) {
         yield(1);
 
-        canCheckMessage(loops);
         commCheckNotices();
         commCheckTelem();
+        canCheckMessage(loops);
         commCheckRcvr();
         canUartStream();
 

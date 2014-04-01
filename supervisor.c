@@ -208,31 +208,55 @@ void supervisorTaskCode(void *unused) {
 		    wp = navGetWaypoint(wpi++);
 
 		    if (fsOption > SPVR_OPT_FS_RAD_ST2_LAND && navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon) > SUPERVISOR_HOME_POS_DETECT_RADIUS) {
+                        float targetAltitude;
+
 			// ascend
 			if (fsOption == SPVR_OPT_FS_RAD_ST2_ASCEND && UKF_ALTITUDE < navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT]) {
+                            // the home leg's altitude is recorded without pressure offset
+                            targetAltitude = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT] + navUkfData.presAltOffset;
+
 			    wp->type = NAV_LEG_GOTO;
-			    wp->relativeAlt = navData.homeLeg.relativeAlt;
-			    wp->targetAlt = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT];
+			    wp->relativeAlt = 0;
+			    wp->targetAlt = targetAltitude;
 			    wp->targetLat = gpsData.lat;
 			    wp->targetLon = gpsData.lon;
 			    wp->targetRadius = SUPERVISOR_HOME_ALT_DETECT_MARGIN;
 			    wp->maxHorizSpeed = navData.homeLeg.maxHorizSpeed;
 			    wp->maxVertSpeed = navData.homeLeg.maxVertSpeed;
 			    wp->poiHeading = navData.homeLeg.poiHeading;
-			    wp->loiterTime = 1e6;
+			    wp->loiterTime = 0;
 			    wp->poiAltitude = 0.0f;
 
 			    wp = navGetWaypoint(wpi++);
 			}
+                        else {
+                            // the greater of our current altitude or home's altitude
+                            targetAltitude = ((UKF_ALTITUDE > navData.homeLeg.targetAlt) ? UKF_ALTITUDE : navData.homeLeg.targetAlt) + navUkfData.presAltOffset;
+                        }
 
-			// home
+                        // go home with previously determined altitude
+                        wp->type = NAV_LEG_GOTO;
+                        wp->relativeAlt = 0;
+                        wp->targetAlt = targetAltitude;
+                        wp->targetLat = navData.homeLeg.targetLat;
+                        wp->targetLon = navData.homeLeg.targetLon;
+                        wp->targetRadius = SUPERVISOR_HOME_POS_DETECT_RADIUS;
+                        wp->maxHorizSpeed = navData.homeLeg.maxHorizSpeed;
+                        wp->maxVertSpeed = navData.homeLeg.maxVertSpeed;
+                        wp->poiHeading = navData.homeLeg.poiHeading;
+                        wp->loiterTime = 0;
+                        wp->poiAltitude = 0.0f;
+
+			wp = navGetWaypoint(wpi++);
+
+			// decend to home
 			wp->type = NAV_LEG_HOME;
 			wp->targetRadius = SUPERVISOR_HOME_POS_DETECT_RADIUS;
-			wp->loiterTime = 1e6;
+			wp->loiterTime = 0;
 			wp->poiAltitude = 0.0f;
 
 			wp = navGetWaypoint(wpi++);
-		    }
+                    }
 
 		    // land
 		    wp->type = NAV_LEG_LAND;
@@ -242,7 +266,7 @@ void supervisorTaskCode(void *unused) {
 
 		    // go
 		    navData.missionLeg = 0;
-		    RADIO_FLAPS = 500;    // mission mode
+		    RADIO_FLAPS = 500;                  // mission mode
 		}
 		// no GPS, slow decent in PH mode
 		else {

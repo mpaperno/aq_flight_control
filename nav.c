@@ -53,19 +53,19 @@ void navResetHoldAlt(float delta) {
 
 void navSetHoldAlt(float alt, uint8_t relative) {
     if (relative)
-	navData.holdAlt += alt;
+        navData.holdAlt += alt;
     else
-	navData.holdAlt = alt;
+        navData.holdAlt = alt;
 }
 
 void navSetHoldHeading(float targetHeading) {
     // signbit() returns true if negative sign
     if (signbit(targetHeading))
-	// use targetHeading as relative to bearing to target
-	navData.holdHeading = compassNormalize(navData.holdCourse + targetHeading);
+        // use targetHeading as relative to bearing to target
+        navData.holdHeading = compassNormalize(navData.holdCourse + targetHeading);
     else
-	// use targetHeading as absolute heading
-	navData.holdHeading = targetHeading;
+        // use targetHeading as absolute heading
+        navData.holdHeading = targetHeading;
 }
 
 void navSetHomeCurrent(void) {
@@ -77,7 +77,7 @@ void navSetHomeCurrent(void) {
     navData.homeLeg.maxHorizSpeed = p[NAV_MAX_SPEED];
     navData.homeLeg.poiHeading = AQ_YAW;
     if (p[NAV_CEILING])
-	navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
+        navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
 
     // notify ground
     AQ_NOTICE("Home position set\n");
@@ -94,27 +94,27 @@ void navRecallHome(void) {
     navSetHoldHeading(navData.homeLeg.poiHeading);
 
     if (navData.holdMaxHorizSpeed == 0.0f)
-	navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
     if (navData.holdMaxVertSpeed == 0.0f)
-	navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+        navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 }
 
 // set reference frame angle for heading-free mode
 void navSetHfReference(uint8_t refType) {
     if (refType == 0) {
-	// use current heading as reference
-	navData.hfReferenceCos = navUkfData.yawCos;
-	navData.hfReferenceSin = navUkfData.yawSin;
-	navData.hfUseStoredReference = 1;
+        // use current heading as reference
+        navData.hfReferenceCos = navUkfData.yawCos;
+        navData.hfReferenceSin = navUkfData.yawSin;
+        navData.hfUseStoredReference = 1;
     } else if (navData.navCapable) {
-	// use current bearing from home position
-	float homeBearing = navCalcBearing(navData.homeLeg.targetLat, navData.homeLeg.targetLon, gpsData.lat, gpsData.lon);
-	if (fabsf(homeBearing - navData.bearingToHome) > NAV_HF_HOME_BRG_D_MAX) {
-	    navData.hfReferenceCos = cosf(homeBearing);
-	    navData.hfReferenceSin = sinf(homeBearing);
-	    navData.bearingToHome = homeBearing;
-	}
-	navData.hfUseStoredReference = 1;
+        // use current bearing from home position
+        float homeBearing = navCalcBearing(navData.homeLeg.targetLat, navData.homeLeg.targetLon, gpsData.lat, gpsData.lon);
+        if (fabsf(homeBearing - navData.bearingToHome) > NAV_HF_HOME_BRG_D_MAX) {
+            navData.hfReferenceCos = cosf(homeBearing);
+            navData.hfReferenceSin = sinf(homeBearing);
+            navData.bearingToHome = homeBearing;
+        }
+        navData.hfUseStoredReference = 1;
     }
 }
 
@@ -125,99 +125,99 @@ void navSetHeadFreeMode(void) {
     // HF switch to set/dynamic position
     // when disarmed one can also set the orientation heading in this position (for 2-pos control)
     if (hfChan > 250 || (hfChan < -250 && !(supervisorData.state & STATE_ARMED))) {
-	if (navData.headFreeMode != NAV_HEADFREE_DYNAMIC) {
-	    if (navData.headFreeMode != NAV_HEADFREE_SETTING && navData.headFreeMode != NAV_HEADFREE_DYN_DELAY) {
-		navData.headFreeMode = NAV_HEADFREE_SETTING;
-		navData.hfDynamicModeTimer = timerMicros();
-		AQ_NOTICE("Set new reference heading for Heading-Free mode\n");
+        if (navData.headFreeMode != NAV_HEADFREE_DYNAMIC) {
+            if (navData.headFreeMode != NAV_HEADFREE_SETTING && navData.headFreeMode != NAV_HEADFREE_DYN_DELAY) {
+                navData.headFreeMode = NAV_HEADFREE_SETTING;
+                navData.hfDynamicModeTimer = timerMicros();
+                AQ_NOTICE("Set new reference heading for Heading-Free mode\n");
 #ifdef USE_SIGNALING
-		signalingOnetimeEvent(SIG_EVENT_OT_HF_SET);
+                signalingOnetimeEvent(SIG_EVENT_OT_HF_SET);
 #endif
-	    }
-	    else if ((supervisorData.state & STATE_ARMED) && timerMicros() - navData.hfDynamicModeTimer > NAV_HF_DYNAMIC_DELAY) {
-		navData.headFreeMode = NAV_HEADFREE_DYNAMIC;
-		AQ_NOTICE("Now in dynamic Heading-Free DVH mode\n");
-	    }
-	    else if (navData.headFreeMode == NAV_HEADFREE_SETTING)
-		navData.headFreeMode = NAV_HEADFREE_DYN_DELAY;
-	}
+            }
+            else if ((supervisorData.state & STATE_ARMED) && timerMicros() - navData.hfDynamicModeTimer > NAV_HF_DYNAMIC_DELAY) {
+                navData.headFreeMode = NAV_HEADFREE_DYNAMIC;
+                AQ_NOTICE("Now in dynamic Heading-Free DVH mode\n");
+            }
+            else if (navData.headFreeMode == NAV_HEADFREE_SETTING)
+                navData.headFreeMode = NAV_HEADFREE_DYN_DELAY;
+        }
 
     }
     // HF switch to locked/on position
     else if (hfChan < -250) {
-	if (navData.headFreeMode != NAV_HEADFREE_LOCKED) {
-	    AQ_NOTICE("Now in locked Heading-Free DVH mode\n");
-	    navData.headFreeMode = NAV_HEADFREE_LOCKED;
-	}
+        if (navData.headFreeMode != NAV_HEADFREE_LOCKED) {
+            AQ_NOTICE("Now in locked Heading-Free DVH mode\n");
+            navData.headFreeMode = NAV_HEADFREE_LOCKED;
+        }
     }
     // HF channel at off position
     else {
-	if (navData.headFreeMode > NAV_HEADFREE_DYN_DELAY)
-	    AQ_NOTICE("Now in normal DVH mode\n");
-	navData.headFreeMode = NAV_HEADFREE_OFF;
+        if (navData.headFreeMode > NAV_HEADFREE_DYN_DELAY)
+            AQ_NOTICE("Now in normal DVH mode\n");
+        navData.headFreeMode = NAV_HEADFREE_OFF;
     }
 }
 
 void navLoadLeg(uint8_t leg) {
     // invalid type?
     if (!navData.missionLegs[leg].type || navData.missionLegs[leg].type >= NAV_NUM_LEG_TYPES)
-	return;
+        return;
 
     // common
     if (navData.missionLegs[leg].relativeAlt)
-	navSetHoldAlt(navData.missionLegs[leg].targetAlt, navData.missionLegs[leg].relativeAlt);
+        navSetHoldAlt(navData.missionLegs[leg].targetAlt, navData.missionLegs[leg].relativeAlt);
     else
-	navSetHoldAlt(navData.missionLegs[leg].targetAlt - navUkfData.presAltOffset, navData.missionLegs[leg].relativeAlt);
+        navSetHoldAlt(navData.missionLegs[leg].targetAlt - navUkfData.presAltOffset, navData.missionLegs[leg].relativeAlt);
 
     navData.holdMaxHorizSpeed = navData.missionLegs[leg].maxHorizSpeed;
     navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
 
     // type specific
     if (navData.missionLegs[leg].type == NAV_LEG_HOME) {
-	navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
-	navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
-	navData.targetHeading = navData.homeLeg.poiHeading;
+        navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
+        navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
+        navData.targetHeading = navData.homeLeg.poiHeading;
 
-	navData.holdMaxHorizSpeed = navData.homeLeg.maxHorizSpeed;
-	navData.holdMaxVertSpeed = navData.homeLeg.maxVertSpeed;
+        navData.holdMaxHorizSpeed = navData.homeLeg.maxHorizSpeed;
+        navData.holdMaxVertSpeed = navData.homeLeg.maxVertSpeed;
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_GOTO) {
-	if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
-	    navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
-	navData.targetHeading = navData.missionLegs[leg].poiHeading;
+        if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
+            navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
+        navData.targetHeading = navData.missionLegs[leg].poiHeading;
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_ORBIT) {
-	if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
-	    navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
-	navData.targetHeading = navData.missionLegs[leg].poiHeading;
-	navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
+            navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
+        navData.targetHeading = navData.missionLegs[leg].poiHeading;
+        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_TAKEOFF) {
-	// store this position as the takeoff position
-	navUkfSetHereAsPositionTarget();
-	navData.targetHeading = AQ_YAW;
+        // store this position as the takeoff position
+        navUkfSetHereAsPositionTarget();
+        navData.targetHeading = AQ_YAW;
 
-	if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
-	    navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
-	else
-	    navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
+        if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
+            navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
+        else
+            navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
 
-	// set the launch location as home
-	navSetHomeCurrent();
-	navData.homeLeg.targetAlt = navData.holdAlt;
-	navData.homeLeg.poiHeading = -0.0f;		// relative
+        // set the launch location as home
+        navSetHomeCurrent();
+        navData.homeLeg.targetAlt = navData.holdAlt;
+        navData.homeLeg.poiHeading = -0.0f;                // relative
     }
     else if (navData.missionLegs[leg].type == NAV_LEG_LAND) {
-	if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
-	    navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
-	else
-	    navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
+        if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
+            navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
+        else
+            navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
     }
 
     if (navData.holdMaxHorizSpeed == 0.0f)
-	navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
     if (navData.holdMaxVertSpeed == 0.0f)
-	navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+        navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 
     navData.loiterCompleteTime = 0;
 
@@ -235,16 +235,16 @@ void navSetFixType(void) {
     float hAccMsk = gpsData.hAcc + runData.accMask;
 
     if (posTimeDlta < NAV_MAX_GPS_AGE && hAccMsk < NAV_MIN_GPS_ACC)
-	navData.fixType = 3;
+        navData.fixType = 3;
     else if (posTimeDlta < NAV_MAX_FIX_AGE && hAccMsk < NAV_MIN_FIX_ACC)
-	navData.fixType = 2;
+        navData.fixType = 2;
     else
-	navData.fixType = 0;
+        navData.fixType = 0;
 
     if (navData.fixType == 3) {
-	digitalHi(gpsData.gpsLed);
+        digitalHi(gpsData.gpsLed);
     } else {
-	digitalLo(gpsData.gpsLed);
+        digitalLo(gpsData.gpsLed);
     }
 }
 
@@ -259,269 +259,269 @@ void navNavigate(void) {
 
     // is there sufficient position accuracy to navigate?
     if (navData.fixType == 3)
-	navData.navCapable = 1;
+        navData.navCapable = 1;
     // do not drop out of mission due to (hopefully) temporary GPS degradation
     else if (navData.mode < NAV_STATUS_POSHOLD)
-	navData.navCapable = 0;
+        navData.navCapable = 0;
 
     // Can we navigate && do we want to be in mission mode?
     if (supervisorData.state > STATE_DISARMED && navData.navCapable && RADIO_FLAPS > 250) {
-	//  are we currently in position hold mode && do we have a clear mission ahead of us?
-	if (navData.mode == NAV_STATUS_POSHOLD && leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
-	    navLoadLeg(leg);
-	    navData.mode = NAV_STATUS_MISSION;
-	}
+        //  are we currently in position hold mode && do we have a clear mission ahead of us?
+        if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
+            navLoadLeg(leg);
+            navData.mode = NAV_STATUS_MISSION;
+        }
     }
     // do we want to be in position hold mode?
     else if (supervisorData.state > STATE_DISARMED && RADIO_FLAPS > -250) {
-	// always allow alt hold
-	if (navData.mode < NAV_STATUS_ALTHOLD) {
-	    // record this altitude as the hold altitude
-	    navSetHoldAlt(UKF_ALTITUDE, 0);
+        // always allow alt hold
+        if (navData.mode < NAV_STATUS_ALTHOLD) {
+            // record this altitude as the hold altitude
+            navSetHoldAlt(UKF_ALTITUDE, 0);
 
-	    // set integral to current RC throttle setting
-	    pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle * RADIO_MID_THROTTLE / MOTORS_SCALE);
-	    pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
+            // set integral to current RC throttle setting
+            pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle * RADIO_MID_THROTTLE / MOTORS_SCALE);
+            pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
 
-	    navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
-	    navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
-	    navData.mode = NAV_STATUS_ALTHOLD;
+            navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
+            navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+            navData.mode = NAV_STATUS_ALTHOLD;
 
             // notify ground
             AQ_NOTICE("Altitude Hold engaged\n");
-	}
+        }
 
-	// are we not in position hold mode now?
-	if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
-	    // only zero bias if coming from lower mode
-	    if (navData.mode < NAV_STATUS_POSHOLD) {
-		navData.holdTiltN = 0.0f;
-		navData.holdTiltE = 0.0f;
+        // are we not in position hold mode now?
+        if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
+            // only zero bias if coming from lower mode
+            if (navData.mode < NAV_STATUS_POSHOLD) {
+                navData.holdTiltN = 0.0f;
+                navData.holdTiltE = 0.0f;
 
-		// speed
-		pidZeroIntegral(navData.speedNPID, UKF_VELN, 0.0f);
-		pidZeroIntegral(navData.speedEPID, UKF_VELE, 0.0f);
+                // speed
+                pidZeroIntegral(navData.speedNPID, UKF_VELN, 0.0f);
+                pidZeroIntegral(navData.speedEPID, UKF_VELE, 0.0f);
 
-		// pos
-		pidZeroIntegral(navData.distanceNPID, UKF_POSN, 0.0f);
-		pidZeroIntegral(navData.distanceEPID, UKF_POSE, 0.0f);
-	    }
+                // pos
+                pidZeroIntegral(navData.distanceNPID, UKF_POSN, 0.0f);
+                pidZeroIntegral(navData.distanceEPID, UKF_POSE, 0.0f);
+            }
 
-	    // store this position as hold position
-	    navUkfSetHereAsPositionTarget();
+            // store this position as hold position
+            navUkfSetHereAsPositionTarget();
 
-	    if (navData.navCapable) {
-		// set this position as home if we have none
-		if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
-		    navSetHomeCurrent();
-	    }
+            if (navData.navCapable) {
+                // set this position as home if we have none
+                if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
+                    navSetHomeCurrent();
+            }
 
-	    // activate pos hold
-	    navData.mode = NAV_STATUS_POSHOLD;
+            // activate pos hold
+            navData.mode = NAV_STATUS_POSHOLD;
 
-	    navData.holdSpeedN = 0.0f;
-	    navData.holdSpeedE = 0.0f;
+            navData.holdSpeedN = 0.0f;
+            navData.holdSpeedE = 0.0f;
 
-	    navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
-	    navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+            navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+            navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 
-	    // notify ground
+            // notify ground
             AQ_NOTICE("Position Hold engaged\n");
-	}
-	// DVH
-	else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && (
-	    RADIO_PITCH > p[CTRL_DEAD_BAND] ||
-	    RADIO_PITCH < -p[CTRL_DEAD_BAND] ||
-	    RADIO_ROLL > p[CTRL_DEAD_BAND] ||
-	    RADIO_ROLL < -p[CTRL_DEAD_BAND])) {
-		    navData.mode = NAV_STATUS_DVH;
-	}
-	else if (navData.mode == NAV_STATUS_DVH) {
-	    // allow speed to drop before holding position (or if RTH engaged)
-	    if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || RADIO_AUX2 < -250) {
-		navUkfSetHereAsPositionTarget();
+        }
+        // DVH
+        else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && (
+            RADIO_PITCH > p[CTRL_DEAD_BAND] ||
+            RADIO_PITCH < -p[CTRL_DEAD_BAND] ||
+            RADIO_ROLL > p[CTRL_DEAD_BAND] ||
+            RADIO_ROLL < -p[CTRL_DEAD_BAND])) {
+                    navData.mode = NAV_STATUS_DVH;
+        }
+        else if (navData.mode == NAV_STATUS_DVH) {
+            // allow speed to drop before holding position (or if RTH engaged)
+            if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || RADIO_AUX2 < -250) {
+                navUkfSetHereAsPositionTarget();
 
-		navData.mode = NAV_STATUS_POSHOLD;
-	    }
-	}
+                navData.mode = NAV_STATUS_POSHOLD;
+            }
+        }
     }
     else {
-	// switch to manual mode
-	navData.mode = NAV_STATUS_MANUAL;
-	// reset mission legs
-	navData.missionLeg = leg = 0;
-	// keep up with changing altitude
-	navSetHoldAlt(UKF_ALTITUDE, 0);
+        // switch to manual mode
+        navData.mode = NAV_STATUS_MANUAL;
+        // reset mission legs
+        navData.missionLeg = leg = 0;
+        // keep up with changing altitude
+        navSetHoldAlt(UKF_ALTITUDE, 0);
     }
 
     // ceiling set ?, 0 is disable
     if (navData.ceilingAlt) {
-	// ceiling reached 1st time
-	if (UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag) {
-	    navData.setCeilingFlag = 1;
-	    navData.ceilingTimer = timerMicros();
-	}
-	// ceiling still reached for 5 seconds
-	else if (navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) {
-	    navData.ceilingTimer = timerMicros();
-	    if (!navData.setCeilingReached)
-		AQ_NOTICE("Warning: Altitude ceiling reached.");
-	    navData.setCeilingReached = 1;
-	}
-	else if ((navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt) {
-	    if (navData.setCeilingReached)
-		AQ_NOTICE("Notice: Altitude returned to within ceiling.");
-	    navData.setCeilingFlag = 0;
-	    navData.setCeilingReached = 0;
-	}
+        // ceiling reached 1st time
+        if (UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag) {
+            navData.setCeilingFlag = 1;
+            navData.ceilingTimer = timerMicros();
+        }
+        // ceiling still reached for 5 seconds
+        else if (navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) {
+            navData.ceilingTimer = timerMicros();
+            if (!navData.setCeilingReached)
+                AQ_NOTICE("Warning: Altitude ceiling reached.");
+            navData.setCeilingReached = 1;
+        }
+        else if ((navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt) {
+            if (navData.setCeilingReached)
+                AQ_NOTICE("Notice: Altitude returned to within ceiling.");
+            navData.setCeilingFlag = 0;
+            navData.setCeilingReached = 0;
+        }
     }
 
     // home set
     if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 > 250) {
-	if (!navData.homeActionFlag) {
-	    navSetHomeCurrent();
-	    navData.homeActionFlag = 1;
-	}
+        if (!navData.homeActionFlag) {
+            navSetHomeCurrent();
+            navData.homeActionFlag = 1;
+        }
     }
     // recall home
     else if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 < -250) {
-	if (!navData.homeActionFlag) {
-	    navRecallHome();
-	    AQ_NOTICE("Returning to home position\n");
-	    navData.homeActionFlag = 1;
-	}
+        if (!navData.homeActionFlag) {
+            navRecallHome();
+            AQ_NOTICE("Returning to home position\n");
+            navData.homeActionFlag = 1;
+        }
     }
     // switch to middle, clear action flag
     else {
-	navData.homeActionFlag = 0;
+        navData.homeActionFlag = 0;
     }
 
     // heading-free mode
     if ((int)p[NAV_HDFRE_CHAN] > 0 && (int)p[NAV_HDFRE_CHAN] <= RADIO_MAX_CHANNELS) {
 
-	navSetHeadFreeMode();
+        navSetHeadFreeMode();
 
-	// set/maintain headfree frame reference
-	if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
-		(navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
-	    uint8_t dfRefTyp = 0;
-	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
-		if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
-		    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
-		    navData.homeDistanceLastUpdate = currentTime;
-		}
-		if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
-		    dfRefTyp = 1;
-	    }
-	    navSetHfReference(dfRefTyp);
-	}
+        // set/maintain headfree frame reference
+        if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
+                (navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
+            uint8_t dfRefTyp = 0;
+            if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
+                if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
+                    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
+                    navData.homeDistanceLastUpdate = currentTime;
+                }
+                if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
+                    dfRefTyp = 1;
+            }
+            navSetHfReference(dfRefTyp);
+        }
     }
 
     if (UKF_POSN != 0.0f || UKF_POSE != 0.0f) {
-	navData.holdCourse = compassNormalize(atan2f(-UKF_POSE, -UKF_POSN) * RAD_TO_DEG);
-	navData.holdDistance = __sqrtf(UKF_POSN*UKF_POSN + UKF_POSE*UKF_POSE);
+        navData.holdCourse = compassNormalize(atan2f(-UKF_POSE, -UKF_POSN) * RAD_TO_DEG);
+        navData.holdDistance = __sqrtf(UKF_POSN*UKF_POSN + UKF_POSE*UKF_POSE);
     }
     else {
-	navData.holdCourse = 0.0f;
-	navData.holdDistance = 0.0f;
+        navData.holdCourse = 0.0f;
+        navData.holdDistance = 0.0f;
     }
 
     if (navData.mode == NAV_STATUS_MISSION) {
-	// have we arrived yet?
-	if (navData.loiterCompleteTime == 0) {
-	    // are we close enough (distance and altitude)?
-	    // goto/home test
-	    if (((navData.missionLegs[leg].type == NAV_LEG_GOTO || navData.missionLegs[leg].type == NAV_LEG_HOME) &&
-		navData.holdDistance < navData.missionLegs[leg].targetRadius &&
-		fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius) ||
-	    // orbit test
-		(navData.missionLegs[leg].type == NAV_LEG_ORBIT &&
-		fabsf(navData.holdDistance - navData.missionLegs[leg].targetRadius) +
-		fabsf(navData.holdAlt - UKF_ALTITUDE) < 2.0f)  ||
-	    // takeoff test
-		(navData.missionLegs[leg].type == NAV_LEG_TAKEOFF &&
-		navData.holdDistance < navData.missionLegs[leg].targetRadius &&
-		fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius)
-		) {
-		    // start the loiter clock
-		    navData.loiterCompleteTime = currentTime + navData.missionLegs[leg].loiterTime;
+        // have we arrived yet?
+        if (navData.loiterCompleteTime == 0) {
+            // are we close enough (distance and altitude)?
+            // goto/home test
+            if (((navData.missionLegs[leg].type == NAV_LEG_GOTO || navData.missionLegs[leg].type == NAV_LEG_HOME) &&
+                navData.holdDistance < navData.missionLegs[leg].targetRadius &&
+                fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius) ||
+            // orbit test
+                (navData.missionLegs[leg].type == NAV_LEG_ORBIT &&
+                fabsf(navData.holdDistance - navData.missionLegs[leg].targetRadius) +
+                fabsf(navData.holdAlt - UKF_ALTITUDE) < 2.0f)  ||
+            // takeoff test
+                (navData.missionLegs[leg].type == NAV_LEG_TAKEOFF &&
+                navData.holdDistance < navData.missionLegs[leg].targetRadius &&
+                fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius)
+                ) {
+                    // start the loiter clock
+                    navData.loiterCompleteTime = currentTime + navData.missionLegs[leg].loiterTime;
 #ifdef USE_MAVLINK
-		    // notify ground
-		    mavlinkWpReached(leg);
+                    // notify ground
+                    mavlinkWpReached(leg);
 #endif
-	    }
-	}
-	// have we loitered long enough?
-	else if (currentTime > navData.loiterCompleteTime && navData.missionLegs[leg].type != NAV_LEG_LAND) {
-	    // next leg
-	    if (++leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
-		navLoadLeg(leg);
-	    }
-	    else {
-		navData.mode = NAV_STATUS_POSHOLD;
-	    }
-	}
+            }
+        }
+        // have we loitered long enough?
+        else if (currentTime > navData.loiterCompleteTime && navData.missionLegs[leg].type != NAV_LEG_LAND) {
+            // next leg
+            if (++leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
+                navLoadLeg(leg);
+            }
+            else {
+                navData.mode = NAV_STATUS_POSHOLD;
+            }
+        }
     }
 
     // DVH
     if (navData.mode == NAV_STATUS_DVH) {
-	float factor = (1.0f / 500.0f) * navData.holdMaxHorizSpeed;
-	float x = 0.0f;
-	float y = 0.0f;
+        float factor = (1.0f / 500.0f) * navData.holdMaxHorizSpeed;
+        float x = 0.0f;
+        float y = 0.0f;
 
-	if (RADIO_PITCH > p[CTRL_DEAD_BAND])
-	    x = -(RADIO_PITCH - p[CTRL_DEAD_BAND]) * factor;
-	if (RADIO_PITCH < -p[CTRL_DEAD_BAND])
-	    x = -(RADIO_PITCH + p[CTRL_DEAD_BAND]) * factor;
-	if (RADIO_ROLL > p[CTRL_DEAD_BAND])
-	    y = +(RADIO_ROLL - p[CTRL_DEAD_BAND]) * factor;
-	if (RADIO_ROLL < -p[CTRL_DEAD_BAND])
-	    y = +(RADIO_ROLL + p[CTRL_DEAD_BAND]) * factor;
+        if (RADIO_PITCH > p[CTRL_DEAD_BAND])
+            x = -(RADIO_PITCH - p[CTRL_DEAD_BAND]) * factor;
+        if (RADIO_PITCH < -p[CTRL_DEAD_BAND])
+            x = -(RADIO_PITCH + p[CTRL_DEAD_BAND]) * factor;
+        if (RADIO_ROLL > p[CTRL_DEAD_BAND])
+            y = +(RADIO_ROLL - p[CTRL_DEAD_BAND]) * factor;
+        if (RADIO_ROLL < -p[CTRL_DEAD_BAND])
+            y = +(RADIO_ROLL + p[CTRL_DEAD_BAND]) * factor;
 
-	// do we want to ignore rotation of craft (headfree/carefree mode)?
-	if (navData.headFreeMode > NAV_HEADFREE_OFF) {
-	    if (navData.hfUseStoredReference) {
-		// rotate to stored frame
-		navData.holdSpeedN = x * navData.hfReferenceCos - y * navData.hfReferenceSin;
-		navData.holdSpeedE = y * navData.hfReferenceCos + x * navData.hfReferenceSin;
-	    }
-	    else {
-		// don't rotate to any frame (pitch/roll move to N/S/E/W)
-		navData.holdSpeedN = x;
-		navData.holdSpeedE = y;
-	    }
-	}
-	else {
-	    // rotate to earth frame
-	    navData.holdSpeedN = x * navUkfData.yawCos - y * navUkfData.yawSin;
-	    navData.holdSpeedE = y * navUkfData.yawCos + x * navUkfData.yawSin;
-	}
+        // do we want to ignore rotation of craft (headfree/carefree mode)?
+        if (navData.headFreeMode > NAV_HEADFREE_OFF) {
+            if (navData.hfUseStoredReference) {
+                // rotate to stored frame
+                navData.holdSpeedN = x * navData.hfReferenceCos - y * navData.hfReferenceSin;
+                navData.holdSpeedE = y * navData.hfReferenceCos + x * navData.hfReferenceSin;
+            }
+            else {
+                // don't rotate to any frame (pitch/roll move to N/S/E/W)
+                navData.holdSpeedN = x;
+                navData.holdSpeedE = y;
+            }
+        }
+        else {
+            // rotate to earth frame
+            navData.holdSpeedN = x * navUkfData.yawCos - y * navUkfData.yawSin;
+            navData.holdSpeedE = y * navUkfData.yawCos + x * navUkfData.yawSin;
+        }
     }
     // orbit POI
     else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_ORBIT) {
-	float velX, velY;
+        float velX, velY;
 
-	// maintain orbital radius
-	velX = -pidUpdate(navData.distanceNPID, navData.missionLegs[leg].targetRadius, navData.holdDistance);
+        // maintain orbital radius
+        velX = -pidUpdate(navData.distanceNPID, navData.missionLegs[leg].targetRadius, navData.holdDistance);
 
-	// maintain orbital velocity (clock wise)
-	velY = -navData.missionLegs[leg].maxHorizSpeed;
+        // maintain orbital velocity (clock wise)
+        velY = -navData.missionLegs[leg].maxHorizSpeed;
 
-	// rotate to earth frame
-	navData.holdSpeedN = velX * navUkfData.yawCos - velY * navUkfData.yawSin;
-	navData.holdSpeedE = velY * navUkfData.yawCos + velX * navUkfData.yawSin;
+        // rotate to earth frame
+        navData.holdSpeedN = velX * navUkfData.yawCos - velY * navUkfData.yawSin;
+        navData.holdSpeedE = velY * navUkfData.yawCos + velX * navUkfData.yawSin;
     }
     else {
-	// distance => velocity
-	navData.holdSpeedN = pidUpdate(navData.distanceNPID, 0.0f, UKF_POSN);
-	navData.holdSpeedE = pidUpdate(navData.distanceEPID, 0.0f, UKF_POSE);
+        // distance => velocity
+        navData.holdSpeedN = pidUpdate(navData.distanceNPID, 0.0f, UKF_POSN);
+        navData.holdSpeedE = pidUpdate(navData.distanceEPID, 0.0f, UKF_POSE);
     }
 
     // normalize N/E speed requests to fit below max nav speed
     tmp = __sqrtf(navData.holdSpeedN*navData.holdSpeedN + navData.holdSpeedE*navData.holdSpeedE);
     if (tmp > navData.holdMaxHorizSpeed) {
-	navData.holdSpeedN = (navData.holdSpeedN / tmp) * navData.holdMaxHorizSpeed;
-	navData.holdSpeedE = (navData.holdSpeedE / tmp) * navData.holdMaxHorizSpeed;
+        navData.holdSpeedN = (navData.holdSpeedN / tmp) * navData.holdMaxHorizSpeed;
+        navData.holdSpeedE = (navData.holdSpeedE / tmp) * navData.holdMaxHorizSpeed;
     }
 
     // velocity => tilt
@@ -529,69 +529,69 @@ void navNavigate(void) {
     navData.holdTiltE = +pidUpdate(navData.speedEPID, navData.holdSpeedE, UKF_VELE);
 
     if (navData.mode > NAV_STATUS_MANUAL) {
-	float vertStick;
+        float vertStick;
 
-	// Throttle controls vertical speed
-	vertStick = RADIO_THROT - RADIO_MID_THROTTLE;
-	if ((vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO]) {
-	    // altitude velocity proportional to throttle stick
-	    navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / RADIO_MID_THROTTLE);
+        // Throttle controls vertical speed
+        vertStick = RADIO_THROT - RADIO_MID_THROTTLE;
+        if ((vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO]) {
+            // altitude velocity proportional to throttle stick
+            navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / RADIO_MID_THROTTLE);
 
-	    navData.verticalOverride = 1;
-	}
-	// are we trying to land?
-	else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_LAND) {
-	    navData.targetHoldSpeedAlt = -navData.holdMaxVertSpeed;
-	}
-	// coming out of vertical override?
-	else if (navData.verticalOverride) {
-	    navData.targetHoldSpeedAlt = 0.0f;
+            navData.verticalOverride = 1;
+        }
+        // are we trying to land?
+        else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_LAND) {
+            navData.targetHoldSpeedAlt = -navData.holdMaxVertSpeed;
+        }
+        // coming out of vertical override?
+        else if (navData.verticalOverride) {
+            navData.targetHoldSpeedAlt = 0.0f;
 
-	    // slow down before trying to hold altitude
-	    if (fabsf(UKF_VELD) < 0.025f)
-		navData.verticalOverride = 0;
+            // slow down before trying to hold altitude
+            if (fabsf(UKF_VELD) < 0.025f)
+                navData.verticalOverride = 0;
 
-	    // set new hold altitude to wherever we are while still in override
-	    if (navData.mode != NAV_STATUS_MISSION)
-		navSetHoldAlt(UKF_ALTITUDE, 0);
-	}
-	// PID has the throttle
-	else {
-	    navData.targetHoldSpeedAlt = pidUpdate(navData.altPosPID, navData.holdAlt, UKF_ALTITUDE);
-	}
+            // set new hold altitude to wherever we are while still in override
+            if (navData.mode != NAV_STATUS_MISSION)
+                navSetHoldAlt(UKF_ALTITUDE, 0);
+        }
+        // PID has the throttle
+        else {
+            navData.targetHoldSpeedAlt = pidUpdate(navData.altPosPID, navData.holdAlt, UKF_ALTITUDE);
+        }
 
-	// constrain vertical velocity
-	navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, (navData.holdMaxVertSpeed < p[NAV_MAX_DECENT]) ? -navData.holdMaxVertSpeed : -p[NAV_MAX_DECENT], navData.holdMaxVertSpeed);
+        // constrain vertical velocity
+        navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, (navData.holdMaxVertSpeed < p[NAV_MAX_DECENT]) ? -navData.holdMaxVertSpeed : -p[NAV_MAX_DECENT], navData.holdMaxVertSpeed);
 
-	// smooth vertical velocity changes
-	navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.01f;
+        // smooth vertical velocity changes
+        navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.01f;
     }
     else {
-	navData.verticalOverride = 0;
+        navData.verticalOverride = 0;
     }
 
     // calculate POI angle (used for tilt in gimbal function)
     if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].poiAltitude != 0.0f) {
-	float a, b, c;
+        float a, b, c;
 
-	a = navData.holdDistance;
-	b = UKF_ALTITUDE - navData.missionLegs[leg].poiAltitude;
-	c = __sqrtf(a*a + b*b);
+        a = navData.holdDistance;
+        b = UKF_ALTITUDE - navData.missionLegs[leg].poiAltitude;
+        c = __sqrtf(a*a + b*b);
 
-	navData.poiAngle = asinf(a/c) * RAD_TO_DEG - 90.0f;
+        navData.poiAngle = asinf(a/c) * RAD_TO_DEG - 90.0f;
     }
     else {
-	navData.poiAngle = 0.0f;
+        navData.poiAngle = 0.0f;
     }
 
     if (navData.mode == NAV_STATUS_MISSION) {
-	// recalculate autonomous heading
-	navSetHoldHeading(navData.targetHeading);
+        // recalculate autonomous heading
+        navSetHoldHeading(navData.targetHeading);
 
-	// watch for bump if landing
-	if (navData.missionLegs[leg].type == NAV_LEG_LAND && IMU_ACCZ < NAV_LANDING_DECEL)
-	    // shut everything down (sure hope we are really on the ground :)
-	    supervisorDisarm();
+        // wait for low throttle if landing
+        if (navData.missionLegs[leg].type == NAV_LEG_LAND && motorsData.throttle <= 1)
+            // shut everything down (sure hope we are really on the ground :)
+            supervisorDisarm();
     }
 
     navData.lastUpdate = currentTime;
@@ -641,8 +641,8 @@ unsigned int navGetWaypointCount(void) {
     int i;
 
     for (i = 0; i < NAV_MAX_MISSION_LEGS; i++)
-	if (navData.missionLegs[i].type == 0)
-	    break;
+        if (navData.missionLegs[i].type == 0)
+            break;
 
     return i;
 }
@@ -652,9 +652,9 @@ unsigned char navClearWaypoints(void) {
     int i;
 
     if (navData.mode != NAV_STATUS_MISSION) {
-	for (i = 0; i < NAV_MAX_MISSION_LEGS; i++)
-	    navData.missionLegs[i].type = 0;
-	ack = 1;
+        for (i = 0; i < NAV_MAX_MISSION_LEGS; i++)
+            navData.missionLegs[i].type = 0;
+        ack = 1;
     }
 
     return ack;
@@ -682,7 +682,7 @@ float navCalcBearing(double lat1, double lon1, double lat2, double lon2) {
     float ret = atan2f(e, n);
 
     if (!isfinite(ret))
-	ret = 0.0f;
+        ret = 0.0f;
 
     return ret;
 }

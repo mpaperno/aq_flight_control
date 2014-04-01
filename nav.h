@@ -27,8 +27,6 @@
 #define NAV_MIN_FIX_ACC		4.0f					    // minimum gps hAcc still considered a valid "2D" fix, in meters
 #define NAV_MAX_FIX_AGE		10e6					    // maximum age of position update still considered a valid "2D" fix, in microseconds
 
-#define NAV_LANDING_DECEL	(-1.5f * GRAVITY)			    // deceleration needed to indicate a landing (1.5g)
-
 #define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
 #define NAV_FLATTENING		(1.0 / 298.257223563)			    // WGS-84
 #define NAV_E_2			(NAV_FLATTENING * (2.0 - NAV_FLATTENING))
@@ -38,11 +36,13 @@
 #define NAV_HF_HOME_BRG_D_MAX	1.0f * DEG_TO_RAD				// re-compute headfree reference angles when bearing to home changes by this many degrees (zero to always re-compute)
 #define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch it toggled high
 
-#define NAV_STATUS_MANUAL	0x00					    // full manual control
-#define NAV_STATUS_ALTHOLD	0x01					    // altitude hold only
-#define NAV_STATUS_POSHOLD	0x02					    // altitude & position hold
-#define NAV_STATUS_DVH		0x03					    // dynamic velocity hold cut through
-#define NAV_STATUS_MISSION	0x04					    // autonomous mission
+enum navStatusTypes {
+    NAV_STATUS_MANUAL = 0,              // full manual control
+    NAV_STATUS_ALTHOLD,                 // altitude hold only
+    NAV_STATUS_POSHOLD,                 // altitude & position hold
+    NAV_STATUS_DVH,                     // dynamic velocity hold cut through
+    NAV_STATUS_MISSION,                 // autonomous mission
+};
 
 enum navLegTypes {
     NAV_LEG_HOME = 1,
@@ -54,11 +54,11 @@ enum navLegTypes {
 };
 
 enum headFreeActiveModes {
-    NAV_HEADFREE_OFF = 0,	// not active
-    NAV_HEADFREE_SETTING,	// active, setting reference point
-    NAV_HEADFREE_DYN_DELAY,	// active, waiting for timer to enable dynamic mode
-    NAV_HEADFREE_LOCKED,	// active with locked frame reference
-    NAV_HEADFREE_DYNAMIC	// active with continually adjusting frame reference
+    NAV_HEADFREE_OFF = 0,               // not active
+    NAV_HEADFREE_SETTING,               // active, setting reference point
+    NAV_HEADFREE_DYN_DELAY,             // active, waiting for timer to enable dynamic mode
+    NAV_HEADFREE_LOCKED,                // active with locked frame reference
+    NAV_HEADFREE_DYNAMIC                // active with continually adjusting frame reference
 };
 
 #define NAV_MAX_MISSION_LEGS	25
