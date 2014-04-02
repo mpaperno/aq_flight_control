@@ -230,11 +230,8 @@ void commTxFinished(void *param) {
     commTxStack_t *txStackPtr = (commTxStack_t *)param;
     commTxBuf_t *txBuf = (commTxBuf_t *)txStackPtr->txBuf;
 
-//    txBuf->status--;
-    __sync_sub_and_fetch(&txBuf->status, 1);
-
     // if no pending tx's for this buffer, free it
-    if (txBuf->status == COMM_TX_BUF_SENDING)
+    if (__sync_sub_and_fetch(&txBuf->status, 1) == COMM_TX_BUF_SENDING)
         txBuf->status = COMM_TX_BUF_FREE;
 
     // re-schedule

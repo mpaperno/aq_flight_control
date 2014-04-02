@@ -46,7 +46,7 @@ void canUartRxChar(uint8_t canId, uint8_t n, uint8_t *data) {
     ptr->rxHead = (ptr->rxHead + n) % CAN_UART_BUF_SIZE;
 }
 
-static void canUartTx(canUartStruct_t *ptr) {
+static int16_t canUartTx(canUartStruct_t *ptr) {
     int16_t tail = ptr->txTail;
     int n;
 
@@ -56,17 +56,19 @@ static void canUartTx(canUartStruct_t *ptr) {
 
     canSendBulk(CAN_LCC_INFO | CAN_TT_NODE | CAN_FID_CMD | (CAN_CMD_STREAM<<19), ptr->node->networkId, n, &ptr->txBuf[tail]);
 
-    ptr->txTail = tail + n;
+    return n;
 }
 
 void canUartStream(void) {
-    int sent1, sent2;
-    int i, j;
+    int needFlush, finished;
+    int16_t sent;
+    canUartTxCallback_t *txCallback;
+    void *txCallbackParam;
+    int i;
 
-    sent1 = 0;
-    for (j = 0; j < CAN_UART_BLOCK_SIZE; j++) {
-        sent2 = 0;
-
+    needFlush = 0;
+    finished = 0;
+    while (finished < CAN_UART_NUM) {
         // try to prevent overflows
         if ((canData.txHeadLo + 1) == canData.txTailLo)
             break;
@@ -75,25 +77,31 @@ void canUartStream(void) {
         for (i = 0; i < CAN_UART_NUM; i++) {
             // anything to send?
             if (canUartData[i].txTail != canUartData[i].txHead) {
-                canUartTx(&canUartData[i]);
-                sent1 = sent2 = 1;
+                sent = canUartTx(&canUartData[i]);
+                needFlush = 1;
 
                 // this stream finished?
-                if (canUartData[i].txTail == canUartData[i].txHead) {
+                if (canUartData[i].txTail + sent == canUartData[i].txHead) {
                     canSendBulkFinish();
-                    canUartData[i].txCallback(canUartData[i].txCallbackParam);
-                    sent1 = 0;
+                    needFlush = 0;
+
+                    txCallbackParam = canUartData[i].txCallbackParam;
+                    txCallback = canUartData[i].txCallback;
+                    canUartData[i].txTail = canUartData[i].txHead;
+
+                    txCallback(txCallbackParam);
+                }
+                else {
+                    canUartData[i].txTail += sent;
                 }
             }
+            else {
+                finished++;
+            }
         }
-
-        // all streams finished?
-        if (!sent2)
-            break;
     }
 
-    // was anything sent?
-    if (sent1)
+    if (needFlush)
         canSendBulkFinish();
 }
 

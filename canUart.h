@@ -30,7 +30,7 @@ typedef void canUartTxCallback_t(void *ptr);
 typedef struct {
     canNodes_t *node;
     uint8_t *txBuf;
-    int16_t txHead, txTail;
+    volatile int16_t txHead, txTail;
     canUartTxCallback_t *txCallback;
     void *txCallbackParam;
     uint8_t rxBuf[CAN_UART_BUF_SIZE];
