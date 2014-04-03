@@ -201,8 +201,6 @@ static void dIMUTaskCode(void *unused) {
 	// wait for work
 	CoWaitForSingleFlag(dImuData.flag, 0);
 
-	digitalTogg(tp);
-
 	// double rate gyo loop
 #ifdef DIMU_HAVE_MPU6000
 	mpu6000DrateDecode();
