@@ -42,16 +42,13 @@ void rccConfiguration(void) {
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 #ifdef RCC_EN1_PORT
-    en1 = digitalInit(RCC_EN1_PORT, RCC_EN1_PIN);
-    digitalHi(en1);
+    en1 = digitalInit(RCC_EN1_PORT, RCC_EN1_PIN, 1);
 #endif
 #ifdef RCC_EN2_PORT
-    en2 = digitalInit(RCC_EN2_PORT, RCC_EN2_PIN);
-    digitalLo(en2);
+    en2 = digitalInit(RCC_EN2_PORT, RCC_EN2_PIN, 0);
 #endif
 #ifdef RCC_SYSOFF_PORT
-    sysoff = digitalInit(RCC_SYSOFF_PORT, RCC_SYSOFF_PIN);
-    digitalLo(sysoff);
+    sysoff = digitalInit(RCC_SYSOFF_PORT, RCC_SYSOFF_PIN, 0);
 #endif
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1 | RCC_AHB1Periph_DMA2, ENABLE);
