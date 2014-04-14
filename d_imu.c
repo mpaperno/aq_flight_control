@@ -248,7 +248,7 @@ static void dIMUReadCalib(void) {
     }
 }
 
-static void dIMUWriteCalib(void) {
+static void _dIMUWriteCalib(void) {
     uint8_t lineBuf[128];
     uint8_t *buf;
     int n;
@@ -276,6 +276,30 @@ static void dIMUWriteCalib(void) {
     eepromClose();
 }
 #endif
+
+void dIMUWriteCalib(void) {
+#ifdef DIMU_HAVE_MPU6000
+    mpu6000Disable();
+#endif
+#ifdef DIMU_HAVE_HMC5983
+    hmc5983Disable();
+#endif
+#ifdef DIMU_HAVE_MS5611
+    ms5611Disable();
+#endif
+
+    _dIMUWriteCalib();
+
+#ifdef DIMU_HAVE_MPU6000
+    mpu6000Enable();
+#endif
+#ifdef DIMU_HAVE_HMC5983
+    hmc5983Enable();
+#endif
+#ifdef DIMU_HAVE_MS5611
+    ms5611Enable();
+#endif
+}
 
 void dIMUInit(void) {
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;

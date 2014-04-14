@@ -70,6 +70,6 @@ extern void dIMUInit(void);
 extern void dIMUTare(void);
 extern void dIMUCancelAlarm1(void);
 extern void dIMUSetAlarm1(int32_t us, dIMUCallback_t *callback, int parameter);
-
+extern void dIMUWriteCalib(void);
 
 #endif

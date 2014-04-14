@@ -37,7 +37,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 supervisorStruct_t supervisorData __attribute__((section(".ccm")));
 
 OS_STK *supervisorTaskStack;
@@ -92,6 +91,20 @@ void supervisorDisarm(void) {
 #endif
 }
 
+void supervisorLEDsOn(void) {
+#ifdef SUPERVISOR_DEBUG_PORT
+    digitalHi(supervisorData.debugLed);
+#endif
+    digitalHi(supervisorData.readyLed);
+}
+
+void supervisorLEDsOff(void) {
+#ifdef SUPERVISOR_DEBUG_PORT
+    digitalLo(supervisorData.debugLed);
+#endif
+    digitalLo(supervisorData.readyLed);
+}
+
 void supervisorTaskCode(void *unused) {
     uint32_t count = 0;
 
@@ -134,24 +147,28 @@ void supervisorTaskCode(void *unused) {
     		supervisorData.armTime = 0;
 	    }
 
+            // various functions
+	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
 #ifdef HAS_DIGITAL_IMU
-	    // leveling function
-	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500 && RADIO_ROLL < -500 && RADIO_PITCH > +500) {
-#ifdef SUPERVISOR_DEBUG_PORT
-		digitalHi(supervisorData.debugLed);
+                // tare function (lower left)
+                if (RADIO_ROLL < -500 && RADIO_PITCH > +500) {
+                    supervisorLEDsOn();
+                    dIMUTare();
+                    AQ_NOTICE("Leveled\n");
+                    supervisorLEDsOff();
+                }
 #endif
-		digitalHi(supervisorData.readyLed);
-
-		dIMUTare();
-
-		AQ_NOTICE("Leveled\n");
-
-#ifdef SUPERVISOR_DEBUG_PORT
-		digitalLo(supervisorData.debugLed);
+                // config write (upper right)
+                if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
+                    supervisorLEDsOn();
+                    configFlashWrite();
+                    AQ_NOTICE("Configuration written to flash\n");
+#ifdef DIMU_HAVE_EEPROM
+                    dIMUWriteCalib();
 #endif
-		digitalLo(supervisorData.readyLed);
-	    }
-#endif
+                    supervisorLEDsOff();
+                }
+            }
 	}
 	else if (supervisorData.state & STATE_ARMED) {
 	    // Disarm only if in manual mode
