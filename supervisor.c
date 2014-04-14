@@ -91,11 +91,17 @@ void supervisorDisarm(void) {
 #endif
 }
 
+void supervisorCalibrate(void) {
+    supervisorData.state = STATE_CALIBRATION;
+    AQ_NOTICE("Calibration mode\n");
+}
+
 void supervisorLEDsOn(void) {
 #ifdef SUPERVISOR_DEBUG_PORT
     digitalHi(supervisorData.debugLed);
 #endif
     digitalHi(supervisorData.readyLed);
+    digitalHi(supervisorData.gpsLed);
 }
 
 void supervisorLEDsOff(void) {
@@ -103,6 +109,7 @@ void supervisorLEDsOff(void) {
     digitalLo(supervisorData.debugLed);
 #endif
     digitalLo(supervisorData.readyLed);
+    digitalLo(supervisorData.gpsLed);
 }
 
 void supervisorTaskCode(void *unused) {
@@ -122,7 +129,28 @@ void supervisorTaskCode(void *unused) {
     while (1) {
 	yield(1000/SUPERVISOR_RATE);
 
-	if (supervisorData.state & STATE_DISARMED) {
+        if (supervisorData.state & STATE_CALIBRATION) {
+            digitalTogg(supervisorData.readyLed);
+#ifdef SUPERVISOR_DEBUG_PORT
+            digitalTogg(supervisorData.debugLed);
+#endif
+            digitalTogg(supervisorData.gpsLed);
+
+            // user looking to go back to DISARMED mode?
+	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
+		if (!supervisorData.armTime) {
+		    supervisorData.armTime = timerMicros();
+		}
+		else if ((timerMicros() - supervisorData.armTime) > SUPERVISOR_DISARM_TIME) {
+		    supervisorDisarm();
+		    supervisorData.armTime = 0;
+		}
+	    }
+	    else {
+    		supervisorData.armTime = 0;
+	    }
+        }
+	else if (supervisorData.state & STATE_DISARMED) {
 #ifdef SUPERVISOR_DEBUG_PORT
 	    // 0.5 Hz blink debug LED if config file could be found on uSD card
 	    if (!(count % (SUPERVISOR_RATE/1)) && supervisorData.configRead)
@@ -167,6 +195,11 @@ void supervisorTaskCode(void *unused) {
                     dIMUWriteCalib();
 #endif
                     supervisorLEDsOff();
+                }
+
+                // calibration mode (upper left)
+                if (RADIO_ROLL < -500 && RADIO_PITCH < -500) {
+                    supervisorCalibrate();
                 }
             }
 	}
@@ -394,10 +427,10 @@ void supervisorInit(void) {
     memset((void *)&supervisorData, 0, sizeof(supervisorData));
 
     supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN, 0);
-
 #ifdef SUPERVISOR_DEBUG_PORT
     supervisorData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN, 0);
 #endif
+    supervisorData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     supervisorData.state = STATE_INITIALIZING;
     supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE, "SUPERVISOR");

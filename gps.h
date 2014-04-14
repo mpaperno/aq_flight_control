@@ -47,7 +47,6 @@ typedef struct {
     int8_t baudSlot;
     uint8_t logHandle;
 
-    digitalPin *gpsLed;
     digitalPin *gpsEnable;
 
     unsigned long iTOW;

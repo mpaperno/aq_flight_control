@@ -28,6 +28,7 @@
 #include "imu.h"
 #include "aq_mavlink.h"
 #include "filer.h"
+#include "supervisor.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -73,9 +74,9 @@ void gpsTaskCode(void *p) {
 	yield(1);
 	gpsCheckBaud(s);
 
-	ledOn = digitalGet(gpsData.gpsLed);
+	ledOn = digitalGet(supervisorData.gpsLed);
 	if (!ledOn)
-	    digitalHi(gpsData.gpsLed);
+	    digitalHi(supervisorData.gpsLed);
 
 	while (serialAvailable(s)) {
 	    c = serialRead(s);
@@ -107,7 +108,7 @@ void gpsTaskCode(void *p) {
 #endif
 
 	if (!ledOn)
-	    digitalLo(gpsData.gpsLed);
+	    digitalLo(supervisorData.gpsLed);
     }
 }
 
@@ -132,8 +133,6 @@ void gpsInit(void) {
     gpsData.baudCycle[2] = 0;
 
     gpsData.baudSlot = 0;
-
-    gpsData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     gpsData.gpsPort = serialOpen(GPS_USART, GPS_BAUD_RATE, USART_HardwareFlowControl_None, 512, 512);
 

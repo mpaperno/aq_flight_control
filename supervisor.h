@@ -38,13 +38,14 @@
 
 enum supervisorStates {
     STATE_INITIALIZING	= 0x00,
-    STATE_DISARMED	= 0x01,
-    STATE_ARMED		= 0x02,
-    STATE_FLYING	= 0x04,
-    STATE_RADIO_LOSS1	= 0x08,
-    STATE_RADIO_LOSS2	= 0x10,
-    STATE_LOW_BATTERY1	= 0x20,
-    STATE_LOW_BATTERY2	= 0x40
+    STATE_CALIBRATION	= 0x01,
+    STATE_DISARMED	= 0x02,
+    STATE_ARMED		= 0x04,
+    STATE_FLYING	= 0x08,
+    STATE_RADIO_LOSS1	= 0x10,
+    STATE_RADIO_LOSS2	= 0x20,
+    STATE_LOW_BATTERY1	= 0x40,
+    STATE_LOW_BATTERY2	= 0x80
 };
 
 enum supervisorFailsafeStg2Options {
@@ -58,6 +59,7 @@ typedef struct {
 
     digitalPin *readyLed;
     digitalPin *debugLed;
+    digitalPin *gpsLed;
 
     float socTable[SUPERVISOR_SOC_TABLE_SIZE+1];
     float soc;

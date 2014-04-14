@@ -242,9 +242,9 @@ void navSetFixType(void) {
         navData.fixType = 0;
 
     if (navData.fixType == 3) {
-        digitalHi(gpsData.gpsLed);
+        digitalHi(supervisorData.gpsLed);
     } else {
-        digitalLo(gpsData.gpsLed);
+        digitalLo(supervisorData.gpsLed);
     }
 }
 
@@ -265,7 +265,7 @@ void navNavigate(void) {
         navData.navCapable = 0;
 
     // Can we navigate && do we want to be in mission mode?
-    if (supervisorData.state > STATE_DISARMED && navData.navCapable && RADIO_FLAPS > 250) {
+    if (supervisorData.state & STATE_ARMED && navData.navCapable && RADIO_FLAPS > 250) {
         //  are we currently in position hold mode && do we have a clear mission ahead of us?
         if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
             navLoadLeg(leg);
@@ -273,7 +273,7 @@ void navNavigate(void) {
         }
     }
     // do we want to be in position hold mode?
-    else if (supervisorData.state > STATE_DISARMED && RADIO_FLAPS > -250) {
+    else if (supervisorData.state & STATE_ARMED && RADIO_FLAPS > -250) {
         // always allow alt hold
         if (navData.mode < NAV_STATUS_ALTHOLD) {
             // record this altitude as the hold altitude
@@ -377,14 +377,14 @@ void navNavigate(void) {
     }
 
     // home set
-    if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 > 250) {
+    if (supervisorData.state & STATE_ARMED && RADIO_AUX2 > 250) {
         if (!navData.homeActionFlag) {
             navSetHomeCurrent();
             navData.homeActionFlag = 1;
         }
     }
     // recall home
-    else if (supervisorData.state > STATE_DISARMED && RADIO_AUX2 < -250) {
+    else if (supervisorData.state & STATE_ARMED && RADIO_AUX2 < -250) {
         if (!navData.homeActionFlag) {
             navRecallHome();
             AQ_NOTICE("Returning to home position\n");
