@@ -28,7 +28,7 @@
 #define FILER_SESS_FNAME	"session.txt"
 #define FILER_MAX_FILES		4
 #define FILER_STREAM_SYNC	200		// ~ 1s
-#define FILER_BUF_SIZE		(1<<16)		// 64KB
+#define FILER_BUF_SIZE		((1<<16)-512)	// <64KB
 #define FILER_FLUSH_THRESHOLD	4
 
 #define FILER_FUNC_NONE		0x00

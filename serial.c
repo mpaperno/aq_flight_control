@@ -831,14 +831,11 @@ void USART1_IRQHandler(void) {
     serialPort_t *s = serialPort1;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART1_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART1_RX_DMA_ST
 
-#ifndef SERIAL_UART1_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -849,7 +846,6 @@ void USART1_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART1_TX_DMA_ST
 }
 #endif	// SERIAL_UART1_PORT
 
@@ -872,14 +868,11 @@ void USART2_IRQHandler(void) {
     serialPort_t *s = serialPort2;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART2_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART2_RX_DMA_ST
 
-#ifndef SERIAL_UART2_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -890,7 +883,6 @@ void USART2_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART2_TX_DMA_ST
 }
 #endif	// SERIAL_UART2_PORT
 
@@ -913,14 +905,11 @@ void USART3_IRQHandler(void) {
     serialPort_t *s = serialPort3;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART3_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART3_RX_DMA_ST
 
-#ifndef SERIAL_UART3_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -931,7 +920,6 @@ void USART3_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART3_TX_DMA_ST
 }
 #endif	// SERIAL_UART3_PORT
 
@@ -954,14 +942,11 @@ void UART4_IRQHandler(void) {
     serialPort_t *s = serialPort4;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART4_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART4_RX_DMA_ST
 
-#ifndef SERIAL_UART4_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -972,7 +957,6 @@ void UART4_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART4_TX_DMA_ST
 }
 #endif	// SERIAL_UART4_PORT
 
@@ -995,14 +979,11 @@ void UART5_IRQHandler(void) {
     serialPort_t *s = serialPort5;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART5_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART5_RX_DMA_ST
 
-#ifndef SERIAL_UART5_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -1013,7 +994,6 @@ void UART5_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART5_TX_DMA_ST
 }
 #endif	// SERIAL_UART5_PORT
 
@@ -1036,14 +1016,11 @@ void USART6_IRQHandler(void) {
     serialPort_t *s = serialPort6;
     uint16_t SR = s->USARTx->SR;
 
-#ifndef SERIAL_UART6_RX_DMA_ST
     if (SR & USART_FLAG_RXNE) {
 	s->rxBuf[s->rxHead] = s->USARTx->DR;
 	s->rxHead = (s->rxHead + 1) % s->rxBufSize;
     }
-#endif	// SERIAL_UART6_RX_DMA_ST
 
-#ifndef SERIAL_UART6_TX_DMA_ST
     if (SR & USART_FLAG_TXE) {
 	if (s->txTail != s->txHead) {
 	    s->USARTx->DR = s->txBuf[s->txTail];
@@ -1054,6 +1031,5 @@ void USART6_IRQHandler(void) {
 	    USART_ITConfig(s->USARTx, USART_IT_TXE, DISABLE);
 	}
     }
-#endif	// SERIAL_UART6_TX_DMA_ST
 }
 #endif	// SERIAL_UART6_PORT
