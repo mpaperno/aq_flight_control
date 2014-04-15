@@ -242,9 +242,11 @@ void navSetFixType(void) {
         navData.fixType = 0;
 
     if (navData.fixType == 3) {
-        digitalHi(supervisorData.gpsLed);
+	if (!(supervisorData.state & STATE_CALIBRATION))
+	    digitalHi(supervisorData.gpsLed);
     } else {
-        digitalLo(supervisorData.gpsLed);
+	if (!(supervisorData.state & STATE_CALIBRATION))
+	    digitalLo(supervisorData.gpsLed);
     }
 }
 

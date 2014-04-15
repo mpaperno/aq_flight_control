@@ -31,6 +31,7 @@
 #include "config.h"
 #include "aq_timer.h"
 #include "aq_mavlink.h"
+#include "calib.h"
 #include <CoOS.h>
 #ifndef __CC_ARM
 #include <intrinsics.h>
@@ -161,6 +162,7 @@ void runTaskCode(void *unused) {
 #ifdef CAN_CALIB
 	canTxIMUData(loops);
 #endif
+        calibrate();
 
 	loops++;
     }

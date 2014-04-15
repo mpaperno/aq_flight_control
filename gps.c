@@ -75,7 +75,7 @@ void gpsTaskCode(void *p) {
 	gpsCheckBaud(s);
 
 	ledOn = digitalGet(supervisorData.gpsLed);
-	if (!ledOn)
+	if (!ledOn && !(supervisorData.state & STATE_CALIBRATION))
 	    digitalHi(supervisorData.gpsLed);
 
 	while (serialAvailable(s)) {
@@ -107,7 +107,7 @@ void gpsTaskCode(void *p) {
 	filerSetHead(gpsData.logHandle, logPointer);
 #endif
 
-	if (!ledOn)
+	if (!ledOn && !(supervisorData.state & STATE_CALIBRATION))
 	    digitalLo(supervisorData.gpsLed);
     }
 }

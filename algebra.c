@@ -39,27 +39,6 @@ void matrixFree(arm_matrix_instance_f32 *m) {
 	free(m->pData);
 }
 
-//char matBuf[1024];
-//char matBufTmp[64];
-//
-//#include "aq.h"
-//#include "notice.h"
-//#include "stdio.h"
-//void matrixDump(char *name, arm_matrix_instance_f32 *m) {
-//    int i, j;
-//    char *p = matBuf;
-//
-//    p += sprintf(p, "%s  = [\n", name);
-//    for (i = 0; i < m->numRows; i++) {
-//	for (j = 0; j < m->numCols; j++) {
-//	    p += sprintf(p, "%+.5e ", m->pData[i*m->numCols + j]);
-//	}
-//	p += sprintf(p, ";\n", name);
-//    }
-//    sprintf(p, "]\n", name);
-//    AQ_NOTICE(matBuf);
-//}
-
 // Calculates the QR decomposition of the given matrix A Transposed (decomp's A', not A)
 //      notes:  A matrix is modified
 //      Adapted from Java code originaly written by Joni Salonen
@@ -238,3 +217,92 @@ void vectorNormalize(float32_t *v, int n) {
     }
 }
 
+// performs Cholesky factorization of 3x3 matrix
+int cholF(float32_t *U) {
+    float32_t a11 = U[0];
+    float32_t a12 = U[1];
+    float32_t a13 = U[2];
+    float32_t a22 = U[4];
+    float32_t a23 = U[5];
+    float32_t a33 = U[8];
+
+    float32_t t0 = 1.0f / __sqrtf(a11);
+    float32_t t1 = a12 * t0;
+    float32_t t2 = a13 * t0;
+    float32_t t3 = t2 * t1;
+    float32_t t4 = __sqrtf(a22 - t1*t1);
+    float32_t t5 = (a23 - t3) / t4;
+
+    U[0] = a11 * t0;
+    U[1] = t1;
+    U[2] = t2;
+
+    U[3] = 0.0f;
+    U[4] = t4;
+    U[5] = t5;
+
+    U[6] = 0.0f;
+    U[7] = 0.0f;
+    U[8] = __sqrtf(a33 - t3 - t5 * t5);
+
+    // is positive definite?
+    return (isnan(t4) || isnan(U[8])) ? 0 : 1;
+}
+
+/* svd.c: Perform a singular value decomposition A = USV' of square matrix.
+ *
+ * This routine has been adapted with permission from a Pascal implementation
+ * (c) 1988 J. C. Nash, "Compact numerical methods for computers", Hilger 1990.
+ * The A matrix must be pre-allocated with 2n rows and n columns. On calling
+ * the matrix to be decomposed is contained in the first n rows of A. On return
+ * the n first rows of A contain the product US and the lower n rows contain V
+ * (not V'). The S2 vector returns the square of the singular values.
+ *
+ * (c) Copyright 1996 by Carl Edward Rasmussen. */
+
+void svd(float32_t *A, float32_t *S2, int n)
+{
+  int  i, j, k, EstColRank = n, RotCount = n, SweepCount = 0,
+       slimit = (n<120) ? 30 : n/4;
+  float32_t eps = 1e-7, e2 = 10.0*n*eps*eps, tol = 0.1*eps, vt, p, x0,
+       y0, q, r, c0, s0, d1, d2;
+
+  for (i=0; i<n; i++) { for (j=0; j<n; j++) A[(n+i)*n + j] = 0.0; A[(n+i)*n + i] = 1.0; }
+  while (RotCount != 0 && SweepCount++ <= slimit) {
+    RotCount = EstColRank*(EstColRank-1)/2;
+    for (j=0; j<EstColRank-1; j++)
+      for (k=j+1; k<EstColRank; k++) {
+        p = q = r = 0.0;
+        for (i=0; i<n; i++) {
+          x0 = A[i*n + j]; y0 = A[i*n + k];
+          p += x0*y0; q += x0*x0; r += y0*y0;
+        }
+        S2[j] = q; S2[k] = r;
+        if (q >= r) {
+          if (q<=e2*S2[0] || fabsf(p)<=tol*q)
+            RotCount--;
+          else {
+            p /= q; r = 1.0-r/q; vt = __sqrtf(4.0*p*p+r*r);
+            c0 = __sqrtf(0.5*(1.0+r/vt)); s0 = p/(vt*c0);
+            for (i=0; i<2*n; i++) {
+              d1 = A[i*n + j]; d2 = A[i*n + k];
+              A[i*n + j] = d1*c0+d2*s0; A[i*n + k] = -d1*s0+d2*c0;
+            }
+          }
+        } else {
+          p /= r; q = q/r-1.0; vt = __sqrtf(4.0*p*p+q*q);
+          s0 = __sqrtf(0.5*(1.0-q/vt));
+          if (p<0.0) s0 = -s0;
+          c0 = p/(vt*s0);
+          for (i=0; i<2*n; i++) {
+            d1 = A[i*n + j]; d2 = A[i*n + k];
+            A[i*n + j] = d1*c0+d2*s0; A[i*n + k] = -d1*s0+d2*c0;
+          }
+        }
+      }
+    while (EstColRank>2 && S2[EstColRank-1]<=S2[0]*tol+tol*tol) EstColRank--;
+  }
+//  if (SweepCount > slimit)
+//    printf("Warning: Reached maximum number of sweeps (%d) in SVD routine...\n"
+//           ,slimit);
+}

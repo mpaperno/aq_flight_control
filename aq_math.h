@@ -43,5 +43,7 @@ extern void quatFilterInit(quatFilter_t *f, float32_t dt, float32_t tau, float32
 extern void quatFilterInit3(quatFilter_t *f, float32_t dt, float32_t tau, float32_t *q);
 extern float32_t *quatFilter(quatFilter_t *f, float32_t *b);
 extern float32_t *quatFilter3(quatFilter_t *f, float32_t *b);
+extern int cholF(float32_t *U);
+extern void svd(float32_t *A, float32_t *S2, int n);
 
 #endif

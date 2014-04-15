@@ -31,6 +31,7 @@
 #include "gps.h"
 #include "d_imu.h"
 #include "motors.h"
+#include "calib.h"
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -73,29 +74,6 @@ void supervisorCreateSOCTable(void) {
     }
 }
 
-void supervisorArm(void) {
-    motorsArm();
-    supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
-    AQ_NOTICE("Armed\n");
-#ifdef USE_SIGNALING
-    signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
-#endif
-}
-
-void supervisorDisarm(void) {
-    motorsDisarm();
-    supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
-    AQ_NOTICE("Disarmed\n");
-#ifdef USE_SIGNALING
-    signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
-#endif
-}
-
-void supervisorCalibrate(void) {
-    supervisorData.state = STATE_CALIBRATION;
-    AQ_NOTICE("Calibration mode\n");
-}
-
 void supervisorLEDsOn(void) {
 #ifdef SUPERVISOR_DEBUG_PORT
     digitalHi(supervisorData.debugLed);
@@ -110,6 +88,32 @@ void supervisorLEDsOff(void) {
 #endif
     digitalLo(supervisorData.readyLed);
     digitalLo(supervisorData.gpsLed);
+}
+
+void supervisorArm(void) {
+    motorsArm();
+    supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
+    AQ_NOTICE("Armed\n");
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
+#endif
+}
+
+void supervisorDisarm(void) {
+    motorsDisarm();
+    calibDeinit();
+    supervisorLEDsOff();
+    supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
+    AQ_NOTICE("Disarmed\n");
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
+#endif
+}
+
+void supervisorCalibrate(void) {
+    supervisorData.state = STATE_CALIBRATION;
+    calibInit();
+    AQ_NOTICE("Calibration mode\n");
 }
 
 void supervisorTaskCode(void *unused) {
@@ -130,11 +134,26 @@ void supervisorTaskCode(void *unused) {
 	yield(1000/SUPERVISOR_RATE);
 
         if (supervisorData.state & STATE_CALIBRATION) {
-            digitalTogg(supervisorData.readyLed);
+	    int i;
+
+	    // try to indicate completion percentage
+	    i = constrainInt(20*((calibData.percentComplete)/(100.0f/3.0f)), 1, 21);
+	    if (i > 20)
+		digitalHi(supervisorData.readyLed);
+	    else if (!(count % i))
+		digitalTogg(supervisorData.readyLed);
 #ifdef SUPERVISOR_DEBUG_PORT
-            digitalTogg(supervisorData.debugLed);
+	    i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f)/(100.0f/3.0f)), 1, 21);
+	    if (i > 20)
+		digitalHi(supervisorData.debugLed);
+	    else if (!(count % i))
+		digitalTogg(supervisorData.debugLed);
 #endif
-            digitalTogg(supervisorData.gpsLed);
+	    i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f*2.0f)/(100.0f/3.0f)), 1, 21);
+	    if (i > 20)
+		digitalHi(supervisorData.gpsLed);
+	    else if (!(count % i))
+		digitalTogg(supervisorData.gpsLed);
 
             // user looking to go back to DISARMED mode?
 	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
