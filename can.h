@@ -199,6 +199,7 @@ typedef struct {
     canTelemCallback_t *telemFuncs[CAN_TYPE_NUM-1];
     uint32_t timeouts;
     uint32_t txOverflows;
+    uint32_t rxOverrun;
     uint8_t responseData[64*8];         // must be word aligned
     volatile uint8_t responses[64];
     volatile uint8_t rxHead, rxTail;

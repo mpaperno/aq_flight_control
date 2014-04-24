@@ -70,7 +70,7 @@ void canUartStream(void) {
     finished = 0;
     while (finished < CAN_UART_NUM) {
         // try to prevent overflows
-        if ((canData.txHeadLo + 1) == canData.txTailLo)
+        if ((canData.txTailLo + 1) == canData.txHeadLo)
             break;
 
         // round robin

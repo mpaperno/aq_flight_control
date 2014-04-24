@@ -560,6 +560,9 @@ void CAN_RX0_HANDLER(void) {
     CANx->RF0R |= CAN_RF0R_RFOM0;
 
     canData.rxHead = (canData.rxHead + 1) % CAN_BUF_SIZE_RX;
+
+    if (canData.rxHead == canData.rxTail)
+        canData.rxOverrun++;
 }
 
 static void canTxMsg(canBuf_t *tx, uint8_t mailbox) {
