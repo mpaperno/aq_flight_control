@@ -162,8 +162,8 @@ void telemetryDo(void) {
 		supervisorSendDataStop();
 	    }
 	}
-
     }
+
     lastAqUpdate = IMU_LASTUPD;
 }
 

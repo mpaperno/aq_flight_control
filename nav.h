@@ -142,7 +142,7 @@ extern unsigned char navClearWaypoints(void);
 extern navMission_t *navGetWaypoint(int seqId);
 extern navMission_t *navGetHomeWaypoint(void);
 extern void navSetHomeCurrent(void);
-extern void navLoadLeg(unsigned char leg);
+extern navMission_t *navLoadLeg(unsigned char leg);
 extern void navNavigate(void);
 extern void navResetHoldAlt(float delta);
 extern float navCalcDistance(double lat1, double lon1, double lat2, double lon2);

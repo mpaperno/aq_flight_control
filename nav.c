@@ -158,22 +158,24 @@ void navSetHeadFreeMode(void) {
     }
 }
 
-void navLoadLeg(uint8_t leg) {
+navMission_t *navLoadLeg(uint8_t leg) {
+    navMission_t *curLeg = &navData.missionLegs[leg];
+
     // invalid type?
-    if (!navData.missionLegs[leg].type || navData.missionLegs[leg].type >= NAV_NUM_LEG_TYPES)
-        return;
+    if (!curLeg->type || curLeg->type >= NAV_NUM_LEG_TYPES)
+        return &navData.missionLegs[0];
 
     // common
-    if (navData.missionLegs[leg].relativeAlt)
-        navSetHoldAlt(navData.missionLegs[leg].targetAlt, navData.missionLegs[leg].relativeAlt);
+    if (curLeg->relativeAlt)
+        navSetHoldAlt(curLeg->targetAlt, curLeg->relativeAlt);
     else
-        navSetHoldAlt(navData.missionLegs[leg].targetAlt - navUkfData.presAltOffset, navData.missionLegs[leg].relativeAlt);
+        navSetHoldAlt(curLeg->targetAlt - navUkfData.presAltOffset, curLeg->relativeAlt);
 
-    navData.holdMaxHorizSpeed = navData.missionLegs[leg].maxHorizSpeed;
-    navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
+    navData.holdMaxHorizSpeed = curLeg->maxHorizSpeed;
+    navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
 
     // type specific
-    if (navData.missionLegs[leg].type == NAV_LEG_HOME) {
+    if (curLeg->type == NAV_LEG_HOME) {
         navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
         navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
         navData.targetHeading = navData.homeLeg.poiHeading;
@@ -181,37 +183,37 @@ void navLoadLeg(uint8_t leg) {
         navData.holdMaxHorizSpeed = navData.homeLeg.maxHorizSpeed;
         navData.holdMaxVertSpeed = navData.homeLeg.maxVertSpeed;
     }
-    else if (navData.missionLegs[leg].type == NAV_LEG_GOTO) {
-        if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
-            navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
-        navData.targetHeading = navData.missionLegs[leg].poiHeading;
+    else if (curLeg->type == NAV_LEG_GOTO) {
+        if (curLeg->targetLat != (double)0.0 && curLeg->targetLon != (double)0.0)
+            navUkfSetGlobalPositionTarget(curLeg->targetLat, curLeg->targetLon);
+        navData.targetHeading = curLeg->poiHeading;
     }
-    else if (navData.missionLegs[leg].type == NAV_LEG_ORBIT) {
-        if (navData.missionLegs[leg].targetLat != (double)0.0 && navData.missionLegs[leg].targetLon != (double)0.0)
-            navUkfSetGlobalPositionTarget(navData.missionLegs[leg].targetLat, navData.missionLegs[leg].targetLon);
-        navData.targetHeading = navData.missionLegs[leg].poiHeading;
+    else if (curLeg->type == NAV_LEG_ORBIT) {
+        if (curLeg->targetLat != (double)0.0 && curLeg->targetLon != (double)0.0)
+            navUkfSetGlobalPositionTarget(curLeg->targetLat, curLeg->targetLon);
+        navData.targetHeading = curLeg->poiHeading;
         navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
     }
-    else if (navData.missionLegs[leg].type == NAV_LEG_TAKEOFF) {
+    else if (curLeg->type == NAV_LEG_TAKEOFF) {
         // store this position as the takeoff position
         navUkfSetHereAsPositionTarget();
         navData.targetHeading = AQ_YAW;
 
-        if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
+        if (curLeg->maxVertSpeed == 0.0f)
             navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
         else
-            navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
+            navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
 
         // set the launch location as home
         navSetHomeCurrent();
         navData.homeLeg.targetAlt = navData.holdAlt;
         navData.homeLeg.poiHeading = -0.0f;                // relative
     }
-    else if (navData.missionLegs[leg].type == NAV_LEG_LAND) {
-        if (navData.missionLegs[leg].maxVertSpeed == 0.0f)
+    else if (curLeg->type == NAV_LEG_LAND) {
+        if (curLeg->maxVertSpeed == 0.0f)
             navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
         else
-            navData.holdMaxVertSpeed = navData.missionLegs[leg].maxVertSpeed;
+            navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
     }
 
     if (navData.holdMaxHorizSpeed == 0.0f)
@@ -227,6 +229,8 @@ void navLoadLeg(uint8_t leg) {
     // notify ground
     mavlinkWpAnnounceCurrent(leg);
 #endif
+
+    return curLeg;
 }
 
 // Set fixType as a rough indication of GPS data quality
@@ -253,6 +257,7 @@ void navSetFixType(void) {
 void navNavigate(void) {
     unsigned long currentTime;
     unsigned char leg = navData.missionLeg;
+    navMission_t *curLeg = &navData.missionLegs[leg];
     float tmp;
 
     currentTime = IMU_LASTUPD;
@@ -269,8 +274,8 @@ void navNavigate(void) {
     // Can we navigate && do we want to be in mission mode?
     if (supervisorData.state & STATE_ARMED && navData.navCapable && RADIO_FLAPS > 250) {
         //  are we currently in position hold mode && do we have a clear mission ahead of us?
-        if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
-            navLoadLeg(leg);
+        if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
+            curLeg = navLoadLeg(leg);
             navData.mode = NAV_STATUS_MISSION;
         }
     }
@@ -433,20 +438,24 @@ void navNavigate(void) {
         if (navData.loiterCompleteTime == 0) {
             // are we close enough (distance and altitude)?
             // goto/home test
-            if (((navData.missionLegs[leg].type == NAV_LEG_GOTO || navData.missionLegs[leg].type == NAV_LEG_HOME) &&
-                navData.holdDistance < navData.missionLegs[leg].targetRadius &&
-                fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius) ||
+            if (((curLeg->type == NAV_LEG_GOTO || curLeg->type == NAV_LEG_HOME) &&
+                navData.holdDistance < curLeg->targetRadius &&
+                fabsf(navData.holdAlt - UKF_ALTITUDE) < curLeg->targetRadius) ||
             // orbit test
-                (navData.missionLegs[leg].type == NAV_LEG_ORBIT &&
-                fabsf(navData.holdDistance - navData.missionLegs[leg].targetRadius) +
+                (curLeg->type == NAV_LEG_ORBIT &&
+                fabsf(navData.holdDistance - curLeg->targetRadius) +
                 fabsf(navData.holdAlt - UKF_ALTITUDE) < 2.0f)  ||
             // takeoff test
-                (navData.missionLegs[leg].type == NAV_LEG_TAKEOFF &&
-                navData.holdDistance < navData.missionLegs[leg].targetRadius &&
-                fabsf(navData.holdAlt - UKF_ALTITUDE) < navData.missionLegs[leg].targetRadius)
+                (curLeg->type == NAV_LEG_TAKEOFF &&
+                navData.holdDistance < curLeg->targetRadius &&
+                fabsf(navData.holdAlt - UKF_ALTITUDE) < curLeg->targetRadius)
                 ) {
+                    // freeze heading unless orbiting
+                    if (curLeg->type != NAV_LEG_ORBIT)
+                        navSetHoldHeading(AQ_YAW);
+
                     // start the loiter clock
-                    navData.loiterCompleteTime = currentTime + navData.missionLegs[leg].loiterTime;
+                    navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
 #ifdef USE_MAVLINK
                     // notify ground
                     mavlinkWpReached(leg);
@@ -454,10 +463,10 @@ void navNavigate(void) {
             }
         }
         // have we loitered long enough?
-        else if (currentTime > navData.loiterCompleteTime && navData.missionLegs[leg].type != NAV_LEG_LAND) {
+        else if (currentTime > navData.loiterCompleteTime && curLeg->type != NAV_LEG_LAND) {
             // next leg
-            if (++leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
-                navLoadLeg(leg);
+            if (++leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
+                curLeg = navLoadLeg(leg);
             }
             else {
                 navData.mode = NAV_STATUS_POSHOLD;
@@ -500,14 +509,14 @@ void navNavigate(void) {
         }
     }
     // orbit POI
-    else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_ORBIT) {
+    else if (navData.mode == NAV_STATUS_MISSION && curLeg->type == NAV_LEG_ORBIT) {
         float velX, velY;
 
         // maintain orbital radius
-        velX = -pidUpdate(navData.distanceNPID, navData.missionLegs[leg].targetRadius, navData.holdDistance);
+        velX = -pidUpdate(navData.distanceNPID, curLeg->targetRadius, navData.holdDistance);
 
         // maintain orbital velocity (clock wise)
-        velY = -navData.missionLegs[leg].maxHorizSpeed;
+        velY = -curLeg->maxHorizSpeed;
 
         // rotate to earth frame
         navData.holdSpeedN = velX * navUkfData.yawCos - velY * navUkfData.yawSin;
@@ -542,7 +551,7 @@ void navNavigate(void) {
             navData.verticalOverride = 1;
         }
         // are we trying to land?
-        else if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].type == NAV_LEG_LAND) {
+        else if (navData.mode == NAV_STATUS_MISSION && curLeg->type == NAV_LEG_LAND) {
             navData.targetHoldSpeedAlt = -navData.holdMaxVertSpeed;
         }
         // coming out of vertical override?
@@ -573,11 +582,11 @@ void navNavigate(void) {
     }
 
     // calculate POI angle (used for tilt in gimbal function)
-    if (navData.mode == NAV_STATUS_MISSION && navData.missionLegs[leg].poiAltitude != 0.0f) {
+    if (navData.mode == NAV_STATUS_MISSION && curLeg->poiAltitude != 0.0f) {
         float a, b, c;
 
         a = navData.holdDistance;
-        b = UKF_ALTITUDE - navData.missionLegs[leg].poiAltitude;
+        b = UKF_ALTITUDE - curLeg->poiAltitude;
         c = __sqrtf(a*a + b*b);
 
         navData.poiAngle = asinf(a/c) * RAD_TO_DEG - 90.0f;
@@ -591,7 +600,7 @@ void navNavigate(void) {
         navSetHoldHeading(navData.targetHeading);
 
         // wait for low throttle if landing
-        if (navData.missionLegs[leg].type == NAV_LEG_LAND && motorsData.throttle <= 1)
+        if (curLeg->type == NAV_LEG_LAND && motorsData.throttle <= 1)
             // shut everything down (sure hope we are really on the ground :)
             supervisorDisarm();
     }
@@ -628,7 +637,7 @@ void navInit(void) {
     // HOME
     navData.missionLegs[i].type = NAV_LEG_HOME;
     navData.missionLegs[i].targetRadius = 0.10f;
-    navData.missionLegs[i].loiterTime = (uint32_t)0.0e6f;
+    navData.missionLegs[i].loiterTime = 0;
     navData.missionLegs[i].poiAltitude = UKF_ALTITUDE;
     i++;
 
