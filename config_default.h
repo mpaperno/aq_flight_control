@@ -16,7 +16,7 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    125
+#define DEFAULT_CONFIG_VERSION	    126
 
 #define DEFAULT_RADIO_TYPE	    -1		// -1 = none, 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -223,100 +223,8 @@
 #define DEFAULT_NAV_ALT_POS_OM	    2.5f
 
 #define DEFAULT_IMU_ROT		    +0.0		// degrees to rotate the IMU to align with the frame
-
-#define DEFAULT_IMU_ACC_BIAS_X	    -1.65
-#define DEFAULT_IMU_ACC_BIAS_Y	    -1.65
-#define DEFAULT_IMU_ACC_BIAS_Z	    -1.65
-#define DEFAULT_IMU_ACC_BIAS1_X	    0.0
-#define DEFAULT_IMU_ACC_BIAS1_Y	    0.0
-#define DEFAULT_IMU_ACC_BIAS1_Z	    0.0
-#define DEFAULT_IMU_ACC_BIAS2_X	    0.0
-#define DEFAULT_IMU_ACC_BIAS2_Y	    0.0
-#define DEFAULT_IMU_ACC_BIAS2_Z	    0.0
-#define DEFAULT_IMU_ACC_BIAS3_X	    0.0
-#define DEFAULT_IMU_ACC_BIAS3_Y	    0.0
-#define DEFAULT_IMU_ACC_BIAS3_Z	    0.0
-
-#define DEFAULT_IMU_ACC_SCAL_X	    +0.019
-#define DEFAULT_IMU_ACC_SCAL_Y	    +0.019
-#define DEFAULT_IMU_ACC_SCAL_Z	    +0.019
-#define DEFAULT_IMU_ACC_SCAL1_X	    0.0
-#define DEFAULT_IMU_ACC_SCAL1_Y	    0.0
-#define DEFAULT_IMU_ACC_SCAL1_Z	    0.0
-#define DEFAULT_IMU_ACC_SCAL2_X	    0.0
-#define DEFAULT_IMU_ACC_SCAL2_Y	    0.0
-#define DEFAULT_IMU_ACC_SCAL2_Z	    0.0
-#define DEFAULT_IMU_ACC_SCAL3_X	    0.0
-#define DEFAULT_IMU_ACC_SCAL3_Y	    0.0
-#define DEFAULT_IMU_ACC_SCAL3_Z	    0.0
-
-#define DEFAULT_IMU_ACC_ALGN_XY	    0.0
-#define DEFAULT_IMU_ACC_ALGN_XZ	    0.0
-#define DEFAULT_IMU_ACC_ALGN_YX	    0.0
-#define DEFAULT_IMU_ACC_ALGN_YZ	    0.0
-#define DEFAULT_IMU_ACC_ALGN_ZX	    0.0
-#define DEFAULT_IMU_ACC_ALGN_ZY	    0.0
-
-#define DEFAULT_IMU_MAG_BIAS_X	    0.0
-#define DEFAULT_IMU_MAG_BIAS_Y	    0.0
-#define DEFAULT_IMU_MAG_BIAS_Z	    0.0
-#define DEFAULT_IMU_MAG_BIAS1_X	    0.0
-#define DEFAULT_IMU_MAG_BIAS1_Y	    0.0
-#define DEFAULT_IMU_MAG_BIAS1_Z	    0.0
-#define DEFAULT_IMU_MAG_BIAS2_X	    0.0
-#define DEFAULT_IMU_MAG_BIAS2_Y	    0.0
-#define DEFAULT_IMU_MAG_BIAS2_Z	    0.0
-#define DEFAULT_IMU_MAG_BIAS3_X	    0.0
-#define DEFAULT_IMU_MAG_BIAS3_Y	    0.0
-#define DEFAULT_IMU_MAG_BIAS3_Z	    0.0
-
-#define DEFAULT_IMU_MAG_SCAL_X	    +0.19
-#define DEFAULT_IMU_MAG_SCAL_Y	    +0.19
-#define DEFAULT_IMU_MAG_SCAL_Z	    +0.19
-#define DEFAULT_IMU_MAG_SCAL1_X	    0.0
-#define DEFAULT_IMU_MAG_SCAL1_Y	    0.0
-#define DEFAULT_IMU_MAG_SCAL1_Z	    0.0
-#define DEFAULT_IMU_MAG_SCAL2_X	    0.0
-#define DEFAULT_IMU_MAG_SCAL2_Y	    0.0
-#define DEFAULT_IMU_MAG_SCAL2_Z	    0.0
-#define DEFAULT_IMU_MAG_SCAL3_X	    0.0
-#define DEFAULT_IMU_MAG_SCAL3_Y	    0.0
-#define DEFAULT_IMU_MAG_SCAL3_Z	    0.0
-
-#define DEFAULT_IMU_MAG_ALGN_XY	    0.0
-#define DEFAULT_IMU_MAG_ALGN_XZ	    0.0
-#define DEFAULT_IMU_MAG_ALGN_YX	    0.0
-#define DEFAULT_IMU_MAG_ALGN_YZ	    0.0
-#define DEFAULT_IMU_MAG_ALGN_ZX	    0.0
-#define DEFAULT_IMU_MAG_ALGN_ZY	    0.0
-
-#define DEFAULT_IMU_GYO_BIAS_X	    -1.33
-#define DEFAULT_IMU_GYO_BIAS_Y	    -1.33
-#define DEFAULT_IMU_GYO_BIAS_Z	    -1.33
-#define DEFAULT_IMU_GYO_BIAS1_X	    0.0
-#define DEFAULT_IMU_GYO_BIAS1_Y	    0.0
-#define DEFAULT_IMU_GYO_BIAS1_Z	    0.0
-#define DEFAULT_IMU_GYO_BIAS2_X	    0.0
-#define DEFAULT_IMU_GYO_BIAS2_Y	    0.0
-#define DEFAULT_IMU_GYO_BIAS2_Z	    0.0
-#define DEFAULT_IMU_GYO_BIAS3_X	    0.0
-#define DEFAULT_IMU_GYO_BIAS3_Y	    0.0
-#define DEFAULT_IMU_GYO_BIAS3_Z	    0.0
-
-#define DEFAULT_IMU_GYO_SCAL_X	    +0.1145
-#define DEFAULT_IMU_GYO_SCAL_Y	    +0.1145
-#define DEFAULT_IMU_GYO_SCAL_Z	    +0.1145
-
-#define DEFAULT_IMU_GYO_ALGN_XY	    0.0
-#define DEFAULT_IMU_GYO_ALGN_XZ	    0.0
-#define DEFAULT_IMU_GYO_ALGN_YX	    0.0
-#define DEFAULT_IMU_GYO_ALGN_YZ	    0.0
-#define DEFAULT_IMU_GYO_ALGN_ZX	    0.0
-#define DEFAULT_IMU_GYO_ALGN_ZY	    0.0
-
 #define DEFAULT_IMU_MAG_INCL	    -65.0
 #define DEFAULT_IMU_MAG_DECL	    0.0
-
 #define DEFAULT_IMU_PRESS_SENSE	    0.0f		// 0 == sensor #1, 1 == sensor #2, 2 == both
 
 
