@@ -68,7 +68,7 @@ extern void motorsInit(void);
 extern void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, float ruddCommand);
 extern void motorsSendValues(void);
 extern void motorsOff(void);
-extern void motorsArm(void);
+extern int motorsArm(void);
 extern void motorsDisarm(void);
 extern float motorsPwm2Thrust(float pwm);
 extern void motorsSendThrust(void);

@@ -77,8 +77,8 @@ static void motorsCanSendGroups(void) {
 static void motorsCanRequestTelem(int motorId) {
 #if MOTORS_CAN_TELEM_RATE > 0
     // request telemetry
-    canSetTelemetryValue(CAN_TT_NODE, motorsData.can[motorId]->networkId, 0, CAN_TELEM_STATUS);
-    canSetTelemetryRate(CAN_TT_NODE, motorsData.can[motorId]->networkId, MOTORS_CAN_TELEM_RATE);
+    canSetTelemetryValueNoWait(CAN_TT_NODE, motorsData.can[motorId]->networkId, 0, CAN_TELEM_STATUS);
+    canSetTelemetryRateNoWait(CAN_TT_NODE, motorsData.can[motorId]->networkId, MOTORS_CAN_TELEM_RATE);
 
     motorsData.canTelemReqTime[motorId] = timerMicros();
 #endif
@@ -280,7 +280,8 @@ static void motorsPwmInit(int i) {
 #endif
 }
 
-void motorsArm(void) {
+int motorsArm(void) {
+    int tries = 1;
     int i;
 
     // group arm
@@ -289,9 +290,16 @@ void motorsArm(void) {
 
     // wait for all to arm
     for (i = 0; i < MOTORS_NUM; i++)
-	if (motorsData.can[i])
-	    while (*canGetState(motorsData.can[i]->networkId) == ESC32_STATE_DISARMED)
+	if (motorsData.can[i]) {
+            tries = 3;
+	    while (--tries && *canGetState(motorsData.can[i]->networkId) == ESC32_STATE_DISARMED)
 		yield(1);
+
+            if (!tries)
+                break;
+        }
+
+    return tries;
 }
 
 void motorsDisarm(void) {

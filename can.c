@@ -293,12 +293,29 @@ uint8_t *canSetTelemetryValue(uint32_t tt, uint8_t tid, uint8_t index, uint8_t v
     return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_VALUE<<19), tid, 2, data);
 }
 
+void canSetTelemetryValueNoWait(uint32_t tt, uint8_t tid, uint8_t index, uint8_t value) {
+    uint8_t data[2];
+
+    data[0] = index;
+    data[1] = value;
+
+    canSend(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_VALUE<<19), tid, 2, data);
+}
+
 uint8_t *canSetTelemetryRate(uint32_t tt, uint8_t tid, uint16_t rate) {
     uint16_t data;
 
     data = rate;
 
     return canSendWaitResponse(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_RATE<<19), tid, 2, (uint8_t *)&data);
+}
+
+void canSetTelemetryRateNoWait(uint32_t tt, uint8_t tid, uint16_t rate) {
+    uint16_t data;
+
+    data = rate;
+
+    canSend(CAN_LCC_NORMAL | tt | CAN_FID_CMD | (CAN_CMD_TELEM_RATE<<19), tid, 2, (uint8_t *)&data);
 }
 
 void canCommandSetpoint16(uint8_t tid, uint8_t *data) {

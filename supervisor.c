@@ -91,12 +91,17 @@ void supervisorLEDsOff(void) {
 }
 
 void supervisorArm(void) {
-    motorsArm();
-    supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
-    AQ_NOTICE("Armed\n");
+    if (motorsArm()) {
+        supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
+        AQ_NOTICE("Armed\n");
 #ifdef USE_SIGNALING
-    signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
+        signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
 #endif
+    }
+    else {
+            motorsDisarm();
+            AQ_NOTICE("Arm motors failed - disarmed\n");
+    }
 }
 
 void supervisorDisarm(void) {
