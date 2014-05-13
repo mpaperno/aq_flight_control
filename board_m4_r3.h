@@ -485,7 +485,7 @@ enum pwmPorts {
 #define SERIAL_UART6_TX_FE_FLAG	DMA_FLAG_FEIF6
 
 
-#define ANALOG_REF_VOLTAGE	3.0f
+#define ANALOG_REF_VOLTAGE	2.85f
 #define ANALOG_VIN_RTOP         10.0f
 #define ANALOG_VIN_RBOT         10.0f
 //#define ANALOG_EXT_VOLT_RTOP	140.0f
