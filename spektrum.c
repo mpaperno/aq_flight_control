@@ -29,72 +29,125 @@
 
 spektrumStruct_t spektrumData __attribute__((section(".ccm")));
 
-void spektrumDecode(void) {
-    int addr, val;
+uint8_t spektrumDecode(void) {
+    uint8_t *buf = spektrumData.rawBuf;
+    uint8_t ret = 0;
+    int addr;
+    int val;
+    int i;
 
-    // 10 bit
-    if (radioData.radioType == RADIO_TYPE_SPEKTRUM10) {
-	addr = (spektrumData.rawBuf[0]>>2) & 0x0f;
-	val = (((spektrumData.rawBuf[0] & 0x03)<<8) | spektrumData.rawBuf[1])<<1;
+    // check over frame to make sure everything looks legit
+    for (i = 0; i < 7; i++) {
+        uint8_t *b = &buf[2 + i*2];
+
+        // empty channel
+        if (b[0] == 0xff && b[1] == 0xff)
+            continue;
+
+        // channels (other than first) should have MSB reset
+        if (i != 0 && (b[0] & 0x80) != 0)
+            return 0;
     }
-    // 11 bit
-    else {
-	addr = (spektrumData.rawBuf[0]>>3) & 0x0f;
-	val = ((spektrumData.rawBuf[0] & 0x07)<<8) | spektrumData.rawBuf[1];
+
+    switch (radioData.radioType) {
+        case RADIO_TYPE_SPEKTRUM11:
+            radioData.errorCount = (buf[0]<<8) | buf[1];
+
+            for (i = 0; i < 7; i++) {
+                uint8_t *b = &buf[2 + i*2];
+
+                // empty channel
+                if (b[0] == 0xff && b[1] == 0xff)
+                    continue;
+
+                addr = (b[0]>>3) & 0x0f;
+                val = ((b[0] & 0x07)<<8) | b[1];
+
+                // throttle
+                if (addr == 0)
+                    val -= 338;
+                else
+                    val -= 1024;
+
+                radioData.channels[addr] = val;
+
+                ret = 1;
+            }
+            break;
+
+        case RADIO_TYPE_SPEKTRUM10:
+        case RADIO_TYPE_DELTANG:
+            if (radioData.radioType == RADIO_TYPE_DELTANG) {
+                uint8_t checksum = 0;
+
+                for (i = 1; i < 16; i++)
+                    checksum += buf[i];
+
+                // checksum error?
+                if (buf[0] != checksum)
+                    return 0;
+
+                // valid data?
+                if ((buf[1] & 0x80) == 0)
+                    return 0;
+
+                radioData.errorCount = buf[1] & 0x1f;   // actually RSSI (5 bits)
+            }
+            else {
+                radioData.errorCount = (buf[0]<<8) | buf[1];
+            }
+
+            for (i = 0; i < 7; i++) {
+                uint8_t *b = &buf[2 + i*2];
+
+                // empty channel
+                if (b[0] == 0xff && b[1] == 0xff)
+                    continue;
+
+                addr = (b[0]>>2) & 0x0f;
+                // channel addresses must be in order
+                if (addr != i)
+                    return 0;
+
+                val = (((b[0] & 0x03)<<8) | b[1])<<1;
+
+                // throttle
+                if (addr == 0)
+                    val -= 338;
+                else
+                    val -= 1024;
+
+                radioData.channels[addr] = val;
+            }
+
+            ret = 1;
+            break;
+
+        default:
+            break;
     }
 
-    // throttle
-    if (addr == 0)
-	val -= 338;
-    else
-	val -= 1024;
-
-    radioData.channels[addr] = val;
+    return ret;
 }
 
-unsigned char spektrumCharIn(int c) {
-    unsigned long receiveTime = timerMicros();
+uint8_t spektrumCharIn(int c) {
+    uint32_t receiveTime = timerMicros();
 
     // top of frame if it's been more than 7.5ms
     if (receiveTime - spektrumData.lastCharReceived > 7500)
-	spektrumData.state = SPEKTRUM_ERR_COUNT1;
+	spektrumData.state = 0;
 
-    spektrumData.lastCharReceived = timerMicros();
+    spektrumData.lastCharReceived = receiveTime;
 
-    switch (spektrumData.state) {
-    case SPEKTRUM_ERR_COUNT1:
-	spektrumData.rawBuf[0] = c;
-	spektrumData.state = SPEKTRUM_ERR_COUNT2;
-	break;
+    spektrumData.rawBuf[spektrumData.state] = c;
 
-    case SPEKTRUM_ERR_COUNT2:
-	radioData.errorCount = (spektrumData.rawBuf[0]<<8) | c;
-	spektrumData.state = SPEKTRUM_CHANNEL1;
-	spektrumData.channelCount = 0;
-	break;
-
-    case SPEKTRUM_CHANNEL1:
-	spektrumData.rawBuf[0] = c;
-	spektrumData.state = SPEKTRUM_CHANNEL2;
-	break;
-
-    case SPEKTRUM_CHANNEL2:
-	spektrumData.rawBuf[1] = c;
-	spektrumDecode();
-	spektrumData.channelCount++;
-	if (spektrumData.channelCount == (radioData.radioType == RADIO_TYPE_SPEKTRUM10 ? 7 : 6)) {
-	    spektrumData.state = SPEKTRUM_WAIT_SYNC1;
-//	    radioData.frameCount++;
-	}
-	else {
-	    spektrumData.state = SPEKTRUM_CHANNEL1;
-	}
-	return 1;
-
-	break;
+    if (++spektrumData.state == 16) {
+	spektrumData.state = 0;
+        return spektrumDecode();
     }
-
-    return 0;
+    else {
+        return 0;
+    }
 }
 
 void spektrumInit(void) {

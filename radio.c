@@ -46,6 +46,7 @@ void radioTaskCode(void *unused) {
 	switch (radioData.radioType) {
 	case RADIO_TYPE_SPEKTRUM11:
 	case RADIO_TYPE_SPEKTRUM10:
+        case RADIO_TYPE_DELTANG:
 	    while (serialAvailable(s))
 		if (spektrumCharIn(serialRead(s))) {
 		    radioData.lastUpdate = timerMicros();
@@ -116,6 +117,7 @@ void radioInit(void) {
     switch (radioData.radioType) {
     case RADIO_TYPE_SPEKTRUM11:
     case RADIO_TYPE_SPEKTRUM10:
+    case RADIO_TYPE_DELTANG:
 	spektrumInit();
 	radioRCSelect(0);
 	break;

@@ -58,7 +58,8 @@ enum radioTypes {
 	RADIO_TYPE_SBUS,
 	RADIO_TYPE_PPM,
 	RADIO_TYPE_SUMD,
-	RADIO_TYPE_MLINK
+	RADIO_TYPE_MLINK,
+        RADIO_TYPE_DELTANG
 };
 
 typedef struct {

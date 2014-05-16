@@ -23,22 +23,14 @@
 #define SPEKTRUM_BAUD		115200
 #define SPEKTRUM_RXBUF_SIZE	64
 
-#define SPEKTRUM_WAIT_SYNC1	0x00
-#define SPEKTRUM_WAIT_SYNC2	0x01
-#define SPEKTRUM_ERR_COUNT1	0x02
-#define SPEKTRUM_ERR_COUNT2	0x03
-#define SPEKTRUM_CHANNEL1	0x04
-#define SPEKTRUM_CHANNEL2	0x05
-
 typedef struct {
-    unsigned long lastCharReceived;
-    unsigned char state;
-    unsigned char channelCount;
-    unsigned char rawBuf[2];
+    uint32_t lastCharReceived;
+    uint8_t rawBuf[16];
+    uint8_t state;
 } spektrumStruct_t;
 
 extern void spektrumInit(void);
-extern unsigned char spektrumCharIn(int c);
+extern uint8_t spektrumCharIn(int c);
 
 extern spektrumStruct_t spektrumData;
 
