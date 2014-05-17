@@ -761,11 +761,40 @@ void configLoadDefault(void) {
 }
 
 void configFlashRead(void) {
-    memcpy(&p, (char *)flashStartAddr(), sizeof(p));
+    configRec_t *recs;
+    int i, j;
+
+    recs = (void *)flashStartAddr();
+
+    for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
+        for (j = 0; j < CONFIG_NUM_PARAMS; j++)
+            if (!strncasecmp(recs[i].name, configParameterStrings[j], 16))
+                p[j] = recs[i].val;
+    }
 }
 
-unsigned char configFlashWrite(void) {
-    return flashAddress(flashStartAddr(), (uint32_t *)&p, sizeof(p));
+uint8_t configFlashWrite(void) {
+    configRec_t *recs;
+    uint8_t ret = 0;
+    int i;
+
+    recs = (void *)aqCalloc(CONFIG_NUM_PARAMS, sizeof(configRec_t));
+
+    if (recs) {
+        for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
+            memcpy(recs[i].name, configParameterStrings[i], 16);
+            recs[i].val = p[i];
+        }
+
+        ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t));
+
+        aqFree(recs, CONFIG_NUM_PARAMS, sizeof(configRec_t));
+    }
+    else {
+        AQ_NOTICE("config: write, cannot allocate memory - abort\n");
+    }
+
+    return ret;
 }
 
 void configInit(void) {
@@ -782,7 +811,7 @@ void configInit(void) {
 	supervisorConfigRead();
 
     // get flash version
-    ver = *(float *)flashStartAddr();
+    ver = *(float *)(flashStartAddr()+16);
     if (isnan(ver))
 	ver = 0.0f;
 

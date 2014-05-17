@@ -18,7 +18,7 @@
 
 #define DEFAULT_CONFIG_VERSION	    126
 
-#define DEFAULT_RADIO_TYPE	    -1		// -1 = none, 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link
+#define DEFAULT_RADIO_TYPE	    -1		// -1 = none, 0 == Spektrum 11bit, 1 == Spektrum 10bit, 2 == SBUS, 3 == PPM, 4 == SUMD, 5 == M-Link, 6 == Deltang
 #define DEFAULT_RADIO_THRO_CH	    0
 #define DEFAULT_RADIO_ROLL_CH	    1
 #define DEFAULT_RADIO_PITC_CH	    2

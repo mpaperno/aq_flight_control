@@ -407,6 +407,11 @@ enum configParameters {
 };
 
 typedef struct {
+    char name[16];
+    float val;
+} configRec_t;
+
+typedef struct {
     unsigned int paramId;
     unsigned int num;
     float values[CONFIG_NUM_PARAMS];
