@@ -320,24 +320,57 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		if (param == 0.0f) {
 		    configFlashRead();
 		    ack = MAV_CMD_ACK_OK;
+		    AQ_NOTICE("Parameters restored from onboard EPROM.");
 		}
 		else if (param == 1.0f) {
 		    configFlashWrite();
 		    ack = MAV_CMD_ACK_OK;
+		    AQ_NOTICE("Parameters saved to onboard EPROM.");
 		}
 		else if (param == 2.0f) {
-		    if (configReadFile(0) >= 0)
+		    if (configReadFile(0) >= 0) {
 			ack = MAV_CMD_ACK_OK;
+			AQ_NOTICE("Parameters restored from local storage file.");
+		    } else {
+			ack = MAV_CMD_ACK_ERR_FAIL;
+			AQ_NOTICE("Error: Failed to read parameters from local file.");
+		    }
 		}
 		else if (param == 3.0f) {
-		    if (configWriteFile(0) >= 0)
+		    if (configWriteFile(0) >= 0) {
 			ack = MAV_CMD_ACK_OK;
+			AQ_NOTICE("Parameters saved to local storage file.");
+		    } else {
+			ack = MAV_CMD_ACK_ERR_FAIL;
+			AQ_NOTICE("Error: Failed to save parameters to local file.");
+		    }
 		}
 	    }
 	    else {
 		ack = MAV_CMD_ACK_ERR_FAIL;
+		AQ_NOTICE("Error: Can't save parameters while flying!");
 	    }
 
+	    break;
+
+	// remote reboot
+	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+	    if (!(supervisorData.state & STATE_ARMED)) {
+		param = mavlink_msg_command_long_get_param1(msg);  // flight controller actions: 0=noOp; 1=reboot; 2=shutdown
+		//param2 = mavlink_msg_command_long_get_param2(msg); // onboard computer actions: 0=noOp; 1=reboot; 2=shutdown
+		if (param == 1.0f) {
+		    AQ_NOTICE("Flight controller restarting...");
+		    ack = MAV_CMD_ACK_OK;
+		    NVIC_SystemReset();
+		} else {
+		    ack = MAV_CMD_ACK_ERR_FAIL;
+		    AQ_NOTICE("Error: Shutdown and computer actions not supported.");
+		}
+	    }
+	    else {
+		ack = MAV_CMD_ACK_ERR_FAIL;
+		AQ_NOTICE("Error: Can't reset while armed!");
+	    }
 	    break;
 
 	// enable/disable AQ custom dataset messages and set frequency
@@ -373,6 +406,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		ack = MAV_CMD_ACK_OK;
             } else {
         	ack = MAV_CMD_ACK_ERR_FAIL;
+		AQ_NOTICE("Error: Unknown telemetry dataset requested.");
             }
             break;
 
