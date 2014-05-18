@@ -205,6 +205,7 @@ const char *configParameterStrings[] = {
     "NAV_ALT_POS_IM",
     "NAV_ALT_POS_OM",
     "IMU_ROT",
+    "IMU_FLIP",
     "IMU_ACC_BIAS_X",
     "IMU_ACC_BIAS_Y",
     "IMU_ACC_BIAS_Z",
@@ -570,6 +571,7 @@ void configLoadDefault(void) {
     p[NAV_ALT_POS_IM] = DEFAULT_NAV_ALT_POS_IM;
     p[NAV_ALT_POS_OM] = DEFAULT_NAV_ALT_POS_OM;
     p[IMU_ROT] = DEFAULT_IMU_ROT;
+    p[IMU_FLIP] = DEFAULT_IMU_FLIP;
     p[IMU_ACC_BIAS_X] = DEFAULT_IMU_ACC_BIAS_X;
     p[IMU_ACC_BIAS_Y] = DEFAULT_IMU_ACC_BIAS_Y;
     p[IMU_ACC_BIAS_Z] = DEFAULT_IMU_ACC_BIAS_Z;

@@ -55,6 +55,8 @@ typedef struct {
     volatile float gyo[3];
     volatile float dRateGyo[3];
     volatile uint32_t lastUpdate;
+    float accSign[3];
+    float gyoSign[3];
     uint8_t readReg;
     uint8_t enabled;
 } mpu6000Struct_t;

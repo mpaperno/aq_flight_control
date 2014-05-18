@@ -40,6 +40,7 @@ typedef struct {
     volatile uint8_t slot;
     float rawMag[3];
     float mag[3];
+    float magSign[3];
     volatile uint32_t lastUpdate;
     uint8_t readCmd;
     uint8_t enabled;

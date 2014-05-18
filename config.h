@@ -215,6 +215,7 @@ enum configParameters {
     NAV_ALT_POS_IM,
     NAV_ALT_POS_OM,
     IMU_ROT,
+    IMU_FLIP,
     IMU_ACC_BIAS_X,
     IMU_ACC_BIAS_Y,
     IMU_ACC_BIAS_Z,
@@ -422,7 +423,7 @@ extern const char *configParameterStrings[];
 
 extern void configInit(void);
 extern void configFlashRead(void);
-extern unsigned char configFlashWrite(void);
+extern uint8_t configFlashWrite(void);
 extern void configLoadDefault(void);
 extern unsigned int configParameterRead(void *data);
 extern unsigned int configParameterWrite(void *data);

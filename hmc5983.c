@@ -34,12 +34,13 @@ static void hmc5983TransferComplete(int unused) {
 }
 
 static void hmc5983ScaleMag(int32_t *in, float *out, float divisor) {
-//    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 390.0f);
-//    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 390.0f);
-//    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 390.0f);
-    out[0] = DIMU_ORIENT_MAG_X * divisor * (1.0f / 187.88f);
-    out[1] = DIMU_ORIENT_MAG_Y * divisor * (1.0f / 187.88f);
-    out[2] = DIMU_ORIENT_MAG_Z * divisor * (1.0f / 187.88f);
+    float scale;
+
+    scale = divisor * (1.0f / 187.88f);
+
+    out[0] = hmc5983Data.magSign[0] * DIMU_ORIENT_MAG_X * scale;
+    out[1] = hmc5983Data.magSign[1] * DIMU_ORIENT_MAG_Y * scale;
+    out[2] = hmc5983Data.magSign[2] * DIMU_ORIENT_MAG_Z * scale;
 }
 
 static void hmc5983CalibMag(float *in, volatile float *out) {
@@ -160,11 +161,31 @@ void hmc5983PreInit(void) {
 }
 
 uint8_t hmc5983Init(void) {
-    int i = HMC5983_RETRIES;
-
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
+    int i = HMC5983_RETRIES;
+
+    switch ((int)p[IMU_FLIP]) {
+        case 1:
+            hmc5983Data.magSign[0] =  1.0f;
+            hmc5983Data.magSign[1] = -1.0f;
+            hmc5983Data.magSign[2] = -1.0f;
+            break;
+
+        case 2:
+            hmc5983Data.magSign[0] = -1.0f;
+            hmc5983Data.magSign[1] =  1.0f;
+            hmc5983Data.magSign[2] = -1.0f;
+            break;
+
+        case 0:
+        default:
+            hmc5983Data.magSign[0] = 1.0f;
+            hmc5983Data.magSign[1] = 1.0f;
+            hmc5983Data.magSign[2] = 1.0f;
+            break;
+    }
 
     // wait for a valid response
     while (--i && hmc5983GetReg(0x0a) != 'H')

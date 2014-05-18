@@ -80,21 +80,21 @@ static void mpu6000CalibAcc(float *in, volatile float *out) {
 static void mpu6000ScaleGyo(int32_t *in, float *out, float divisor) {
     float scale;
 
-    scale = 1.0f / ((1<<16) / (MPU6000_GYO_SCALE * 2.0f));
+    scale = 1.0f / ((1<<16) / (MPU6000_GYO_SCALE * 2.0f)) * divisor * DEG_TO_RAD;
 
-    out[0] = DIMU_ORIENT_GYO_X * divisor * scale * DEG_TO_RAD;
-    out[1] = DIMU_ORIENT_GYO_Y * divisor * scale * DEG_TO_RAD;
-    out[2] = DIMU_ORIENT_GYO_Z * divisor * scale * DEG_TO_RAD;
+    out[0] = mpu6000Data.gyoSign[0] * DIMU_ORIENT_GYO_X * scale;
+    out[1] = mpu6000Data.gyoSign[1] * DIMU_ORIENT_GYO_Y * scale;
+    out[2] = mpu6000Data.gyoSign[2] * DIMU_ORIENT_GYO_Z * scale;
 }
 
 static void mpu6000ScaleAcc(int32_t *in, float *out, float divisor) {
     float scale;
 
-    scale = 1.0f / ((1<<16) / (MPU6000_ACC_SCALE * 2.0f));
+    scale = 1.0f / ((1<<16) / (MPU6000_ACC_SCALE * 2.0f)) * divisor * GRAVITY;
 
-    out[0] = DIMU_ORIENT_ACC_X * divisor * scale * GRAVITY;
-    out[1] = DIMU_ORIENT_ACC_Y * divisor * scale * GRAVITY;
-    out[2] = DIMU_ORIENT_ACC_Z * divisor * scale * GRAVITY;
+    out[0] = mpu6000Data.accSign[0] * DIMU_ORIENT_ACC_X * scale;
+    out[1] = mpu6000Data.accSign[1] * DIMU_ORIENT_ACC_Y * scale;
+    out[2] = mpu6000Data.accSign[2] * DIMU_ORIENT_ACC_Z * scale;
 }
 
 static void mpu6000CalibGyo(float *in, volatile float *out) {
@@ -261,6 +261,36 @@ void mpu6000Init(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
+
+    switch ((int)p[IMU_FLIP]) {
+        case 1:
+            mpu6000Data.accSign[0] =  1.0f;
+            mpu6000Data.accSign[1] = -1.0f;
+            mpu6000Data.accSign[2] = -1.0f;
+            mpu6000Data.gyoSign[0] =  1.0f;
+            mpu6000Data.gyoSign[1] = -1.0f;
+            mpu6000Data.gyoSign[2] = -1.0f;
+            break;
+
+        case 2:
+            mpu6000Data.accSign[0] = -1.0f;
+            mpu6000Data.accSign[1] =  1.0f;
+            mpu6000Data.accSign[2] = -1.0f;
+            mpu6000Data.gyoSign[0] = -1.0f;
+            mpu6000Data.gyoSign[1] =  1.0f;
+            mpu6000Data.gyoSign[2] = -1.0f;
+            break;
+
+        case 0:
+        default:
+            mpu6000Data.accSign[0] = 1.0f;
+            mpu6000Data.accSign[1] = 1.0f;
+            mpu6000Data.accSign[2] = 1.0f;
+            mpu6000Data.gyoSign[0] = 1.0f;
+            mpu6000Data.gyoSign[1] = 1.0f;
+            mpu6000Data.gyoSign[2] = 1.0f;
+            break;
+    }
 
     utilFilterInit(&mpu6000Data.tempFilter, DIMU_OUTER_DT, DIMU_TEMP_TAU, IMU_ROOM_TEMP);
 
