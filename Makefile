@@ -193,7 +193,7 @@ AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mf
 
 # linker (ld) options
 LINKER_OPTS = -ereset_handler --omagic -defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
-	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(STMLIB_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
+	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(SRC_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
 
 # eabi linker libs
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
