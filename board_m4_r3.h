@@ -55,6 +55,7 @@ enum pwmPorts {
     PWM_6,
     PWM_7,
     PWM_8,
+    PWM_9,
     PWM_NUM_PORTS
 };
 
@@ -68,7 +69,8 @@ enum pwmPorts {
     TIM4, \
     TIM4, \
     TIM8, \
-    TIM8 \
+    TIM8, \
+    TIM9 \
 };
 
 #define	PWM_AFS	    const uint8_t pwmAFs[] = { \
@@ -79,7 +81,8 @@ enum pwmPorts {
     GPIO_AF_TIM4, \
     GPIO_AF_TIM4, \
     GPIO_AF_TIM8, \
-    GPIO_AF_TIM8  \
+    GPIO_AF_TIM8, \
+    GPIO_AF_TIM9  \
 };
 
 #define PWM_PORTS   const GPIO_TypeDef *pwmPorts[] = { \
@@ -90,7 +93,8 @@ enum pwmPorts {
     GPIOB, \
     GPIOB, \
     GPIOC, \
-    GPIOC  \
+    GPIOC, \
+    GPIOA  \
 };
 
 #define PWM_PINS    const uint32_t pwmPins[] = { \
@@ -101,7 +105,8 @@ enum pwmPorts {
     GPIO_Pin_6, \
     GPIO_Pin_7, \
     GPIO_Pin_6, \
-    GPIO_Pin_7 \
+    GPIO_Pin_7, \
+    GPIO_Pin_3 \
 };
 
 #define PWM_PINSOURCES	const uint16_t pwmPinSources[] = { \
@@ -112,7 +117,8 @@ enum pwmPorts {
     GPIO_PinSource6, \
     GPIO_PinSource7, \
     GPIO_PinSource6, \
-    GPIO_PinSource7 \
+    GPIO_PinSource7, \
+    GPIO_PinSource3 \
 };
 
 #define PWM_TIMERCHANNELS   const uint8_t pwmTimerChannels[] = { \
@@ -124,6 +130,7 @@ enum pwmPorts {
     TIM_Channel_2, \
     TIM_Channel_1, \
     TIM_Channel_2, \
+    TIM_Channel_2 \
 };
 
 #define PWM_BDTRS   const uint8_t pwmBDTRs[] = { \
@@ -134,7 +141,8 @@ enum pwmPorts {
     0, \
     0, \
     1, \
-    1 \
+    1, \
+    0 \
 };
 
 #define PWM_CLOCKS  const uint32_t pwmClocks[] = { \
@@ -145,7 +153,8 @@ enum pwmPorts {
     84000000, \
     84000000, \
     84000000, \
-    84000000 \
+    84000000, \
+    168000000 \
 };
 
 #define PWM_IC_IRQS  const uint8_t pwmIcIrqChannels[] = { \
@@ -156,7 +165,8 @@ enum pwmPorts {
     TIM4_IRQn, \
     TIM4_IRQn, \
     TIM8_CC_IRQn, \
-    TIM8_CC_IRQn \
+    TIM8_CC_IRQn, \
+    TIM1_BRK_TIM9_IRQn \
 };
 
 #define PWM_IRQ_TIM3_CH3	0
@@ -167,11 +177,13 @@ enum pwmPorts {
 #define PWM_IRQ_TIM4_CH2	5
 #define PWM_IRQ_TIM8_CH1	6
 #define PWM_IRQ_TIM8_CH2	7
+#define PWM_IRQ_TIM9_CH2	8
 
 #define PWM_PRESCALE		84000000
 
-#define RC1_UART		USART3
-
+#ifndef RC1_UART
+    #define RC1_UART		USART3
+#endif
 
 #define SUPERVISOR_READY_PORT	GPIOA
 #define SUPERVISOR_READY_PIN	GPIO_Pin_15

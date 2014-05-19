@@ -88,9 +88,8 @@ AQLIB_PATH ?= ..
 #BUILD_PATH ?= .
 BUILD_PATH ?= ../build
 
-# Add preprocessor definitions here (eg. CC_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
-CC_VARS ?=
-
+# Add preprocessor definitions to CC_VARS (eg. CC_ADD_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
+CC_ADD_VARS ?=
 
 # defaults end
 
@@ -187,7 +186,7 @@ endif
 
 
 # all compiler options
-CFLAGS = $(CC_OPTS) $(CC_INCLUDES) $(CC_VARS) $(BT_CFLAGS)
+CFLAGS = $(CC_OPTS) $(CC_INCLUDES) $(CC_VARS) $(BT_CFLAGS) $(CC_ADD_VARS)
 
 # assembler options
 AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mfloat-abi=hard
