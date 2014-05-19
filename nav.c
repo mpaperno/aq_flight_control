@@ -465,7 +465,7 @@ void navNavigate(void) {
         // have we loitered long enough?
         else if (currentTime > navData.loiterCompleteTime && curLeg->type != NAV_LEG_LAND) {
             // next leg
-            if (++leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
+            if (++leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
                 curLeg = navLoadLeg(leg);
             }
             else {
