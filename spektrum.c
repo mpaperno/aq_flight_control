@@ -105,10 +105,6 @@ uint8_t spektrumDecode(void) {
                     continue;
 
                 addr = (b[0]>>2) & 0x0f;
-                // channel addresses must be in order
-                if (addr != i)
-                    return 0;
-
                 val = (((b[0] & 0x03)<<8) | b[1])<<1;
 
                 // throttle
