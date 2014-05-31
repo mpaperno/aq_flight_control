@@ -152,8 +152,8 @@ enum pwmPorts {
     84000000, \
     84000000, \
     84000000, \
-    84000000, \
-    84000000, \
+    168000000, \
+    168000000, \
     168000000 \
 };
 
@@ -179,7 +179,6 @@ enum pwmPorts {
 #define PWM_IRQ_TIM8_CH2	7
 #define PWM_IRQ_TIM9_CH2	8
 
-#define PWM_PRESCALE		84000000
 
 #ifndef RC1_UART
     #define RC1_UART		USART3
@@ -562,7 +561,7 @@ enum pwmPorts {
 #define MOTORS_PWM_FREQ		80000	// Hz
 
 
-#define HAS_ONBOARD_ESC
+#define HAS_ONBOARD_ESC         84000000
 
 
 #define DEFAULT_IMU_ACC_BIAS_X      0.0

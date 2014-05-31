@@ -144,14 +144,15 @@ uint16_t pwmCheckTimer(uint8_t pwmPort) {
 }
 
 // note - assumes all timer clocks have been enable during system startup
-pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t period, uint32_t inititalValue, int8_t ESC32Mode) {
+pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t resolution, uint32_t freq, uint32_t inititalValue, int8_t ESC32Mode) {
+    uint32_t period = resolution / freq;
     pwmPortStruct_t *p = 0;
 
     if (pwmValidatePort(pwmPort, period)) {
 	p = &pwmData[pwmPort];
 	p->direction = PWM_OUTPUT;
 
-	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / PWM_PRESCALE);
+	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / resolution);
 
 	// set ESC32 mode via 1-wire protocol if necessary before activating PWM output
 	if (ESC32Mode > 0)

@@ -33,7 +33,6 @@
 gimbalStruct_t gimbalData __attribute__((section(".ccm")));
 
 void gimbalInit(void) {
-    uint16_t pwmPeriod;
     int8_t chkTim, initPitchPort, initRollPort, initTiltPort, initTrigPort, initPsthrPort;
 
     AQ_NOTICE("Gimbal init\n");
@@ -61,10 +60,8 @@ void gimbalInit(void) {
     initTrigPort = (p[GMBL_TRIG_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_TRIG_PORT]-1)));
     initPsthrPort = (p[GMBL_PSTHR_PORT] && (!chkTim || !pwmCheckTimer(p[GMBL_PSTHR_PORT]-1)) && p[GMBL_PSTHR_CHAN] && (int)p[GMBL_PSTHR_CHAN] <= RADIO_MAX_CHANNELS);
 
-    pwmPeriod = PWM_PRESCALE / (int)p[GMBL_PWM_FREQ];
-
     if (initPitchPort) {
-	gimbalData.pitchPort = pwmInitOut(p[GMBL_PITCH_PORT]-1, pwmPeriod, p[GMBL_NTRL_PITCH], -1);
+	gimbalData.pitchPort = pwmInitOut(p[GMBL_PITCH_PORT]-1, 1000000, (int)p[GMBL_PWM_FREQ], p[GMBL_NTRL_PITCH], -1);
 	if (gimbalData.pitchPort) {
 	    if (p[GMBL_TILT_PORT] == p[GMBL_PITCH_PORT])
 		AQ_NOTICE("Gimbal combined PITCH & TILT port initialized.\n");
@@ -74,25 +71,25 @@ void gimbalInit(void) {
 	}
     }
     if (initRollPort) {
-	gimbalData.rollPort = pwmInitOut(p[GMBL_ROLL_PORT]-1, pwmPeriod, p[GMBL_NTRL_ROLL], -1);
+	gimbalData.rollPort = pwmInitOut(p[GMBL_ROLL_PORT]-1, 1000000, (int)p[GMBL_PWM_FREQ], p[GMBL_NTRL_ROLL], -1);
 	if (gimbalData.rollPort) {
 	    AQ_NOTICE("Gimbal ROLL stabilization port initialized.\n");
 	}
     }
     if (initTiltPort) {
-	gimbalData.tiltPort = pwmInitOut(p[GMBL_TILT_PORT]-1, pwmPeriod, p[GMBL_NTRL_PITCH], -1);
+	gimbalData.tiltPort = pwmInitOut(p[GMBL_TILT_PORT]-1, 1000000, (int)p[GMBL_PWM_FREQ], p[GMBL_NTRL_PITCH], -1);
 	if (gimbalData.tiltPort) {
 	    AQ_NOTICE("Gimbal TILT control port initialized.\n");
 	}
     }
     if (initTrigPort) {
-	gimbalData.triggerPort = pwmInitOut(p[GMBL_TRIG_PORT]-1, pwmPeriod, GMBL_TRIG_NTRL_PWM, -1);
+	gimbalData.triggerPort = pwmInitOut(p[GMBL_TRIG_PORT]-1, 1000000, (int)p[GMBL_PWM_FREQ], GMBL_TRIG_NTRL_PWM, -1);
 	if (gimbalData.triggerPort) {
 	    AQ_NOTICE("Gimbal TRIGGER control port initialized.\n");
 	}
     }
     if (initPsthrPort) {
-	gimbalData.passthroughPort = pwmInitOut(p[GMBL_PSTHR_PORT]-1, pwmPeriod, GMBL_TRIG_NTRL_PWM, -1);
+	gimbalData.passthroughPort = pwmInitOut(p[GMBL_PSTHR_PORT]-1, 1000000, (int)p[GMBL_PWM_FREQ], GMBL_TRIG_NTRL_PWM, -1);
 	if (gimbalData.passthroughPort) {
 	    AQ_NOTICE("Gimbal radio PASSTHROUGH port initialized.\n");
 	}

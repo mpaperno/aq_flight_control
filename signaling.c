@@ -132,7 +132,7 @@ void signalingInit(void) {
 	    sigData.beeperType = 0;
 	}
 	else {	// piezo speaker
-	    sigData.beeperPort = pwmInitOut(abs(p[SIG_BEEP_PRT])-1, 200.0f / SIG_SPEAKER_FREQ * 5000, 0, 0);
+	    sigData.beeperPort = pwmInitOut(abs(p[SIG_BEEP_PRT])-1, 1000000, SIG_SPEAKER_FREQ, 0, 0);
 	    sigData.beeperType = 1;
 	}
 
@@ -142,7 +142,7 @@ void signalingInit(void) {
 	    AQ_NOTICE("Warning: Could not open Beeper signaling port!\n");
     }
     if (p[SIG_PWM_PRT]) {
-	sigData.pwmPort = pwmInitOut(p[SIG_PWM_PRT]-1, 2500, 950, 0);
+	sigData.pwmPort = pwmInitOut(p[SIG_PWM_PRT]-1, 1000000, 2500, 950, 0);
 
 	if (sigData.pwmPort)
 	    sigData.enabled = 1;

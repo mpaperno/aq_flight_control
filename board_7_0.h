@@ -177,7 +177,6 @@ enum pwmPorts {
 #define PWM_IRQ_TIM9_CH2	7
 #define PWM_IRQ_TIM11_CH1	8
 
-#define PWM_PRESCALE		1000000
 
 
 #define RC1_UART		UART4
