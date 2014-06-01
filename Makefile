@@ -26,6 +26,12 @@
 #   make hex BOARD_REV=1 DIMU_VER=1.1          # build only .hex file for rev 1 hardware with DIMU add-on board
 #   make bin BOARD_VER=8 BOARD_REV=3 QUATOS=1  # build .bin file for AQ M4 hardware using Quatos (see note on QUATOS option, below)
 #
+# 
+# To get a proper size report after building, the GCC program "size" is needed (arm-none-eabi-size[.exe]). 
+#  The SIZE variable (below) specifies its location. By default this is in the same folder as the compiler/build chain. However, 
+#  the CrossWorks build chain does not provide one.  A copy can be obtained from many sources, 
+#  eg. any recent version of https://launchpad.net/gcc-arm-embedded, Yagarto, etc.
+#
 # Windows needs some core GNU tools in your %PATH% (probably same place your "make" is). 
 #    Required: gawk, mv, echo, rm
 #    Optional: mkdir (auto-create build folders),  expr (auto-incrmenent buildnumber), zip (to compress hex files using "make pack")
@@ -173,6 +179,39 @@ CC = $(CC_BIN_PATH)/cc1
 AS = $(CC_BIN_PATH)/as
 LD = $(CC_BIN_PATH)/ld
 OBJCP = $(CC_BIN_PATH)/objcopy
+SIZE ?= $(CC_BIN_PATH)/size
+
+
+# target memory locations and sizes in KB (from autoquad.ld script)
+MEM_START_FLASH = 0x8000000
+MEM_START_CCM   = 0x10000000
+MEM_START_SRAM1 = 0x20000000
+MEM_START_SRAM2 = 0x2001c000
+
+MEM_SIZE_FLASH = 1024
+MEM_SIZE_CCM   = 64
+MEM_SIZE_SRAM1 = 112
+MEM_SIZE_SRAM2 = 16
+
+# script to run for reporting allocated memory sizes
+CMD_SIZE_REPORT = `$(SIZE) -A -x $(BIN_PATH)/$(BIN_NAME).elf | $(EXE_AWK) -n '\
+	BEGIN { \
+		c=0; r=0; r2=0; f=0; \
+		printf("\nSection Details:\n%-10s\t%7s\t\t%10s\t%s\n", "section", "size(B)", "addr", "loc") \
+	} \
+	NR > 2 && $$3 != 0x0 && $$3 != "" { \
+		printf("%-10s\t%7d\t\t0x%08x\t", $$1, $$2, $$3); \
+		if      ($$1 == ".data")            {f += $$2; print "F"}   \
+		else if ($$3 >= $(MEM_START_SRAM2)) {r2 += $$2; print "S2"} \
+		else if ($$3 >= $(MEM_START_SRAM1)) {r += $$2; print "S1"}  \
+		else if ($$3 >= $(MEM_START_CCM))   {c += $$2; print "C"}   \
+		else if ($$3 >= $(MEM_START_FLASH)) {f += $$2; print "F"}   \
+	} \
+	END { \
+		printf("\nTotals: %10s\t usage\tof ttl\n Flash: %10.2f\t%5.2f%\t%6d\n   CCM: %10.2f\t%5.2f%\t%6d\n SRAM1: %10.2f\t%5.2f%\t%6d\n SRAM2: %10.2f\t%5.2f%\t%6d\n", "KB", \
+		f/1024, f/($(MEM_SIZE_FLASH)*1024)*100, $(MEM_SIZE_FLASH), c/1024, c/($(MEM_SIZE_CCM)*1024)*100, $(MEM_SIZE_CCM), \
+		r/1024, r/($(MEM_SIZE_SRAM1)*1024)*100, $(MEM_SIZE_SRAM1), r2/1024, r2/($(MEM_SIZE_SRAM2)*1024)*100, $(MEM_SIZE_SRAM2)); \
+	}'`
 
 #
 ## External libraries required by AQ
@@ -226,7 +265,7 @@ ifeq ($(DEBUG_BUILD), 1)
 	BT_CFLAGS = -DDEBUG -DUSE_FULL_ASSERT -O1 -ggdb -g2
 	BT_CFLAGS += -DSTARTUP_FROM_RESET
 else
-	BT_CFLAGS = -DNDEBUG -DSTARTUP_FROM_RESET -O2 -g2
+	BT_CFLAGS = -DNDEBUG -DSTARTUP_FROM_RESET -O2 -ggdb -g2
 endif
 
 
@@ -238,15 +277,17 @@ AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mf
 
 # linker (ld) options
 LINKER_OPTS = -ereset_handler --omagic --fatal-warnings -EL --gc-sections -T$(SRC_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors \
-	-defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
-	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long
+	-defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll \
+	-defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long -defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long
 
 # eabi linker libs
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
-EXTRA_LIB_FILES = libm_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_v7em_fpv4_sp_d16_hard_t_le_eabi.a libcpp_v7em_fpv4_sp_d16_hard_t_le_eabi.a \
-	libdebugio_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_targetio_impl_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_user_libc_v7em_fpv4_sp_d16_hard_t_le_eabi.a
+EXTRA_LIB_FILES = libm libc libcpp libdebugio libc_targetio_impl libc_user_libc
+
+ARM_LIB_QUAL ?= v7em_fpv4_sp_d16_hard_t_le_eabi
 
 EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
+EXTRA_LIBS := $(addsuffix _$(ARM_LIB_QUAL).a, $(EXTRA_LIBS))
 
 
 # AQ code objects to create (correspond to .c source to compile)
@@ -309,11 +350,16 @@ DEPS := $(C_OBJECTS:.o=.d)
 ## Target definitions
 #
 
-.PHONY: all hex bin clean-all clean clean-bin clean-pack pack pack-hex pack-bin CREATE_BUILD_FOLDER BUILDNUMBER
+.PHONY: build-common-start build-common-end build-copy-hex build-copy-bin all hex bin clean-all clean clean-bin clean-pack pack pack-hex pack-bin CREATE_BUILD_FOLDER BUILDNUMBER SIZEREPORT
 
-all: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex $(BIN_PATH)/$(BIN_NAME).bin
-hex: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex
-bin: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).bin
+build-common-start: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).elf
+build-common-end: SIZEREPORT
+build-copy-hex: $(BIN_PATH)/$(BIN_NAME).hex
+build-copy-bin: $(BIN_PATH)/$(BIN_NAME).bin
+
+all: build-common-start build-copy-hex build-copy-bin build-common-end
+hex: build-common-start build-copy-hex build-common-end
+bin: build-common-start build-copy-bin build-common-end
 
 clean-all: clean clean-bin clean-pack
 
@@ -399,6 +445,9 @@ BUILDNUMBER :
 	@echo "Incrementing Build Number"
 	$(CMD_BUILDNUMBER)
 
+SIZEREPORT:
+	@if test -f $(SIZE); then echo; echo "---- Size report ----"; echo "${CMD_SIZE_REPORT}"; fi
+	
 ## Flash-Loader (Linux only) 			##
 ## Requires AQ ground tools sources	##
 $(SRC_PATH)/../ground/loader: $(SRC_PATH)/../ground/loader.c
