@@ -274,17 +274,13 @@ static void motorsCanInit(int i) {
 
 static void motorsPwmInit(int i) {
 #if defined(HAS_ONBOARD_ESC)
-    #if defined(USE_QUATOS)
-        motorsData.pwm[i] = pwmInitOut(i, HAS_ONBOARD_ESC, MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
-    #else
-        motorsData.pwm[i] = pwmInitOut(i, HAS_ONBOARD_ESC, MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
-    #endif  // USE_QUATOS
+    motorsData.pwm[i] = pwmInitOut(i, HAS_ONBOARD_ESC, MOTORS_PWM_FREQ, 0, 0);
 #else
-    #if defined(USE_QUATOS)
-        motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
-    #else
-        motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
-    #endif  // USE_QUATOS
+#if defined(USE_QUATOS)
+    motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
+#else
+    motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
+#endif  // USE_QUATOS
 #endif  // HAS_ONBOARD_ESC
 }
 
