@@ -5,9 +5,13 @@
 # ! This file is ignored when building with CrossWorks Studio.
 #
 # All paths are relative to Makefile location.  Possible make targets:
-#  all         build firmware .elf and .hex binaries
+#  all         build firmware .elf, .hex, and .bin binaries
+#  hex         build firmware .elf, and .hex binaries
+#  bin         build firmware .elf, and .bin binaries
 #  flash       attempt to build ../ground/loader and flash firmware to board (linux only)
-#  pack        create .zip archive of generated .hex file (requires GNU zip)
+#  pack        create .zip archive of generated .hex and .bin files (requires GNU zip)
+#  pack-hex    create .zip archive of generated .hex files
+#  pack-bin    create .zip archive of generated .bin files
 #  clean       delete all built objects (not binaries or archives)
 #  clean-bin   delete all binaries created in build folder (*.elf, *.bin, *.hex)
 #  clean-pack  delete all archives in build folder (*.zip)
@@ -16,9 +20,11 @@
 # Read comments below under "External libraries required by AQ" for dependency details.
 #
 # Usage examples:
-#   make all                              # default Release type builds .hex and .elf binaries
-#   make all BUILD_TYPE=Debug             # build with compiler debugging flags/options enabled
-#   make all BOARD_REV=1 INCR_BUILDNUM=0  # build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
+#   make all                                   # default Release type builds .hex and .elf binaries
+#   make all BUILD_TYPE=Debug                  # build with compiler debugging flags/options enabled
+#   make all BOARD_REV=1 INCR_BUILDNUM=0       # build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
+#   make hex BOARD_REV=1 DIMU_VER=1.1          # build only .hex file for rev 1 hardware with DIMU add-on board
+#   make bin BOARD_VER=8 BOARD_REV=3 QUATOS=1  # build .bin file for AQ M4 hardware using Quatos (see note on QUATOS option, below)
 #
 # Windows needs some core GNU tools in your %PATH% (probably same place your "make" is). 
 #    Required: gawk, mv, echo, rm
@@ -36,33 +42,50 @@
 #
 # Output folder name; Use 'Debug' to set debug compiler options;
 BUILD_TYPE ?= Release
+
 # Path to source files - no trailing slash
 SRC_PATH ?= .
+
 # Board version to build for (6|7|8(mx))
 BOARD_VER ?= 6
+
 # Board revision to build for (0 = v6 initial release revision, 1 = v6 Oct. 2012 revision)
 BOARD_REV ?= 0
+
 # Specify a DIMU version number to enable DIMU support in AQ, zero to disable (eg. DIMU_VER=1.1)
 DIMU_VER ?= 0
+
 # Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
+
 # Use the single-folder source file organization from AQ repo? (0|1)
 FLAT_SRC ?= 1
+
 # Produced binaries file name prefix (version/revision/build/hardware info will be automatically appended)
 BIN_NAME ?= aq
+
 # Build debug version? (0|1; true by default if build_type contains the word "debug")
 ifeq ($(findstring Debug, $(BUILD_TYPE)), Debug)
 	DEBUG_BUILD ?= 1
 else 
 	DEBUG_BUILD ?= 0
 endif
+
 # Flashing interface (Linux only)
 USB_DEVICE ?= /dev/ttyUSB0
+
+# Build with Quatos controller enabled (0=no, 1=yes)
+# NOTE: Must have pre-compiled quatos library file in $(AQLIB_PATH)/aq
+#   At this time the quatos lib is board-specific:
+#    For AQv6 use quatos.a, for AQ M4 use quatos-board8.3.a
+QUATOS ?= 0
+
+# Add preprocessor definitions to CC_VARS (eg. CC_ADD_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
+CC_ADD_VARS ?=
 
 # You may also use BIN_SUFFIX to append text 
 # to generated bin file name after version string;
 # BIN_SUFFIX = 
-
 
 # System-specific folder paths and commands
 #
@@ -74,7 +97,7 @@ CC_PATH ?= /usr/share/crossworks_for_arm_2.3
 EXE_AWK ?= gawk 
 EXE_MKDIR ?= mkdir
 #EXE_MKDIR = C:/cygwin/bin/mkdir
-EXE_ZIP ?= zip
+EXE_ZIP ?= zip -j
 # file extention for compressed files (gz for gzip, etc)
 ZIP_EXT ?= zip
 
@@ -87,9 +110,6 @@ AQLIB_PATH ?= ..
 # A sub-folder is created along this path, named as the BUILD_TYPE (eg. build/Release).
 #BUILD_PATH ?= .
 BUILD_PATH ?= ../build
-
-# Add preprocessor definitions to CC_VARS (eg. CC_ADD_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
-CC_ADD_VARS ?=
 
 # defaults end
 
@@ -147,6 +167,8 @@ STMLIB_PATH = $(AQLIB_PATH)/STM32
 # STM32F4 libs from ST (http://www.st.com/web/en/catalog/tools/PF257901)
 STM32DRIVER_PATH = $(AQLIB_PATH)/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/STM32F4xx_StdPeriph_Driver
 STM32CMSIS_PATH = $(AQLIB_PATH)/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/CMSIS
+# any other libraries specific to AQ
+OTHERLIB_PATH = $(AQLIB_PATH)/aq
 
 # all include flags for the compiler
 CC_INCLUDES :=  -I$(SRC_PATH) -I$(STMLIB_PATH)/include -I$(STM32DRIVER_PATH)/inc -I$(STM32CMSIS_PATH)/Include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
@@ -154,11 +176,13 @@ CC_INCLUDES :=  -I$(SRC_PATH) -I$(STMLIB_PATH)/include -I$(STM32DRIVER_PATH)/inc
 # compiler flags
 CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -Wall -finline-functions -Wdouble-promotion -std=c99 \
 	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet
+# -fno-diagnostics-show-caret -mtp=soft
 
 # macro definitions to pass via compiler command line
 #
-CC_VARS += -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG -D__TARGET_F4XX= -DSTM32F4XX= -DSTM32F40_41xxx -D__FPU_PRESENT \
-	-DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER
+CC_VARS += -D__SIZEOF_WCHAR_T=4 -D__ARM_ARCH_7EM__ -D__CROSSWORKS_ARM -D__ARM_ARCH_FPV4_SP_D16__ -D__TARGET_PROCESSOR=STM32F407VG \
+	-D__CROSSWORKS_MAJOR_VERSION=2 -D__CROSSWORKS_MINOR_VERSION=3 -D__CROSSWORKS_REVISION=2 \
+	-D__TARGET_PROCESSOR_STM32F407VG -DSTM32F4XX -DSTM32F40_41xxx -D__FPU_PRESENT=1 -DARM_MATH_CM4 -D__THUMB -DNESTED_INTERRUPTS -DCTL_TASKING -DUSE_STDPERIPH_DRIVER
 	
 # set AQ hardware version and revision
 CC_VARS += -DBOARD_VERSION=$(BOARD_VER) -DBOARD_REVISION=$(BOARD_REV)
@@ -181,7 +205,7 @@ ifeq ($(DEBUG_BUILD), 1)
 	BT_CFLAGS = -DDEBUG -DUSE_FULL_ASSERT -O1 -ggdb -g2
 	BT_CFLAGS += -DSTARTUP_FROM_RESET
 else
-	BT_CFLAGS = -DNDEBUG -DSTARTUP_FROM_RESET -O2
+	BT_CFLAGS = -DNDEBUG -DSTARTUP_FROM_RESET -O2 -g2
 endif
 
 
@@ -192,8 +216,9 @@ CFLAGS = $(CC_OPTS) $(CC_INCLUDES) $(CC_VARS) $(BT_CFLAGS) $(CC_ADD_VARS)
 AS_OPTS = --traditional-format -mcpu=cortex-m4 -mthumb -EL -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 
 # linker (ld) options
-LINKER_OPTS = -ereset_handler --omagic -defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
-	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long --fatal-warnings -EL --gc-sections -T$(SRC_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors
+LINKER_OPTS = -ereset_handler --omagic --fatal-warnings -EL --gc-sections -T$(SRC_PATH)/autoquad.ld -Map $(OBJ_PATH)/autoquad.map -u_vectors \
+	-defsym=__do_debug_operation=__do_debug_operation_mempoll -u__do_debug_operation_mempoll -defsym=__vfprintf=__vfprintf_double_long_long -u__vfprintf_double_long_long \
+	-defsym=__vfscanf=__vfscanf_double_long_long -u__vfscanf_double_long_long
 
 # eabi linker libs
 # ! These are proprietary Rowley libraries, approved for personal use with the AQ project (see http://forum.autoquad.org/viewtopic.php?f=31&t=44&start=50#p8476 )
@@ -201,6 +226,16 @@ EXTRA_LIB_FILES = libm_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_v7em_fpv4_sp_d16_h
 	libdebugio_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_targetio_impl_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_user_libc_v7em_fpv4_sp_d16_hard_t_le_eabi.a
 
 EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
+
+ifeq ($(QUATOS), 1)
+	BIN_NAME := $(BIN_NAME)-quatos
+	QLIB = quatos.a
+	ifeq ($(BOARD_VER), 8)
+		QLIB = quatos-board8.3.a
+	endif
+	EXTRA_LIBS += $(OTHERLIB_PATH)/$(QLIB)
+	CFLAGS += -DUSE_QUATOS
+endif
 
 
 # AQ code objects to create (correspond to .c source to compile)
@@ -252,9 +287,11 @@ DEPS := $(C_OBJECTS:.o=.d)
 ## Target definitions
 #
 
-.PHONY: all clean-all clean clean-bin clean-pack pack CREATE_BUILD_FOLDER BUILDNUMBER
+.PHONY: all hex bin clean-all clean clean-bin clean-pack pack pack-hex pack-bin CREATE_BUILD_FOLDER BUILDNUMBER
 
-all: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex
+all: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex $(BIN_PATH)/$(BIN_NAME).bin
+hex: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).hex
+bin: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).bin
 
 clean-all: clean clean-bin clean-pack
 
@@ -269,9 +306,15 @@ clean-bin:
 clean-pack:
 	-rm -f $(BIN_PATH)/*.$(ZIP_EXT)
 	
-pack:
-	@echo "Compressing binaries... "
-	$(EXE_ZIP) $(BIN_PATH)/$(BIN_NAME).hex.$(ZIP_EXT) $(BIN_PATH)/$(BIN_NAME).hex
+pack: pack-hex pack-bin
+
+pack-hex:
+	@echo "Compressing .hex files... "
+	$(EXE_ZIP) $(BIN_PATH)/$(BIN_NAME).$(ZIP_EXT) $(BIN_PATH)/$(BIN_NAME).hex
+
+pack-bin:
+	@echo "Compressing .bin files... "
+	$(EXE_ZIP) $(BIN_PATH)/$(BIN_NAME).$(ZIP_EXT) $(BIN_PATH)/$(BIN_NAME).bin
 
 # include auto-generated depenency targets
 -include $(DEPS)
