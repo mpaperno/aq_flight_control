@@ -760,6 +760,8 @@ void configLoadDefault(void) {
     p[LIC_KEY1] = DEFAULT_LIC_KEY1;
     p[LIC_KEY2] = DEFAULT_LIC_KEY2;
     p[LIC_KEY3] = DEFAULT_LIC_KEY3;
+
+    AQ_NOTICE("config: Loaded default parameters.\n");
 }
 
 void configFlashRead(void) {
@@ -773,6 +775,8 @@ void configFlashRead(void) {
             if (!strncasecmp(recs[i].name, configParameterStrings[j], 16))
                 p[j] = recs[i].val;
     }
+
+    AQ_NOTICE("config: Parameters restored from flash memory.\n");
 }
 
 uint8_t configFlashWrite(void) {
@@ -791,9 +795,11 @@ uint8_t configFlashWrite(void) {
         ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t));
 
         aqFree(recs, CONFIG_NUM_PARAMS, sizeof(configRec_t));
+
+	AQ_NOTICE("config: Parameters saved to flash memory.\n");
     }
     else {
-        AQ_NOTICE("config: write, cannot allocate memory - abort\n");
+        AQ_NOTICE("config: Error writing params to flash, cannot allocate memory.\n");
     }
 
     return ret;
@@ -913,6 +919,11 @@ int8_t configReadFile(char *fname) {
     if (fileBuf)
 	aqFree(fileBuf, CONFIG_FILE_BUF_SIZE, sizeof(char));
 
+    if (ret > -1)
+	AQ_NOTICE("config: Parameters loaded from local storage file.\n");
+    else
+	AQ_NOTICE("config: Failed to read parameters from local file.");
+
     return ret;
 }
 
@@ -944,13 +955,17 @@ int8_t configWriteFile(char *fname) {
 	ret = filerWrite(fh, buf, -1, n);
 
 	if (ret < n) {
-	    AQ_NOTICE("config: file write error\n");
 	    ret = -1;
 	    break;
 	}
     }
 
     filerClose(fh);
+
+    if (ret > -1)
+	AQ_NOTICE("config: Parameters saved to local storage file.\n");
+    else
+	AQ_NOTICE("config: Error writing parameters to file.\n");
 
     return ret;
 }

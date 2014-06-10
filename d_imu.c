@@ -229,8 +229,8 @@ static void dIMUTaskCode(void *unused) {
     }
 }
 
+void dIMUReadCalib(void) {
 #ifdef DIMU_HAVE_EEPROM
-static void dIMUReadCalib(void) {
     uint8_t *buf;
     int size;
     int p1 = 0;
@@ -246,9 +246,11 @@ static void dIMUReadCalib(void) {
 
 	AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
     }
+#endif
 }
 
 static void _dIMUWriteCalib(void) {
+#ifdef DIMU_HAVE_EEPROM
     uint8_t lineBuf[128];
     uint8_t *buf;
     int n;
@@ -274,8 +276,8 @@ static void _dIMUWriteCalib(void) {
     AQ_NOTICE("DIMU: wrote calibration parameters to EEPROM\n");
 
     eepromClose();
-}
 #endif
+}
 
 void dIMUWriteCalib(void) {
 #ifdef DIMU_HAVE_MPU6000

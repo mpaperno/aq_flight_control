@@ -85,5 +85,7 @@ extern void supervisorSendDataStop(void);
 extern void supervisorConfigRead(void);
 extern void supervisorArm(void);
 extern void supervisorDisarm(void);
+extern void supervisorCalibrate(void);
+extern void supervisorTare(void);
 
 #endif

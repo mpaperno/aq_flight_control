@@ -41,6 +41,7 @@
 #include "analog.h"
 #include "comm.h"
 #include "gimbal.h"
+#include "d_imu.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -308,59 +309,111 @@ void mavlinkDo(void) {
 void mavlinkDoCommand(mavlink_message_t *msg) {
     uint16_t command;
     float param, param2, param3;
-    uint8_t enable, i,
+    uint8_t enable, i, compId,
 	ack = MAV_CMD_ACK_ERR_NOT_SUPPORTED;
 
     command = mavlink_msg_command_long_get_command(msg);
+    compId = mavlink_msg_command_long_get_target_component(msg);
 
     switch (command) {
-	case MAV_CMD_PREFLIGHT_STORAGE:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		param = mavlink_msg_command_long_get_param1(msg);
-		if (param == 0.0f) {
-		    configFlashRead();
+
+	case MAV_CMD_PREFLIGHT_CALIBRATION:
+	    if (!(supervisorData.state & STATE_ARMED)) {
+		param = mavlink_msg_command_long_get_param2(msg);  // MAG
+		param2 = mavlink_msg_command_long_get_param5(msg); // ACC
+		if (param) {
+		    supervisorCalibrate();
 		    ack = MAV_CMD_ACK_OK;
-		    AQ_NOTICE("Parameters restored from onboard EPROM.");
 		}
-		else if (param == 1.0f) {
-		    configFlashWrite();
+		if (param2) {
+#ifdef HAS_DIGITAL_IMU
+		    supervisorTare();
 		    ack = MAV_CMD_ACK_OK;
-		    AQ_NOTICE("Parameters saved to onboard EPROM.");
-		}
-		else if (param == 2.0f) {
-		    if (configReadFile(0) >= 0) {
-			ack = MAV_CMD_ACK_OK;
-			AQ_NOTICE("Parameters restored from local storage file.");
-		    } else {
-			ack = MAV_CMD_ACK_ERR_FAIL;
-			AQ_NOTICE("Error: Failed to read parameters from local file.");
-		    }
-		}
-		else if (param == 3.0f) {
-		    if (configWriteFile(0) >= 0) {
-			ack = MAV_CMD_ACK_OK;
-			AQ_NOTICE("Parameters saved to local storage file.");
-		    } else {
-			ack = MAV_CMD_ACK_ERR_FAIL;
-			AQ_NOTICE("Error: Failed to save parameters to local file.");
-		    }
+#else
+		    ack = MAV_CMD_ACK_ERR_FAIL;
+		    AQ_NOTICE("Error: Can't perform Tare, no Digital IMU.");
+#endif
 		}
 	    }
 	    else {
 		ack = MAV_CMD_ACK_ERR_FAIL;
-		AQ_NOTICE("Error: Can't save parameters while flying!");
+		AQ_NOTICE("Error: Can't calibrate while armed!");
 	    }
 
-	    break;
+	    break;  // case MAV_CMD_PREFLIGHT_CALIBRATION
+
+	case MAV_CMD_PREFLIGHT_STORAGE:
+	    if (!(supervisorData.state & STATE_FLYING)) {
+		param = mavlink_msg_command_long_get_param1(msg);
+		switch (compId) {
+
+		    // IMU calibration parameters
+		    case MAV_COMP_ID_IMU:
+#if defined(HAS_DIGITAL_IMU) && defined(DIMU_HAVE_EEPROM)
+			if (param == 0.0f) {
+			    dIMUReadCalib();
+			    ack = MAV_CMD_ACK_OK;
+			}
+			else if (param == 1.0f) {
+	                    dIMUWriteCalib();
+			    ack = MAV_CMD_ACK_OK;
+			}
+#else
+			ack = MAV_CMD_ACK_ERR_FAIL;
+			AQ_NOTICE("Error: No Digital IMU with EEPROM is available.");
+#endif
+
+			break; // case MAV_COMP_ID_IMU
+
+		    // main parameters
+		    default:
+			if (param == 0.0f) {  			// read flash
+			    configFlashRead();
+			    ack = MAV_CMD_ACK_OK;
+			}
+			else if (param == 1.0f) {		// write flash
+			    if (configFlashWrite())
+				ack = MAV_CMD_ACK_OK;
+			    else
+				ack = MAV_CMD_ACK_ERR_FAIL;
+			}
+			else if (param == 2.0f) {		// read file
+			    if (configReadFile(0) >= 0)
+				ack = MAV_CMD_ACK_OK;
+			    else
+				ack = MAV_CMD_ACK_ERR_FAIL;
+			}
+			else if (param == 3.0f) {		// write file
+			    if (configWriteFile(0) >= 0)
+				ack = MAV_CMD_ACK_OK;
+			    else
+				ack = MAV_CMD_ACK_ERR_FAIL;
+			}
+			else if (param == 4.0f) {		// load defaults
+			    configLoadDefault();
+			    ack = MAV_CMD_ACK_OK;
+			}
+
+			break; // case default (main params)
+
+		} // switch(component ID)
+	    }
+	    else {
+		ack = MAV_CMD_ACK_ERR_FAIL;
+		AQ_NOTICE("Error: Can't save or load parameters while flying!");
+	    }
+
+	    break; // case MAV_CMD_PREFLIGHT_STORAGE
 
 	// remote reboot
 	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
 	    if (!(supervisorData.state & STATE_ARMED)) {
-		param = mavlink_msg_command_long_get_param1(msg);  // flight controller actions: 0=noOp; 1=reboot; 2=shutdown
-		//param2 = mavlink_msg_command_long_get_param2(msg); // onboard computer actions: 0=noOp; 1=reboot; 2=shutdown
+		param = mavlink_msg_command_long_get_param1(msg);	// flight controller actions: 0=noOp; 1=reboot; 2=shutdown
+		//param2 = mavlink_msg_command_long_get_param2(msg);	// onboard computer actions: 0=noOp; 1=reboot; 2=shutdown
 		if (param == 1.0f) {
 		    AQ_NOTICE("Flight controller restarting...");
 		    ack = MAV_CMD_ACK_OK;
+		    yield(100);
 		    NVIC_SystemReset();
 		} else {
 		    ack = MAV_CMD_ACK_ERR_FAIL;
@@ -371,7 +424,8 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		ack = MAV_CMD_ACK_ERR_FAIL;
 		AQ_NOTICE("Error: Can't reset while armed!");
 	    }
-	    break;
+
+	    break;  // case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN
 
 	// enable/disable AQ custom dataset messages and set frequency
 	case MAV_CMD_AQ_TELEMETRY:
@@ -408,7 +462,8 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
         	ack = MAV_CMD_ACK_ERR_FAIL;
 		AQ_NOTICE("Error: Unknown telemetry dataset requested.");
             }
-            break;
+
+            break; // case MAV_CMD_AQ_TELEMETRY
 
 	// send firmware version number;
 	case MAV_CMD_AQ_REQUEST_VERSION:
@@ -417,8 +472,10 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 	    break;
 
 	default:
+	    AQ_PRINTF("Error: Unrecognized command: %u", command);
 	    break;
-    }
+
+    } // switch(command)
 
     mavlink_msg_command_ack_send(MAVLINK_COMM_0, command, ack);
 }

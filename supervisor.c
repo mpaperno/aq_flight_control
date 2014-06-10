@@ -117,8 +117,15 @@ void supervisorDisarm(void) {
 
 void supervisorCalibrate(void) {
     supervisorData.state = STATE_CALIBRATION;
+    AQ_NOTICE("Starting MAG calibration mode.\n");
     calibInit();
-    AQ_NOTICE("Calibration mode\n");
+}
+
+void supervisorTare(void) {
+    supervisorLEDsOn();
+    dIMUTare();
+    AQ_NOTICE("Level calibration complete.\n");
+    supervisorLEDsOff();
 }
 
 void supervisorTaskCode(void *unused) {
@@ -204,17 +211,13 @@ void supervisorTaskCode(void *unused) {
 #ifdef HAS_DIGITAL_IMU
                 // tare function (lower left)
                 if (RADIO_ROLL < -500 && RADIO_PITCH > +500) {
-                    supervisorLEDsOn();
-                    dIMUTare();
-                    AQ_NOTICE("Leveled\n");
-                    supervisorLEDsOff();
+                    supervisorTare();
                 }
 #endif
                 // config write (upper right)
                 if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
                     supervisorLEDsOn();
                     configFlashWrite();
-                    AQ_NOTICE("Configuration written to flash\n");
 #ifdef DIMU_HAVE_EEPROM
                     dIMUWriteCalib();
 #endif
