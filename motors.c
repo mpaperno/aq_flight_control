@@ -39,16 +39,42 @@
 
 motorsStruct_t motorsData __attribute__((section(".ccm")));
 
+#ifdef MOTORS_CAN_LOGGING
+#include "filer.h"
+
+uint8_t motorsLogBuf[MOTORS_CAN_LOGGING * sizeof(motorsLog_t)];
+
+void motorsSetupLogging(void) {
+    // setup logging
+    motorsData.logHandle = filerGetHandle("ESC");
+    filerStream(motorsData.logHandle, motorsLogBuf, sizeof(motorsLogBuf));
+}
+#endif
+
 void motorsReceiveTelem(uint8_t canId, uint8_t doc, void *p) {
     uint32_t *data = (uint32_t *)p;
     uint32_t *storage = (uint32_t *)&motorsData.canStatus[canId-1];
+    uint32_t micros = timerMicros();
+#ifdef MOTORS_CAN_LOGGING
+    motorsLog_t *buf = (motorsLog_t *)(motorsLogBuf + motorsData.head);
+
+    buf->sync = 0xff;
+    buf->escId = 0xc0 | canId;  // 2 MSB are high as part of sync bits
+    buf->micros = micros;
+    buf->data[0] = data[0];
+    buf->data[1] = data[1];
+
+    motorsData.head = (motorsData.head + sizeof(motorsLog_t)) % sizeof(motorsLogBuf);
+
+    filerSetHead(motorsData.logHandle, motorsData.head);
+#endif
 
     // copy status data to our storage (8 bytes)
     storage[0] = data[0];
     storage[1] = data[1];
 
     // record reception time
-    motorsData.canStatusTime[canId-1] = timerMicros();
+    motorsData.canStatusTime[canId-1] = micros;
 }
 
 static float motorsThrust2Value(float thrust) {
@@ -400,6 +426,11 @@ void motorsInit(void) {
 
     if (fabsf(sumYaw) > 0.01f)
 	AQ_NOTICE("Motors: Warning yaw control imbalance\n");
+
+#ifdef MOTORS_CAN_LOGGING
+    if (p[MOT_CANL] != 0.0f || p[MOT_CANH] != 0.0f)
+        motorsSetupLogging();
+#endif
 
     motorsSetCanGroup();
     motorsOff();

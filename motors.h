@@ -36,12 +36,21 @@
 #define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
 #define MOTORS_COMP_PRELOAD_NFACT   2.0f//3.0f
 
+//#define MOTORS_CAN_LOGGING          256             // number of records in log buffer, comment out to disable logging
+
 typedef struct {
     float throttle;
     float pitch;
     float roll;
     float yaw;
 } motorsPowerStruct_t;
+
+typedef struct {
+    uint8_t sync;
+    uint8_t escId;
+    uint32_t micros;
+    uint32_t data[2];
+} __attribute__((packed)) motorsLog_t;
 
 typedef struct {
     motorsPowerStruct_t *distribution;
@@ -60,6 +69,10 @@ typedef struct {
     float throttleLimiter;
     uint8_t active[MOTORS_NUM];
     uint8_t numGroups;
+#ifdef MOTORS_CAN_LOGGING
+    uint16_t head;
+    uint8_t logHandle;
+#endif
 } motorsStruct_t;
 
 extern motorsStruct_t motorsData;
