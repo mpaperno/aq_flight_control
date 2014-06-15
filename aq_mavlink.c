@@ -351,11 +351,11 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		    case MAV_COMP_ID_IMU:
 #if defined(HAS_DIGITAL_IMU) && defined(DIMU_HAVE_EEPROM)
 			if (param == 0.0f) {
-			    dIMUReadCalib();
+			    dIMURequestCalibRead();
 			    ack = MAV_CMD_ACK_OK;
 			}
 			else if (param == 1.0f) {
-	                    dIMUWriteCalib();
+			    dIMURequestCalibWrite();
 			    ack = MAV_CMD_ACK_OK;
 			}
 #else
@@ -367,32 +367,22 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 		    // main parameters
 		    default:
-			if (param == 0.0f) {  			// read flash
+			if (param == 0.0f) {  					// read flash
 			    configFlashRead();
 			    ack = MAV_CMD_ACK_OK;
 			}
-			else if (param == 1.0f) {		// write flash
-			    if (configFlashWrite())
-				ack = MAV_CMD_ACK_OK;
-			    else
-				ack = MAV_CMD_ACK_ERR_FAIL;
-			}
-			else if (param == 2.0f) {		// read file
-			    if (configReadFile(0) >= 0)
-				ack = MAV_CMD_ACK_OK;
-			    else
-				ack = MAV_CMD_ACK_ERR_FAIL;
-			}
-			else if (param == 3.0f) {		// write file
-			    if (configWriteFile(0) >= 0)
-				ack = MAV_CMD_ACK_OK;
-			    else
-				ack = MAV_CMD_ACK_ERR_FAIL;
-			}
-			else if (param == 4.0f) {		// load defaults
+			else if (param == 1.0f && configFlashWrite()) 		// write flash
+			    ack = MAV_CMD_ACK_OK;
+			else if (param == 2.0f && configReadFile(0) >= 0)	// read file
+			    ack = MAV_CMD_ACK_OK;
+			else if (param == 3.0f && configWriteFile(0) >= 0)	// write file
+			    ack = MAV_CMD_ACK_OK;
+			else if (param == 4.0f) {				// load defaults
 			    configLoadDefault();
 			    ack = MAV_CMD_ACK_OK;
 			}
+			else
+			    ack = MAV_CMD_ACK_ERR_FAIL;
 
 			break; // case default (main params)
 

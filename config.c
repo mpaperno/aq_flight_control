@@ -856,12 +856,15 @@ unsigned int configParameterWrite(void *data) {
 
 int configParseParams(char *fileBuf, int size, int p1) {
     static char lineBuf[CONFIG_LINE_BUF_SIZE];
-    char param[17];
+    char *param;
     float value;
     char c;
     int p2;
     int n;
     int i, j;
+
+    if (!(param = (char *)aqCalloc(17, sizeof(char))))
+	return -1;
 
     p2 = 0;
     for (i = 0; i < size; i++) {
@@ -879,7 +882,7 @@ int configParseParams(char *fileBuf, int size, int p1) {
 
 	    if (n == 2) {
 		for (j = 0; j < CONFIG_NUM_PARAMS; j++) {
-		    if (!strncasecmp(param, configParameterStrings[j], sizeof(param)))
+		    if (!strncasecmp(param, configParameterStrings[j], sizeof(char)*17))
 			p[j] = value;
 		}
 	    }
@@ -889,6 +892,9 @@ int configParseParams(char *fileBuf, int size, int p1) {
 	    lineBuf[p1++] = c;
 	}
     }
+
+    if (param)
+	aqFree(param, 17, sizeof(char));
 
     return p1;
 }
@@ -908,11 +914,20 @@ int8_t configReadFile(char *fname) {
 	return -1;
     }
 
-    fileBuf = (char *)aqCalloc(CONFIG_FILE_BUF_SIZE, sizeof(char));
+    if (!(fileBuf = (char *)aqCalloc(CONFIG_FILE_BUF_SIZE, sizeof(char)))) {
+	AQ_NOTICE("config: Error reading from file, cannot allocate memory.\n");
+	filerClose(fh);
+	return -1;
+    }
 
     p1 = 0;
-    while ((ret = filerRead(fh, fileBuf, -1, CONFIG_FILE_BUF_SIZE)) > 0)
+    while ((ret = filerRead(fh, fileBuf, -1, CONFIG_FILE_BUF_SIZE)) > 0) {
 	p1 = configParseParams((char *)fileBuf, ret, p1);
+	if (p1 < 0) {
+	    ret = -1;
+	    break;
+	}
+    }
 
     filerClose(fh);
 
@@ -928,15 +943,24 @@ int8_t configReadFile(char *fname) {
 }
 
 int8_t configFormatParam(char *buf, int n) {
-    char str[16];
+    char *str;
+    int8_t ret = 0;
+
+    if (!(str = (char *)aqCalloc(16, sizeof(char))))
+	return ret;
 
     ftoa(str, p[n], 10);
-    return sprintf(buf, "%-17s\t\t%s\n", configParameterStrings[n], str);
+    ret = sprintf(buf, "%-17s\t\t%s\n", configParameterStrings[n], str);
+
+    if (str)
+	aqFree(str, 16, sizeof(char));
+
+    return ret;
 }
 
 // write config to uSD
 int8_t configWriteFile(char *fname) {
-    char buf[128];
+    char *buf;
     int8_t fh;
     int8_t ret;
     int n;
@@ -950,17 +974,27 @@ int8_t configWriteFile(char *fname) {
 	return -1;
     }
 
+    if (!(buf = (char *)aqCalloc(128, sizeof(char)))) {
+	AQ_NOTICE("config: Error writing to file, cannot allocate memory.\n");
+	filerClose(fh);
+	return -1;
+    }
+
     for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
 	n = configFormatParam(buf, i);
-	ret = filerWrite(fh, buf, -1, n);
+	if (n)
+	    ret = filerWrite(fh, buf, -1, n);
 
-	if (ret < n) {
+	if (!n || ret < n) {
 	    ret = -1;
 	    break;
 	}
     }
 
     filerClose(fh);
+
+    if (buf)
+	aqFree(buf, 128, sizeof(char));
 
     if (ret > -1)
 	AQ_NOTICE("config: Parameters saved to local storage file.\n");

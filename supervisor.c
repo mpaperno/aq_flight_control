@@ -219,7 +219,7 @@ void supervisorTaskCode(void *unused) {
                     supervisorLEDsOn();
                     configFlashWrite();
 #ifdef DIMU_HAVE_EEPROM
-                    dIMUWriteCalib();
+                    dIMURequestCalibWrite();
 #endif
                     supervisorLEDsOff();
                 }

@@ -194,12 +194,115 @@ static void dIMUCalcTempDiff(void) {
     dImuData.dTemp3 = dImuData.dTemp2 * dImuData.dTemp;
 }
 
+static void dIMUReadCalib(void) {
+#ifdef DIMU_HAVE_EEPROM
+    uint8_t *buf;
+    int size;
+    int p1 = 0;
+
+    buf = eepromOpenRead();
+
+    if (buf == 0) {
+	AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
+    }
+    else {
+	while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
+	    p1 = configParseParams((char *)buf, size, p1);
+
+	AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
+    }
+#endif
+}
+
+static void dIMUWriteCalib(void) {
+#ifdef DIMU_HAVE_EEPROM
+    char *lineBuf;
+    uint8_t *buf;
+    int n;
+    int i, j, k;
+
+    if (!(lineBuf = (char *)aqCalloc(128, sizeof(char)))) {
+	AQ_NOTICE("DIMU: Error writing to EEPROM, cannot allocate memory.\n");
+	return;
+    }
+
+    buf = eepromOpenWrite();
+
+    k = 0;
+    for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++) {
+	n = configFormatParam(lineBuf, dImuCalibParameters[i]);
+
+	for (j = 0; j < n; j++) {
+	    buf[k++] = lineBuf[j];
+	    if (k == DIMU_EEPROM_BLOCK_SIZE) {
+		eepromWrite();
+		k = 0;
+	    }
+	}
+    }
+    if (k != 0)
+       eepromWrite();
+    if (lineBuf)
+	aqFree(lineBuf, 128, sizeof(char));
+
+    AQ_NOTICE("DIMU: wrote calibration parameters to EEPROM\n");
+
+    eepromClose();
+#endif
+}
+
+static void dIMUReadWriteCalib(void) {
+#ifdef DIMU_HAVE_EEPROM
+
+#ifdef DIMU_HAVE_MPU6000
+    mpu6000Disable();
+#endif
+#ifdef DIMU_HAVE_HMC5983
+    hmc5983Disable();
+#endif
+#ifdef DIMU_HAVE_MS5611
+    ms5611Disable();
+#endif
+
+    if (dImuData.calibReadWriteFlag == 1)
+	dIMUReadCalib();
+    else if (dImuData.calibReadWriteFlag == 2)
+	dIMUWriteCalib();
+
+    dImuData.calibReadWriteFlag = 0;
+
+#ifdef DIMU_HAVE_MPU6000
+    mpu6000Enable();
+#endif
+#ifdef DIMU_HAVE_HMC5983
+    hmc5983Enable();
+#endif
+#ifdef DIMU_HAVE_MS5611
+    ms5611Enable();
+#endif
+
+#endif  //DIMU_HAVE_EEPROM
+}
+
+void dIMURequestCalibWrite(void) {
+    if (!dImuData.calibReadWriteFlag)
+	dImuData.calibReadWriteFlag = 2;
+}
+
+void dIMURequestCalibRead(void) {
+    if (!dImuData.calibReadWriteFlag)
+	dImuData.calibReadWriteFlag = 1;
+}
+
 static void dIMUTaskCode(void *unused) {
     uint32_t loops = 0;
 
     while (1) {
 	// wait for work
 	CoWaitForSingleFlag(dImuData.flag, 0);
+
+	if (dImuData.calibReadWriteFlag)
+	    dIMUReadWriteCalib();
 
 	// double rate gyo loop
 #ifdef DIMU_HAVE_MPU6000
@@ -227,80 +330,6 @@ static void dIMUTaskCode(void *unused) {
 
 	loops++;
     }
-}
-
-void dIMUReadCalib(void) {
-#ifdef DIMU_HAVE_EEPROM
-    uint8_t *buf;
-    int size;
-    int p1 = 0;
-
-    buf = eepromOpenRead();
-
-    if (buf == 0) {
-	AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
-    }
-    else {
-	while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
-	    p1 = configParseParams((char *)buf, size, p1);
-
-	AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
-    }
-#endif
-}
-
-static void _dIMUWriteCalib(void) {
-#ifdef DIMU_HAVE_EEPROM
-    uint8_t lineBuf[128];
-    uint8_t *buf;
-    int n;
-    int i, j, k;
-
-    buf = eepromOpenWrite();
-
-    k = 0;
-    for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++) {
-	n = configFormatParam((char *)lineBuf, dImuCalibParameters[i]);
-
-	for (j = 0; j < n; j++) {
-	    buf[k++] = lineBuf[j];
-	    if (k == DIMU_EEPROM_BLOCK_SIZE) {
-		eepromWrite();
-		k = 0;
-	    }
-	}
-    }
-    if (k != 0)
-       eepromWrite();
-
-    AQ_NOTICE("DIMU: wrote calibration parameters to EEPROM\n");
-
-    eepromClose();
-#endif
-}
-
-void dIMUWriteCalib(void) {
-#ifdef DIMU_HAVE_MPU6000
-    mpu6000Disable();
-#endif
-#ifdef DIMU_HAVE_HMC5983
-    hmc5983Disable();
-#endif
-#ifdef DIMU_HAVE_MS5611
-    ms5611Disable();
-#endif
-
-    _dIMUWriteCalib();
-
-#ifdef DIMU_HAVE_MPU6000
-    mpu6000Enable();
-#endif
-#ifdef DIMU_HAVE_HMC5983
-    hmc5983Enable();
-#endif
-#ifdef DIMU_HAVE_MS5611
-    ms5611Enable();
-#endif
 }
 
 void dIMUInit(void) {
