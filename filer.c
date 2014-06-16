@@ -317,7 +317,9 @@ void filerTaskCode(void *p) {
 	    }
 	}
 
-	supervisorDiskWait(1);
+        supervisorDiskWait(1);
+
+	filerData.loops++;
 
 	for (i = 0; i < FILER_MAX_FILES; i++) {
 	    if (filerData.files[i].function > FILER_FUNC_NONE) {
@@ -328,14 +330,12 @@ void filerTaskCode(void *p) {
 			filerDebug("session write error, aborting", filerData.files[i].status);
 			goto filerRestart;
 		    }
-		    else if (!((filerData.loops+1) % FILER_STREAM_SYNC)) {
+		    else if (!((filerData.loops+i) % FILER_STREAM_SYNC)) {
 			filerProcessSync(&filerData.files[i]);
 		    }
 		}
 	    }
 	}
-
-	filerData.loops++;
 
 	CoClearFlag(filerData.filerFlag);
 	CoWaitForSingleFlag(filerData.filerFlag, 5);	// run at least every 5ms if possible
