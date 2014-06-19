@@ -36,7 +36,7 @@ const char *canTypeStrings[] = {
     "ESC",
     "SERVO",
     "SENSOR",
-    "LED",
+    "SWITCH",
     "OSD",
     "UART",
     "HUB"
