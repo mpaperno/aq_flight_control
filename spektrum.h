@@ -19,7 +19,8 @@
 #ifndef _spektrum_h
 #define _spektrum_h
 
-#define SPEKTRUM_UART		RC1_UART
+#include "radio.h"
+
 #define SPEKTRUM_BAUD		115200
 #define SPEKTRUM_RXBUF_SIZE	64
 
@@ -29,8 +30,8 @@ typedef struct {
     uint8_t state;
 } spektrumStruct_t;
 
-extern void spektrumInit(void);
-extern uint8_t spektrumCharIn(int c);
+extern void spektrumInit(radioInstance_t *r, USART_TypeDef *uart);
+extern uint8_t spektrumCharIn(radioInstance_t *r, int c);
 
 extern spektrumStruct_t spektrumData;
 

@@ -16,10 +16,11 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#ifndef futaba_h
-#define futaba_h
+#ifndef _futaba_h
+#define _futaba_h
 
-#define FUTABA_UART		RC1_UART
+#include "radio.h"
+
 #define FUTABA_BAUD		100000
 #define FUTABA_RXBUF_SIZE	32
 
@@ -47,13 +48,13 @@ typedef struct {
     unsigned channel14 : 11;
     unsigned channel15 : 11;
     unsigned channel16 : 11;
-    }  __attribute__((packed)) futabaChannelStruct_t;
+}  __attribute__((packed)) futabaChannelStruct_t;
 
 typedef struct {
-    unsigned char state;
-    unsigned char dataCount;
-    unsigned char validFrame;
-    unsigned long lastCharReceived;
+    uint8_t state;
+    uint8_t dataCount;
+    uint8_t validFrame;
+    uint32_t lastCharReceived;
 
     union {
 	uint8_t rawBuf[23];
@@ -63,7 +64,7 @@ typedef struct {
 
 extern futabaStruct_t futabaData;
 
-extern void futabaInit(void);
-extern int futabaCharIn(unsigned char c);
+extern void futabaInit(radioInstance_t *r, USART_TypeDef *uart);
+extern int futabaCharIn(radioInstance_t *r, uint8_t c);
 
 #endif

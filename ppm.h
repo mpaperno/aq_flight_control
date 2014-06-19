@@ -26,13 +26,14 @@
 #define _ppm_h
 
 #include "pwm.h"
+#include "radio.h"
 
 #define PPM_MAX_CHANNELS		12	// can't be > RADIO_MAX_CHANNELS
-#define PPM_GUARD_PULSE_LENGTH	    2700
-#define PPM_MIN_PULSE_WIDTH	    750
-#define PPM_MAX_PULSE_WIDTH	    2250
-#define PPM_STAB_CHANNEL_FRAMES     20    // number of consecutive frames with the same number of channels after which we assume that number of channels is stable ;)
-#define PPM_CAPTURE_EDGE	    1	  // "polarity" value for passing to pwmInitIn(); -1 for falling edge, 1 for rising edge
+#define PPM_GUARD_PULSE_LENGTH          2700
+#define PPM_MIN_PULSE_WIDTH             750
+#define PPM_MAX_PULSE_WIDTH             2250
+#define PPM_STAB_CHANNEL_FRAMES         20      // number of consecutive frames with the same number of channels after which we assume that number of channels is stable ;)
+#define PPM_CAPTURE_EDGE                1       // "polarity" value for passing to pwmInitIn(); -1 for falling edge, 1 for rising edge
 
 #define PPM_THROT_MIN			-338	// final value constraints
 #define PPM_THROT_MAX			1709
@@ -40,6 +41,7 @@
 #define PPM_CHAN_MAX			1023
 
 typedef struct {
+    radioInstance_t *r;
     pwmPortStruct_t *ppmPort;
     volatile uint8_t frameParsed;
 
@@ -60,8 +62,8 @@ typedef struct {
 
 } ppmStruct_t;
 
-extern void ppmInit( void );
-extern int  ppmDataAvailable( void );
-extern int8_t ppmGetSignalQuality(void);
+extern void ppmInit(radioInstance_t *r);
+extern int  ppmDataAvailable(radioInstance_t *r);
+extern int8_t ppmGetSignalQuality(radioInstance_t *r);
 
 #endif

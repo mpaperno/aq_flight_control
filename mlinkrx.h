@@ -21,7 +21,6 @@
 #ifndef _mlinkrx_h
 #define _mlinkrx_h
 
-#define MLINKRX_UART			RC1_UART
 #define MLINKRX_BAUD			115200
 #define MLINKRX_RXBUF_SIZE		64
 
@@ -29,17 +28,16 @@
 #define MLINKRX_CHANNELS		12
 
 typedef struct {
-	unsigned long lastCharReceived;
-	int count;
-	unsigned char framebuf[MLINKRX_FRAMESIZE];
-	uint16_t crc_rx;
-	uint16_t crc_calc;
+    unsigned long lastCharReceived;
+    int count;
+    unsigned char framebuf[MLINKRX_FRAMESIZE];
+    uint16_t crc_rx;
+    uint16_t crc_calc;
 } mlinkrxStruct_t;
 
-extern void mlinkrxInit(void);
-extern unsigned char mlinkrxCharIn(int c);
+extern void mlinkrxInit(radioInstance_t *r, USART_TypeDef *uart);
+extern unsigned char mlinkrxCharIn(radioInstance_t *r, uint8_t c);
 
 extern mlinkrxStruct_t mlinkrxData;
 
 #endif
-

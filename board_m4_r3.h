@@ -180,9 +180,9 @@ enum pwmPorts {
 #define PWM_IRQ_TIM9_CH2	8
 
 
-#ifndef RC1_UART
-    #define RC1_UART		USART3
-#endif
+#define RC1_UART		USART3
+#define RC2_UART		USART2
+
 
 #define SUPERVISOR_READY_PORT	GPIOA
 #define SUPERVISOR_READY_PIN	GPIO_Pin_15

@@ -16,21 +16,17 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#ifndef radio_h
-#define radio_h
+#ifndef _radio_h
+#define _radio_h
 
 #include "serial.h"
-#include "spektrum.h"
-#include "futaba.h"
-#include "ppm.h"
-#include "mlinkrx.h"
-#include "grhott.h"
 #include "digital.h"
 #include "util.h"
 
 #define RADIO_STACK_SIZE	100
 #define RADIO_PRIORITY		25
 
+#define RADIO_NUM               3       // max number of RC radios
 #define RADIO_MAX_CHANNELS	18
 #define RADIO_UPDATE_TIMEOUT	60000	// maximum time in micros between valid radio updates before signal is considered unstable;
 
@@ -49,30 +45,47 @@
 
 #define RADIO_MID_THROTTLE	700
 
-#define RADIO_ERROR_COUNT       radioData.errorCount
-#define RADIO_QUALITY           radioData.quality
+#define RADIO_ERROR_COUNT       (*radioData.errorCount)
+#define RADIO_QUALITY           (*radioData.quality)
 
 enum radioTypes {
-	RADIO_TYPE_SPEKTRUM11 = 0,
-	RADIO_TYPE_SPEKTRUM10,
-	RADIO_TYPE_SBUS,
-	RADIO_TYPE_PPM,
-	RADIO_TYPE_SUMD,
-	RADIO_TYPE_MLINK,
-        RADIO_TYPE_DELTANG
+    RADIO_TYPE_NONE = 0,
+    RADIO_TYPE_SPEKTRUM11,
+    RADIO_TYPE_SPEKTRUM10,
+    RADIO_TYPE_SBUS,
+    RADIO_TYPE_PPM,
+    RADIO_TYPE_SUMD,
+    RADIO_TYPE_MLINK,
+    RADIO_TYPE_DELTANG
+};
+
+enum radioModes {
+    RADIO_MODE_DIVERSITY = 0,
+    RADIO_MODE_SPLIT
 };
 
 typedef struct {
-    OS_TID radioTask;
+    uint32_t lastUpdate;            // time of last valid data received from radio handler
     serialPort_t *serialPort;
     utilFilter_t qualityFilter;
+    uint32_t errorCount;            // cumulative error/lost frame counter
+    float quality;                  // running measure of radio data stability, in range of 0-100
+    int16_t *channels;
+    uint8_t radioType;
+} radioInstance_t;
 
-    int16_t channels[RADIO_MAX_CHANNELS];	// holds channel values received from radio handler
-    unsigned int errorCount;	// cumulative error/lost frame counter
-    float quality;		// running measure of radio data stability, in range of 0-100
-    int8_t radioType;		// stores the radio type defined in parameters to avoid runtime changes
+typedef struct {
+    OS_TID radioTask;
+
     digitalPin *select[2];
-    unsigned long lastUpdate;	// time of last valid data received from radio handler
+    radioInstance_t radioInstances[RADIO_NUM];
+    int16_t allChannels[RADIO_MAX_CHANNELS*RADIO_NUM];	// holds channel values received from radio handlers
+
+    int16_t *channels;
+    float *quality;
+    uint32_t *errorCount;
+
+    uint8_t mode;
 } radioStruct_t;
 
 extern radioStruct_t radioData;

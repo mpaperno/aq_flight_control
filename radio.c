@@ -19,6 +19,11 @@
 #include "aq.h"
 #include "config.h"
 #include "radio.h"
+#include "spektrum.h"
+#include "futaba.h"
+#include "ppm.h"
+#include "grhott.h"
+#include "mlinkrx.h"
 #include "util.h"
 #include "aq_timer.h"
 #include "comm.h"
@@ -29,13 +34,70 @@ radioStruct_t radioData __attribute__((section(".ccm")));
 OS_STK *radioTaskStack;
 
 // calculate radio reception quality
-static void radioReceptionQuality(int8_t q) {
-    radioData.quality = utilFilter(&radioData.qualityFilter, (float)(q + 1)) * 0.5f * 100.0f;
+static void radioReceptionQuality(radioInstance_t *r, int8_t q) {
+    r->quality = utilFilter(&r->qualityFilter, (float)(q + 1)) * 0.5f * 100.0f;
+}
+
+static void radioMakeCurrent(radioInstance_t *r) {
+    radioData.quality = &r->quality;
+    radioData.errorCount = &r->errorCount;
+    radioData.channels = r->channels;
+}
+
+static void radioProcessInstance(radioInstance_t *r) {
+    serialPort_t *s = r->serialPort;
+    int8_t q;
+
+    switch (r->radioType) {
+    case RADIO_TYPE_SPEKTRUM11:
+    case RADIO_TYPE_SPEKTRUM10:
+    case RADIO_TYPE_DELTANG:
+        while (serialAvailable(s))
+            if (spektrumCharIn(r, serialRead(s))) {
+                r->lastUpdate = timerMicros();
+                radioReceptionQuality(r, 1);
+            }
+        break;
+
+    case RADIO_TYPE_SBUS:
+        while (serialAvailable(s))
+            if ((q = futabaCharIn(r, serialRead(s)))) {
+                r->lastUpdate = timerMicros();
+                radioReceptionQuality(r, q);
+            }
+        break;
+
+    case RADIO_TYPE_PPM:
+        if (ppmDataAvailable(r))
+            r->lastUpdate = timerMicros();
+        break;
+
+    case RADIO_TYPE_SUMD:
+        while (serialAvailable(s))
+            if ((q = grhottCharIn(r, serialRead(s)))) {
+                r->lastUpdate = timerMicros();
+                radioReceptionQuality(r, q);
+            }
+        break;
+
+    case RADIO_TYPE_MLINK:
+        while (serialAvailable(s))
+        if ((q = mlinkrxCharIn(r, serialRead(s)))) {
+            r->lastUpdate = timerMicros();
+            radioReceptionQuality(r, q);
+        }
+        break;
+    }
+
+    // no radio signal?
+    if (timerMicros() - r->lastUpdate > RADIO_UPDATE_TIMEOUT)
+        radioReceptionQuality(r, -1);                       // minimum signal quality (0%) if no updates within timeout value
+    else if (r->radioType == RADIO_TYPE_PPM)
+        radioReceptionQuality(r, ppmGetSignalQuality(r));   // signal quality based on PPM status
 }
 
 void radioTaskCode(void *unused) {
-    serialPort_t *s = radioData.serialPort;
-    int8_t q;
+    int i;
 
     AQ_NOTICE("Radio task started\n");
 
@@ -43,111 +105,140 @@ void radioTaskCode(void *unused) {
 	// wait for data
 	yield(2); // 2ms
 
-	switch (radioData.radioType) {
-	case RADIO_TYPE_SPEKTRUM11:
-	case RADIO_TYPE_SPEKTRUM10:
-        case RADIO_TYPE_DELTANG:
-	    while (serialAvailable(s))
-		if (spektrumCharIn(serialRead(s))) {
-		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(1);
-		}
-	    break;
+        for (i = 0; i < RADIO_NUM; i++) {
+            radioInstance_t *r = &radioData.radioInstances[i];
 
-	case RADIO_TYPE_SBUS:
-	    while (serialAvailable(s))
-		if ((q = futabaCharIn(serialRead(s)))) {
-		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(q);
-		}
-	    break;
+            if (r->radioType > RADIO_TYPE_NONE) {
+                radioProcessInstance(r);
 
-	case RADIO_TYPE_PPM:
-	    if (ppmDataAvailable())
-                radioData.lastUpdate = timerMicros();
-            break;
-
-	case RADIO_TYPE_SUMD:
-	    while (serialAvailable(s))
-		if ((q = grhottCharIn(serialRead(s)))) {
-		    radioData.lastUpdate = timerMicros();
-		    radioReceptionQuality(q);
-		}
-	    break;
-
-	case RADIO_TYPE_MLINK:
-		while (serialAvailable(s))
-		if ((q = mlinkrxCharIn(serialRead(s)))) {
-			radioData.lastUpdate = timerMicros();
-			radioReceptionQuality(q);
-		}
-		break;
-	}
-
-	// no radio?
-	if (timerMicros() - radioData.lastUpdate > RADIO_UPDATE_TIMEOUT)
-	    radioReceptionQuality(-1);  // minimum signal quality (0%) if no updates within timeout value
-	else if (radioData.radioType == RADIO_TYPE_PPM)
-		radioReceptionQuality(ppmGetSignalQuality());  // signal quality based on PPM status
+                // find best signal
+                if (radioData.mode == RADIO_MODE_DIVERSITY && r->quality > *radioData.quality)
+                    radioMakeCurrent(r);
+            }
+        }
     }
 }
 
-void radioRCSelect(uint8_t level) {
+static void radioRCSelect(uint8_t rcPort, uint8_t level) {
 #ifdef RADIO_RC1_SELECT_PORT
-    radioData.select[0] = digitalInit(RADIO_RC1_SELECT_PORT, RADIO_RC1_SELECT_PIN, level);
+    if (rcPort == 0)
+        radioData.select[0] = digitalInit(RADIO_RC1_SELECT_PORT, RADIO_RC1_SELECT_PIN, level);
 #endif
 
 #ifdef RADIO_RC2_SELECT_PORT
-    radioData.select[1] = digitalInit(RADIO_RC2_SELECT_PORT, RADIO_RC2_SELECT_PIN, level);
+    if (rcPort == 1)
+        radioData.select[1] = digitalInit(RADIO_RC2_SELECT_PORT, RADIO_RC2_SELECT_PIN, level);
 #endif
 }
 
 void radioInit(void) {
+    uint16_t radioType = (uint16_t)p[RADIO_TYPE];
+    int i;
+
     AQ_NOTICE("Radio init\n");
 
     memset((void *)&radioData, 0, sizeof(radioData));
 
-    utilFilterInit(&radioData.qualityFilter, (1.0f / 50.0f), 0.75f, 0.0f);
+    radioData.mode = (radioType>>12) & 0x0f;
 
-    radioData.radioType = (int8_t)p[RADIO_TYPE];
+    for (i = 0; i < RADIO_NUM; i++) {
+        radioInstance_t *r = &radioData.radioInstances[i];
+        USART_TypeDef *uart;
 
-    for (int i=0; i < RADIO_MAX_CHANNELS; ++i)
-	radioData.channels[i] = (i == (int)p[RADIO_FLAP_CH]) ? -700 : 0;
+        // determine UART
+        switch (i) {
+            case 0:
+                uart = RC1_UART;
+                break;
+#ifdef RC2_UART
+            case 1:
+                uart = RC2_UART;
+                break;
+#endif
+#ifdef RC3_UART
+            case 2:
+                uart = RC3_UART;
+                break;
+#endif
+            default:
+                uart = 0;
+                break;
+        }
 
-    switch (radioData.radioType) {
-    case RADIO_TYPE_SPEKTRUM11:
-    case RADIO_TYPE_SPEKTRUM10:
-    case RADIO_TYPE_DELTANG:
-	spektrumInit();
-	radioRCSelect(0);
-	break;
+        r->radioType = (radioType>>(i*4)) & 0x0f;
+        r->channels = &radioData.allChannels[RADIO_MAX_CHANNELS * i];
 
-    case RADIO_TYPE_SBUS:
-	futabaInit();
-	radioRCSelect(1);
-	break;
+        utilFilterInit(&r->qualityFilter, (1.0f / 50.0f), 0.75f, 0.0f);
 
-    case RADIO_TYPE_PPM:
-	ppmInit();
-	break;
+        switch (r->radioType) {
+        case RADIO_TYPE_SPEKTRUM11:
+        case RADIO_TYPE_SPEKTRUM10:
+        case RADIO_TYPE_DELTANG:
+            if (uart) {
+                spektrumInit(r, uart);
+                radioRCSelect(i, 0);
+                AQ_PRINTF("Spektrum on RC port %d\n", i);
+            }
+            break;
 
-    case RADIO_TYPE_SUMD:
-        grhottInit();
-	radioRCSelect(0);
-        break;
+        case RADIO_TYPE_SBUS:
+            if (uart) {
+                futabaInit(r, uart);
+                radioRCSelect(i, 1);
+                AQ_PRINTF("Futaba on RC port %d\n", i);
+            }
+            break;
 
-    case RADIO_TYPE_MLINK:
-        mlinkrxInit();
-        radioRCSelect(0);
-        break;
+        case RADIO_TYPE_PPM:
+            ppmInit(r);
+            AQ_PRINTF("PPM on RC port %d\n", i);
+            break;
 
-    default:
-	AQ_NOTICE("WARNING: Invalid radio type!");
-	return;
+        case RADIO_TYPE_SUMD:
+            if (uart) {
+                grhottInit(r, uart);
+                radioRCSelect(i, 0);
+                AQ_PRINTF("GrHott on RC port %d\n", i);
+            }
+            break;
+
+        case RADIO_TYPE_MLINK:
+            if (uart) {
+                mlinkrxInit(r, uart);
+                radioRCSelect(i, 0);
+                AQ_PRINTF("Mlink on RC port %d\n", i);
+            }
+            break;
+
+        case RADIO_TYPE_NONE:
+            break;
+
+        default:
+            AQ_NOTICE("WARNING: Invalid radio type!\n");
+            break;
+        }
     }
+
+    switch (radioData.mode) {
+        case RADIO_MODE_DIVERSITY:
+            // select first available radio to start with
+            for (i = 0; i < RADIO_NUM; i++) {
+                if (radioData.radioInstances[i].radioType > RADIO_TYPE_NONE) {
+                    radioMakeCurrent(&radioData.radioInstances[i]);
+                    break;
+                }
+            }
+            break;
+
+        case RADIO_MODE_SPLIT:
+            radioMakeCurrent(&radioData.radioInstances[0]);
+            break;
+    }
+
+    // set mode default
+    radioData.channels[(int)p[RADIO_FLAP_CH]] = -700;
 
     radioTaskStack = aqStackInit(RADIO_STACK_SIZE, "RADIO");
 
     radioData.radioTask = CoCreateTask(radioTaskCode, (void *)0, RADIO_PRIORITY, &radioTaskStack[RADIO_STACK_SIZE-1], RADIO_STACK_SIZE);
 }
-

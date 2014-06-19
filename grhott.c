@@ -25,7 +25,7 @@
 
 grhottStruct_t grhottData __attribute__((section(".ccm")));
 
-int grhottDecode(void) {
+int grhottDecode(radioInstance_t *r) {
     int crc;
     int grhott_crc;
     int nb_channel;
@@ -60,7 +60,6 @@ int grhottDecode(void) {
 	break;
 
     default:
-	// AQ_NOTICE("SUMD Error: only use 6,8,10,12 or 14 channels");
 	return -1;
     }
 
@@ -85,21 +84,20 @@ int grhottDecode(void) {
 
     if (crc == grhott_crc) {
 	nb_channel = (grhottData.nb_channel - 2) / 2;
-	radioData.channels[0] = (int16_t) (((grhottData.rawBuf[0] << 8) + grhottData.rawBuf[1] - GRHOTT_MIN) / 5);
+	r->channels[0] = (int16_t) (((grhottData.rawBuf[0] << 8) + grhottData.rawBuf[1] - GRHOTT_MIN) / 5);
 
 	// Prepare to rotate 8 bits
 	for (i = 1; i < nb_channel; i++)
-	    radioData.channels[i] = (int16_t) (((grhottData.rawBuf[i * 2] << 8) + grhottData.rawBuf[i * 2 + 1] - GRHOTT_MID) / 5);
+	    r->channels[i] = (int16_t) (((grhottData.rawBuf[i * 2] << 8) + grhottData.rawBuf[i * 2 + 1] - GRHOTT_MID) / 5);
 
 	return 1;
     }
     else {
-	// AQ_NOTICE("SUMD CRC Error");
 	return -1;
     }
 }
 
-int grhottCharIn(unsigned char c) {
+int grhottCharIn(radioInstance_t *r, uint8_t c) {
     switch (grhottData.state) {
     case GRHOTT_WAIT_SYNC1:
 	if (c == GRHOTT_START_CHAR1) {
@@ -125,7 +123,7 @@ int grhottCharIn(unsigned char c) {
 	grhottData.rawBuf[grhottData.dataCount++] = c;
 	if (grhottData.dataCount == grhottData.nb_channel) {
 	    grhottData.state = GRHOTT_WAIT_SYNC1;
-	    return grhottDecode();
+	    return grhottDecode(r);
 	}
 	break;
     }
@@ -133,24 +131,10 @@ int grhottCharIn(unsigned char c) {
     return 0;
 }
 
-void grhottInit(void) {
-//    USART_InitTypeDef USART_InitStructure;
-
+void grhottInit(radioInstance_t *r, USART_TypeDef *uart) {
     memset((void *) &grhottData, 0, sizeof(grhottData));
 
-    radioData.serialPort = serialOpen(GRHOTT_UART, GRHOTT_BAUD, USART_HardwareFlowControl_None, GRHOTT_RXBUF_SIZE, 0);
-
-    // modify default serial configuration
-//    USART_StructInit(&USART_InitStructure);
-//    USART_InitStructure.USART_BaudRate = GRHOTT_BAUD;
-//    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-//    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-//    USART_InitStructure.USART_Parity = USART_Parity_No;
-//    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-//    USART_InitStructure.USART_Mode = USART_Mode_Rx;
-//    USART_Init(GRHOTT_UART, &USART_InitStructure);
-//
-//    USART_Cmd(GRHOTT_UART, ENABLE);
+    r->serialPort = serialOpen(uart, GRHOTT_BAUD, USART_HardwareFlowControl_None, GRHOTT_RXBUF_SIZE, 0);
 
     grhottData.state = GRHOTT_WAIT_SYNC1;
 }

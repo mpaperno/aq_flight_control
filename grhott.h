@@ -16,10 +16,11 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#ifndef grhott_h
-#define grhott_h
+#ifndef _grhott_h
+#define _grhott_h
 
-#define GRHOTT_UART		RC1_UART
+#include "radio.h"
+
 #define GRHOTT_BAUD             115200
 #define GRHOTT_RXBUF_SIZE       40
 
@@ -36,15 +37,15 @@
 #define POLYNOM                 0x11021
 
 typedef struct {
-    unsigned char state;
-    unsigned char nb_channel;
-    unsigned char dataCount;
-    unsigned char rawBuf[32];
+    uint8_t state;
+    uint8_t nb_channel;
+    uint8_t dataCount;
+    uint8_t rawBuf[32];
 } grhottStruct_t;
 
 extern grhottStruct_t grhottData;
 
-extern void grhottInit(void);
-extern int grhottCharIn(unsigned char c);
+extern void grhottInit(radioInstance_t *r, USART_TypeDef *uart);
+extern int grhottCharIn(radioInstance_t *r, uint8_t c);
 
 #endif

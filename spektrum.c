@@ -17,7 +17,6 @@
 */
 
 #include "aq.h"
-#include "radio.h"
 #include "spektrum.h"
 #include "aq_timer.h"
 #include "imu.h"
@@ -29,7 +28,7 @@
 
 spektrumStruct_t spektrumData __attribute__((section(".ccm")));
 
-uint8_t spektrumDecode(void) {
+uint8_t spektrumDecode(radioInstance_t *r) {
     uint8_t *buf = spektrumData.rawBuf;
     uint8_t ret = 0;
     int addr;
@@ -49,9 +48,9 @@ uint8_t spektrumDecode(void) {
             return 0;
     }
 
-    switch (radioData.radioType) {
+    switch (r->radioType) {
         case RADIO_TYPE_SPEKTRUM11:
-            radioData.errorCount = (buf[0]<<8) | buf[1];
+            r->errorCount = (buf[0]<<8) | buf[1];
 
             for (i = 0; i < 7; i++) {
                 uint8_t *b = &buf[2 + i*2];
@@ -69,7 +68,7 @@ uint8_t spektrumDecode(void) {
                 else
                     val -= 1024;
 
-                radioData.channels[addr] = val;
+                r->channels[addr] = val;
 
                 ret = 1;
             }
@@ -77,7 +76,7 @@ uint8_t spektrumDecode(void) {
 
         case RADIO_TYPE_SPEKTRUM10:
         case RADIO_TYPE_DELTANG:
-            if (radioData.radioType == RADIO_TYPE_DELTANG) {
+            if (r->radioType == RADIO_TYPE_DELTANG) {
                 uint8_t checksum = 0;
 
                 for (i = 1; i < 16; i++)
@@ -91,10 +90,10 @@ uint8_t spektrumDecode(void) {
                 if ((buf[1] & 0x80) == 0)
                     return 0;
 
-                radioData.errorCount = buf[1] & 0x1f;   // actually RSSI (5 bits)
+                r->errorCount = buf[1] & 0x1f;   // actually RSSI (5 bits)
             }
             else {
-                radioData.errorCount = (buf[0]<<8) | buf[1];
+                r->errorCount = (buf[0]<<8) | buf[1];
             }
 
             for (i = 0; i < 7; i++) {
@@ -113,7 +112,7 @@ uint8_t spektrumDecode(void) {
                 else
                     val -= 1024;
 
-                radioData.channels[addr] = val;
+                r->channels[addr] = val;
             }
 
             ret = 1;
@@ -126,7 +125,7 @@ uint8_t spektrumDecode(void) {
     return ret;
 }
 
-uint8_t spektrumCharIn(int c) {
+uint8_t spektrumCharIn(radioInstance_t *r, int c) {
     uint32_t receiveTime = timerMicros();
 
     // top of frame if it's been more than 7.5ms
@@ -139,15 +138,15 @@ uint8_t spektrumCharIn(int c) {
 
     if (++spektrumData.state == 16) {
 	spektrumData.state = 0;
-        return spektrumDecode();
+        return spektrumDecode(r);
     }
     else {
         return 0;
     }
 }
 
-void spektrumInit(void) {
+void spektrumInit(radioInstance_t *r, USART_TypeDef *uart) {
     memset((void *)&spektrumData, 0, sizeof(spektrumData));
 
-    radioData.serialPort = serialOpen(SPEKTRUM_UART, SPEKTRUM_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
+    r->serialPort = serialOpen(uart, SPEKTRUM_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
 }

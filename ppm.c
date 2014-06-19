@@ -90,7 +90,7 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
             // handle invalid frame
             else {
                 ppmData.signalQuality = -1; // critical error
-                radioData.errorCount++;     // increment shared cumulative error counter
+                ppmData.r->errorCount++;     // increment shared cumulative error counter
             }
         }
 
@@ -120,29 +120,34 @@ void ppmCallback(uint32_t capture, uint8_t bitstatus) {
     }
 }
 
-void ppmInit(void) {
+void ppmInit(radioInstance_t *r) {
     memset((void *)&ppmData, 0, sizeof(ppmData));
+
+    ppmData.r = r;
     ppmData.ppmPort = pwmInitIn(PPM_PWM_CHANNEL, PPM_CAPTURE_EDGE, 0x10000, ppmCallback);
 }
 
-int ppmDataAvailable(void) {
+int ppmDataAvailable(radioInstance_t *r) {
+    int i;
 
     if (ppmData.frameParsed) {
         ppmData.frameParsed = 0;
-        for (int i=0; i < ppmData.numberChannels; ++i) {
-            if (i == (int)p[RADIO_THRO_CH])
-                radioData.channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_THROT_LOW])*5 / p[PPM_SCALER]), PPM_THROT_MIN, PPM_THROT_MAX);
+
+        for (i = 0; i < ppmData.numberChannels; ++i) {
+            if (&RADIO_THROT == &r->channels[i])
+                r->channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_THROT_LOW])*5 / p[PPM_SCALER]), PPM_THROT_MIN, PPM_THROT_MAX);
             else
-        	radioData.channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_CHAN_MID])*5 / p[PPM_SCALER]), PPM_CHAN_MIN, PPM_CHAN_MAX);
+        	r->channels[i] = constrainInt((int)((ppmData.channels[i] - p[PPM_CHAN_MID])*5 / p[PPM_SCALER]), PPM_CHAN_MIN, PPM_CHAN_MAX);
         }
+
         return 1;
     }
-    else
+    else {
         return 0;
-
+    }
 }
 
-int8_t ppmGetSignalQuality(void) {
-  return ppmData.signalQuality;
+int8_t ppmGetSignalQuality(radioInstance_t *r) {
+    return ppmData.signalQuality;
 }
 
