@@ -21,7 +21,7 @@
 #include "digital.h"
 
 RCC_ClocksTypeDef rccClocks;
-digitalPin *sysoff, *en1, *en2;
+digitalPin *sysoff, *en1, *en2, *stepupEn;
 
 void rccConfiguration(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -49,6 +49,9 @@ void rccConfiguration(void) {
 #endif
 #ifdef RCC_SYSOFF_PORT
     sysoff = digitalInit(RCC_SYSOFF_PORT, RCC_SYSOFF_PIN, 0);
+#endif
+#ifdef RCC_STEPUP_EN_PORT
+    stepupEn = digitalInit(RCC_STEPUP_EN_PORT, RCC_STEPUP_EN_PIN, 1);
 #endif
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1 | RCC_AHB1Periph_DMA2, ENABLE);
