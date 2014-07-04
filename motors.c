@@ -175,25 +175,27 @@ void motorsSendThrust(void) {
 	    value = motorsThrust2Value(motorsData.thrust[i]);
 
 #ifdef HAS_ONBOARD_ESC
-	    // preload the request to accelerate setpoint changes
-	    if (motorsData.oldValues[i] != value) {
-		float v = (value -  motorsData.oldValues[i]);
+            if (motorsData.pwm[i]) {
+                // preload the request to accelerate setpoint changes
+                if (motorsData.oldValues[i] != value) {
+                    float v = (value -  motorsData.oldValues[i]);
 
-		// increase
-		if (v > 0.0f)
-		    value += v * MOTORS_COMP_PRELOAD_PTERM;
-		// decrease
-		else
-		    value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
+                    // increase
+                    if (v > 0.0f)
+                        value += v * MOTORS_COMP_PRELOAD_PTERM;
+                    // decrease
+                    else
+                        value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
 
-		// slowly follow setpoint
-		motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
-	    }
+                    // slowly follow setpoint
+                    motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
+                }
 
-	    // battery voltage compensation
-	    nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
-	    voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
-	    value *= voltageFactor;
+                // battery voltage compensation
+                nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
+                voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
+                value *= voltageFactor;
+            }
 #endif
 
 	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE / p[MOT_VALUE_SCAL], 0, MOTORS_SCALE);
