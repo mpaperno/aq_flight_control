@@ -62,11 +62,12 @@ uint32_t sector = 0;
     return sector;
 }
 
-int flashAddress(uint32_t startAddr, uint32_t *data, unsigned int len) {
+int flashAddress(uint32_t startAddr, uint32_t *data, uint32_t len) {
     FLASH_Status status;
     unsigned int retries;
     int ret;
-    unsigned int i;
+    uint32_t startSector, endSector;
+    uint32_t i;
 
     if (startAddr == 0)
 	startAddr = FLASH_START_ADDR;
@@ -78,7 +79,11 @@ int flashAddress(uint32_t startAddr, uint32_t *data, unsigned int len) {
 
     ret = 1;
 
-    for (i = GetSector(startAddr); i <= GetSector(startAddr+len); i += 8) {
+    startSector = GetSector(startAddr);
+    endSector = GetSector(startAddr + len*4);
+
+    i = startSector;
+    while (i <= endSector) {
 	retries = 0;
 	do {
 	    // Device voltage range supposed to be [2.7V to 3.6V], the operation will be done by word
@@ -90,6 +95,11 @@ int flashAddress(uint32_t startAddr, uint32_t *data, unsigned int len) {
 	    ret = 0;
 	    break;
 	}
+
+        if (i == FLASH_Sector_11)
+            i += 40;
+        else
+            i += 8;
     }
 
     if (ret) {

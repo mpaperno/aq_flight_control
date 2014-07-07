@@ -792,7 +792,7 @@ uint8_t configFlashWrite(void) {
             recs[i].val = p[i];
         }
 
-        ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t));
+        ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t)/sizeof(uint32_t));
 
         aqFree(recs, CONFIG_NUM_PARAMS, sizeof(configRec_t));
 
