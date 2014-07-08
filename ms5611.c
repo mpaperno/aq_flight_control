@@ -185,7 +185,7 @@ void ms5611Disable(void) {
 }
 
 void ms5611PreInit(void) {
-    ms5611Data.spi = spiClientInit(DIMU_MS5611_SPI, MS5611_SPI_BAUD, DIMU_MS5611_CS_PORT, DIMU_MS5611_CS_PIN, &ms5611Data.spiFlag, 0);
+    ms5611Data.spi = spiClientInit(DIMU_MS5611_SPI, MS5611_SPI_BAUD, 0, DIMU_MS5611_CS_PORT, DIMU_MS5611_CS_PIN, &ms5611Data.spiFlag, 0);
 }
 
 // code from MS's AN520

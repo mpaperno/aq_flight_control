@@ -254,7 +254,7 @@ inline void mpu6000Disable(void) {
 }
 
 void mpu6000PreInit(void) {
-    mpu6000Data.spi = spiClientInit(DIMU_MPU6000_SPI, MPU6000_SPI_REG_BAUD, DIMU_MPU6000_CS_PORT, DIMU_MPU6000_CS_PIN, &mpu6000Data.spiFlag, 0);
+    mpu6000Data.spi = spiClientInit(DIMU_MPU6000_SPI, MPU6000_SPI_REG_BAUD, 0, DIMU_MPU6000_CS_PORT, DIMU_MPU6000_CS_PIN, &mpu6000Data.spiFlag, 0);
 }
 
 void mpu6000Init(void) {

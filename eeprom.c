@@ -25,7 +25,7 @@
 eepromStruct_t eepromData;
 
 void eepromPreInit(void) {
-    eepromData.spi = spiClientInit(DIMU_EEPROM_SPI, DIMU_EEPROM_SPI_BAUD, DIMU_EEPROM_CS_PORT, DIMU_EEPROM_CS_PIN, &eepromData.spiFlag, 0);
+    eepromData.spi = spiClientInit(DIMU_EEPROM_SPI, DIMU_EEPROM_SPI_BAUD, 0, DIMU_EEPROM_CS_PORT, DIMU_EEPROM_CS_PIN, &eepromData.spiFlag, 0);
 }
 
 void eepromWriteStatus(int8_t status) {

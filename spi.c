@@ -51,7 +51,7 @@ static void spiTriggerSchedule(uint8_t interface) {
 }
 
 #ifdef SPI_SPI1_CLOCK
-void spi1Init(void) {
+void spi1Init(uint8_t invert) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -65,7 +65,10 @@ void spi1Init(void) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+        if (invert)
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        else
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 
 	// SPI SCK / MOSI / MISO pin configuration
 	GPIO_InitStructure.GPIO_Pin = SPI_SPI1_SCK_PIN;
@@ -87,8 +90,14 @@ void spi1Init(void) {
 	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        if (invert) {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+        }
+        else {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        }
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
@@ -170,7 +179,7 @@ void spi1Init(void) {
 #endif
 
 #ifdef SPI_SPI2_CLOCK
-void spi2Init(void) {
+void spi2Init(uint8_t invert) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -184,7 +193,10 @@ void spi2Init(void) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+        if (invert)
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        else
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 
 	// SPI SCK / MOSI / MISO pin configuration
 	GPIO_InitStructure.GPIO_Pin = SPI_SPI2_SCK_PIN;
@@ -206,8 +218,14 @@ void spi2Init(void) {
 	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        if (invert) {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+        }
+        else {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        }
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
@@ -288,7 +306,7 @@ void spi2Init(void) {
 #endif
 
 #ifdef SPI_SPI3_CLOCK
-void spi3Init(void) {
+void spi3Init(uint8_t invert) {
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -302,7 +320,10 @@ void spi3Init(void) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
+        if (invert)
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+        else
+            GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_UP;
 
 	// SPI SCK / MOSI / MISO pin configuration
 	GPIO_InitStructure.GPIO_Pin = SPI_SPI3_SCK_PIN;
@@ -324,8 +345,14 @@ void spi3Init(void) {
 	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        if (invert) {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
+        }
+        else {
+            SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
+            SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+        }
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
@@ -555,7 +582,7 @@ void spiTransaction(spiClient_t *client, volatile void *rxBuf, void *txBuf, uint
     spiTriggerSchedule(client->interface);
 }
 
-spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort, uint16_t csPin, volatile uint32_t *flag, spiCallback_t *callback) {
+spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, uint8_t invert, GPIO_TypeDef *csPort, uint16_t csPin, volatile uint32_t *flag, spiCallback_t *callback) {
     spiClient_t *client;
 
     client = (spiClient_t *)aqCalloc(1, sizeof(spiClient_t));
@@ -563,19 +590,19 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, GPIO_TypeDef *csPort
 #ifdef SPI_SPI1_CLOCK
     if (spi == SPI1) {
 	client->interface = 0;
-	spi1Init();
+	spi1Init(invert);
     }
 #endif
 #ifdef SPI_SPI2_CLOCK
     if (spi == SPI2) {
 	client->interface = 1;
-	spi2Init();
+	spi2Init(invert);
     }
 #endif
 #ifdef SPI_SPI3_CLOCK
     if (spi == SPI3) {
 	client->interface = 2;
-	spi3Init();
+	spi3Init(invert);
     }
 #endif
 

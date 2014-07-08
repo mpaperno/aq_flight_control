@@ -157,7 +157,7 @@ inline void hmc5983Disable(void) {
 }
 
 void hmc5983PreInit(void) {
-    hmc5983Data.spi = spiClientInit(DIMU_HMC5983_SPI, HMC5983_SPI_BAUD, DIMU_HMC5983_CS_PORT, DIMU_HMC5983_CS_PIN, &hmc5983Data.spiFlag, 0);
+    hmc5983Data.spi = spiClientInit(DIMU_HMC5983_SPI, HMC5983_SPI_BAUD, 0, DIMU_HMC5983_CS_PORT, DIMU_HMC5983_CS_PIN, &hmc5983Data.spiFlag, 0);
 }
 
 uint8_t hmc5983Init(void) {
