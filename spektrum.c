@@ -86,11 +86,11 @@ uint8_t spektrumDecode(radioInstance_t *r) {
                 if (buf[0] != checksum)
                     return 0;
 
+                r->errorCount = buf[1] & 0x1f;   // actually RSSI (5 bits)
+
                 // valid data?
                 if ((buf[1] & 0x80) == 0)
                     return 0;
-
-                r->errorCount = buf[1] & 0x1f;   // actually RSSI (5 bits)
             }
             else {
                 r->errorCount = (buf[0]<<8) | buf[1];
@@ -148,5 +148,10 @@ uint8_t spektrumCharIn(radioInstance_t *r, int c) {
 void spektrumInit(radioInstance_t *r, USART_TypeDef *uart) {
     memset((void *)&spektrumData, 0, sizeof(spektrumData));
 
+#ifdef RC1_DELTANG_BAUD
+    if (r->radioType == RADIO_TYPE_DELTANG)
+        r->serialPort = serialOpen(uart, RC1_DELTANG_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
+    else
+#endif
     r->serialPort = serialOpen(uart, SPEKTRUM_BAUD, USART_HardwareFlowControl_None, SPEKTRUM_RXBUF_SIZE, 0);
 }

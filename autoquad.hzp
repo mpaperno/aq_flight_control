@@ -80,11 +80,6 @@
       <file file_name="gimbal.h"/>
       <file file_name="gimbal.c"/>
       <file file_name="config_default.h"/>
-      <file file_name="board_6_1.h"/>
-      <file file_name="board_6_1a.h"/>
-      <file file_name="board_7.h"/>
-      <file file_name="board_m4.h"/>
-      <file file_name="board_m4_r3.h"/>
       <file file_name="quatos.h"/>
       <file file_name="1wire.c"/>
       <file file_name="1wire.h"/>
@@ -142,6 +137,15 @@
       <file file_name="mlinkrx.h"/>
       <file file_name="calib.c"/>
       <file file_name="calib.h"/>
+      <folder Name="boards">
+        <file file_name="board_6_1.h"/>
+        <file file_name="board_6_1a.h"/>
+        <file file_name="board_7.h"/>
+        <file file_name="board_m4.h"/>
+        <file file_name="board_m4_r3.h"/>
+        <file file_name="board_m4_r4.h"/>
+        <file file_name="board_m4_r5.h"/>
+      </folder>
     </folder>
     <folder Name="System Files" file_name="">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>

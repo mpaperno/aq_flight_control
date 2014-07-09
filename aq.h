@@ -60,6 +60,9 @@
     #if BOARD_REVISION == 4
         #include "board_m4_r4.h"
     #endif
+    #if BOARD_REVISION == 5
+        #include "board_m4_r5.h"
+    #endif
 #endif
 
 #ifndef M_PI
