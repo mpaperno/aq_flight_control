@@ -132,10 +132,14 @@ static void radioRCSelect(uint8_t rcPort, uint8_t level) {
 }
 
 void radioInit(void) {
-    uint16_t radioType = (uint16_t)p[RADIO_TYPE];
+    uint16_t radioType = (uint16_t)p[RADIO_SETUP];
     int i;
 
     AQ_NOTICE("Radio init\n");
+
+	// TODO: remove RADIO_TYPE
+	if (radioType == 0 && (int8_t)p[RADIO_TYPE] >= 0)
+		radioType = (int8_t)p[RADIO_TYPE];
 
     memset((void *)&radioData, 0, sizeof(radioData));
 

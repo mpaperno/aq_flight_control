@@ -43,6 +43,7 @@
 enum configParameters {
     CONFIG_VERSION = 0,
     RADIO_TYPE,
+    RADIO_SETUP,
     RADIO_THRO_CH,
     RADIO_ROLL_CH,
     RADIO_PITC_CH,
