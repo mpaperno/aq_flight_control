@@ -20,7 +20,7 @@
 # Read comments below under "External libraries required by AQ" for dependency details.
 #
 # Usage examples:
-#   make all                                   # default Release type builds .hex and .elf binaries
+#   make all                                   # default Release type builds .elf, .hex, and .bin binaries
 #   make all BUILD_TYPE=Debug                  # build with compiler debugging flags/options enabled
 #   make all BOARD_REV=1 INCR_BUILDNUM=0       # build for rev 1 (post Oct-2012) hardware, don't increment the buildnumber
 #   make hex BOARD_REV=1 DIMU_VER=1.1          # build only .hex file for rev 1 hardware with DIMU add-on board
@@ -28,7 +28,7 @@
 #
 # Windows needs some core GNU tools in your %PATH% (probably same place your "make" is). 
 #    Required: gawk, mv, echo, rm
-#    Optional: mkdir (auto-create build folders),  zip (to compress hex files using "make pack")
+#    Optional: mkdir (auto-create build folders),  expr (auto-incrmenent buildnumber), zip (to compress hex files using "make pack")
 #   Also see EXE_MKDIR variable below -- due to a naming conflict with the Windows "mkdir", you may need to specify a full path for it.
 #   Recommend GnuWin32 CoreUtils http://gnuwin32.sourceforge.net/packages/coreutils.htm
 #
@@ -130,7 +130,7 @@ FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"]+" }$$2 ~ /FI(MR|RM)WARE_VERSIO
 REV_NUM := $(shell $(EXE_AWK) '$$2 ~ /REVISION/{print $$4}' $(SRC_PATH)/buildnum.h)
 BUILD_NUM := $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{print $$NF}' $(SRC_PATH)/buildnum.h)
 ifeq ($(INCR_BUILDNUM), 1)
-	BUILD_NUM := $(shell echo $$[$(BUILD_NUM)+1])
+	BUILD_NUM := $(shell expr $(BUILD_NUM) + 1)
 endif
 
 # Resulting bin file names before extension
@@ -230,9 +230,9 @@ EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 ifeq ($(QUATOS), 1)
 	BIN_NAME := $(BIN_NAME)-quatos
 	QLIB = quatos.a
-	ifeq ($(BOARD_VER), 8)
-		QLIB = quatos-board8.3.a
-	endif
+#	ifeq ($(BOARD_VER), 8)
+#		QLIB = quatos-board8.3.a
+#	endif
 	EXTRA_LIBS += $(OTHERLIB_PATH)/$(QLIB)
 	CFLAGS += -DUSE_QUATOS
 endif

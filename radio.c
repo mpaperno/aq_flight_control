@@ -137,9 +137,9 @@ void radioInit(void) {
 
     AQ_NOTICE("Radio init\n");
 
-	// TODO: remove RADIO_TYPE
-	if (radioType == 0 && (int8_t)p[RADIO_TYPE] >= 0)
-		radioType = (int8_t)p[RADIO_TYPE];
+    // TODO: remove RADIO_TYPE
+    if (radioType == 0 && (int8_t)p[RADIO_TYPE] >= 0)
+	radioType = (uint16_t)p[RADIO_TYPE] + 1;
 
     memset((void *)&radioData, 0, sizeof(radioData));
 
@@ -195,7 +195,7 @@ void radioInit(void) {
 
         case RADIO_TYPE_PPM:
             ppmInit(r);
-            AQ_PRINTF("PPM on RC port %d\n", i);
+            AQ_PRINTF("PPM on PWM port %d\n", PPM_PWM_CHANNEL);
             break;
 
         case RADIO_TYPE_SUMD:
@@ -223,6 +223,9 @@ void radioInit(void) {
         }
     }
 
+    // ensure zero default channel values
+    radioData.channels = radioData.radioInstances[0].channels;
+
     switch (radioData.mode) {
         case RADIO_MODE_DIVERSITY:
             // select first available radio to start with
@@ -237,6 +240,7 @@ void radioInit(void) {
         case RADIO_MODE_SPLIT:
             radioMakeCurrent(&radioData.radioInstances[0]);
             break;
+
     }
 
     // set mode default
