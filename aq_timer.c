@@ -51,6 +51,7 @@ void timerInit(void) {
     timerCancelAlarm1();
     timerCancelAlarm2();
     timerCancelAlarm3();
+    timerCancelAlarm4();
 
     // Output Compare for alarms
     TIM_OCStructInit(&TIM_OCInitStructure);
@@ -63,6 +64,12 @@ void timerInit(void) {
 
     TIM_OC2Init(TIMER_TIM, &TIM_OCInitStructure);
     TIM_OC2PreloadConfig(TIMER_TIM, TIM_OCPreload_Disable);
+
+    TIM_OC3Init(TIMER_TIM, &TIM_OCInitStructure);
+    TIM_OC3PreloadConfig(TIMER_TIM, TIM_OCPreload_Disable);
+
+    TIM_OC4Init(TIMER_TIM, &TIM_OCInitStructure);
+    TIM_OC4PreloadConfig(TIMER_TIM, TIM_OCPreload_Disable);
 
     // go...
     TIM_Cmd(TIMER_TIM, ENABLE);
@@ -81,6 +88,11 @@ void timerCancelAlarm2(void) {
 void timerCancelAlarm3(void) {
     TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC3;
     TIM_ClearITPendingBit(TIMER_TIM, TIM_IT_CC3);
+}
+
+void timerCancelAlarm4(void) {
+    TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC4;
+    TIM_ClearITPendingBit(TIMER_TIM, TIM_IT_CC4);
 }
 
 void timerSetAlarm1(int32_t us, timerCallback_t *callback, int parameter) {
@@ -113,8 +125,20 @@ void timerSetAlarm3(int32_t us, timerCallback_t *callback, int parameter) {
     TIMER_TIM->DIER |= TIM_IT_CC3;
 }
 
+void timerSetAlarm4(int32_t us, timerCallback_t *callback, int parameter) {
+    // schedule it
+    timerData.alarm4Callback = callback;
+    timerData.alarm4Parameter = parameter;
+
+    TIMER_TIM->SR = (uint16_t)~TIM_IT_CC4;
+    TIMER_TIM->CCR4 = TIMER_TIM->CNT + us;
+    TIMER_TIM->DIER |= TIM_IT_CC4;
+}
+
 void TIMER_ISR(void) {
-    if (TIM_GetITStatus(TIMER_TIM, TIM_IT_CC1) != RESET) {
+    uint16_t itStatus = TIMER_TIM->SR;
+
+    if ((itStatus & TIM_IT_CC1) != RESET) {
 	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC1;
 
 	// Disable the Interrupt
@@ -122,7 +146,7 @@ void TIMER_ISR(void) {
 
 	timerData.alarm1Callback(timerData.alarm1Parameter);
     }
-    else if (TIM_GetITStatus(TIMER_TIM, TIM_IT_CC2) != RESET) {
+    else if ((itStatus & TIM_IT_CC2) != RESET) {
 	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC2;
 
 	// Disable the Interrupt
@@ -130,7 +154,7 @@ void TIMER_ISR(void) {
 
 	timerData.alarm2Callback(timerData.alarm2Parameter);
     }
-    else if (TIM_GetITStatus(TIMER_TIM, TIM_IT_CC3) != RESET) {
+    else if ((itStatus & TIM_IT_CC3) != RESET) {
 	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC3;
 
 	// Disable the Interrupt
@@ -139,11 +163,13 @@ void TIMER_ISR(void) {
 	timerData.alarm3Callback(timerData.alarm3Parameter);
     }
     // CC4 is used for RTC calibration at startup
-    else if (TIM_GetITStatus(TIMER_TIM, TIM_IT_CC4) != RESET) {
-	// Get the Input Capture value
-	rtcData.captureLSI[rtcData.captureNumber++] = TIM_GetCapture4(TIM5);
+    else if ((itStatus & TIM_IT_CC4) != RESET) {
+	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC4;
 
-	// Clear CC4 Interrupt pending bit
-	TIM_ClearITPendingBit(TIM5, TIM_IT_CC4);
+        if (timerData.alarm4Callback)
+            timerData.alarm4Callback(timerData.alarm4Parameter);
+        else
+            // Get the Input Capture value
+            rtcData.captureLSI[rtcData.captureNumber++] = TIM_GetCapture4(TIMER_TIM);
     }
 }
