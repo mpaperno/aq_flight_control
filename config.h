@@ -23,13 +23,13 @@
 
 #if BOARD_VERSION == 6 && defined DIMU_VERSION
     #if DIMU_VERSION == 10
-	#include "board_dimu_v1.h"
+        #include "board_dimu_v1.h"
     #elif DIMU_VERSION == 11
-	#include "board_dimu_v1_1.h"
+        #include "board_dimu_v1_1.h"
     #elif DIMU_VERSION == 20
-	#include "board_dimu_v2.h"
+        #include "board_dimu_v2.h"
     #else
-	#error "Unknown DIMU_VERSION for BOARD_VERSION == 6"
+        #error "Unknown DIMU_VERSION for BOARD_VERSION == 6"
     #endif
 #endif
 
@@ -409,6 +409,11 @@ enum configParameters {
 };
 
 typedef struct {
+    uint32_t key;
+    char data[24];
+} configToken_t;
+
+typedef struct {
     char name[16];
     float val;
 } configRec_t;
@@ -434,5 +439,7 @@ extern void configSetParamByID(int id, float value);
 extern int configGetParamIdByName(char *name);
 extern int8_t configFormatParam(char *buf, int n);
 extern int configParseParams(char *fileBuf, int size, int p1);
+extern configToken_t *configTokenGet(uint32_t key);
+extern void configTokenStore(configToken_t *token);
 
 #endif

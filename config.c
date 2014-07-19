@@ -766,6 +766,36 @@ void configLoadDefault(void) {
     AQ_NOTICE("config: Loaded default parameters.\n");
 }
 
+configToken_t *configTokenFindEmpty(void) {
+    configToken_t *p = (configToken_t *)(FLASH_END_ADDR + 1);
+
+    do {
+        p--;
+    } while (p->key != 0xffffffff);
+
+    return p;
+}
+
+void configTokenStore(configToken_t *token) {
+    flashAddress((uint32_t)configTokenFindEmpty(), (uint32_t *)token, sizeof(configToken_t)/sizeof(uint32_t));
+}
+
+configToken_t *configTokenGet(uint32_t key) {
+    configToken_t *p, *t;
+
+    p = (configToken_t *)(FLASH_END_ADDR + 1);
+    t = 0;
+
+    do {
+        p--;
+
+        if (p->key == key)
+            t = p;
+    } while (p->key != 0xffffffff);
+
+    return t;
+}
+
 void configFlashRead(void) {
     configRec_t *recs;
     int i, j;
@@ -781,6 +811,18 @@ void configFlashRead(void) {
     AQ_NOTICE("config: Parameters restored from flash memory.\n");
 }
 
+configToken_t *configTokenIterate(configToken_t *t) {
+    if (t == 0)
+        t = (configToken_t *)(FLASH_END_ADDR + 1);
+
+    t--;
+
+    if (t->key != 0xffffffff)
+        return t;
+    else
+        return 0;
+}
+
 uint8_t configFlashWrite(void) {
     configRec_t *recs;
     uint8_t ret = 0;
@@ -789,12 +831,48 @@ uint8_t configFlashWrite(void) {
     recs = (void *)aqCalloc(CONFIG_NUM_PARAMS, sizeof(configRec_t));
 
     if (recs) {
-        for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
-            memcpy(recs[i].name, configParameterStrings[i], 16);
-            recs[i].val = p[i];
-        }
+        configToken_t *tr = (configToken_t *)recs;
+        configToken_t *tf = 0;
 
-        ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t)/sizeof(uint32_t));
+        // read all tokens
+        do {
+            tf = configTokenIterate(tf);
+
+            // copy to RAM
+            if (tf) {
+                // only one instance per key
+                do {
+                    if (tr->key == 0 || tr->key == tf->key) {
+                        memcpy(tr, tf, sizeof(configToken_t));
+                        break;
+                    }
+                    tr++;
+                } while (1);
+            }
+        } while (tf);
+
+        ret = flashErase(flashStartAddr(), CONFIG_NUM_PARAMS*sizeof(configRec_t)/sizeof(uint32_t));
+
+        // invalidate the flash data cache
+        FLASH_DataCacheCmd(DISABLE);
+        FLASH_DataCacheReset();
+        FLASH_DataCacheCmd(ENABLE);
+
+        if (ret) {
+            tr = (configToken_t *)recs;
+
+            // copy tokens back to flash
+            while (tr->key)
+                configTokenStore(tr++);
+
+            // create param list in RAM
+            for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
+                memcpy(recs[i].name, configParameterStrings[i], 16);
+                recs[i].val = p[i];
+            }
+
+            ret = flashAddress(flashStartAddr(), (uint32_t *)recs, CONFIG_NUM_PARAMS*sizeof(configRec_t)/sizeof(uint32_t));
+        }
 
         aqFree(recs, CONFIG_NUM_PARAMS, sizeof(configRec_t));
 
