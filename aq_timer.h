@@ -19,15 +19,16 @@
 #ifndef _timer_h
 #define _timer_h
 
-#define TIMER_TIM	TIM5	// can only use 32bit timers TIM2 or TIM5
-#define TIMER_CLOCK	(rccClocks.PCLK1_Frequency * 2)
-#define TIMER_EN	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE)
-#define TIMER_IRQ_CH	TIM5_IRQn
-#define TIMER_ISR	TIM5_IRQHandler
+#define TIMER_TIM			TIM5	// can only use 32bit timers TIM2 or TIM5
+#define TIMER_CLOCK			(rccClocks.PCLK1_Frequency * 2)
+#define TIMER_EN			RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE)
+#define TIMER_IRQ_CH		TIM5_IRQn
+#define TIMER_ISR			TIM5_IRQHandler
+#define TIMER_CORE_HALT		DBGMCU_TIM5_STOP
 
-#define timerMicros()	TIMER_TIM->CNT
-#define timerStart()	timerData.timerStart = timerMicros()
-#define timerStop()	(timerMicros() - timerData.timerStart)
+#define timerMicros()		TIMER_TIM->CNT
+#define timerStart()		timerData.timerStart = timerMicros()
+#define timerStop()			(timerMicros() - timerData.timerStart)
 
 typedef void timerCallback_t(int);
 
@@ -49,5 +50,9 @@ extern void timerSetAlarm1(int32_t us, timerCallback_t *callback, int parameter)
 extern void timerSetAlarm2(int32_t us, timerCallback_t *callback, int parameter);
 extern void timerSetAlarm3(int32_t us, timerCallback_t *callback, int parameter);
 extern void timerSetAlarm4(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAbsoluteAlarm1(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAbsoluteAlarm2(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAbsoluteAlarm3(int32_t us, timerCallback_t *callback, int parameter);
+extern void timerSetAbsoluteAlarm4(int32_t us, timerCallback_t *callback, int parameter);
 
 #endif

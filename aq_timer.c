@@ -38,6 +38,9 @@ void timerInit(void) {
 
     TIMER_EN;
 
+	// stop timer when core halted (debug)
+	DBGMCU_APB1PeriphConfig(DBGMCU_TIM5_STOP, ENABLE);
+
     /* Time base configuration for 1MHz (us)*/
     TIM_TimeBaseStructure.TIM_Period = 0xFFFFFFFF;
     TIM_TimeBaseStructure.TIM_Prescaler = (TIMER_CLOCK / 1000000) - 1;
@@ -135,41 +138,87 @@ void timerSetAlarm4(int32_t us, timerCallback_t *callback, int parameter) {
     TIMER_TIM->DIER |= TIM_IT_CC4;
 }
 
+void timerSetAbsoluteAlarm1(int32_t us, timerCallback_t *callback, int parameter) {
+    // schedule it
+    timerData.alarm1Callback = callback;
+    timerData.alarm1Parameter = parameter;
+
+    TIMER_TIM->SR = (uint16_t)~TIM_IT_CC1;
+    TIMER_TIM->CCR1 = us;
+    TIMER_TIM->DIER |= TIM_IT_CC1;
+}
+
+void timerSetAbsoluteAlarm2(int32_t us, timerCallback_t *callback, int parameter) {
+    // schedule it
+    timerData.alarm2Callback = callback;
+    timerData.alarm2Parameter = parameter;
+
+    TIMER_TIM->SR = (uint16_t)~TIM_IT_CC2;
+    TIMER_TIM->CCR2 = us;
+    TIMER_TIM->DIER |= TIM_IT_CC2;
+}
+
+void timerSetAbsoluteAlarm3(int32_t us, timerCallback_t *callback, int parameter) {
+    // schedule it
+    timerData.alarm3Callback = callback;
+    timerData.alarm3Parameter = parameter;
+
+    TIMER_TIM->SR = (uint16_t)~TIM_IT_CC3;
+    TIMER_TIM->CCR3 = us;
+    TIMER_TIM->DIER |= TIM_IT_CC3;
+}
+
+void timerSetAbsoluteAlarm4(int32_t us, timerCallback_t *callback, int parameter) {
+    // schedule it
+    timerData.alarm4Callback = callback;
+    timerData.alarm4Parameter = parameter;
+
+    TIMER_TIM->SR = (uint16_t)~TIM_IT_CC4;
+    TIMER_TIM->CCR4 = us;
+    TIMER_TIM->DIER |= TIM_IT_CC4;
+}
+
 void TIMER_ISR(void) {
+	uint16_t itEnable = TIMER_TIM->DIER;
     uint16_t itStatus = TIMER_TIM->SR;
 
-    if ((itStatus & TIM_IT_CC1) != RESET) {
-	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC1;
+    if ((itEnable & TIM_IT_CC1) != RESET && (itStatus & TIM_IT_CC1) != RESET) {
+		TIMER_TIM->SR = (uint16_t)~TIM_IT_CC1;
 
-	// Disable the Interrupt
-	TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC1;
+		// Disable the Interrupt
+		TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC1;
 
-	timerData.alarm1Callback(timerData.alarm1Parameter);
+		timerData.alarm1Callback(timerData.alarm1Parameter);
     }
-    else if ((itStatus & TIM_IT_CC2) != RESET) {
-	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC2;
+    else if ((itEnable & TIM_IT_CC2) != RESET && (itStatus & TIM_IT_CC2) != RESET) {
+		TIMER_TIM->SR = (uint16_t)~TIM_IT_CC2;
 
-	// Disable the Interrupt
-	TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC2;
+		// Disable the Interrupt
+		TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC2;
 
-	timerData.alarm2Callback(timerData.alarm2Parameter);
+		timerData.alarm2Callback(timerData.alarm2Parameter);
     }
-    else if ((itStatus & TIM_IT_CC3) != RESET) {
-	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC3;
+    else if ((itEnable & TIM_IT_CC3) != RESET && (itStatus & TIM_IT_CC3) != RESET) {
+		TIMER_TIM->SR = (uint16_t)~TIM_IT_CC3;
 
-	// Disable the Interrupt
-	TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC3;
+		// Disable the Interrupt
+		TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC3;
 
-	timerData.alarm3Callback(timerData.alarm3Parameter);
-    }
+		timerData.alarm3Callback(timerData.alarm3Parameter);
+	}
     // CC4 is used for RTC calibration at startup
-    else if ((itStatus & TIM_IT_CC4) != RESET) {
-	TIMER_TIM->SR = (uint16_t)~TIM_IT_CC4;
+    else if ((itEnable & TIM_IT_CC4) != RESET && (itStatus & TIM_IT_CC4) != RESET) {
+		TIMER_TIM->SR = (uint16_t)~TIM_IT_CC4;
 
-        if (timerData.alarm4Callback)
-            timerData.alarm4Callback(timerData.alarm4Parameter);
-        else
+        if (timerData.alarm4Callback) {
+			// Disable the Interrupt
+			TIMER_TIM->DIER &= (uint16_t)~TIM_IT_CC4;
+
+			timerData.alarm4Callback(timerData.alarm4Parameter);
+		}
+        else {
             // Get the Input Capture value
             rtcData.captureLSI[rtcData.captureNumber++] = TIM_GetCapture4(TIMER_TIM);
+		}
     }
 }
