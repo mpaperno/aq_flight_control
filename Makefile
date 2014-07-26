@@ -263,7 +263,7 @@ USB_OBJS = usb.o usb_bsp.o usb_core.o usb_dcd.o usb_dcd_int.o \
 #  usb_hcd.o usb_hcd_int.o
 
 # STM32 drivers from STM32F4xx_StdPeriph_Driver/src/
-STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_hash.o stm32f4xx_hash_md5.o \
+STM32_SYS_OBJ_FILES =  misc.o stm32f4xx_adc.o stm32f4xx_can.o stm32f4xx_dbgmcu.o stm32f4xx_dma.o stm32f4xx_exti.o stm32f4xx_flash.o stm32f4xx_gpio.o stm32f4xx_hash.o stm32f4xx_hash_md5.o \
 	stm32f4xx_pwr.o stm32f4xx_rcc.o stm32f4xx_rtc.o stm32f4xx_sdio.o stm32f4xx_spi.o stm32f4xx_syscfg.o stm32f4xx_tim.o stm32f4xx_usart.o
 STM32_SYS_OBJS := $(addprefix STM32SYS/, $(STM32_SYS_OBJ_FILES))
 
