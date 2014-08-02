@@ -146,6 +146,13 @@
         <file file_name="board_m4_r4.h"/>
         <file file_name="board_m4_r5.h"/>
       </folder>
+      <folder Name="DSM">
+        <file file_name="cyrf6936.h"/>
+        <file file_name="cyrf6936.c"/>
+        <file file_name="cyrf6936_regs.h"/>
+        <file file_name="dsm.h"/>
+        <file file_name="dsm.c"/>
+      </folder>
     </folder>
     <folder Name="System Files" file_name="">
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>

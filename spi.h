@@ -65,5 +65,6 @@ extern spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, uint8_t inver
 extern void spiChangeBaud(spiClient_t *spi, uint16_t baud);
 extern void spiChangeCallback(spiClient_t *client, spiCallback_t *callback);
 extern void spiTransaction(spiClient_t *client, volatile void *rxBuf, void *txBuf, uint16_t size);
+extern void spiClientFree(spiClient_t *spi);
 
 #endif

@@ -200,6 +200,31 @@ float utilFilter3(utilFilter_t *f, float signal) {
     return utilFilter(&f[0], utilFilter(&f[1], utilFilter(&f[2], signal)));
 }
 
+float utilFirFilter(utilFirFilter_t *f, float newValue) {
+    float result = 0.0f;
+    int i;
+
+    f->data[f->i] = newValue;
+    f->i = (f->i + 1) % f->n;
+
+    for (i = 0; i < f->n; i++)
+        result += f->window[i] * f->data[(f->i + i) % f->n];
+
+    return result;
+}
+
+void utilFirFilterInit(utilFirFilter_t *f, const float *window, float *buffer, uint8_t n) {
+    int i;
+
+    f->window = window;
+    f->data = buffer;
+    f->n = n;
+    f->i = 0;
+
+    for (i = 0; i < n; i++)
+        f->data[i] = 0.0f;
+}
+
 int ftoa(char *buf, float f, unsigned int digits) {
     int index = 0;
     int exponent;

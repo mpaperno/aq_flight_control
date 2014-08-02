@@ -23,12 +23,16 @@
 #include "digital.h"
 #include "util.h"
 
-#define RADIO_STACK_SIZE	100
-#define RADIO_PRIORITY		25
+#define RADIO_STACK_SIZE        120
+#define RADIO_PRIORITY          25
 
 #define RADIO_NUM               3       // max number of RC radios
-#define RADIO_MAX_CHANNELS	18
-#define RADIO_UPDATE_TIMEOUT	60000	// maximum time in micros between valid radio updates before signal is considered unstable;
+#define RADIO_MAX_CHANNELS      18
+#define RADIO_UPDATE_TIMEOUT    50000	// maximum time in micros between valid radio updates before signal is considered unstable;
+#define RADIO_LAST_UPDATE       (*radioData.lastUpdate)
+#define RADIO_BINDING           (*radioData.binding)
+#define RADIO_INITIALIZED       (radioData.lastUpdate)
+#define RADIO_VALID             ((timerMicros() - RADIO_LAST_UPDATE) < RADIO_UPDATE_TIMEOUT)
 
 #define RADIO_THROT		radioData.channels[(int)p[RADIO_THRO_CH]]
 #define RADIO_ROLL		radioData.channels[(int)p[RADIO_ROLL_CH]]
@@ -56,7 +60,8 @@ enum radioTypes {
     RADIO_TYPE_PPM,
     RADIO_TYPE_SUMD,
     RADIO_TYPE_MLINK,
-    RADIO_TYPE_DELTANG
+    RADIO_TYPE_DELTANG,
+    RADIO_TYPE_CYRF6936
 };
 
 enum radioModes {
@@ -72,6 +77,7 @@ typedef struct {
     float quality;                  // running measure of radio data stability, in range of 0-100
     int16_t *channels;
     uint8_t radioType;
+    uint8_t binding;
 } radioInstance_t;
 
 typedef struct {
@@ -84,6 +90,8 @@ typedef struct {
     int16_t *channels;
     float *quality;
     uint32_t *errorCount;
+    uint32_t *lastUpdate;
+    uint8_t *binding;
 
     uint8_t mode;
 } radioStruct_t;

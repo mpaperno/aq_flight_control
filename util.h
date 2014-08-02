@@ -43,6 +43,13 @@ typedef struct {
     float z1;
 } utilFilter_t;
 
+typedef struct {
+    const float *window;
+    float *data;
+    uint8_t n;
+    uint8_t i;
+} utilFirFilter_t;
+
 extern void delay(unsigned long t);
 extern void delayMicros(unsigned long t);
 extern void dumpFloat(unsigned char n, float *floats);
@@ -60,6 +67,8 @@ extern void utilFilterReset(utilFilter_t *f, float setpoint);
 extern void utilFilterReset3(utilFilter_t *f, float setpoint);
 extern int ftoa(char *buf, float f, unsigned int digits);
 extern void utilVersionString(void);
+extern float utilFirFilter(utilFirFilter_t *f, float newValue);
+extern void utilFirFilterInit(utilFirFilter_t *f, const float *window, float *buffer, uint8_t n);
 #ifdef UTIL_STACK_CHECK
 extern void utilStackCheck(void);
 extern uint16_t stackFrees[UTIL_STACK_CHECK];

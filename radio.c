@@ -24,6 +24,7 @@
 #include "ppm.h"
 #include "grhott.h"
 #include "mlinkrx.h"
+#include "dsm.h"
 #include "util.h"
 #include "aq_timer.h"
 #include "comm.h"
@@ -42,6 +43,8 @@ static void radioMakeCurrent(radioInstance_t *r) {
     radioData.quality = &r->quality;
     radioData.errorCount = &r->errorCount;
     radioData.channels = r->channels;
+    radioData.lastUpdate = &r->lastUpdate;
+    radioData.binding = &r->binding;
 }
 
 static void radioProcessInstance(radioInstance_t *r) {
@@ -83,6 +86,13 @@ static void radioProcessInstance(radioInstance_t *r) {
     case RADIO_TYPE_MLINK:
         while (serialAvailable(s))
         if ((q = mlinkrxCharIn(r, serialRead(s)))) {
+            r->lastUpdate = timerMicros();
+            radioReceptionQuality(r, q);
+        }
+        break;
+
+    case RADIO_TYPE_CYRF6936:
+        if ((q = dsmReceive(r))) {
             r->lastUpdate = timerMicros();
             radioReceptionQuality(r, q);
         }
@@ -139,7 +149,7 @@ void radioInit(void) {
 
     // TODO: remove RADIO_TYPE
     if (radioType == 0 && (int8_t)p[RADIO_TYPE] >= 0)
-	radioType = (uint16_t)p[RADIO_TYPE] + 1;
+        radioType = (uint16_t)p[RADIO_TYPE] + 1;
 
     memset((void *)&radioData, 0, sizeof(radioData));
 
@@ -195,7 +205,7 @@ void radioInit(void) {
 
         case RADIO_TYPE_PPM:
             ppmInit(r);
-            AQ_PRINTF("PPM on PWM port %d\n", PPM_PWM_CHANNEL);
+            AQ_PRINTF("PPM on RC port %d\n", i);
             break;
 
         case RADIO_TYPE_SUMD:
@@ -214,6 +224,11 @@ void radioInit(void) {
             }
             break;
 
+        case RADIO_TYPE_CYRF6936:
+            if (dsmInit())
+                AQ_PRINTF("CYRF6936 on RC port %d\n", i);
+            break;
+
         case RADIO_TYPE_NONE:
             break;
 
@@ -222,9 +237,6 @@ void radioInit(void) {
             break;
         }
     }
-
-    // ensure zero default channel values
-    radioData.channels = radioData.radioInstances[0].channels;
 
     switch (radioData.mode) {
         case RADIO_MODE_DIVERSITY:
@@ -240,7 +252,6 @@ void radioInit(void) {
         case RADIO_MODE_SPLIT:
             radioMakeCurrent(&radioData.radioInstances[0]);
             break;
-
     }
 
     // set mode default

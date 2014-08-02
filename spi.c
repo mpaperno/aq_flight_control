@@ -522,6 +522,7 @@ static void spiEndTxn(spiStruct_t *interface) {
 
     spiDisableSPI(interface);
     spiDisableDMA(interface);
+    spiDeselect(client);
 
     // record longest txn
     tmp = timerMicros() - interface->txnStart;
@@ -532,8 +533,6 @@ static void spiEndTxn(spiStruct_t *interface) {
 
     tail = (tail + 1) % SPI_SLOTS;
     interface->tail = tail;
-
-    spiDeselect(client);
 
     interface->txRunning = 0;
 
@@ -614,6 +613,11 @@ spiClient_t *spiClientInit(SPI_TypeDef *spi, uint16_t baud, uint8_t invert, GPIO
     client->callback = callback;
 
     return client;
+}
+
+void spiClientFree(spiClient_t *spi) {
+    if (spi)
+        aqFree(spi, 1, sizeof(spiClient_t));
 }
 
 #ifdef SPI_SPI1_CLOCK

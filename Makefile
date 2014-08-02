@@ -241,8 +241,8 @@ endif
 # AQ code objects to create (correspond to .c source to compile)
 AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
 	calib.o comm.o command.o compass.o config.o control.o \
-	can.o canCalib.o canOSD.o canSensors.o canUart.o \
-	d_imu.o digital.o esc32.o eeprom.o \
+	can.o canCalib.o canOSD.o canSensors.o canUart.o cyrf6936.o \
+	d_imu.o digital.o dsm.o esc32.o eeprom.o \
 	ff.o filer.o flash.o fpu.o futaba.o \
 	gimbal.o gps.o getbuildnum.o grhott.o \
 	hmc5983.o imu.o util.o logger.o \

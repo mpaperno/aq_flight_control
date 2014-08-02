@@ -659,4 +659,27 @@ enum pwmPorts {
 #define DEFAULT_IMU_GYO_ALGN_ZX     0.0
 #define DEFAULT_IMU_GYO_ALGN_ZY     0.0
 
+
+#define CYRF_TIMER              TIM7
+#define CYRF_TIMER_CLOCK        (rccClocks.PCLK1_Frequency * 2)
+#define CYRF_TIMER_IRQ_CH       TIM7_IRQn
+#define CYRF_TIMER_ISR          TIM7_IRQHandler
+#define CYRF_TIMER_DBG          DBGMCU_TIM7_STOP
+
+#define CYRF_SPI                SPI1
+#define CYRF_SPI_BAUD           SPI_BaudRatePrescaler_16	// 2.125 MHz
+
+#define CYRF_IRQ_PORT           GPIOC
+#define CYRF_IRQ_PIN            GPIO_Pin_6
+#define CYRF_RST_PORT           GPIOB
+#define CYRF_RST_PIN            GPIO_Pin_6
+#define CYRF_CS_PORT            GPIOB
+#define CYRF_CS_PIN             GPIO_Pin_7
+
+#define CYRF_IRQ_EXTI_PORT      EXTI_PortSourceGPIOC
+#define CYRF_IRQ_EXTI_PIN       EXTI_PinSource6
+#define CYRF_IRQ_EXTI_LINE      EXTI_Line6
+#define CYRF_IRQ_EXTI_IRQ       EXTI9_5_IRQn
+#define CYRF_IRQ_ISR            EXTI9_5_IRQHandler
+
 #endif

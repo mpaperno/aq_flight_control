@@ -39,7 +39,7 @@ void timerInit(void) {
     TIMER_EN;
 
 	// stop timer when core halted (debug)
-	DBGMCU_APB1PeriphConfig(DBGMCU_TIM5_STOP, ENABLE);
+	DBGMCU_APB1PeriphConfig(TIMER_CORE_HALT, ENABLE);
 
     /* Time base configuration for 1MHz (us)*/
     TIM_TimeBaseStructure.TIM_Period = 0xFFFFFFFF;

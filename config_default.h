@@ -19,7 +19,7 @@
 #define DEFAULT_CONFIG_VERSION	    128
 
 #define DEFAULT_RADIO_TYPE			-1		// depreciated - will be removed
-#define DEFAULT_RADIO_SETUP			0		// 0 = NONE, 1 == Spektrum 11bit, 2 == Spektrum 10bit, 3 == SBUS, 4 == PPM, 5 == SUMD, 6 == M-Link, 7 == Deltang
+#define DEFAULT_RADIO_SETUP         0		// 0 = NONE, 1 == Spektrum 11bit, 2 == Spektrum 10bit, 3 == SBUS, 4 == PPM, 5 == SUMD, 6 == M-Link, 7 == Deltang, 8 == CYRF6936
 #define DEFAULT_RADIO_THRO_CH	    0
 #define DEFAULT_RADIO_ROLL_CH	    1
 #define DEFAULT_RADIO_PITC_CH	    2
