@@ -116,7 +116,7 @@ void supervisorDisarm(void) {
 }
 
 void supervisorCalibrate(void) {
-supervisorData.state = STATE_CALIBRATION;
+    supervisorData.state = STATE_CALIBRATION;
     AQ_NOTICE("Starting MAG calibration mode.\n");
     calibInit();
 }
@@ -409,8 +409,8 @@ void supervisorTaskCode(void *unused) {
 
 #ifdef SUPERVISOR_DEBUG_PORT
     // DEBUG LED to indicate radio RX state
-    if (!supervisorData.configRead && RADIO_INITIALIZED) {
-        // packet received in the last 50ms
+    if (!supervisorData.configRead && RADIO_INITIALIZED && supervisorData.state != STATE_CALIBRATION) {
+        // packet received in the last 50ms?
         if (RADIO_VALID) {
             digitalHi(supervisorData.debugLed);
         }

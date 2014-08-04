@@ -205,7 +205,7 @@ void radioInit(void) {
 
         case RADIO_TYPE_PPM:
             ppmInit(r);
-            AQ_PRINTF("PPM on RC port %d\n", i);
+            AQ_PRINTF("PPM on PWM port %d\n", PPM_PWM_CHANNEL);
             break;
 
         case RADIO_TYPE_SUMD:
@@ -237,6 +237,9 @@ void radioInit(void) {
             break;
         }
     }
+
+    // ensure zero default channel values
+    radioData.channels = radioData.radioInstances[0].channels;
 
     switch (radioData.mode) {
         case RADIO_MODE_DIVERSITY:
