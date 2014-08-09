@@ -123,7 +123,7 @@ void dIMUTare(void) {
 
     // reset all parameters
     for (i = 0; dImuCalibParameters[i] != IMU_MAG_BIAS_X; i++)
-	p[dImuCalibParameters[i]] = 0.0f;
+    p[dImuCalibParameters[i]] = 0.0f;
 
     p[IMU_ACC_SCAL_X] = 1.0f;
     p[IMU_ACC_SCAL_Y] = 1.0f;
@@ -137,28 +137,28 @@ void dIMUTare(void) {
 
     // let new averages settle
     for (i = 0; i < (int)samples; i++) {
-	while (lastUpdate == dImuData.lastUpdate)
-	    ;
-	lastUpdate = dImuData.lastUpdate;
+        while (lastUpdate == dImuData.lastUpdate)
+            ;
+        lastUpdate = dImuData.lastUpdate;
     }
 
     for (i = 0; i < 3; i++) {
-	acc[i] = 0.0f;
-	gyo[i] = 0.0f;
+        acc[i] = 0.0f;
+        gyo[i] = 0.0f;
     }
 
     for (i = 0; i < (int)samples; i++) {
-	while (lastUpdate == dImuData.lastUpdate)
-	    ;
-	lastUpdate = dImuData.lastUpdate;
+        while (lastUpdate == dImuData.lastUpdate)
+            ;
+        lastUpdate = dImuData.lastUpdate;
 
-	acc[0] += mpu6000Data.rawAcc[0];
-	acc[1] += mpu6000Data.rawAcc[1];
-	acc[2] += mpu6000Data.rawAcc[2];
+        acc[0] += IMU_RAW_ACCX;
+        acc[1] += IMU_RAW_ACCY;
+        acc[2] += IMU_RAW_ACCZ;
 
-	gyo[0] += mpu6000Data.rawGyo[0];
-	gyo[1] += mpu6000Data.rawGyo[1];
-	gyo[2] += mpu6000Data.rawGyo[2];
+        gyo[0] += IMU_RAW_RATEX;
+        gyo[1] += IMU_RAW_RATEY;
+        gyo[2] += IMU_RAW_RATEZ;
     }
 
     p[IMU_ACC_BIAS_X] = -(acc[0] / samples);
@@ -178,8 +178,16 @@ static void dIMUCalcTempDiff(void) {
     int i = 0;
 
 #ifdef DIMU_HAVE_MPU6000
-    temp += mpu6000Data.temp;
-    i++;
+    if (mpu6000Data.enabled) {
+        temp += mpu6000Data.temp;
+        i++;
+    }
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    if (max21100Data.enabled) {
+        temp += max21100Data.temp;
+        i++;
+    }
 #endif
 #ifdef DIMU_HAVE_MS5611
     if (ms5611Data.enabled) {
@@ -203,13 +211,13 @@ static void dIMUReadCalib(void) {
     buf = eepromOpenRead();
 
     if (buf == 0) {
-	AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
+        AQ_NOTICE("DIMU: cannot read EEPROM parameters!\n");
     }
     else {
-	while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
-	    p1 = configParseParams((char *)buf, size, p1);
+        while ((size = eepromRead(DIMU_EEPROM_BLOCK_SIZE)) != 0)
+            p1 = configParseParams((char *)buf, size, p1);
 
-	AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
+        AQ_NOTICE("DIMU: read calibration parameters from EEPROM\n");
     }
 #endif
 }
@@ -222,28 +230,28 @@ static void dIMUWriteCalib(void) {
     int i, j, k;
 
     if (!(lineBuf = (char *)aqCalloc(128, sizeof(char)))) {
-	AQ_NOTICE("DIMU: Error writing to EEPROM, cannot allocate memory.\n");
-	return;
+        AQ_NOTICE("DIMU: Error writing to EEPROM, cannot allocate memory.\n");
+        return;
     }
 
     buf = eepromOpenWrite();
 
     k = 0;
     for (i = 0; i < sizeof(dImuCalibParameters) / sizeof(uint16_t); i++) {
-	n = configFormatParam(lineBuf, dImuCalibParameters[i]);
+        n = configFormatParam(lineBuf, dImuCalibParameters[i]);
 
-	for (j = 0; j < n; j++) {
-	    buf[k++] = lineBuf[j];
-	    if (k == DIMU_EEPROM_BLOCK_SIZE) {
-		eepromWrite();
-		k = 0;
-	    }
-	}
+        for (j = 0; j < n; j++) {
+            buf[k++] = lineBuf[j];
+                if (k == DIMU_EEPROM_BLOCK_SIZE) {
+                eepromWrite();
+                k = 0;
+            }
+        }
     }
     if (k != 0)
-       eepromWrite();
+        eepromWrite();
     if (lineBuf)
-	aqFree(lineBuf, 128, sizeof(char));
+        aqFree(lineBuf, 128, sizeof(char));
 
     AQ_NOTICE("DIMU: wrote calibration parameters to EEPROM\n");
 
@@ -256,6 +264,9 @@ static void dIMUReadWriteCalib(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6000Disable();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100Disable();
 #endif
 #ifdef DIMU_HAVE_HMC5983
     hmc5983Disable();
@@ -274,6 +285,9 @@ static void dIMUReadWriteCalib(void) {
 #ifdef DIMU_HAVE_MPU6000
     mpu6000Enable();
 #endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100Enable();
+#endif
 #ifdef DIMU_HAVE_HMC5983
     hmc5983Enable();
 #endif
@@ -286,49 +300,55 @@ static void dIMUReadWriteCalib(void) {
 
 void dIMURequestCalibWrite(void) {
     if (!dImuData.calibReadWriteFlag)
-	dImuData.calibReadWriteFlag = 2;
+        dImuData.calibReadWriteFlag = 2;
 }
 
 void dIMURequestCalibRead(void) {
     if (!dImuData.calibReadWriteFlag)
-	dImuData.calibReadWriteFlag = 1;
+        dImuData.calibReadWriteFlag = 1;
 }
 
 static void dIMUTaskCode(void *unused) {
     uint32_t loops = 0;
 
     while (1) {
-	// wait for work
-	CoWaitForSingleFlag(dImuData.flag, 0);
+    // wait for work
+        CoWaitForSingleFlag(dImuData.flag, 0);
 
-	if (dImuData.calibReadWriteFlag)
-	    dIMUReadWriteCalib();
+        if (dImuData.calibReadWriteFlag)
+            dIMUReadWriteCalib();
 
-	// double rate gyo loop
+        // double rate gyo loop
 #ifdef DIMU_HAVE_MPU6000
-	mpu6000DrateDecode();
+        mpu6000DrateDecode();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+        max21100DrateDecode();
 #endif
 
-	imuDImuDRateReady();
+        imuDImuDRateReady();
 
-	// full sensor loop
-	if (!(loops % (DIMU_OUTER_PERIOD/DIMU_INNER_PERIOD))) {
+        // full sensor loop
+        if (!(loops % (DIMU_OUTER_PERIOD/DIMU_INNER_PERIOD))) {
 #ifdef DIMU_HAVE_MPU6000
-	    mpu6000Decode();
+            mpu6000Decode();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+            max21100Decode();
 #endif
 #ifdef DIMU_HAVE_HMC5983
-	    hmc5983Decode();
+            hmc5983Decode();
 #endif
 #ifdef DIMU_HAVE_MS5611
-	    ms5611Decode();
+            ms5611Decode();
 #endif
-	    dImuData.lastUpdate = timerMicros();
-	    imuDImuSensorReady();
+            dImuData.lastUpdate = timerMicros();
+            imuDImuSensorReady();
 
-	    dIMUCalcTempDiff();
-	}
+            dIMUCalcTempDiff();
+        }
 
-	loops++;
+        loops++;
     }
 }
 
@@ -339,6 +359,9 @@ void dIMUInit(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6000PreInit();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100PreInit();
 #endif
 #ifdef DIMU_HAVE_EEPROM
     eepromPreInit();
@@ -352,6 +375,9 @@ void dIMUInit(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6000Init();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100Init();
 #endif
 #ifdef DIMU_HAVE_EEPROM
     eepromInit();
@@ -414,6 +440,9 @@ void dIMUInit(void) {
 #ifdef DIMU_HAVE_MPU6000
     mpu6000Enable();
 #endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100Enable();
+#endif
 #ifdef DIMU_HAVE_HMC5983
     hmc5983Enable();
 #endif
@@ -428,6 +457,9 @@ void dIMUInit(void) {
 
 #ifdef DIMU_HAVE_MPU6000
     mpu6600InitialBias();
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    max21100InitialBias();
 #endif
 #ifdef DIMU_HAVE_MS5611
     ms5611InitialBias();

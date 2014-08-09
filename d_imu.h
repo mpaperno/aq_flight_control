@@ -28,6 +28,7 @@
 #include "eeprom.h"
 #include "hmc5983.h"
 #include "ms5611.h"
+#include "max21100.h"
 
 #define DIMU_STACK_SIZE	    250
 #define DIMU_PRIORITY	    11

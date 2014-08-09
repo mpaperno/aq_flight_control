@@ -116,6 +116,9 @@
         <file file_name="board_dimu_v1.h"/>
         <file file_name="board_dimu_v1_1.h"/>
         <file file_name="board_dimu_v2.h"/>
+        <file file_name="board_dimu_v21.h"/>
+        <file file_name="max21100.h"/>
+        <file file_name="max21100.c"/>
       </folder>
       <folder Name="USB" file_name="">
         <file file_name="usbd_conf.h"/>

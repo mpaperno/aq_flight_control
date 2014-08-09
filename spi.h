@@ -23,7 +23,7 @@
 
 #define SPI_BAUD_MASK		    (~((int16_t)0b111<<3))
 
-#define SPI_SLOTS		    4
+#define SPI_SLOTS               5
 #define SPI_MAX_TXN_TIME	    30	    // us
 
 typedef void spiCallback_t(int);

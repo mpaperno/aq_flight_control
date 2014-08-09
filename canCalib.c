@@ -58,21 +58,13 @@ void canTxIMUData(uint32_t loop) {
 	    // ACCX & ACCY
 	    canCalibData.txMessage.StdId = CAN_IMU_VALUES_1 | CAN_ID;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawAcc[0];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_ACCX];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_ACCX;
 	    canCalibData.txMessage.Data[0] = *ptr++;
 	    canCalibData.txMessage.Data[1] = *ptr++;
 	    canCalibData.txMessage.Data[2] = *ptr++;
 	    canCalibData.txMessage.Data[3] = *ptr++;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawAcc[1];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_ACCY];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_ACCY;
 	    canCalibData.txMessage.Data[4] = *ptr++;
 	    canCalibData.txMessage.Data[5] = *ptr++;
 	    canCalibData.txMessage.Data[6] = *ptr++;
@@ -83,20 +75,16 @@ void canTxIMUData(uint32_t loop) {
 	    // ACCZ & MAGX
 	    canCalibData.txMessage.StdId = CAN_IMU_VALUES_2 | CAN_ID;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawAcc[2];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_ACCZ];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_ACCZ;
 	    canCalibData.txMessage.Data[0] = *ptr++;
 	    canCalibData.txMessage.Data[1] = *ptr++;
 	    canCalibData.txMessage.Data[2] = *ptr++;
 	    canCalibData.txMessage.Data[3] = *ptr++;
 
 #ifdef HAS_DIGITAL_IMU
-	    value = hmc5983Data.rawMag[0];
+	    value = IMU_RAW_MAGX;
 #else
-	    value = (adcData.voltages[ADC_VOLTS_MAGX] - adcData.magBridgeBiasX) * (float)adcData.magSign;
+	    value = (IMU_RAW_MAGX - adcData.magBridgeBiasX) * (float)adcData.magSign;
 #endif
 
 	    ptr = (uint8_t *)&value;
@@ -111,9 +99,9 @@ void canTxIMUData(uint32_t loop) {
 	    canCalibData.txMessage.StdId = CAN_IMU_VALUES_3 | CAN_ID;
 
 #ifdef HAS_DIGITAL_IMU
-	    value = hmc5983Data.rawMag[1];
+	    value = IMU_RAW_MAGY;
 #else
-	    value = (adcData.voltages[ADC_VOLTS_MAGY] - adcData.magBridgeBiasY) * (float)adcData.magSign;
+	    value = (IMU_RAW_MAGY - adcData.magBridgeBiasY) * (float)adcData.magSign;
 #endif
 
 	    ptr = (uint8_t *)&value;
@@ -123,9 +111,9 @@ void canTxIMUData(uint32_t loop) {
 	    canCalibData.txMessage.Data[3] = *ptr++;
 
 #ifdef HAS_DIGITAL_IMU
-	    value = hmc5983Data.rawMag[2];
+	    value = IMU_RAW_MAGZ;
 #else
-	    value = (adcData.voltages[ADC_VOLTS_MAGZ] - adcData.magBridgeBiasZ) * (float)adcData.magSign;
+	    value = (IMU_RAW_MAGZ - adcData.magBridgeBiasZ) * (float)adcData.magSign;
 #endif
 
 	    ptr = (uint8_t *)&value;
@@ -141,21 +129,13 @@ void canTxIMUData(uint32_t loop) {
 	    // GYOX & GYOY
 	    canCalibData.txMessage.StdId = CAN_IMU_VALUES_4 | CAN_ID;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawGyo[0];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_RATEX];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_RATEX;
 	    canCalibData.txMessage.Data[0] = *ptr++;
 	    canCalibData.txMessage.Data[1] = *ptr++;
 	    canCalibData.txMessage.Data[2] = *ptr++;
 	    canCalibData.txMessage.Data[3] = *ptr++;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawGyo[1];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_RATEY];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_RATEY;
 	    canCalibData.txMessage.Data[4] = *ptr++;
 	    canCalibData.txMessage.Data[5] = *ptr++;
 	    canCalibData.txMessage.Data[6] = *ptr++;
@@ -166,11 +146,7 @@ void canTxIMUData(uint32_t loop) {
 	    // GYOZ & TEMP
 	    canCalibData.txMessage.StdId = CAN_IMU_VALUES_5 | CAN_ID;
 
-#ifdef HAS_DIGITAL_IMU
-	    ptr = (uint8_t *)&mpu6000Data.rawGyo[2];
-#else
-	    ptr = (uint8_t *)&adcData.voltages[ADC_VOLTS_RATEZ];
-#endif
+	    ptr = (uint8_t *)&IMU_RAW_RATEZ;
 	    canCalibData.txMessage.Data[0] = *ptr++;
 	    canCalibData.txMessage.Data[1] = *ptr++;
 	    canCalibData.txMessage.Data[2] = *ptr++;

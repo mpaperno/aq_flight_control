@@ -268,46 +268,22 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&IMU_LASTUPD;
 		break;
 	    case LOG_VOLTAGE0:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[0];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[0];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_RATEX;
 		break;
 	    case LOG_VOLTAGE1:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[1];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[1];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_RATEY;
 		break;
 	    case LOG_VOLTAGE2:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawGyo[2];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[2];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_RATEZ;
 		break;
 	    case LOG_VOLTAGE3:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[0];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[3];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_MAGX;
 		break;
 	    case LOG_VOLTAGE4:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[1];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[4];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_MAGY;
 		break;
 	    case LOG_VOLTAGE5:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&hmc5983Data.rawMag[2];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[5];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_MAGZ;
 		break;
 	    case LOG_VOLTAGE6:
 #ifdef HAS_AIMU
@@ -322,25 +298,13 @@ void loggerSetup(void) {
 #endif
 		break;
 	    case LOG_VOLTAGE8:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[0];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[8];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_ACCX;
 		break;
 	    case LOG_VOLTAGE9:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[1];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[9];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_ACCY;
 		break;
 	    case LOG_VOLTAGE10:
-#ifdef USE_DIGITAL_IMU
-		loggerData.fp[i].fieldPointer = (void *)&mpu6000Data.rawAcc[2];
-#else
-		loggerData.fp[i].fieldPointer = (void *)&adcData.voltages[10];
-#endif
+		loggerData.fp[i].fieldPointer = (void *)&IMU_RAW_ACCZ;
 		break;
 #ifdef HAS_AIMU
 	    case LOG_VOLTAGE11:
