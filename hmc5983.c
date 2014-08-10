@@ -23,6 +23,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#include "ext_irq.h"
 #ifndef __CC_ARM
 #include <intrinsics.h>
 #endif
@@ -74,31 +75,31 @@ void hmc5983Decode(void) {
     int i;
 
     if (hmc5983Data.enabled) {
-      mag[0] = 0;
-      mag[1] = 0;
-      mag[2] = 0;
+        mag[0] = 0;
+        mag[1] = 0;
+        mag[2] = 0;
 
-      divisor = (float)HMC5983_SLOTS;
-      for (i = 0; i < HMC5983_SLOTS; i++) {
-          int j = i*HMC5983_SLOT_SIZE;
+        divisor = (float)HMC5983_SLOTS;
+        for (i = 0; i < HMC5983_SLOTS; i++) {
+            int j = i*HMC5983_SLOT_SIZE;
 
-          // check if we are in the middle of a transaction for this slot
-          if (i == hmc5983Data.slot && hmc5983Data.spiFlag == 0)	{
-              divisor -= 1.0f;
-          }
-          else {
-              mag[1] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
-              mag[2] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
-              mag[0] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
-          }
-      }
+            // check if we are in the middle of a transaction for this slot
+            if (i == hmc5983Data.slot && hmc5983Data.spiFlag == 0)	{
+                divisor -= 1.0f;
+            }
+            else {
+                mag[1] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
+                mag[2] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
+                mag[0] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
+            }
+        }
 
-      divisor = 1.0f / divisor;
+        divisor = 1.0f / divisor;
 
-      hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
-      hmc5983CalibMag(hmc5983Data.rawMag, hmc5983Data.mag);
+        hmc5983ScaleMag(mag, hmc5983Data.rawMag, divisor);
+        hmc5983CalibMag(hmc5983Data.rawMag, hmc5983Data.mag);
 
-      hmc5983Data.lastUpdate = timerMicros();
+        hmc5983Data.lastUpdate = timerMicros();
     }
 }
 
@@ -112,7 +113,7 @@ static uint8_t hmc5983GetReg(uint8_t reg) {
     spiTransaction(hmc5983Data.spi, rxBuf, txBuf, 2);
 
     while (!hmc5983Data.spiFlag)
-	;
+        ;
 
     return rxBuf[1];
 }
@@ -128,29 +129,29 @@ static void hmc5983SetReg(uint8_t reg, uint8_t val) {
     spiTransaction(hmc5983Data.spi, rxBuf, txBuf, 2);
 
     while (!hmc5983Data.spiFlag)
-	;
+        ;
 }
 
 static void hmc5983ReliablySetReg(uint8_t reg, uint8_t val) {
     uint8_t ret;
 
     do {
-	delay(10);
-	hmc5983SetReg(reg, val);
-	delay(10);
-	ret = hmc5983GetReg(reg);
+        delay(10);
+        hmc5983SetReg(reg, val);
+        delay(10);
+        ret = hmc5983GetReg(reg);
     } while (ret != val);
 }
 
-static void hmc5983StartTransfer(void) {
+void hmc5983IntHandler(void) {
     if (hmc5983Data.enabled)
-	spiTransaction(hmc5983Data.spi, &hmc5983Data.rxBuf[hmc5983Data.slot*HMC5983_SLOT_SIZE], &hmc5983Data.readCmd, HMC5983_BYTES);
+        spiTransaction(hmc5983Data.spi, &hmc5983Data.rxBuf[hmc5983Data.slot*HMC5983_SLOT_SIZE], &hmc5983Data.readCmd, HMC5983_BYTES);
 }
 
 inline void hmc5983Enable(void) {
     if (hmc5983Data.initialized)
-      hmc5983Data.enabled = 1;
-}
+        hmc5983Data.enabled = 1;
+    }
 
 inline void hmc5983Disable(void) {
     hmc5983Data.enabled = 0;
@@ -161,9 +162,6 @@ void hmc5983PreInit(void) {
 }
 
 uint8_t hmc5983Init(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
     int i = HMC5983_RETRIES;
 
     switch ((int)p[IMU_FLIP]) {
@@ -189,58 +187,35 @@ uint8_t hmc5983Init(void) {
 
     // wait for a valid response
     while (--i && hmc5983GetReg(0x0a) != 'H')
-	delay(100);
+        delay(100);
 
     if (i > 0) {
-      // 75Hz, 8x oversample
-      hmc5983ReliablySetReg(0x00, 0b11111000);
-      delay(10);
+        // 75Hz, 8x oversample
+        hmc5983ReliablySetReg(0x00, 0b11111000);
+        delay(10);
 
-  //    // highest gain (+-0.88 Ga)
-  //    hmc5983ReliablySetReg(0x01, 0b00000000);
-      // gain (+-2.5 Ga)
-      hmc5983ReliablySetReg(0x01, 0b01100000);
-      delay(10);
+        //    // highest gain (+-0.88 Ga)
+        //    hmc5983ReliablySetReg(0x01, 0b00000000);
+        // gain (+-2.5 Ga)
+        hmc5983ReliablySetReg(0x01, 0b01100000);
+        delay(10);
 
-      hmc5983ReliablySetReg(0x02, 0b00000000);
-      delay(10);
+        hmc5983ReliablySetReg(0x02, 0b00000000);
+        delay(10);
 
-      hmc5983Data.readCmd = HMC5983_READ_MULT_BIT | 0x03;
+        hmc5983Data.readCmd = HMC5983_READ_MULT_BIT | 0x03;
 
-      spiChangeCallback(hmc5983Data.spi, hmc5983TransferComplete);
+        spiChangeCallback(hmc5983Data.spi, hmc5983TransferComplete);
 
-      // External Interrupt line for data ready
-      GPIO_StructInit(&GPIO_InitStructure);
-      GPIO_InitStructure.GPIO_Pin = DIMU_HMC5983_INT_PIN;
-      GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-      GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-      GPIO_Init(DIMU_HMC5983_INT_PORT, &GPIO_InitStructure);
+        // External Interrupt line for data ready
+        extRegisterCallback(DIMU_HMC5983_INT_PORT, DIMU_HMC5983_INT_PIN, EXTI_Trigger_Rising, 1, hmc5983IntHandler);
 
-      SYSCFG_EXTILineConfig(DIMU_HMC5983_INT_EXTI_PORT, DIMU_HMC5983_INT_EXTI_PIN);
+        hmc5983Data.initialized = 1;
+    }
+    else {
+        hmc5983Data.initialized = 0;
+    }
 
-      EXTI_InitStructure.EXTI_Line = DIMU_HMC5983_INT_EXTI_LINE;
-      EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-      EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-      EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-      EXTI_Init(&EXTI_InitStructure);
-
-      NVIC_InitStructure.NVIC_IRQChannel = DIMU_HMC5983_INT_EXTI_IRQ;
-      NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-      NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-      NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-      NVIC_Init(&NVIC_InitStructure);
-
-      hmc5983Data.initialized = 1;
-  }
-  else {
-      hmc5983Data.initialized = 0;
-  }
-
-  return hmc5983Data.initialized;
-}
-
-void DIMU_HMC5983_INT_ISR(void) {
-    EXTI_ClearITPendingBit(DIMU_HMC5983_INT_EXTI_LINE);
-    hmc5983StartTransfer();
+    return hmc5983Data.initialized;
 }
 #endif

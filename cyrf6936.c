@@ -301,10 +301,23 @@ void cyrfTimerInit(void) {
     TIM_Cmd(CYRF_TIMER, ENABLE);
 }
 
+void cyrfIntHandler(void) {
+    cyrfData.irqTime = timerMicros();
+
+    if (cyrfData.isTx)
+        // get the TX IRQ status
+        cyrfQueueReadReg(CYRF_TX_IRQ_STATUS, &cyrfData.txIrqStatus);
+    else
+        // get the RX IRQ status
+        cyrfQueueReadReg(CYRF_RX_IRQ_STATUS, &cyrfData.rxIrqStatus);
+
+    if (cyrfData.isrCallback)
+        cyrfQueueExec(cyrfData.isrCallback, cyrfData.isrCallbackParam);
+
+    cyrfProcessStack();
+}
+
 uint8_t cyrfInit(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
     int i;
 
     if (cyrfData.spi)
@@ -344,25 +357,7 @@ uint8_t cyrfInit(void) {
             cyrfData.isrAddr = PERIPH2BB((uint32_t)CYRF_IRQ_PORT + 0x11, bit-8);
 
         // External Interrupt line
-        GPIO_StructInit(&GPIO_InitStructure);
-        GPIO_InitStructure.GPIO_Pin = CYRF_IRQ_PIN;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-        GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-        GPIO_Init(CYRF_IRQ_PORT, &GPIO_InitStructure);
-
-        SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource6);
-
-        EXTI_InitStructure.EXTI_Line = EXTI_Line6;
-        EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-        EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-        EXTI_Init(&EXTI_InitStructure);
-
-        NVIC_InitStructure.NVIC_IRQChannel = CYRF_IRQ_EXTI_IRQ;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-        NVIC_Init(&NVIC_InitStructure);
+        extRegisterCallback(CYRF_IRQ_PORT, CYRF_IRQ_PIN, EXTI_Trigger_Falling, 1, cyrfIntHandler);
 
         cyrfData.initialized = 1;
 
@@ -375,23 +370,6 @@ uint8_t cyrfInit(void) {
     return i;
 }
 
-void CYRF_IRQ_ISR(void) {
-    EXTI_ClearITPendingBit(CYRF_IRQ_EXTI_LINE);
-
-    cyrfData.irqTime = timerMicros();
-
-    if (cyrfData.isTx)
-        // get the TX IRQ status
-        cyrfQueueReadReg(CYRF_TX_IRQ_STATUS, &cyrfData.txIrqStatus);
-    else
-        // get the RX IRQ status
-        cyrfQueueReadReg(CYRF_RX_IRQ_STATUS, &cyrfData.rxIrqStatus);
-
-    if (cyrfData.isrCallback)
-        cyrfQueueExec(cyrfData.isrCallback, cyrfData.isrCallbackParam);
-
-    cyrfProcessStack();
-}
 
 void CYRF_TIMER_ISR(void) {
     CYRF_TIMER->SR &= (uint16_t)~TIM_IT_Update;

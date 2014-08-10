@@ -90,6 +90,8 @@
       <file file_name="spi.c"/>
       <file file_name="signaling.h"/>
       <file file_name="signaling.c"/>
+      <file file_name="ext_irq.c"/>
+      <file file_name="ext_irq.h"/>
       <folder Name="CAN" file_name="">
         <file file_name="can.h"/>
         <file file_name="can.c"/>

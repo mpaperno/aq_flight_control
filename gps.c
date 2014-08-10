@@ -29,6 +29,7 @@
 #include "aq_mavlink.h"
 #include "filer.h"
 #include "supervisor.h"
+#include "ext_irq.h"
 #include <CoOS.h>
 #include <string.h>
 
@@ -117,13 +118,17 @@ void gpsPassThrough(commRcvrStruct_t *r) {
 	serialWrite(gpsData.gpsPort, commReadChar(r));
 }
 
-void gpsInit(void) {
-#ifdef GPS_TP_PORT
-    GPIO_InitTypeDef GPIO_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-#endif
+void gpsTpHandler() {
+    unsigned long tp = timerMicros();
+    unsigned long diff = (tp - gpsData.lastTimepulse);
 
+    if (diff > 950000 && diff < 1050000)
+	gpsData.microsPerSecond -= (gpsData.microsPerSecond - (signed long)((tp - gpsData.lastTimepulse)<<11))>>5;
+    gpsData.lastTimepulse = tp;
+    gpsData.TPtowMS = gpsData.lastReceivedTPtowMS;
+}
+
+void gpsInit(void) {
     AQ_NOTICE("GPS init\n");
 
     memset((void *)&gpsData, 0, sizeof(gpsData));
@@ -144,27 +149,7 @@ void gpsInit(void) {
     gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 
 #ifdef GPS_TP_PORT
-    // External Interrupt line PE1 for timepulse
-    GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = GPS_TP_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(GPS_TP_PORT, &GPIO_InitStructure);
-
-    SYSCFG_EXTILineConfig(GPS_TP_PORT_SOURCE, GPS_TP_PIN_SOURCE);
-
-    EXTI_InitStructure.EXTI_Line = GPS_TP_EXTI_LINE;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    // Timepulse interrupt from GPS
-    NVIC_InitStructure.NVIC_IRQChannel = GPS_TP_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+    extRegisterCallback(GPS_TP_PORT, GPS_TP_PIN, EXTI_Trigger_Rising, 1, gpsTpHandler);
 #endif
 
     gpsData.microsPerSecond = AQ_US_PER_SEC<<11;
@@ -185,17 +170,3 @@ void gpsSendPacket(unsigned char len, char *buf) {
     for (i = 0; i < len; i++)
 	serialWrite(gpsData.gpsPort, buf[i]);
 }
-
-#ifdef GPS_TP_HANDLER
-void GPS_TP_HANDLER() {
-    unsigned long tp = timerMicros();
-    unsigned long diff = (tp - gpsData.lastTimepulse);
-
-    if (diff > 950000 && diff < 1050000)
-	gpsData.microsPerSecond -= (gpsData.microsPerSecond - (signed long)((tp - gpsData.lastTimepulse)<<11))>>5;
-    gpsData.lastTimepulse = tp;
-    gpsData.TPtowMS = gpsData.lastReceivedTPtowMS;
-
-    EXTI_ClearITPendingBit(GPS_TP_EXTI_LINE);
-}
-#endif

@@ -22,6 +22,7 @@
 #include "aq_timer.h"
 #include "comm.h"
 #include "rtc.h"
+#include "ext_irq.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -1005,10 +1006,17 @@ SD_Error SD_EnableWideBusOperation(uint32_t WideMode) {
     return(errorstatus);
 }
 
+// card detect interrupt
+void sdioIntHandler(void) {
+    if (SD_DetectLowLevel() == SD_NOT_PRESENT)
+        sdioData.cardRemovalMicros = timerMicros();
+    else
+        sdioData.cardRemovalMicros = 0;
+}
+
 void sdioLowLevelInit(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
 
     memset((void *)&sdioData, 0, sizeof(sdioData));
 
@@ -1060,26 +1068,7 @@ void sdioLowLevelInit(void) {
     NVIC_Init(&NVIC_InitStructure);
 
     // Configure SD Card detect pin
-    GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = SDIO_DETECT_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_Init(SDIO_DETECT_GPIO_PORT, &GPIO_InitStructure);
-
-    // card detect interrupt
-    NVIC_InitStructure.NVIC_IRQChannel = SDIO_DETECT_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
-
-    SYSCFG_EXTILineConfig(SDIO_DETECT_PORT_SOURCE, SDIO_DETECT_PIN_SOURCE);
-
-    EXTI_InitStructure.EXTI_Line = SDIO_DETECT_EXTI_LINE;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+    extRegisterCallback(SDIO_DETECT_GPIO_PORT, SDIO_DETECT_PIN, EXTI_Trigger_Rising_Falling, 2, sdioIntHandler);
 
     sdioData.initialized = 0;
     sdioData.cardRemovalMicros = 0;
@@ -2110,15 +2099,6 @@ int SD_TransferComplete(void) {
 // Process All SDIO Interrupt Sources
 void SDIO_IRQHandler(void) {
     SD_ProcessIRQSrc();
-}
-
-// card detect interrupt
-void SDIO_DETECT_HANDLER(void) {
-    if (SD_DetectLowLevel() == SD_NOT_PRESENT)
-	sdioData.cardRemovalMicros = timerMicros();
-    else
-	sdioData.cardRemovalMicros = 0;
-    EXTI_ClearITPendingBit(SDIO_DETECT_EXTI_LINE);
 }
 
 void SDIO_DMA_IRQHANDLER(void) {

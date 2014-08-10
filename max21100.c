@@ -23,6 +23,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#include "ext_irq.h"
 #ifndef __CC_ARM
 #include <intrinsics.h>
 #endif
@@ -242,7 +243,7 @@ static void max21100ReliablySetReg(uint8_t reg, uint8_t val) {
     } while (max21100GetReg(reg) != val);
 }
 
-void max21100StartTransfer(void) {
+void max21100IntHandler(void) {
     if (max21100Data.enabled)
         spiTransaction(max21100Data.spi, &max21100Data.rxBuf[max21100Data.slot*MAX21100_SLOT_SIZE], &max21100Data.readReg, MAX21100_BYTES);
 }
@@ -250,7 +251,7 @@ void max21100StartTransfer(void) {
 inline void max21100Enable(void) {
     max21100Data.enabled = 1;
 
-    max21100StartTransfer();
+    max21100IntHandler();
 }
 
 inline void max21100Disable(void) {
@@ -262,10 +263,6 @@ void max21100PreInit(void) {
 }
 
 void max21100Init(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
     switch ((int)p[IMU_FLIP]) {
         case 1:
             max21100Data.accSign[0] =  1.0f;
@@ -349,31 +346,8 @@ void max21100Init(void) {
     max21100Data.readReg = MAX21100_READ_BIT | 0x24;	// start of sensor registers
 
     // External Interrupt line for data ready
-    GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = DIMU_MAX21100_INT_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DIMU_MAX21100_INT_PORT, &GPIO_InitStructure);
-
-    SYSCFG_EXTILineConfig(DIMU_MAX21100_INT_EXTI_PORT, DIMU_MAX21100_INT_EXTI_PIN);
-
-    EXTI_InitStructure.EXTI_Line = DIMU_MAX21100_INT_EXTI_LINE;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    NVIC_InitStructure.NVIC_IRQChannel = DIMU_MAX21100_INT_EXTI_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
+    extRegisterCallback(DIMU_MAX21100_INT_PORT, DIMU_MAX21100_INT_PIN, EXTI_Trigger_Rising, 1, max21100IntHandler);
 
     spiChangeCallback(max21100Data.spi, max21100TransferComplete);
 }
-
-//void DIMU_MAX21100_INT_ISR(void) {
-//    EXTI_ClearITPendingBit(DIMU_MAX21100_INT_EXTI_LINE);
-//    max21100StartTransfer();
-//}
 #endif

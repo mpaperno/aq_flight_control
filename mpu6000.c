@@ -23,6 +23,7 @@
 #include "aq_timer.h"
 #include "util.h"
 #include "config.h"
+#include "ext_irq.h"
 #ifndef __CC_ARM
 #include <intrinsics.h>
 #endif
@@ -218,7 +219,7 @@ static uint8_t mpu6000GetReg(uint8_t reg) {
     spiTransaction(mpu6000Data.spi, &mpu6000RxBuf, &mpu6000TxBuf, 2);
 
     while (!mpu6000Data.spiFlag)
-	;
+        ;
 
     return ((uint8_t *)&mpu6000RxBuf)[1];
 }
@@ -231,20 +232,20 @@ static void mpu6000SetReg(uint8_t reg, uint8_t val) {
     spiTransaction(mpu6000Data.spi, &mpu6000RxBuf, &mpu6000TxBuf, 2);
 
     while (!mpu6000Data.spiFlag)
-	;
+        ;
 }
 
 static void mpu6000ReliablySetReg(uint8_t reg, uint8_t val) {
     do {
-	delay(10);
-	mpu6000SetReg(reg, val);
-	delay(10);
+        delay(10);
+        mpu6000SetReg(reg, val);
+        delay(10);
     } while (mpu6000GetReg(reg) != val);
 }
 
-static void mpu6000StartTransfer(void) {
+static void mpu6000IntHandler(void) {
     if (mpu6000Data.enabled)
-	spiTransaction(mpu6000Data.spi, &mpu6000Data.rxBuf[mpu6000Data.slot*MPU6000_SLOT_SIZE], &mpu6000Data.readReg, MPU6000_BYTES);
+        spiTransaction(mpu6000Data.spi, &mpu6000Data.rxBuf[mpu6000Data.slot*MPU6000_SLOT_SIZE], &mpu6000Data.readReg, MPU6000_BYTES);
 }
 
 inline void mpu6000Enable(void) {
@@ -260,10 +261,6 @@ void mpu6000PreInit(void) {
 }
 
 void mpu6000Init(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
-    EXTI_InitTypeDef EXTI_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-
     switch ((int)p[IMU_FLIP]) {
         case 1:
             mpu6000Data.accSign[0] =  1.0f;
@@ -356,40 +353,7 @@ void mpu6000Init(void) {
     spiChangeCallback(mpu6000Data.spi, mpu6000TransferComplete);
 
     // External Interrupt line for data ready
-    GPIO_StructInit(&GPIO_InitStructure);
-    GPIO_InitStructure.GPIO_Pin = DIMU_MPU6000_INT_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(DIMU_MPU6000_INT_PORT, &GPIO_InitStructure);
+    extRegisterCallback(DIMU_MPU6000_INT_PORT, DIMU_MPU6000_INT_PIN, EXTI_Trigger_Rising, 1, mpu6000IntHandler);
 
-    SYSCFG_EXTILineConfig(DIMU_MPU6000_INT_EXTI_PORT, DIMU_MPU6000_INT_EXTI_PIN);
-
-    EXTI_InitStructure.EXTI_Line = DIMU_MPU6000_INT_EXTI_LINE;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
-
-    NVIC_InitStructure.NVIC_IRQChannel = DIMU_MPU6000_INT_EXTI_IRQ;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
 }
 #endif
-
-// TODO: abstract
-void DIMU_MPU6000_INT_ISR(void) {
-#ifdef DIMU_HAVE_MPU6000
-    if (EXTI->PR & DIMU_MPU6000_INT_EXTI_LINE) {
-        EXTI->PR = DIMU_MPU6000_INT_EXTI_LINE;
-        mpu6000StartTransfer();
-    }
-#endif
-#ifdef DIMU_HAVE_MAX21100
-    if (EXTI->PR & DIMU_MAX21100_INT_EXTI_LINE) {
-        EXTI->PR = DIMU_MAX21100_INT_EXTI_LINE;
-        max21100StartTransfer();
-    }
-#endif
-}
