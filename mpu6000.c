@@ -17,7 +17,7 @@
 */
 
 #include "config.h"
-#ifdef HAS_DIGITAL_IMU
+#if defined(HAS_DIGITAL_IMU) && defined(DIMU_HAVE_MPU6000)
 #include "imu.h"
 #include "mpu6000.h"
 #include "aq_timer.h"
@@ -376,16 +376,20 @@ void mpu6000Init(void) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 }
+#endif
 
 // TODO: abstract
 void DIMU_MPU6000_INT_ISR(void) {
+#ifdef DIMU_HAVE_MPU6000
     if (EXTI->PR & DIMU_MPU6000_INT_EXTI_LINE) {
         EXTI->PR = DIMU_MPU6000_INT_EXTI_LINE;
         mpu6000StartTransfer();
     }
-    else if (EXTI->PR & DIMU_MAX21100_INT_EXTI_LINE) {
+#endif
+#ifdef DIMU_HAVE_MAX21100
+    if (EXTI->PR & DIMU_MAX21100_INT_EXTI_LINE) {
         EXTI->PR = DIMU_MAX21100_INT_EXTI_LINE;
         max21100StartTransfer();
     }
-}
 #endif
+}
