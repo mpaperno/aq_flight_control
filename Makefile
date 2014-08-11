@@ -242,11 +242,11 @@ endif
 AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o \
 	calib.o comm.o command.o compass.o config.o control.o \
 	can.o canCalib.o canOSD.o canSensors.o canUart.o cyrf6936.o \
-	d_imu.o digital.o dsm.o esc32.o eeprom.o \
+	d_imu.o digital.o dsm.o esc32.o eeprom.o ext_irq.o \
 	ff.o filer.o flash.o fpu.o futaba.o \
 	gimbal.o gps.o getbuildnum.o grhott.o \
 	hmc5983.o imu.o util.o logger.o \
-	main_ctl.o mlinkrx.o motors.o mpu6000.o ms5611.o max21100.o \
+	main_ctl.o max21100.o mlinkrx.o motors.o mpu6000.o ms5611.o \
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
 	radio.o rotations.o rcc.o rtc.o run.o \
 	sdio.o serial.o signaling.o spektrum.o spi.o srcdkf.o supervisor.o \
