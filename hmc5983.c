@@ -208,7 +208,7 @@ uint8_t hmc5983Init(void) {
         spiChangeCallback(hmc5983Data.spi, hmc5983TransferComplete);
 
         // External Interrupt line for data ready
-        extRegisterCallback(DIMU_HMC5983_INT_PORT, DIMU_HMC5983_INT_PIN, EXTI_Trigger_Rising, 1, hmc5983IntHandler);
+        extRegisterCallback(DIMU_HMC5983_INT_PORT, DIMU_HMC5983_INT_PIN, EXTI_Trigger_Rising, 1, GPIO_PuPd_NOPULL, hmc5983IntHandler);
 
         hmc5983Data.initialized = 1;
     }

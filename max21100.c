@@ -346,7 +346,7 @@ void max21100Init(void) {
     max21100Data.readReg = MAX21100_READ_BIT | 0x24;	// start of sensor registers
 
     // External Interrupt line for data ready
-    extRegisterCallback(DIMU_MAX21100_INT_PORT, DIMU_MAX21100_INT_PIN, EXTI_Trigger_Rising, 1, max21100IntHandler);
+    extRegisterCallback(DIMU_MAX21100_INT_PORT, DIMU_MAX21100_INT_PIN, EXTI_Trigger_Rising, 1, GPIO_PuPd_NOPULL, max21100IntHandler);
 
     spiChangeCallback(max21100Data.spi, max21100TransferComplete);
 }

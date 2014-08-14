@@ -1068,7 +1068,7 @@ void sdioLowLevelInit(void) {
     NVIC_Init(&NVIC_InitStructure);
 
     // Configure SD Card detect pin
-    extRegisterCallback(SDIO_DETECT_GPIO_PORT, SDIO_DETECT_PIN, EXTI_Trigger_Rising_Falling, 2, sdioIntHandler);
+    extRegisterCallback(SDIO_DETECT_GPIO_PORT, SDIO_DETECT_PIN, EXTI_Trigger_Rising_Falling, 2, GPIO_PuPd_UP, sdioIntHandler);
 
     sdioData.initialized = 0;
     sdioData.cardRemovalMicros = 0;

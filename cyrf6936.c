@@ -22,6 +22,7 @@
 #include "comm.h"
 #include "rcc.h"
 #include "aq_timer.h"
+#include "ext_irq.h"
 #include <string.h>
 
 #ifdef CYRF_SPI
@@ -357,7 +358,7 @@ uint8_t cyrfInit(void) {
             cyrfData.isrAddr = PERIPH2BB((uint32_t)CYRF_IRQ_PORT + 0x11, bit-8);
 
         // External Interrupt line
-        extRegisterCallback(CYRF_IRQ_PORT, CYRF_IRQ_PIN, EXTI_Trigger_Falling, 1, cyrfIntHandler);
+        extRegisterCallback(CYRF_IRQ_PORT, CYRF_IRQ_PIN, EXTI_Trigger_Falling, 1, GPIO_PuPd_NOPULL, cyrfIntHandler);
 
         cyrfData.initialized = 1;
 

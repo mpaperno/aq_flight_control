@@ -353,7 +353,7 @@ void mpu6000Init(void) {
     spiChangeCallback(mpu6000Data.spi, mpu6000TransferComplete);
 
     // External Interrupt line for data ready
-    extRegisterCallback(DIMU_MPU6000_INT_PORT, DIMU_MPU6000_INT_PIN, EXTI_Trigger_Rising, 1, mpu6000IntHandler);
+    extRegisterCallback(DIMU_MPU6000_INT_PORT, DIMU_MPU6000_INT_PIN, EXTI_Trigger_Rising, 1, GPIO_PuPd_NOPULL, mpu6000IntHandler);
 
 }
 #endif

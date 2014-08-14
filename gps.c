@@ -149,7 +149,7 @@ void gpsInit(void) {
     gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 
 #ifdef GPS_TP_PORT
-    extRegisterCallback(GPS_TP_PORT, GPS_TP_PIN, EXTI_Trigger_Rising, 1, gpsTpHandler);
+    extRegisterCallback(GPS_TP_PORT, GPS_TP_PIN, EXTI_Trigger_Rising, 1, GPIO_PuPd_NOPULL, gpsTpHandler);
 #endif
 
     gpsData.microsPerSecond = AQ_US_PER_SEC<<11;

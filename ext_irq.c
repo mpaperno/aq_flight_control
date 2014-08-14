@@ -1,10 +1,28 @@
+/*
+    This file is part of AutoQuad.
+
+    AutoQuad is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AutoQuad is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright © 2011-2014  Bill Nesbitt
+*/
+
 #include "stm32f4xx.h"
 #include "ext_irq.h"
 #include "comm.h"
 
 extStruct_t extData;
 
-int extRegisterCallback(GPIO_TypeDef *port, uint16_t pin, EXTITrigger_TypeDef polarity, uint8_t priority, extCallback_t *callback) {
+int extRegisterCallback(GPIO_TypeDef *port, uint16_t pin, EXTITrigger_TypeDef polarity, uint8_t priority, GPIOPuPd_TypeDef pull, extCallback_t *callback) {
     GPIO_InitTypeDef GPIO_InitStructure;
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -146,7 +164,7 @@ int extRegisterCallback(GPIO_TypeDef *port, uint16_t pin, EXTITrigger_TypeDef po
     GPIO_StructInit(&GPIO_InitStructure);
     GPIO_InitStructure.GPIO_Pin = pin;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    GPIO_InitStructure.GPIO_PuPd = pull;
     GPIO_Init(port, &GPIO_InitStructure);
 
     SYSCFG_EXTILineConfig(exitPortSource, exitPinSource);
