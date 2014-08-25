@@ -33,12 +33,13 @@
 #include "gps.h"
 #include "nav.h"
 #include "logger.h"
-#include "run.h"
+#include "alt_ukf.h"
 #include "nav_ukf.h"
 #include "aq_mavlink.h"
 #include "util.h"
 #include "supervisor.h"
 #include "gimbal.h"
+#include "run.h"
 #include "sdio.h"
 #include "can.h"
 #include "analog.h"
@@ -74,6 +75,7 @@ void aqInit(void *pdata) {
     imuInit();
     analogInit();
     navUkfInit();
+    altUkfInit();
     radioInit();
     gpsInit();
     navInit();

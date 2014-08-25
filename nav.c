@@ -32,6 +32,7 @@
 #include "nav_ukf.h"
 #include "motors.h"
 #include "run.h"
+#include "alt_ukf.h"
 #include "supervisor.h"
 #include "aq_mavlink.h"
 #ifdef USE_SIGNALING
@@ -46,6 +47,11 @@
 #endif
 
 navStruct_t navData __attribute__((section(".ccm")));
+
+// reset current sea level static pressure based on better GPS estimate
+void navPressureAdjust(float altitude) {
+    navData.presAltOffset = altitude - ALTITUDE;
+}
 
 void navResetHoldAlt(float delta) {
     navData.holdAlt += delta;
@@ -71,13 +77,13 @@ void navSetHoldHeading(float targetHeading) {
 void navSetHomeCurrent(void) {
     navData.homeLeg.type = NAV_LEG_GOTO;
     navData.homeLeg.relativeAlt = 0;
-    navData.homeLeg.targetAlt = UKF_ALTITUDE;
+    navData.homeLeg.targetAlt = ALTITUDE;
     navData.homeLeg.targetLat = gpsData.lat;
     navData.homeLeg.targetLon = gpsData.lon;
     navData.homeLeg.maxHorizSpeed = p[NAV_MAX_SPEED];
     navData.homeLeg.poiHeading = AQ_YAW;
     if (p[NAV_CEILING])
-        navData.ceilingAlt = (UKF_ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
+        navData.ceilingAlt = (ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
 
     // notify ground
     AQ_NOTICE("Home position set\n");
@@ -169,7 +175,7 @@ navMission_t *navLoadLeg(uint8_t leg) {
     if (curLeg->relativeAlt)
         navSetHoldAlt(curLeg->targetAlt, curLeg->relativeAlt);
     else
-        navSetHoldAlt(curLeg->targetAlt - navUkfData.presAltOffset, curLeg->relativeAlt);
+        navSetHoldAlt(curLeg->targetAlt - navData.presAltOffset, curLeg->relativeAlt);
 
     navData.holdMaxHorizSpeed = curLeg->maxHorizSpeed;
     navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
@@ -284,13 +290,13 @@ void navNavigate(void) {
         // always allow alt hold
         if (navData.mode < NAV_STATUS_ALTHOLD) {
             // record this altitude as the hold altitude
-            navSetHoldAlt(UKF_ALTITUDE, 0);
+            navSetHoldAlt(ALTITUDE, 0);
 
             // set integral to current RC throttle setting
-            pidZeroIntegral(navData.altSpeedPID, -UKF_VELD, motorsData.throttle * RADIO_MID_THROTTLE / MOTORS_SCALE);
-            pidZeroIntegral(navData.altPosPID, UKF_ALTITUDE, 0.0f);
+            pidZeroIntegral(navData.altSpeedPID, -VELOCITYD, motorsData.throttle * RADIO_MID_THROTTLE / MOTORS_SCALE);
+            pidZeroIntegral(navData.altPosPID, ALTITUDE, 0.0f);
 
-            navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -UKF_VELD;
+            navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -VELOCITYD;
             navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
             navData.mode = NAV_STATUS_ALTHOLD;
 
@@ -358,24 +364,24 @@ void navNavigate(void) {
         // reset mission legs
         navData.missionLeg = leg = 0;
         // keep up with changing altitude
-        navSetHoldAlt(UKF_ALTITUDE, 0);
+        navSetHoldAlt(ALTITUDE, 0);
     }
 
     // ceiling set ?, 0 is disable
     if (navData.ceilingAlt) {
         // ceiling reached 1st time
-        if (UKF_ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag) {
+        if (ALTITUDE > navData.ceilingAlt && !navData.setCeilingFlag) {
             navData.setCeilingFlag = 1;
             navData.ceilingTimer = timerMicros();
         }
         // ceiling still reached for 5 seconds
-        else if (navData.setCeilingFlag && UKF_ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) {
+        else if (navData.setCeilingFlag && ALTITUDE > navData.ceilingAlt && (timerMicros() - navData.ceilingTimer) > (1e6 * 5) ) {
             navData.ceilingTimer = timerMicros();
             if (!navData.setCeilingReached)
                 AQ_NOTICE("Warning: Altitude ceiling reached.");
             navData.setCeilingReached = 1;
         }
-        else if ((navData.setCeilingFlag || navData.setCeilingReached) && UKF_ALTITUDE <= navData.ceilingAlt) {
+        else if ((navData.setCeilingFlag || navData.setCeilingReached) && ALTITUDE <= navData.ceilingAlt) {
             if (navData.setCeilingReached)
                 AQ_NOTICE("Notice: Altitude returned to within ceiling.");
             navData.setCeilingFlag = 0;
@@ -440,15 +446,15 @@ void navNavigate(void) {
             // goto/home test
             if (((curLeg->type == NAV_LEG_GOTO || curLeg->type == NAV_LEG_HOME) &&
                 navData.holdDistance < curLeg->targetRadius &&
-                fabsf(navData.holdAlt - UKF_ALTITUDE) < curLeg->targetRadius) ||
+                fabsf(navData.holdAlt - ALTITUDE) < curLeg->targetRadius) ||
             // orbit test
                 (curLeg->type == NAV_LEG_ORBIT &&
                 fabsf(navData.holdDistance - curLeg->targetRadius) +
-                fabsf(navData.holdAlt - UKF_ALTITUDE) < 2.0f)  ||
+                fabsf(navData.holdAlt - ALTITUDE) < 2.0f)  ||
             // takeoff test
                 (curLeg->type == NAV_LEG_TAKEOFF &&
                 navData.holdDistance < curLeg->targetRadius &&
-                fabsf(navData.holdAlt - UKF_ALTITUDE) < curLeg->targetRadius)
+                fabsf(navData.holdAlt - ALTITUDE) < curLeg->targetRadius)
                 ) {
                     // freeze heading unless orbiting
                     if (curLeg->type != NAV_LEG_ORBIT)
@@ -559,23 +565,23 @@ void navNavigate(void) {
             navData.targetHoldSpeedAlt = 0.0f;
 
             // slow down before trying to hold altitude
-            if (fabsf(UKF_VELD) < 0.025f)
+            if (fabsf(VELOCITYD) < 0.025f)
                 navData.verticalOverride = 0;
 
             // set new hold altitude to wherever we are while still in override
             if (navData.mode != NAV_STATUS_MISSION)
-                navSetHoldAlt(UKF_ALTITUDE, 0);
+                navSetHoldAlt(ALTITUDE, 0);
         }
         // PID has the throttle
         else {
-            navData.targetHoldSpeedAlt = pidUpdate(navData.altPosPID, navData.holdAlt, UKF_ALTITUDE);
+            navData.targetHoldSpeedAlt = pidUpdate(navData.altPosPID, navData.holdAlt, ALTITUDE);
         }
 
         // constrain vertical velocity
         navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, (navData.holdMaxVertSpeed < p[NAV_MAX_DECENT]) ? -navData.holdMaxVertSpeed : -p[NAV_MAX_DECENT], navData.holdMaxVertSpeed);
 
         // smooth vertical velocity changes
-        navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.01f;
+        navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.05f;
     }
     else {
         navData.verticalOverride = 0;
@@ -586,7 +592,7 @@ void navNavigate(void) {
         float a, b, c;
 
         a = navData.holdDistance;
-        b = UKF_ALTITUDE - curLeg->poiAltitude;
+        b = ALTITUDE - curLeg->poiAltitude;
         c = __sqrtf(a*a + b*b);
 
         navData.poiAngle = asinf(a/c) * RAD_TO_DEG - 90.0f;
@@ -632,13 +638,13 @@ void navInit(void) {
     navData.hfUseStoredReference = 0;
 
     navSetHoldHeading(AQ_YAW);
-    navSetHoldAlt(UKF_ALTITUDE, 0);
+    navSetHoldAlt(ALTITUDE, 0);
 
     // HOME
     navData.missionLegs[i].type = NAV_LEG_HOME;
     navData.missionLegs[i].targetRadius = 0.10f;
     navData.missionLegs[i].loiterTime = 0;
-    navData.missionLegs[i].poiAltitude = UKF_ALTITUDE;
+    navData.missionLegs[i].poiAltitude = ALTITUDE;
     i++;
 
     // land

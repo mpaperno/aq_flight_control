@@ -132,6 +132,7 @@ enum {
     LOG_CURRENT_PDB,
     LOG_CURRENT_EXT,
     LOG_VIN_PDB,
+    LOG_UKF_ALT_VEL,
     LOG_NUM_IDS
 };
 

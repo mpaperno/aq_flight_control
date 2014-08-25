@@ -32,6 +32,7 @@
 #include "d_imu.h"
 #include "motors.h"
 #include "calib.h"
+#include "run.h"
 #ifdef USE_SIGNALING
 #include "signaling.h"
 #endif
@@ -296,9 +297,9 @@ void supervisorTaskCode(void *unused) {
                     float targetAltitude;
 
                     // ascend
-                    if (fsOption == SPVR_OPT_FS_RAD_ST2_ASCEND && UKF_ALTITUDE < navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT]) {
+                    if (fsOption == SPVR_OPT_FS_RAD_ST2_ASCEND && ALTITUDE < navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT]) {
                         // the home leg's altitude is recorded without pressure offset
-                        targetAltitude = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT] + navUkfData.presAltOffset;
+                        targetAltitude = navData.homeLeg.targetAlt + p[SPVR_FS_ADD_ALT] + navData.presAltOffset;
 
                         wp->type = NAV_LEG_GOTO;
                         wp->relativeAlt = 0;
@@ -316,7 +317,7 @@ void supervisorTaskCode(void *unused) {
                     }
                     else {
                         // the greater of our current altitude or home's altitude
-                        targetAltitude = ((UKF_ALTITUDE > navData.homeLeg.targetAlt) ? UKF_ALTITUDE : navData.homeLeg.targetAlt) + navUkfData.presAltOffset;
+                        targetAltitude = ((ALTITUDE > navData.homeLeg.targetAlt) ? ALTITUDE : navData.homeLeg.targetAlt) + navData.presAltOffset;
                     }
 
                     // go home with previously determined altitude

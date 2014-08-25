@@ -110,9 +110,7 @@ typedef struct {
     int navHistIndex;
     float yaw, pitch, roll;
     float yawCos, yawSin;
-    float mat3x3[3*3];
     float *x;			// states
-    float presAltOffset;
     float flowSumX, flowSumY;
     int32_t flowSumQuality;
     float flowSumAlt;
@@ -141,7 +139,6 @@ extern void navUkfFlowUpdate(void);
 extern void navUkfOpticalFlow(int16_t x, int16_t y, uint8_t quality, float ground);
 extern void navUkfSetGlobalPositionTarget(double lat, double lon);
 extern void navUkfSetHereAsPositionTarget(void);
-extern void UKFPressureAdjust(float altitude);
 extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll);
 extern void navUkfZeroRate(float zRate, int axis);
 extern void navUkfFinish(void);
@@ -150,5 +147,7 @@ extern void navUkfResetBias(void);
 extern void navUkfResetVels(void);
 extern void navUkfZeroPos(void);
 extern void navUkfZeroVel(void);
+extern void navUkfRotateVectorByQuat(float *vr, float *v, float *q);
+extern float navUkfPresToAlt(float pressure);
 
 #endif

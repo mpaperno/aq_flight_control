@@ -65,6 +65,8 @@
       <file file_name="fpu.c"/>
       <file file_name="nav_ukf.h"/>
       <file file_name="nav_ukf.c"/>
+      <file file_name="alt_ukf.h"/>
+      <file file_name="alt_ukf.c"/>
       <file file_name="run.h"/>
       <file file_name="run.c"/>
       <file file_name="radio.c"/>
@@ -150,6 +152,7 @@
         <file file_name="board_m4_r3.h"/>
         <file file_name="board_m4_r4.h"/>
         <file file_name="board_m4_r5.h"/>
+        <file file_name="board_m4_r6.h"/>
       </folder>
       <folder Name="DSM">
         <file file_name="cyrf6936.h"/>

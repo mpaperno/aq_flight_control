@@ -42,6 +42,7 @@
 #include "comm.h"
 #include "gimbal.h"
 #include "d_imu.h"
+#include "run.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -76,12 +77,12 @@ void mavlinkWpAnnounceCurrent(uint16_t seqId) {
 
 // send new home position coordinates
 void mavlinkAnnounceHome(void) {
-    mavlink_msg_gps_global_origin_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7f, navData.homeLeg.targetLon*(double)1e7, (navData.homeLeg.targetAlt + navUkfData.presAltOffset)*1e3);
+    mavlink_msg_gps_global_origin_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7f, navData.homeLeg.targetLon*(double)1e7, (navData.homeLeg.targetAlt + navData.presAltOffset)*1e3);
     // announce ceiling altitude if any
     float ca = navData.ceilingAlt;
     if (ca)
 	// convert to GPS altitude
-	ca += navUkfData.presAltOffset;
+	ca += navData.presAltOffset;
     mavlink_msg_safety_allowed_area_send(MAVLINK_COMM_0, MAV_FRAME_GLOBAL, 0, 0, ca, 0, 0, 0);
 }
 
@@ -204,7 +205,7 @@ void mavlinkDo(void) {
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_POSITION].enable && mavlinkData.streams[MAV_DATA_STREAM_POSITION].next < micros)) {
 	mavlink_msg_gps_raw_int_send(MAVLINK_COMM_0, micros, navData.fixType, gpsData.lat*(double)1e7, gpsData.lon*(double)1e7, gpsData.height*1e3,
 		gpsData.hAcc*100, gpsData.vAcc*100, gpsData.speed*100, gpsData.heading, 255);
-	mavlink_msg_local_position_ned_send(MAVLINK_COMM_0, micros, UKF_POSN, UKF_POSE, -UKF_POSD, UKF_VELN, UKF_VELE, -UKF_VELD);
+	mavlink_msg_local_position_ned_send(MAVLINK_COMM_0, micros, UKF_POSN, UKF_POSE, -UKF_POSD, UKF_VELN, UKF_VELE, -VELOCITYD);
 	mavlinkData.streams[MAV_DATA_STREAM_POSITION].next = micros + mavlinkData.streams[MAV_DATA_STREAM_POSITION].interval;
     }
     // rc channels and pwm outputs (would be nice to separate these)
@@ -238,11 +239,11 @@ void mavlinkDo(void) {
 	    switch(i) {
 	    case AQMAV_DATASET_LEGACY1 :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
-			navData.holdHeading, AQ_PRESSURE, IMU_TEMP, UKF_ALTITUDE, analogData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
+			navData.holdHeading, AQ_PRESSURE, IMU_TEMP, ALTITUDE, analogData.vIn, UKF_POSN, UKF_POSE, UKF_POSD);
 		break;
 	    case AQMAV_DATASET_LEGACY2 :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,
-			navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, UKF_VELD,
+			navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, VELOCITYD,
 			RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_LEGACY3 :

@@ -34,6 +34,8 @@
 #include "supervisor.h"
 #include "analog.h"
 #include "comm.h"
+#include "alt_ukf.h"
+#include "run.h"
 #include <CoOS.h>
 #include <string.h>
 #include <stdio.h>
@@ -120,12 +122,12 @@ void telemetryDo(void) {
 		ptr = telemtrySendFloat(ptr, navData.holdHeading);
 		ptr = telemtrySendFloat(ptr, AQ_PRESSURE);
 		ptr = telemtrySendFloat(ptr, IMU_TEMP);
-		ptr = telemtrySendFloat(ptr, UKF_ALTITUDE);
+		ptr = telemtrySendFloat(ptr, ALTITUDE);
 		ptr = telemtrySendFloat(ptr, analogData.vIn);
 		ptr = telemtrySendInt(ptr, IMU_LASTUPD - gpsData.lastPosUpdate);  // us
 		ptr = telemtrySendFloat(ptr, UKF_POSN);
 		ptr = telemtrySendFloat(ptr, UKF_POSE);
-		ptr = telemtrySendFloat(ptr, UKF_ALTITUDE);
+		ptr = telemtrySendFloat(ptr, ALT_POS);
 		ptr = telemtrySendFloat(ptr, gpsData.lat);
 		ptr = telemtrySendFloat(ptr, gpsData.lon);
 		ptr = telemtrySendFloat(ptr, gpsData.hAcc);
@@ -139,7 +141,7 @@ void telemetryDo(void) {
 		ptr = telemtrySendFloat(ptr, navData.holdTiltE);
 		ptr = telemtrySendFloat(ptr, UKF_VELN);
 		ptr = telemtrySendFloat(ptr, UKF_VELE);
-		ptr = telemtrySendFloat(ptr, -UKF_VELD);
+		ptr = telemtrySendFloat(ptr, -VELOCITYD);
 		ptr = telemtrySendFloat(ptr, IMU_MAGX);
 		ptr = telemtrySendFloat(ptr, IMU_MAGY);
 		ptr = telemtrySendFloat(ptr, IMU_MAGZ);

@@ -32,6 +32,7 @@
 #include "aq_timer.h"
 #include "aq_mavlink.h"
 #include "calib.h"
+#include "alt_ukf.h"
 #include <CoOS.h>
 #ifndef __CC_ARM
 #include <intrinsics.h>
@@ -111,7 +112,7 @@ void runTaskCode(void *unused) {
 	    CoClearFlag(gpsData.gpsPosFlag);
 	    // refine static sea level pressure based on better GPS altitude fixes
 	    if (gpsData.hAcc < runData.bestHacc && gpsData.hAcc < NAV_MIN_GPS_ACC) {
-		UKFPressureAdjust(gpsData.height);
+                navPressureAdjust(gpsData.height);
 		runData.bestHacc = gpsData.hAcc;
 	    }
 	}
@@ -146,7 +147,18 @@ void runTaskCode(void *unused) {
 	    }
 	}
 
-	navUkfFinish();
+        navUkfFinish();
+        altUkfProcess(AQ_PRESSURE);
+
+        // determine which altitude estimate to use
+        if (gpsData.hAcc > 0.8f) {
+            runData.altPos = &ALT_POS;
+            runData.altVel = &ALT_VEL;
+        }
+        else {
+            runData.altPos = &UKF_ALTITUDE;
+            runData.altVel = &UKF_VELD;
+        }
 
 	CoSetFlag(runData.runFlag);	// new state data
 
@@ -190,28 +202,33 @@ void runInit(void) {
 
     pres = AQ_PRESSURE;
 
+    // initialize sensor history
     for (i = 0; i < RUN_SENSOR_HIST; i++) {
-	runData.accHist[0][i] = acc[0];
-	runData.accHist[1][i] = acc[1];
-	runData.accHist[2][i] = acc[2];
-	runData.magHist[0][i] = mag[0];
-	runData.magHist[1][i] = mag[1];
-	runData.magHist[2][i] = mag[2];
-	runData.presHist[i] = pres;
+        runData.accHist[0][i] = acc[0];
+        runData.accHist[1][i] = acc[1];
+        runData.accHist[2][i] = acc[2];
+        runData.magHist[0][i] = mag[0];
+        runData.magHist[1][i] = mag[1];
+        runData.magHist[2][i] = mag[2];
+        runData.presHist[i] = pres;
 
-	runData.sumAcc[0] += acc[0];
-	runData.sumAcc[1] += acc[1];
-	runData.sumAcc[2] += acc[2];
-	runData.sumMag[0] += mag[0];
-	runData.sumMag[1] += mag[1];
-	runData.sumMag[2] += mag[2];
-	runData.sumPres += pres;
+        runData.sumAcc[0] += acc[0];
+        runData.sumAcc[1] += acc[1];
+        runData.sumAcc[2] += acc[2];
+        runData.sumMag[0] += mag[0];
+        runData.sumMag[1] += mag[1];
+        runData.sumMag[2] += mag[2];
+        runData.sumPres += pres;
     }
 
     runData.sensorHistIndex = 0;
 
     runData.bestHacc = 1000.0f;
     runData.accMask = 1000.0f;
+
+    // use altUkf altitude & vertical velocity estimates to start with
+    runData.altPos = &ALT_POS;
+    runData.altVel = &ALT_VEL;
 
 #ifdef USE_MAVLINK
     // configure px4flow sensor

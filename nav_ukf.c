@@ -40,11 +40,6 @@ float navUkfPresToAlt(float pressure) {
     return (1.0f -  powf(pressure / UKF_P0, 0.19f)) * (1.0f / 22.558e-6f);
 }
 
-// reset current sea level static pressure based on better GPS estimate
-void UKFPressureAdjust(float altitude) {
-    navUkfData.presAltOffset = altitude - UKF_PRES_ALT;
-}
-
 static void navUkfCalcEarthRadius(double lat) {
     double sinLat2;
 
@@ -73,7 +68,9 @@ static void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
     UKF_POSE += deltaE;
     UKF_POSD += deltaD;
 
+#ifndef USE_PRES_ALT
     navResetHoldAlt(deltaD);
+#endif
 }
 
 void navUkfSetGlobalPositionTarget(double lat, double lon) {
@@ -129,12 +126,12 @@ void navUkfNormalizeVec3(float *vr, float *v) {
 void navUkfNormalizeQuat(float *qr, float *q) {
     float norm;
 
-    norm = __sqrtf(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+    norm = 1.0f / __sqrtf(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
 
-    qr[0] = q[0] / norm;
-    qr[1] = q[1] / norm;
-    qr[2] = q[2] / norm;
-    qr[3] = q[3] / norm;
+    qr[0] *= norm;
+    qr[1] *= norm;
+    qr[2] *= norm;
+    qr[3] *= norm;
 }
 
 void crossVector3(float *vr, float *va, float *vb) {
@@ -171,7 +168,7 @@ void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q) {
     navUkfRotateVectorByQuat(vr, v, qc);
 }
 
-static void navUkfRotateVecByMatrix(float *vr, float *v, float *m) {
+void navUkfRotateVecByMatrix(float *vr, float *v, float *m) {
     vr[0] = m[0*3 + 0]*v[0] + m[0*3 + 1]*v[1] + m[0*3 + 2]*v[2];
     vr[1] = m[1*3 + 0]*v[0] + m[1*3 + 1]*v[1] + m[1*3 + 2]*v[2];
     vr[2] = m[2*3 + 0]*v[0] + m[2*3 + 1]*v[1] + m[2*3 + 2]*v[2];
@@ -249,7 +246,7 @@ void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll) {
 }
 
 // result and source can be the same
-static void navUkfRotateQuat(float *qOut, float *qIn, float *rate, float dt) {
+static void navUkfRotateQuat(float *qOut, float *qIn, float *rate) {
     float q[4];
     float r[3];
 
@@ -320,7 +317,7 @@ void navUkfTimeUpdate(float *in, float *noise, float *out, float *u, float dt, i
 	rate[2] = (u[5] + in[UKF_STATE_GYO_BIAS_Z*n + i] + noise[UKF_V_NOISE_RATE_Z*n + i]) * dt;
 
 	// rotate quat
-	navUkfRotateQuat(q, q, rate, dt);
+	navUkfRotateQuat(q, q, rate);
 	out[UKF_STATE_Q1*n + i] = q[0];
 	out[UKF_STATE_Q2*n + i] = q[1];
 	out[UKF_STATE_Q3*n + i] = q[2];
@@ -445,7 +442,7 @@ void simDoPresUpdate(float pres) {
     y[1] = y[0];
 
     // if GPS altitude data has been available, only update pressure altitude
-    if (navUkfData.presAltOffset != 0.0f)
+    if (navData.presAltOffset != 0.0f)
 	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 1, 1, noise, navUkfPresUpdate);
     // otherwise update pressure and GPS altitude from the single pressure reading
     else
@@ -709,7 +706,7 @@ void navUkfFlowUpdate(void) {
     if (navUkfData.flowInit == 0) {
 	// only allow init if we have a valid altitude
 	if (navUkfData.flowAltCount > 0) {
-	    UKFPressureAdjust(navUkfData.flowAlt);
+	    navPressureAdjust(navUkfData.flowAlt);
 	    UKF_POSD = navUkfData.flowAlt;
 	    navUkfData.flowInit = 1;
 	}
@@ -911,7 +908,8 @@ void navUkfInitState(void) {
 	    rotError[2] += -(mag[1] * estMag[0] - estMag[1] * mag[0]) * 1.0f;
 	}
 
-        navUkfRotateQuat(&UKF_Q1, &UKF_Q1, rotError, 0.1f);
+        navUkfRotateQuat(&UKF_Q1, &UKF_Q1, rotError);
+        navUkfNormalizeQuat(&UKF_Q1, &UKF_Q1);
 
 	i++;
     } while (i <= UKF_GYO_AVG_NUM*5);

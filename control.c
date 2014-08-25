@@ -33,6 +33,7 @@
 #include "aq_mavlink.h"
 #include "supervisor.h"
 #include "gps.h"
+#include "run.h"
 #ifdef USE_QUATOS
 #include "quatos.h"
 #endif
@@ -76,7 +77,7 @@ void controlTaskCode(void *unused) {
 		// are we in altitude hold mode?
 		if (navData.mode > NAV_STATUS_MANUAL) {
 		    // override throttle with nav's request
-		    throttle = pidUpdate(navData.altSpeedPID, navData.holdSpeedAlt, -UKF_VELD) * MOTORS_SCALE / RADIO_MID_THROTTLE;
+		    throttle = pidUpdate(navData.altSpeedPID, navData.holdSpeedAlt, -VELOCITYD) * MOTORS_SCALE / RADIO_MID_THROTTLE;
 
                     // don't allow negative throttle to be built up
                     if (navData.altSpeedPID->iState < 0.0f)

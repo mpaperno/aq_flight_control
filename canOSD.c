@@ -22,6 +22,7 @@
 #include "nav.h"
 #include "gps.h"
 #include "nav_ukf.h"
+#include "run.h"
 #include "radio.h"
 
 canOSDStruct_t canOSDData;
@@ -69,7 +70,7 @@ void canOSDTelemetry(uint32_t loop) {
                 break;
 
             case OSD_TELEM_VELD:
-                dataFloat[0] = UKF_VELD;
+                dataFloat[0] = VELOCITYD;
                 n = 4;
                 break;
 

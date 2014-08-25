@@ -85,8 +85,8 @@ static void ms5611Callback(int unused) {
 	    case 0:
 		// temp conversion
 		spiTransaction(ms5611Data.spi, &rxBuf[0], &ms5611Data.startTempConv, 1);
-//		dIMUSetAlarm1(9040, ms5611Callback, 0);
-		dIMUSetAlarm1(600, ms5611Callback, 0);
+		dIMUSetAlarm1(9040, ms5611Callback, 0);
+//		dIMUSetAlarm1(600, ms5611Callback, 0);
 		break;
 
 	    case 1:
@@ -148,7 +148,7 @@ void ms5611Decode(void) {
 
       // temperature
       dT = rawTemp / divisor - (ms5611Data.p[5]<<8);
-      temp = (int64_t)dT * ms5611Data.p[6] / 8388608 + 2000;
+      temp = (int64_t)dT * ms5611Data.p[6] / (1<<23) + 2000;
       ms5611Data.rawTemp = temp / 100.0f;
 
       ms5611Data.temp = utilFilter(&ms5611Data.tempFilter, ms5611Data.rawTemp);
@@ -166,7 +166,7 @@ void ms5611Decode(void) {
       else if (sens > 6442352640)
           sens = 6442352640;
 
-      ms5611Data.pres = ((int64_t)rawPres * sens / 2097152 / divisor - off) * (1.0f / 32768.0f);
+      ms5611Data.pres = ((int64_t)rawPres * sens / (1<<21) / divisor - off) * (1.0f / (1<<15));
 
       ms5611Data.lastUpdate = timerMicros();
     }
@@ -243,8 +243,8 @@ uint8_t ms5611Init(void) {
     if (j > 0) {
       ms5611Data.adcRead = 0x00;
 
-  //    ms5611Data.startTempConv = 0x58;    // 4096 OSR
-      ms5611Data.startTempConv = 0x50;    // 256 OSR
+        ms5611Data.startTempConv = 0x58;    // 4096 OSR
+//      ms5611Data.startTempConv = 0x50;    // 256 OSR
       ms5611Data.startPresConv = 0x48;	// 4096 OSR
   //    ms5611Data.startPresConv = 0x40;	// 256 OSR
 

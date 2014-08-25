@@ -92,6 +92,7 @@ typedef struct {
     float holdTiltE;			// required tilt (East/West)
     float holdSpeedAlt;			// required speed (Up/Down)
     float targetHoldSpeedAlt;
+    float presAltOffset;
 
     pidStruct_t *speedNPID;		// PID to control N/S speed - output tilt in degrees
     pidStruct_t *speedEPID;		// PID to control E/W speed - output tilt in degrees
@@ -126,7 +127,6 @@ typedef struct {
     uint8_t ceilingTimer;
     uint8_t verticalOverride;
     float ceilingAlt;
-
 } navStruct_t;
 
 extern navStruct_t navData;
@@ -134,7 +134,6 @@ extern navStruct_t navData;
 extern void navInit(void);
 extern void navAccelUpdate(void);
 extern void navGpsUpdate(void);
-extern void navUpdateAlt(float altitude);
 extern float navGetVel(char direction);
 extern float navGetPos(char direction);
 extern unsigned int navGetWaypointCount(void);
@@ -147,5 +146,6 @@ extern void navNavigate(void);
 extern void navResetHoldAlt(float delta);
 extern float navCalcDistance(double lat1, double lon1, double lat2, double lon2);
 extern float navCalcBearing(double lat1, double lon1, double lat2, double lon2);
+extern void navPressureAdjust(float altitude);
 
 #endif

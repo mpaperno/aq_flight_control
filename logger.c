@@ -35,6 +35,7 @@
 #include "analog.h"
 #include "gimbal.h"
 #include "canSensors.h"
+#include "alt_ukf.h"
 #include <CoOS.h>
 #include <stdio.h>
 #include <string.h>
@@ -105,6 +106,7 @@ loggerFields_t loggerFields[] = {
     {LOG_UKF_POSD, LOG_TYPE_FLOAT},
     {LOG_UKF_PRES_ALT, LOG_TYPE_FLOAT},
     {LOG_UKF_ALT, LOG_TYPE_FLOAT},
+    {LOG_UKF_ALT_VEL, LOG_TYPE_FLOAT},
     {LOG_UKF_VELN, LOG_TYPE_FLOAT},
     {LOG_UKF_VELE, LOG_TYPE_FLOAT},
     {LOG_UKF_VELD, LOG_TYPE_FLOAT},
@@ -445,7 +447,10 @@ void loggerSetup(void) {
 		loggerData.fp[i].fieldPointer = (void *)&UKF_PRES_ALT;
 		break;
 	    case LOG_UKF_ALT:
-		loggerData.fp[i].fieldPointer = (void *)&UKF_ALTITUDE;
+		loggerData.fp[i].fieldPointer = (void *)&ALT_POS;
+		break;
+	    case LOG_UKF_ALT_VEL:
+		loggerData.fp[i].fieldPointer = (void *)&ALT_VEL;
 		break;
 	    case LOG_UKF_VELN:
 		loggerData.fp[i].fieldPointer = (void *)&UKF_VELN;

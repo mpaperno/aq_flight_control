@@ -26,6 +26,9 @@
 
 #define RUN_SENSOR_HIST		10				// number of timesteps to average observation sensors' data
 
+#define ALTITUDE                 (*runData.altPos)
+#define VELOCITYD                (*runData.altVel)
+
 typedef struct {
     OS_TID runTask;
     OS_FlagID runFlag;
@@ -39,6 +42,8 @@ typedef struct {
     float sumMag[3];
     float sumPres;
     int sensorHistIndex;
+    float *altPos;
+    float *altVel;
 } runStruct_t;
 
 extern runStruct_t runData;
