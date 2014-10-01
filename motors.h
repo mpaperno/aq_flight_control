@@ -60,7 +60,7 @@ typedef struct {
     esc32CanStatus_t canStatus[MOTORS_NUM];
     uint32_t canStatusTime[MOTORS_NUM];
     uint32_t canTelemReqTime[MOTORS_NUM];
-    pwmPortStruct_t *pwm[PWM_NUM_PORTS];
+    pwmPortStruct_t *pwm[14];   // max number on any board yet
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];
     float oldValues[MOTORS_NUM];
