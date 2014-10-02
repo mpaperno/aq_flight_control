@@ -63,7 +63,7 @@ uint8_t spektrumDecode(radioInstance_t *r) {
                 val = ((b[0] & 0x07)<<8) | b[1];
 
                 // throttle
-                if (addr == 0)
+                if (addr == (int)p[RADIO_THRO_CH])
                     val -= 338;
                 else
                     val -= 1024;
@@ -107,7 +107,7 @@ uint8_t spektrumDecode(radioInstance_t *r) {
                 val = (((b[0] & 0x03)<<8) | b[1])<<1;
 
                 // throttle
-                if (addr == 0)
+                if (addr == (int)p[RADIO_THRO_CH])
                     val -= 338;
                 else
                     val -= 1024;

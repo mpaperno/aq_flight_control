@@ -889,7 +889,7 @@ void dsmDecode(radioInstance_t *r) {
             }
 
             // throttle
-            if (addr == 0)
+            if (addr == (int)p[RADIO_THRO_CH])
                 val -= 338;
             else
                 val -= 1024;
