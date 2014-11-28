@@ -562,8 +562,9 @@ enum pwmPorts {
 #define RCC_SYNC_PORT           GPIOB
 #define RCC_SYNC_PIN            GPIO_Pin_10
 
-
+#ifndef USE_EXTERNAL_ESC
 #define HAS_ONBOARD_ESC         84000000
+#endif
 
 #ifdef HAS_ONBOARD_ESC
 #define MOTORS_PWM_FREQ		80000	// Hz
