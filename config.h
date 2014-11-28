@@ -33,7 +33,15 @@
     #endif
 #endif
 
-#include "config_default.h"
+#ifndef CONFIG_DEFAULTS_FILE
+    #define CONFIG_DEFAULTS_FILE    "config_default.h"
+#endif
+
+#include CONFIG_DEFAULTS_FILE
+
+#ifndef DEFAULT_CONFIG_VERSION
+    #error "Configuration defaults not properly defined."
+#endif
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
