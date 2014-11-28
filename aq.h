@@ -44,28 +44,31 @@
     #elif BOARD_REVISION == 1
         #include "board_6_1a.h"
     #endif
-#endif
-#if BOARD_VERSION == 7
+
+#elif BOARD_VERSION == 7
     #if BOARD_REVISION == 0
         #include "board_7_0.h"
     #endif
-#endif
-#if BOARD_VERSION == 8
+
+#elif BOARD_VERSION == 8
     #if BOARD_REVISION == 1 || BOARD_REVISION == 2
         #include "board_m4.h"
-    #endif
-    #if BOARD_REVISION == 3
+    #elif BOARD_REVISION == 3
         #include "board_m4_r3.h"
-    #endif
-    #if BOARD_REVISION == 4
+    #elif BOARD_REVISION == 4
         #include "board_m4_r4.h"
-    #endif
-    #if BOARD_REVISION == 5
+    #elif BOARD_REVISION == 5
         #include "board_m4_r5.h"
-    #endif
-    #if BOARD_REVISION == 6
+    #elif BOARD_REVISION == 6
         #include "board_m4_r6.h"
     #endif
+
+    #define CONFIG_DEFAULTS_FILE    "config_default_m4.h"
+
+#endif
+
+#ifndef _board_h
+    #error "Board definitions header file not loaded."
 #endif
 
 #ifndef M_PI
