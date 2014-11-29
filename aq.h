@@ -38,37 +38,38 @@
 
 #include "stm32f4xx.h"
 
-#if BOARD_VERSION == 6
+#ifndef BOARD_HEADER_FILE
+    #if BOARD_VERSION == 6
     #if BOARD_REVISION == 0
-        #include "board_6_1.h"
+	    #define BOARD_HEADER_FILE "board_6_1.h"
     #elif BOARD_REVISION == 1
-        #include "board_6_1a.h"
+	    #define BOARD_HEADER_FILE "board_6_1a.h"
     #endif
 
-#elif BOARD_VERSION == 7
+    #elif BOARD_VERSION == 7
     #if BOARD_REVISION == 0
-        #include "board_7_0.h"
+	    #define BOARD_HEADER_FILE "board_7_0.h"
     #endif
 
-#elif BOARD_VERSION == 8
+    #elif BOARD_VERSION == 8
     #if BOARD_REVISION == 1 || BOARD_REVISION == 2
-        #include "board_m4.h"
+	    #define BOARD_HEADER_FILE "board_m4.h"
     #elif BOARD_REVISION == 3
-        #include "board_m4_r3.h"
+	    #define BOARD_HEADER_FILE "board_m4_r3.h"
     #elif BOARD_REVISION == 4
-        #include "board_m4_r4.h"
+	    #define BOARD_HEADER_FILE "board_m4_r4.h"
     #elif BOARD_REVISION == 5
-        #include "board_m4_r5.h"
+	    #define BOARD_HEADER_FILE "board_m4_r5.h"
     #elif BOARD_REVISION == 6
-        #include "board_m4_r6.h"
+	    #define BOARD_HEADER_FILE "board_m4_r6.h"
+	#endif
     #endif
-
-    #define CONFIG_DEFAULTS_FILE    "config_default_m4.h"
-
 #endif
 
-#ifndef _board_h
-    #error "Board definitions header file not loaded."
+#include BOARD_HEADER_FILE
+
+#if BOARD_VERSION == 8 && !defined(CONFIG_DEFAULTS_FILE)
+    #define CONFIG_DEFAULTS_FILE    "config_default_m4.h"
 #endif
 
 #ifndef M_PI

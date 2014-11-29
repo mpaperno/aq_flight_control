@@ -46,10 +46,16 @@ BUILD_TYPE ?= Release
 # Path to source files - no trailing slash
 SRC_PATH ?= .
 
-# Board version to build for (6|7|8(mx))
+# Where to put the built objects and binaries. Use any relative or absolute path (directory must alrady exist).
+# A sub-folder is created along this path, named as the BUILD_TYPE (eg. build/Release).
+BUILD_PATH ?= ../build
+
+# Board version to build for (6=AQv6, 7=AQv7, 8=AQ M4)
 BOARD_VER ?= 6
 
-# Board revision to build for (0 = v6 initial release revision, 1 = v6 Oct. 2012 revision)
+# Board revision to build for 
+# For AQv6: 0=initial release, 1=Oct. 2012 revision)
+# For AQ M4: 1-3=early prototypes, 4-5=beta boards, 6=Dec 2014 production (aka M4v2)
 BOARD_REV ?= 0
 
 # Specify a DIMU version number to enable DIMU support in AQ, zero to disable (eg. DIMU_VER=1.1)
@@ -57,9 +63,6 @@ DIMU_VER ?= 0
 
 # Increment build number? (0|1)  This is automatically disabled for debug builds.
 INCR_BUILDNUM ?= 1
-
-# Use the single-folder source file organization from AQ repo? (0|1)
-FLAT_SRC ?= 1
 
 # Produced binaries file name prefix (version/revision/build/hardware info will be automatically appended)
 BIN_NAME ?= aq
@@ -71,27 +74,35 @@ else
 	DEBUG_BUILD ?= 0
 endif
 
-# Flashing interface (Linux only)
-USB_DEVICE ?= /dev/ttyUSB0
-
 # Build with Quatos controller enabled (0=no, 1=yes)
 # NOTE: Must have pre-compiled quatos library file in $(AQLIB_PATH)/aq
-#   At this time the quatos lib is board-specific:
-#    For AQv6 use quatos.a, for AQ M4 use quatos-board8.3.a
 QUATOS ?= 0
+
+# Build with specific default parameters file (eg. CONFIG_FILE=config_default_m4.h)
+CONFIG_FILE ?= 0
+
+# Build with specific board (hardware) definitions file (eg. BOARD_FILE=board_custom.h)
+BOARD_FILE ?= 0
 
 # Add preprocessor definitions to CC_VARS (eg. CC_ADD_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
 CC_ADD_VARS ?=
 
-# You may also use BIN_SUFFIX to append text 
-# to generated bin file name after version string;
-# BIN_SUFFIX = 
+# You may use BIN_SUFFIX to append text to generated bin file name after version string;
+BIN_SUFFIX ?= 0
 
 # System-specific folder paths and commands
 #
 # compiler base path
+# eg: CC_PATH ?= C:/devel/gcc/crossworks_for_arm_2.3
 CC_PATH ?= /usr/share/crossworks_for_arm_2.3
-#CC_PATH ?= C:/devel/gcc/crossworks_for_arm_2.3
+
+# Absolute or relative path to libraries/includes, no trailing slash.
+# see "External libraries required by AQ" below
+# eg: AQLIB_PATH = C:/devel/AQ/lib or ../../lib or /usr/lib/aq
+AQLIB_PATH ?= ..
+
+# Generated MAVLink header files (https://github.com/AutoQuad/mavlink/tree/master/include)
+MAVINC_PATH ?= $(AQLIB_PATH)/mavlink/include/autoquad
 
 # shell commands
 EXE_AWK ?= gawk 
@@ -101,15 +112,8 @@ EXE_ZIP ?= zip -j
 # file extention for compressed files (gz for gzip, etc)
 ZIP_EXT ?= zip
 
-# Path to libraries/includes
-# see "External libraries required by AQ" below
-AQLIB_PATH ?= ..
-#AQLIB_PATH = C:/devel/AQ/lib
-
-# Where to put the built objects and binaries.
-# A sub-folder is created along this path, named as the BUILD_TYPE (eg. build/Release).
-#BUILD_PATH ?= .
-BUILD_PATH ?= ../build
+# Flashing interface (Linux only)
+USB_DEVICE ?= /dev/ttyUSB0
 
 # defaults end
 
@@ -143,7 +147,10 @@ else
 	ifneq ($(DIMU_VER), 0)
 		BIN_NAME := $(BIN_NAME)-dimu$(DIMU_VER)
 	endif
-	ifdef BIN_SUFFIX
+	ifeq ($(QUATOS), 1)
+		BIN_NAME := $(BIN_NAME)-quatos
+	endif
+	ifneq ($(BIN_SUFFIX), 0)
 		BIN_NAME := $(BIN_NAME)-$(BIN_SUFFIX)
 	endif
 endif
@@ -160,9 +167,7 @@ OBJCP = $(CC_BIN_PATH)/objcopy
 #
 ## External libraries required by AQ
 #
-# Generated MAVLink header files (https://github.com/AutoQuad/mavlink/tree/master/include)
-MAVINC_PATH = $(AQLIB_PATH)/mavlink/include/autoquad
-# Files from Crossworks SMT32 package: autoquad.ld (STM32f4.ld), STM32F40_41xxx.vec, STM32_Startup.s, & the /include folder
+# Files from Crossworks SMT32 package: STM32F40_41xxx.vec, STM32_Startup.s, & the /include folder
 STMLIB_PATH = $(AQLIB_PATH)/STM32
 # STM32F4 libs from ST (http://www.st.com/web/en/catalog/tools/PF257901)
 STM32DRIVER_PATH = $(AQLIB_PATH)/STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/STM32F4xx_StdPeriph_Driver
@@ -190,6 +195,12 @@ CC_VARS += -DBOARD_VERSION=$(BOARD_VER) -DBOARD_REVISION=$(BOARD_REV)
 # build AQ with specific digital IMU version, if specified (fall back to AIMU on v6 hardware)
 ifneq ($(DIMU_VER), 0)
 	CC_VARS += -DDIMU_VERSION=$(subst .,,$(DIMU_VER))
+endif
+ifneq ($(CONFIG_FILE), 0)
+	CC_VARS += -DCONFIG_DEFAULTS_FILE=\"$(CONFIG_FILE)\"
+endif
+ifneq ($(BOARD_FILE), 0)
+	CC_VARS += -DBOARD_HEADER_FILE=\"$(BOARD_FILE)\"
 endif
 
 # Additional target(s) to build based on conditionals
@@ -228,7 +239,6 @@ EXTRA_LIB_FILES = libm_v7em_fpv4_sp_d16_hard_t_le_eabi.a libc_v7em_fpv4_sp_d16_h
 EXTRA_LIBS := $(addprefix $(CC_LIB_PATH)/, $(EXTRA_LIB_FILES))
 
 ifeq ($(QUATOS), 1)
-	BIN_NAME := $(BIN_NAME)-quatos
 	QLIB = quatos.a
 #	ifeq ($(BOARD_VER), 8)
 #		QLIB = quatos-board8.3.a
