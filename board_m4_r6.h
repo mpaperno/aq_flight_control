@@ -500,13 +500,13 @@ enum pwmPorts {
 #define ANALOG_REF_VOLTAGE	3.3f
 #define ANALOG_VIN_RTOP         10.0f
 #define ANALOG_VIN_RBOT         10.0f
-//#define ANALOG_EXT_VOLT_RTOP	140.0f
-//#define ANALOG_EXT_VOLT_RBOT	10.0f
+#define ANALOG_EXT_VOLT_RTOP	10.0f
+#define ANALOG_EXT_VOLT_RBOT	1.2f
 //#define ANALOG_EXT_AMP_RTOP	1.0f
 //#define ANALOG_EXT_AMP_RBOT	1.2f
 
 #define	ANALOG_CHANNEL_VIN	    ADC_Channel_10
-#define	ANALOG_CHANNEL_EXT_VOLT	    ADC_Channel_10
+#define	ANALOG_CHANNEL_EXT_VOLT	    ADC_Channel_11
 #define	ANALOG_CHANNEL_EXT_AMP	    ADC_Channel_10
 #define ANALOG_CHANNEL_SPARE4	    ADC_Channel_4
 #define ANALOG_CHANNEL_SPARE5	    ADC_Channel_5
