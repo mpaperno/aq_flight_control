@@ -41,7 +41,7 @@ typedef struct {
     unsigned int duty :	    8;	// x (255/100)
     unsigned int temp :     9;  // (Deg C + 32) * 4
     unsigned int errCode :  3;
-} esc32CanStatus_t;
+}  __attribute__((packed)) esc32CanStatus_t;
 
 extern void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode);
 extern void esc32SetupCan(canNodes_t *canNode, uint8_t mode);

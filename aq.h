@@ -28,6 +28,7 @@
 #define USE_PRES_ALT		 	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING                   // uncomment to use external signaling events and ports
 //#define USE_QUATOS
+//#define USE_EXTERNAL_ESC              // uncomment to use external ESCs on board version 8
 
 #ifndef BOARD_VERSION
     #define BOARD_VERSION	6
@@ -67,10 +68,6 @@
 #endif
 
 #include BOARD_HEADER_FILE
-
-#if BOARD_VERSION == 8 && !defined(CONFIG_DEFAULTS_FILE)
-    #define CONFIG_DEFAULTS_FILE    "config_default_m4.h"
-#endif
 
 #ifndef M_PI
 #define M_PI			3.14159265f
