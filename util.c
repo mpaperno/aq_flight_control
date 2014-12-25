@@ -145,12 +145,16 @@ void delay(unsigned long t) {
     delayMicros(t * 1000);
 }
 
+void utilSerialNoString(void) {
+    AQ_PRINTF("AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
+}
+
 void utilVersionString(void) {
     AQ_PRINTF("AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
 }
 
 void info(void) {
-    AQ_PRINTF("AQ S/N: %08X-%08X-%08X\n", flashSerno(2), flashSerno(1), flashSerno(0));
+    utilSerialNoString();
 
 #ifdef USE_MAVLINK
     AQ_PRINTF("Mavlink SYS ID: %d\n", flashSerno(0) % 250);
@@ -160,7 +164,7 @@ void info(void) {
     AQ_PRINTF("%u/%u heap used/high water\n", heapUsed, heapHighWater);
     AQ_PRINTF("%u of %u CCM heap used\n", dataSramUsed * sizeof(int), UTIL_CCM_HEAP_SIZE * sizeof(int));
 
-    yield(50);
+    yield(100);
     utilVersionString();
 }
 

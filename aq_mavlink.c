@@ -459,6 +459,10 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 	// send firmware version number;
 	case MAV_CMD_AQ_REQUEST_VERSION:
 	    utilVersionString();
+	    utilSerialNoString();
+#ifdef USE_QUATOS
+	    AQ_NOTICE("Quatos enabled.");
+#endif
 	    ack = MAV_CMD_ACK_OK;
 	    break;
 
