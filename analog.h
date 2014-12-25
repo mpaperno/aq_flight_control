@@ -51,6 +51,7 @@ typedef struct {
     float extAmp;
 
     int8_t batCellCount;
+    uint8_t initComplete;
 
     uint8_t vInSourceIndex;
     uint8_t extVoltSourceIndex;
