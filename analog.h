@@ -51,6 +51,12 @@ typedef struct {
     float extAmp;
 
     int8_t batCellCount;
+
+    uint8_t vInSourceIndex;
+    uint8_t extVoltSourceIndex;
+    float vInSlope;
+    float extVoltSlope;
+
 } analogStruct_t;
 
 extern analogStruct_t analogData;

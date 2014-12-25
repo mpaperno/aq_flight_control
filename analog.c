@@ -19,6 +19,7 @@
 #include "analog.h"
 #include "comm.h"
 #include "util.h"
+#include "config.h"
 #include <stdio.h>
 
 analogStruct_t analogData;
@@ -37,9 +38,9 @@ void analogDecode(void) {
     for (i = 0; i < ANALOG_CHANNELS; i++)
 	analogData.voltages[i] = analogData.rawChannels[i] * ANALOG_DIVISOR;
 
-    analogData.vIn = analogData.voltages[ANALOG_VOLTS_VIN] * ANALOG_VIN_SLOPE;
+    analogData.vIn = analogData.voltages[analogData.vInSourceIndex] * analogData.vInSlope;
 #ifdef ANALOG_EXT_VOLT_SLOPE
-    analogData.extVolt = analogData.voltages[ANALOG_VOLTS_EXT_VOLT] * ANALOG_EXT_VOLT_SLOPE;
+    analogData.extVolt = analogData.voltages[analogData.extVoltSourceIndex] * analogData.extVoltSlope;
 #endif
 #ifdef ANALOG_EXT_AMP_SLOPE
     analogData.extAmp = analogData.voltages[ANALOG_VOLTS_EXT_AMP] * ANALOG_EXT_AMP_SLOPE;
@@ -48,7 +49,24 @@ void analogDecode(void) {
 #endif
 
 void analogInit(void) {
+
+    memset((void *)&analogData, 0, sizeof(analogData));
+
 #ifdef ANALOG_DMA_STREAM
+
+    analogData.vInSourceIndex = ANALOG_VOLTS_VIN;
+    analogData.vInSlope = ANALOG_VIN_SLOPE;
+#ifdef ANALOG_EXT_VOLT_SLOPE
+    analogData.extVoltSourceIndex = ANALOG_VOLTS_EXT_VOLT;
+    analogData.extVoltSlope = ANALOG_EXT_VOLT_SLOPE;
+    if ((int)p[SPVR_VIN_SOURCE] == 1) {
+	analogData.vInSourceIndex = ANALOG_VOLTS_EXT_VOLT;
+	analogData.vInSlope = ANALOG_EXT_VOLT_SLOPE;
+	analogData.extVoltSourceIndex = ANALOG_VOLTS_VIN;
+	analogData.extVoltSlope = ANALOG_VIN_SLOPE;
+    }
+#endif
+
     DMA_InitTypeDef DMA_InitStructure;
     ADC_CommonInitTypeDef ADC_CommonInitStructure;
     ADC_InitTypeDef ADC_InitStructure;

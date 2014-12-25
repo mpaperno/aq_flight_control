@@ -346,6 +346,7 @@ enum configParameters {
     SPVR_FS_RAD_ST1,
     SPVR_FS_RAD_ST2,
     SPVR_FS_ADD_ALT,
+    SPVR_VIN_SOURCE,
     QUATOS_J_ROLL,
     QUATOS_J_PITCH,
     QUATOS_J_YAW,
