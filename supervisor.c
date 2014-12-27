@@ -135,7 +135,7 @@ void supervisorTaskCode(void *unused) {
     AQ_NOTICE("Supervisor task started\n");
 
     // wait for ADC vIn data
-    while (analogData.initComplete == 0)
+    while (analogData.batCellCount == 0)
         yield(100);
 
     supervisorCreateSOCTable();

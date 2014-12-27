@@ -152,8 +152,7 @@ void mavlinkDo(void) {
     static unsigned long mavCounter;
     static unsigned long lastMicros = 0;
     unsigned long micros, statusInterval;
-    int8_t battRemainPct = -1;
-    int8_t streamAll, i;
+    int8_t battRemainPct, streamAll, i;
 
     micros = timerMicros();
 
@@ -188,8 +187,7 @@ void mavlinkDo(void) {
 	mavlinkData.idlePercent = (mavCounter - mavlinkData.lastCounter) * minCycles * 1000.0f / ((float)statusInterval * rccClocks.SYSCLK_Frequency / 1e6f);
 	mavlinkData.lastCounter = mavCounter;
 	//calculate remaining battery % based on supervisor low batt stg 2 level
-	if (analogData.batCellCount)
-	    battRemainPct = (analogData.vIn - p[SPVR_LOW_BAT2] * analogData.batCellCount) / ((4.2 - p[SPVR_LOW_BAT2]) * analogData.batCellCount) * 100;
+	battRemainPct = (analogData.vIn - p[SPVR_LOW_BAT2] * analogData.batCellCount) / ((4.2 - p[SPVR_LOW_BAT2]) * analogData.batCellCount) * 100;
 
 	mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, analogData.vIn * 1000, -1, battRemainPct, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
 	mavlink_msg_radio_status_send(MAVLINK_COMM_0, RADIO_QUALITY, 0, 0, 0, 0, RADIO_ERROR_COUNT, 0);

@@ -21,7 +21,6 @@
 #include "util.h"
 #include "config.h"
 #include <stdio.h>
-#include <string.h>
 
 analogStruct_t analogData;
 
@@ -123,13 +122,8 @@ void analogInit(void) {
     analogDecode();
 #endif // ANALOG_DMA_STREAM
 
-    // give some time for voltage to stabilize
-    yield(100);
-
     // determine LiPo battery cell count
-    if (analogData.vIn < 2.8f)
-	analogData.batCellCount = 0;
-    else if (analogData.vIn < 5.0f)
+    if (analogData.vIn < 5.0f)
 	analogData.batCellCount = 1;
     else if (analogData.vIn < 8.5f)
 	analogData.batCellCount = 2;
@@ -143,6 +137,4 @@ void analogInit(void) {
 	analogData.batCellCount = 6;
 
     AQ_PRINTF("Battery cells: %d\n", analogData.batCellCount);
-
-    analogData.initComplete = 1;
 }
