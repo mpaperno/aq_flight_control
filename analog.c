@@ -41,7 +41,7 @@ void analogDecode(void) {
 
     analogData.vIn = analogData.voltages[analogData.vInSourceIndex] * analogData.vInSlope;
 #ifdef ANALOG_EXT_VOLT_SLOPE
-    analogData.extVolt = analogData.voltages[analogData.extVoltSourceIndex] * analogData.extVoltSlope;
+    analogData.extVolt = analogData.voltages[ANALOG_VOLTS_EXT_VOLT] * ANALOG_EXT_VOLT_SLOPE;
 #endif
 #ifdef ANALOG_EXT_AMP_SLOPE
     analogData.extAmp = analogData.voltages[ANALOG_VOLTS_EXT_AMP] * ANALOG_EXT_AMP_SLOPE;
@@ -51,20 +51,14 @@ void analogDecode(void) {
 
 void analogInit(void) {
 
-    memset((void *)&analogData, 0, sizeof(analogData));
-
 #ifdef ANALOG_DMA_STREAM
 
     analogData.vInSourceIndex = ANALOG_VOLTS_VIN;
     analogData.vInSlope = ANALOG_VIN_SLOPE;
 #ifdef ANALOG_EXT_VOLT_SLOPE
-    analogData.extVoltSourceIndex = ANALOG_VOLTS_EXT_VOLT;
-    analogData.extVoltSlope = ANALOG_EXT_VOLT_SLOPE;
     if ((int)p[SPVR_VIN_SOURCE] == 1) {
 	analogData.vInSourceIndex = ANALOG_VOLTS_EXT_VOLT;
 	analogData.vInSlope = ANALOG_EXT_VOLT_SLOPE;
-	analogData.extVoltSourceIndex = ANALOG_VOLTS_VIN;
-	analogData.extVoltSlope = ANALOG_VIN_SLOPE;
     }
 #endif
 
@@ -127,10 +121,13 @@ void analogInit(void) {
 
     yield(10);
     analogDecode();
-#endif
+#endif // ANALOG_DMA_STREAM
+
+    // give some time for voltage to stabilize
+    yield(100);
 
     // determine LiPo battery cell count
-    if (analogData.vIn < 3.0f)
+    if (analogData.vIn < 2.8f)
 	analogData.batCellCount = 0;
     else if (analogData.vIn < 5.0f)
 	analogData.batCellCount = 1;

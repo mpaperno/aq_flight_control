@@ -54,9 +54,7 @@ typedef struct {
     uint8_t initComplete;
 
     uint8_t vInSourceIndex;
-    uint8_t extVoltSourceIndex;
     float vInSlope;
-    float extVoltSlope;
 
 } analogStruct_t;
 
