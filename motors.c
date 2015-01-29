@@ -278,6 +278,7 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 static void motorsCanInit(int i) {
     uint8_t numTry = CAN_RETRIES;
     uint8_t motorId = i;
+    float escVer;
 
     // canId's 17-32 map to motorId's 1-16
     if (motorId >= 16)
@@ -291,11 +292,12 @@ static void motorsCanInit(int i) {
     }
     else {
 #ifdef USE_QUATOS
-	esc32SetupCan(motorsData.can[motorId], 1);
+	escVer = esc32SetupCan(motorsData.can[motorId], 1);
 #else
-	esc32SetupCan(motorsData.can[motorId], 0);
+	escVer = esc32SetupCan(motorsData.can[motorId], 0);
 #endif
 
+	motorsData.esc32Version[motorId] = (uint16_t)(escVer / 0.01f);
     	motorsCanRequestTelem(motorId);
     }
 }
@@ -413,6 +415,7 @@ void motorsInit(void) {
 		motorsPwmInit(i);
 
 	    motorsData.active[i] = 1;
+	    motorsData.activeList[motorsData.numActive++] = i;
 
 	    sumPitch += d->pitch;
 	    sumRoll += d->roll;

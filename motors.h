@@ -60,7 +60,8 @@ typedef struct {
     esc32CanStatus_t canStatus[MOTORS_NUM];
     uint32_t canStatusTime[MOTORS_NUM];
     uint32_t canTelemReqTime[MOTORS_NUM];
-    pwmPortStruct_t *pwm[14];   // max number on any board yet
+    pwmPortStruct_t *pwm[14];           // max number on any board yet
+    uint16_t esc32Version[MOTORS_NUM];  // currently only storing this if using CAN
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];
     float oldValues[MOTORS_NUM];
@@ -68,6 +69,8 @@ typedef struct {
     float throttle;
     float throttleLimiter;
     uint8_t active[MOTORS_NUM];
+    uint8_t activeList[MOTORS_NUM];
+    uint8_t numActive;
     uint8_t numGroups;
 #ifdef MOTORS_CAN_LOGGING
     uint16_t head;

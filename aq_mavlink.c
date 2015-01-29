@@ -152,7 +152,7 @@ void mavlinkDo(void) {
     static unsigned long mavCounter;
     static unsigned long lastMicros = 0;
     unsigned long micros, statusInterval;
-    int8_t battRemainPct, streamAll, i;
+    int8_t battRemainPct, streamAll;
 
     micros = timerMicros();
 
@@ -231,9 +231,37 @@ void mavlinkDo(void) {
 	mavlink_msg_nav_controller_output_send(MAVLINK_COMM_0, navData.holdTiltE, navData.holdTiltN, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, 0, 0);
 	mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].interval;
     }
+    // ESC/Motor telemetry
+    if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].enable && mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].next < micros)) {
+	uint8_t id, i, m, s;
+	uint8_t mId[4], dataVer[4];
+	uint16_t statAge[4];
+	uint32_t data[2][4];
+	uint32_t ms = micros / 1000;
+	memset(data, 0, sizeof(data));
+	i = m = s = 0;
+	for (; i < motorsData.numActive; ++i) {
+	    id = motorsData.activeList[i];
+	    mId[m] = id + 1;
+	    dataVer[m] = (uint8_t)(motorsData.esc32Version[id] / 10);
+	    if (!motorsData.canTelemReqTime[id] || micros - motorsData.canStatusTime[id] > 3e6f)
+		statAge[m] = 0xffff;
+	    else {
+		statAge[m] = ms - (motorsData.canStatusTime[id] / 1000);
+		memcpy(&data[0][m], &motorsData.canStatus[id], sizeof(uint32_t));
+		memcpy(&data[1][m], (uint32_t *)&motorsData.canStatus[id] + 1, sizeof(uint32_t));
+	    }
+	    if (++m == 4 || i == motorsData.numActive - 1) {
+		mavlink_msg_aq_esc_telemetry_send(MAVLINK_COMM_0, ms, ++s, motorsData.numActive, m, mId, statAge, dataVer, data[0], data[1]);
+		memset(data, 0, sizeof(data));
+		m = 0;
+	    }
+	}
+	mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].next = micros + mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].interval;
+    }
     // EXTRA3 stream -- AQ custom telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next < micros)) {
-	for (i=0; i < AQMAV_DATASET_ENUM_END; ++i) {
+	for (uint8_t i=0; i < AQMAV_DATASET_ENUM_END; ++i) {
 	    if (!mavlinkData.customDatasets[i])
 		continue;
 	    switch(i) {
@@ -878,6 +906,7 @@ void mavlinkInit(void) {
     mavlinkData.streams[MAV_DATA_STREAM_EXTRA1].dfltInterval = AQMAVLINK_STREAM_RATE_EXTRA1;
     mavlinkData.streams[MAV_DATA_STREAM_EXTRA2].dfltInterval = AQMAVLINK_STREAM_RATE_EXTRA2;
     mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].dfltInterval = AQMAVLINK_STREAM_RATE_EXTRA3;
+    mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].dfltInterval = AQMAVLINK_STREAM_RATE_PROPULSION;
 
     // turn on streams & spread them out
     micros = timerMicros();

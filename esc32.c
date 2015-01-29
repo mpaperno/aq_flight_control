@@ -247,10 +247,11 @@ static int8_t esc32ReadFile(char *fname, canNodes_t *canNode) {
     return needsConfigWrite;
 }
 
-void esc32SetupCan(canNodes_t *canNode, uint8_t mode) {
+float esc32SetupCan(canNodes_t *canNode, uint8_t mode) {
     char *s;
     int16_t paramId;
     int i = 0;
+    float ret = 0.0f;
 
     if ((s = canGetVersion(canNode->networkId)) != 0) {
 	AQ_PRINTF("ESC32: CAN ID: %2d, ver: %s\n", canNode->canId, s);
@@ -279,10 +280,17 @@ void esc32SetupCan(canNodes_t *canNode, uint8_t mode) {
 		AQ_NOTICE("ESC32: CAN failed to flash params\n");
 	    }
 	}
+
+	ret = strtof(s, NULL);
     }
     else {
 	AQ_PRINTF("ESC32: cannot detect ESC CAN ID %d\n", canNode->canId);
     }
+
+    if (!isfinite(ret))
+        ret = 0.0f;
+
+    return ret;
 }
 
 void esc32SetupOw(const GPIO_TypeDef *port, const uint16_t pin, uint8_t mode) {

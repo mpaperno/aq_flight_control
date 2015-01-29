@@ -39,7 +39,7 @@
 #define AQMAVLINK_WP_MAX_ATTEMPTS		20		    // maximum number of retries for wpnt. requests
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
-#define AQMAVLINK_TOTAL_STREAMS			13
+#define AQMAVLINK_TOTAL_STREAMS			14
 // default stream rates in microseconds
 #define AQMAVLINK_STREAM_RATE_ALL		0
 #define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0	    // IMU and baro
@@ -50,6 +50,7 @@
 #define AQMAVLINK_STREAM_RATE_EXTRA1		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA2		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA3		0	    // AQ custom telemetry options
+#define AQMAVLINK_STREAM_RATE_PROPULSION	0	    // ESC/Motor telemetry
 
 enum mavlinkCustomDataSets {
     AQMAV_DATASET_LEGACY1 = 0,	// legacy sets can eventually be phased out
