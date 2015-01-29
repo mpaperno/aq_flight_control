@@ -25,10 +25,10 @@
 #include "digital.h"
 #include "config.h"
 // lots of warnings coming from mavlink
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include "../mavlink_types.h"
-#pragma GCC diagnostic pop
+//#pragma GCC diagnostic pop
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #define MAVLINK_SEND_UART_BYTES			mavlinkSendPacket
@@ -37,7 +37,6 @@
 #define AQMAVLINK_PARAM_INTERVAL		(1e6f / 150.0f)	    // 150Hz
 #define AQMAVLINK_WP_TIMEOUT			1e6f		    // 1 second - retry frequency for waypoint requests to planner
 #define AQMAVLINK_WP_MAX_ATTEMPTS		20		    // maximum number of retries for wpnt. requests
-#define AQMAVLINK_CUSTOM_TELEM_TYPE_DFLT	1		    // default mavlinkData.customTelemType
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
 #define AQMAVLINK_TOTAL_STREAMS			13
@@ -73,6 +72,11 @@ typedef struct {
 } mavlinkStreams_t;
 
 typedef struct {
+    uint8_t sys_type;		    // System type (MAV_TYPE enum)
+    uint8_t sys_state;		    // System state (MAV_STATE enum)
+    uint8_t sys_mode;		    // System operating mode (MAV_MODE_FLAG enum bitmask)
+    uint32_t sys_nav_mode;	    // System navigation mode (AUTOQUAD_NAV_STATUS enum)
+
     mavlink_status_t mavlinkStatus;
     mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
     uint8_t customDatasets[AQMAV_DATASET_ENUM_END];

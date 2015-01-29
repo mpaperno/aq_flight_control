@@ -96,56 +96,56 @@ void mavlinkToggleStreams(uint8_t enable) {
 }
 
 void mavlinkSetSystemData(void) {
-    mavlink_system.state = MAV_STATE_STANDBY;
-    mavlink_system.mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
-    mavlink_system.nav_mode = AQ_NAV_STATUS_STANDBY;
+    mavlinkData.sys_state = MAV_STATE_STANDBY;
+    mavlinkData.sys_mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
+    mavlinkData.sys_nav_mode = AQ_NAV_STATUS_STANDBY;
 
     if ((supervisorData.state & STATE_RADIO_LOSS1) || (supervisorData.state & STATE_LOW_BATTERY2)) {
-	mavlink_system.state =  MAV_STATE_CRITICAL;
+	mavlinkData.sys_state =  MAV_STATE_CRITICAL;
     }
     else if (supervisorData.state & STATE_FLYING) {
-	mavlink_system.state = MAV_STATE_ACTIVE;
-	mavlink_system.nav_mode = AQ_NAV_STATUS_MANUAL;
+	mavlinkData.sys_state = MAV_STATE_ACTIVE;
+	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_MANUAL;
     }
 
     switch(navData.mode) {
     case NAV_STATUS_ALTHOLD:
-	mavlink_system.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
-	mavlink_system.nav_mode = AQ_NAV_STATUS_ALTHOLD;
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED;
+	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_ALTHOLD;
 	break;
 
     case NAV_STATUS_POSHOLD:
-	mavlink_system.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
-	mavlink_system.nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD;
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;
+	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD;
 	break;
 
     case NAV_STATUS_DVH:
-	mavlink_system.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_GUIDED_ENABLED;
-	mavlink_system.nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD | AQ_NAV_STATUS_DVH;
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_GUIDED_ENABLED;
+	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_ALTHOLD | AQ_NAV_STATUS_POSHOLD | AQ_NAV_STATUS_DVH;
 	break;
 
     case NAV_STATUS_MISSION:
-	mavlink_system.mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_AUTO_ENABLED;
-	mavlink_system.nav_mode = AQ_NAV_STATUS_MISSION;
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_AUTO_ENABLED;
+	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_MISSION;
 	break;
     }
 
     if ((supervisorData.state & STATE_RADIO_LOSS2))
-	mavlink_system.nav_mode |= AQ_NAV_STATUS_FAILSAFE;
+	mavlinkData.sys_nav_mode |= AQ_NAV_STATUS_FAILSAFE;
 
     if (navData.headFreeMode == NAV_HEADFREE_DYNAMIC)
-	mavlink_system.nav_mode |= AQ_NAV_STATUS_HF_DYNAMIC;
+	mavlinkData.sys_nav_mode |= AQ_NAV_STATUS_HF_DYNAMIC;
     else if (navData.headFreeMode == NAV_HEADFREE_LOCKED)
-	mavlink_system.nav_mode |= AQ_NAV_STATUS_HF_LOCKED;
+	mavlinkData.sys_nav_mode |= AQ_NAV_STATUS_HF_LOCKED;
 
     if (navData.ceilingAlt) {
-	mavlink_system.nav_mode |= AQ_NAV_STATUS_CEILING;
+	mavlinkData.sys_nav_mode |= AQ_NAV_STATUS_CEILING;
 	if (navData.setCeilingReached)
-	    mavlink_system.nav_mode |= AQ_NAV_STATUS_CEILING_REACHED;
+	    mavlinkData.sys_nav_mode |= AQ_NAV_STATUS_CEILING_REACHED;
     }
 
     if (supervisorData.state & STATE_ARMED)
-	mavlink_system.mode |= MAV_MODE_FLAG_SAFETY_ARMED;
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 }
 
 void mavlinkDo(void) {
@@ -169,7 +169,7 @@ void mavlinkDo(void) {
     // heartbeat
     if (mavlinkData.nextHeartbeat < micros) {
 	mavlinkSetSystemData();
-	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, mavlink_system.type, MAV_AUTOPILOT_AUTOQUAD, mavlink_system.mode, mavlink_system.nav_mode, mavlink_system.state);
+	mavlink_msg_heartbeat_send(MAVLINK_COMM_0, mavlinkData.sys_type, MAV_AUTOPILOT_AUTOQUAD, mavlinkData.sys_mode, mavlinkData.sys_nav_mode, mavlinkData.sys_state);
 	mavlinkData.nextHeartbeat = micros + AQMAVLINK_HEARTBEAT_INTERVAL;
     }
 
@@ -420,41 +420,46 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 	// enable/disable AQ custom dataset messages and set frequency
 	case MAV_CMD_AQ_TELEMETRY:
-            param = mavlink_msg_command_long_get_param1(msg);	// start/stop
-            param2 = mavlink_msg_command_long_get_param2(msg);	// interval in us
-            param3 = mavlink_msg_command_long_get_param3(msg);	// dataset id
+	    param = mavlink_msg_command_long_get_param1(msg);	// start/stop
+	    param2 = mavlink_msg_command_long_get_param2(msg);	// interval in us
+	    param3 = mavlink_msg_command_long_get_param3(msg);	// dataset id
 
-            if (param3 < AQMAV_DATASET_ENUM_END) {
-        	enable = (uint8_t)param;
+	    if (param3 < AQMAV_DATASET_ENUM_END) {
+		enable = (uint8_t)param;
+
+		// enable/disable this dataset
 		mavlinkData.customDatasets[(uint8_t)param3] = enable;
-		// "legacy" diagnostic telemetry mode
+
+		// "legacy" diagnostic telemetry mode enables 2 more datasets
 		if ((uint8_t)param3 == AQMAV_DATASET_LEGACY1) {
 		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY2] = enable;
 		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY3] = enable;
 		    // toggle all other streams because legacy mode sends a lot of data
 		    mavlinkToggleStreams(!enable);
 		}
+
 		// check if any datasets are active and enable/disable EXTRA3 stream accordingly
 		// AQMAV_DATASET_ALL is special and toggles all datasets
 		if (!enable && (uint8_t)param3 != AQMAV_DATASET_ALL) {
 		    for (i=0; i < AQMAV_DATASET_ENUM_END; ++i)
-			if (mavlinkData.customDatasets[i]) {
-			    enable = 1;
+			if ((enable = mavlinkData.customDatasets[i]) > 0)
 			    break;
-			}
 		}
+
+		// enable/disable EXTRA3 stream
 		mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable = enable;
-		// note that specified interval currently affects all custom datasets in the EXTRA3 stream
+		// set stream interval (note that specified interval currently affects all custom datasets in the EXTRA3 stream)
 		if (param2)
 		    mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].interval = (unsigned long)param2;
 
 		ack = MAV_CMD_ACK_OK;
-            } else {
-        	ack = MAV_CMD_ACK_ERR_FAIL;
-		AQ_NOTICE("Error: Unknown telemetry dataset requested.");
-            }
 
-            break; // case MAV_CMD_AQ_TELEMETRY
+	    } else {
+		ack = MAV_CMD_ACK_ERR_FAIL;
+		AQ_NOTICE("Error: Unknown telemetry dataset requested.");
+	    }
+
+	    break; // case MAV_CMD_AQ_TELEMETRY
 
 	// send firmware version number;
 	case MAV_CMD_AQ_REQUEST_VERSION:
@@ -502,7 +507,7 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 
 		case MAVLINK_MSG_ID_SET_MODE:
 		    if (mavlink_msg_set_mode_get_target_system(&msg) == mavlink_system.sysid) {
-			mavlink_system.mode = mavlink_msg_set_mode_get_base_mode(&msg);
+			mavlinkData.sys_mode = mavlink_msg_set_mode_get_base_mode(&msg);
 			mavlink_msg_sys_status_send(MAVLINK_COMM_0, 0, 0, 0, 1000-mavlinkData.idlePercent, analogData.vIn * 1000, -1, (analogData.vIn - 9.8f) / 12.6f * 1000, 0, mavlinkData.packetDrops, 0, 0, 0, 0);
 		    }
 		    break;
@@ -820,19 +825,19 @@ void mavlinkSetSystemType(void) {
 
     switch (motCount) {
     case 3:
-	mavlink_system.type = MAV_TYPE_TRICOPTER;
+	mavlinkData.sys_type = MAV_TYPE_TRICOPTER;
 	break;
     case 4:
-	mavlink_system.type = MAV_TYPE_QUADROTOR;
+	mavlinkData.sys_type = MAV_TYPE_QUADROTOR;
 	break;
     case 6:
-	mavlink_system.type = MAV_TYPE_HEXAROTOR;
+	mavlinkData.sys_type = MAV_TYPE_HEXAROTOR;
 	break;
     case 8:
-	mavlink_system.type = MAV_TYPE_OCTOROTOR;
+	mavlinkData.sys_type = MAV_TYPE_OCTOROTOR;
 	break;
     default:
-	mavlink_system.type = MAV_TYPE_GENERIC;
+	mavlinkData.sys_type = MAV_TYPE_GENERIC;
 	break;
     }
 }
@@ -857,9 +862,9 @@ void mavlinkInit(void) {
     mavlinkData.currentParam = CONFIG_NUM_PARAMS;
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
-    mavlink_system.mode = MAV_MODE_PREFLIGHT;
-    mavlink_system.state = MAV_STATE_BOOT;
-    mavlink_system.nav_mode = AQ_NAV_STATUS_INIT;
+    mavlinkData.sys_mode = MAV_MODE_PREFLIGHT;
+    mavlinkData.sys_state = MAV_STATE_BOOT;
+    mavlinkData.sys_nav_mode = AQ_NAV_STATUS_INIT;
     mavlink_system.sysid = flashSerno(0) % 250;
     mavlink_system.compid = MAV_COMP_ID_MISSIONPLANNER;
     mavlinkSetSystemType();
