@@ -21,7 +21,7 @@
 
 #include "buildnum.h"
 
-#define FIMRWARE_VERSION "7.0 - EXPR"
+#define FIMRWARE_VERSION "7.0 - BETA"
 
 extern unsigned long  getBuildNumber(void);
 extern unsigned long  getRevisionNumber(void);
