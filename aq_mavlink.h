@@ -24,11 +24,7 @@
 #include "serial.h"
 #include "digital.h"
 #include "config.h"
-// lots of warnings coming from mavlink
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include "../mavlink_types.h"
-//#pragma GCC diagnostic pop
 
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #define MAVLINK_SEND_UART_BYTES			mavlinkSendPacket
