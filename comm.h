@@ -22,7 +22,7 @@
 #include "serial.h"
 #include <stdio.h>
 
-#define COMM_STACK_SIZE		300
+#define COMM_STACK_SIZE		340
 #define COMM_PRIORITY		40
 #define COMM_NOTICE_DEPTH	16  // must be power of 2
 #define COMM_NOTICE_LENGTH	64
