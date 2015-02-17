@@ -129,9 +129,8 @@ BIN_PATH = $(BUILD_PATH)/$(BUILD_TYPE)
 # command to execute (later, if necessary) for increasing build number in buildnum.h
 CMD_BUILDNUMBER = $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{ $$NF=$$NF+1 } 1' $(SRC_PATH)/buildnum.h > $(SRC_PATH)/tmp_buildnum.h && mv $(SRC_PATH)/tmp_buildnum.h $(SRC_PATH)/buildnum.h)
 
-# get current revision and build numbers
+# get current version and build numbers
 FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"]+" }$$2 ~ /FI(MR|RM)WARE_VERSION/{print $$3}' $(SRC_PATH)/getbuildnum.h)
-REV_NUM := $(shell $(EXE_AWK) '$$2 ~ /REVISION/{print $$4}' $(SRC_PATH)/buildnum.h)
 BUILD_NUM := $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{print $$NF}' $(SRC_PATH)/buildnum.h)
 ifeq ($(INCR_BUILDNUM), 1)
 	BUILD_NUM := $(shell expr $(BUILD_NUM) + 1)
@@ -143,7 +142,7 @@ ifeq ($(DEBUG_BUILD), 1)
 	BIN_NAME := $(BIN_NAME)-debug
 	INCR_BUILDNUM = 0
 else
-	BIN_NAME := $(BIN_NAME)v$(FW_VER).r$(REV_NUM).b$(BUILD_NUM)-hwv$(BOARD_VER).$(BOARD_REV)
+	BIN_NAME := $(BIN_NAME)v$(FW_VER).$(BUILD_NUM)-hwv$(BOARD_VER).$(BOARD_REV)
 	ifneq ($(DIMU_VER), 0)
 		BIN_NAME := $(BIN_NAME)-dimu$(DIMU_VER)
 	endif
