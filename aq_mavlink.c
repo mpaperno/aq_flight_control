@@ -19,11 +19,7 @@
 #include "aq.h"
 #ifdef USE_MAVLINK
 #include "aq_mavlink.h"
-// lots of warnings coming from mavlink
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdouble-promotion"
 #include "mavlink.h"
-#pragma GCC diagnostic pop
 #include "config.h"
 #include "aq_timer.h"
 #include "imu.h"
