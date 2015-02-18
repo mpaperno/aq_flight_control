@@ -227,6 +227,7 @@ void mavlinkDo(void) {
 	mavlink_msg_nav_controller_output_send(MAVLINK_COMM_0, navData.holdTiltE, navData.holdTiltN, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, 0, 0);
 	mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].interval;
     }
+#ifdef MAVLINK_MSG_ID_AQ_ESC_TELEMETRY
     // ESC/Motor telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].enable && mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].next < micros)) {
 	uint8_t id, i, m, s;
@@ -255,6 +256,7 @@ void mavlinkDo(void) {
 	}
 	mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].next = micros + mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].interval;
     }
+#endif
     // EXTRA3 stream -- AQ custom telemetry
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].enable && mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].next < micros)) {
 	for (uint8_t i=0; i < AQMAV_DATASET_ENUM_END; ++i) {

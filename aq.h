@@ -41,27 +41,27 @@
 
 #ifndef BOARD_HEADER_FILE
     #if BOARD_VERSION == 6
-    #if BOARD_REVISION == 0
+	#if BOARD_REVISION == 0
 	    #define BOARD_HEADER_FILE "board_6_1.h"
-    #elif BOARD_REVISION == 1
+	#elif BOARD_REVISION == 1
 	    #define BOARD_HEADER_FILE "board_6_1a.h"
-    #endif
+	#endif
 
     #elif BOARD_VERSION == 7
-    #if BOARD_REVISION == 0
+	#if BOARD_REVISION == 0
 	    #define BOARD_HEADER_FILE "board_7_0.h"
-    #endif
+	#endif
 
     #elif BOARD_VERSION == 8
-    #if BOARD_REVISION == 1 || BOARD_REVISION == 2
+	#if BOARD_REVISION == 1 || BOARD_REVISION == 2
 	    #define BOARD_HEADER_FILE "board_m4.h"
-    #elif BOARD_REVISION == 3
+	#elif BOARD_REVISION == 3
 	    #define BOARD_HEADER_FILE "board_m4_r3.h"
-    #elif BOARD_REVISION == 4
+	#elif BOARD_REVISION == 4
 	    #define BOARD_HEADER_FILE "board_m4_r4.h"
-    #elif BOARD_REVISION == 5
+	#elif BOARD_REVISION == 5
 	    #define BOARD_HEADER_FILE "board_m4_r5.h"
-    #elif BOARD_REVISION == 6
+	#elif BOARD_REVISION == 6
 	    #define BOARD_HEADER_FILE "board_m4_r6.h"
 	#endif
     #endif

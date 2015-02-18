@@ -37,7 +37,7 @@
     #if BOARD_VERSION == 8
 	#define CONFIG_DEFAULTS_FILE    "config_default_m4.h"
     #else
-    #define CONFIG_DEFAULTS_FILE    "config_default.h"
+	#define CONFIG_DEFAULTS_FILE    "config_default.h"
     #endif
 #endif
 
