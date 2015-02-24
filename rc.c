@@ -20,34 +20,6 @@
 #include "radio.h"
 #include "config.h"
 
-/* private functions */
-
-int16_t rcGetChannelValue(uint8_t chan) {
-    // TODO: RADIO_MODE_SPLIT not tested -- concept only!
-//    if (radioData.mode == RADIO_MODE_SPLIT && chan < RADIO_MAX_CHANNELS*RADIO_NUM)
-//	return radioData.allChannels[chan];
-//    else
-    if (chan < RADIO_MAX_CHANNELS)
-	return radioData.channels[chan];
-    else
-	return 0;
-}
-
-uint8_t rcSetChannelValue(uint8_t chan, int16_t value) {
-    // TODO: RADIO_MODE_SPLIT not tested -- concept only!
-//    if (radioData.mode == RADIO_MODE_SPLIT && chan < RADIO_MAX_CHANNELS*RADIO_NUM) {
-//	radioData.allChannels[chan] = value;
-//	return 1;
-//    } else
-    if (chan < RADIO_MAX_CHANNELS) {
-	radioData.channels[chan] = value;
-	return 1;
-    } else
-	return 0;
-}
-
-/* public functions */
-
 // Returns zero if any valid remote control is active, or an error code otherwise.
 uint8_t rcCheckValidController(void) {
     if (RADIO_QUALITY < RC_MIN_RADIO_QUALITY_ARM)
@@ -98,18 +70,3 @@ void rcSetSwitchActive(int paramId) {
     }
 }
  */
-
-// Returns the raw value of a control channel (eg. radio channel).
-int16_t rcGetControlValue(int paramId) {
-    uint8_t chan = ((uint32_t)p[paramId] & 0x3F);
-
-    if (chan--)
-	return rcGetChannelValue(chan);
-    else
-	return 0;
-}
-
-// Returns true if any control channel (eg. radio channel) is configured for a given control parameter.
-uint8_t rcIsControlConfigured(int paramId) {
-    return ((uint32_t)p[paramId] & 0x3F);
-}

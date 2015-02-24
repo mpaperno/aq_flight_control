@@ -28,9 +28,26 @@
  * Undef this value to use strict bounds checking. See #ifdef code in rcIsControlActive().
  */
 #define RC_SWITCH_VALUE_BOUNDS		550
-
 // minimum RADIO_QUALITY needed to allow arming
 #define RC_MIN_RADIO_QUALITY_ARM	40
+
+// function macros  //
+
+#define rcGetChannelValue(x)		((x >=0 && x < RADIO_MAX_CHANNELS) ? radioData.channels[x] : 0)
+// TODO: RADIO_MODE_SPLIT not tested -- concept only!
+//    if (radioData.mode == RADIO_MODE_SPLIT && x < RADIO_MAX_CHANNELS*RADIO_NUM)
+//	return radioData.allChannels[x];
+//    else ... radioData.channels[x]
+
+// unused for now
+//#define rcSetChannelValue(x, y)	if (x < RADIO_MAX_CHANNELS) radioData.channels[x] = y;
+
+// Returns true if any control channel (eg. radio channel) is configured for a given control parameter.
+#define rcIsControlConfigured(x)	((uint32_t)p[x] & 0x3F)
+
+// Returns the raw value of a control channel (eg. radio channel).
+#define rcGetControlValue(x)		((rcIsControlConfigured(x)) ? rcGetChannelValue(((uint32_t)p[x] & 0x3F)-1) : 0)
+
 
 enum rcErrorCodes {
     RC_ERROR_NONE = 0,
@@ -40,7 +57,5 @@ enum rcErrorCodes {
 extern uint8_t rcCheckValidController(void);
 extern uint8_t rcIsSwitchActive(int paramId);
 //extern void    rcSetSwitchActive(int paramId);
-extern int16_t rcGetControlValue(int paramId);
-extern uint8_t rcIsControlConfigured(int paramId);
 
 #endif /* RC_H_ */
