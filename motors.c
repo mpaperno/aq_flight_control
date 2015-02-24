@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011-2014  Bill Nesbitt
+    Copyright Å  2011-2014  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -192,13 +192,14 @@ void motorsSendThrust(void) {
                 }
 
                 // battery voltage compensation
-                nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
-                voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
-                value *= voltageFactor;
+                
+                value /= analogData.vIn;//Express voltage command as a fraction of battery volts!
             }
+#else
+                value /= p[MOT_VALUE_SCAL];//Express rpm command as a fraction of max rpm
 #endif
 
-	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE / p[MOT_VALUE_SCAL], 0, MOTORS_SCALE);
+	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);//scale output rpm or voltage from 0 to MOTORS_SCALE
 	}
     }
 
