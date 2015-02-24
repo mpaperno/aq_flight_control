@@ -23,6 +23,7 @@
 #include "comm.h"
 #include "digital.h"
 #include "radio.h"
+#include "rc.h"
 #include "nav.h"
 #include "analog.h"
 #include "aq_timer.h"
@@ -92,7 +93,16 @@ void supervisorLEDsOff(void) {
 }
 
 void supervisorArm(void) {
-    if (motorsArm()) {
+    uint8_t rcStat = rcCheckValidController();
+    if (rcStat == RC_ERROR_LOW_RADIO_QUAL)
+	AQ_NOTICE("Error: Can't arm, Radio Quality too low.\n");
+    if (rcIsSwitchActive(NAV_CTRL_PH) || rcIsSwitchActive(NAV_CTRL_MISN))
+	AQ_NOTICE("Error: Can't arm, not in manual flight mode.\n");
+    else if (rcIsSwitchActive(NAV_CTRL_HOM_SET) || rcIsSwitchActive(NAV_CTRL_HOM_GO))
+	AQ_NOTICE("Error: Can't arm, home command active.\n");
+    else if (rcIsSwitchActive(NAV_CTRL_HF_SET) || rcIsSwitchActive(NAV_CTRL_HF_LOCK))
+	AQ_NOTICE("Error: Can't arm, heading-free mode active.\n");
+    else if (motorsArm()) {
         supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
         AQ_NOTICE("Armed\n");
 #ifdef USE_SIGNALING
@@ -101,7 +111,7 @@ void supervisorArm(void) {
     }
     else {
         motorsDisarm();
-        AQ_NOTICE("Arm motors failed - disarmed\n");
+        AQ_NOTICE("Error: Arm motors failed - disarmed.\n");
     }
 }
 
@@ -201,8 +211,8 @@ void supervisorTaskCode(void *unused) {
         if (!(count % ((supervisorData.diskWait) ? SUPERVISOR_RATE/10 : SUPERVISOR_RATE/2)))
             digitalTogg(supervisorData.readyLed);
 
-        // Arm if all the switches are in default (startup positions) - flaps down, aux2 centered
-        if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500 && RADIO_FLAPS < -250 && !navData.homeActionFlag && navData.headFreeMode == NAV_HEADFREE_OFF) {
+        // Attempt to arm if throttle down and yaw full right for 2sec.
+        if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500) {
             if (!supervisorData.armTime) {
                 supervisorData.armTime = timerMicros();
             }
@@ -264,6 +274,7 @@ void supervisorTaskCode(void *unused) {
             if (supervisorData.state & STATE_RADIO_LOSS1)
                 AQ_NOTICE("Warning: radio signal regained\n");
 
+            navData.spvrModeOverride = 0;
             supervisorData.state &= ~(STATE_RADIO_LOSS1 | STATE_RADIO_LOSS2);
         }
         // loss 1
@@ -272,8 +283,8 @@ void supervisorTaskCode(void *unused) {
             AQ_NOTICE("Warning: Radio loss stage 1 detected\n");
 
             // hold position
-            RADIO_FLAPS = 0;    // position hold
-            RADIO_AUX2 = 0;     // normal home mode
+            navData.spvrModeOverride = NAV_STATUS_POSHOLD;
+            //RADIO_AUX2 = 0;     // normal home mode
             RADIO_PITCH = 0;    // center sticks
             RADIO_ROLL = 0;
             RADIO_RUDD = 0;
@@ -282,7 +293,7 @@ void supervisorTaskCode(void *unused) {
         // loss 2
         else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
             supervisorData.state |= STATE_RADIO_LOSS2;
-            AQ_NOTICE("Warning: Radio loss stage 2! Initiating recovery mission.\n");
+            AQ_NOTICE("Warning: Radio loss stage 2! Initiating recovery.\n");
 
             // only available with GPS
             if (navData.navCapable) {
@@ -352,12 +363,12 @@ void supervisorTaskCode(void *unused) {
 
                 // go
                 navData.missionLeg = 0;
-                RADIO_FLAPS = 500;                  // mission mode
+                navData.spvrModeOverride = NAV_STATUS_MISSION;
             }
             // no GPS, slow decent in PH mode
             else {
-                RADIO_FLAPS = 0;    // position hold
-                RADIO_AUX2 = 0;     // normal home mode
+        	navData.spvrModeOverride = NAV_STATUS_POSHOLD;
+                //RADIO_AUX2 = 0;     // normal home mode
                 RADIO_PITCH = 0;    // center sticks
                 RADIO_ROLL = 0;
                 RADIO_RUDD = 0;

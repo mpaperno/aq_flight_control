@@ -21,6 +21,7 @@
 #include "imu.h"
 #include "nav_ukf.h"
 #include "radio.h"
+#include "rc.h"
 #include "util.h"
 #include "config.h"
 #include "aq_timer.h"
@@ -105,7 +106,7 @@ void gimbalUpdate(void) {
 
     // calculate manual/PoI tilt angle override
     if (p[GMBL_TILT_PORT]) {
-	tilt = RADIO_AUX3 + navData.poiAngle * GMBL_DEGREES_TO_PW * p[GMBL_SCAL_PITCH];
+	tilt = rcGetControlValue(GMBL_CTRL_TILT) + navData.poiAngle * GMBL_DEGREES_TO_PW * p[GMBL_SCAL_PITCH];
 	// smooth
 	if (tilt != gimbalData.tilt)
 	    gimbalData.tilt -= (gimbalData.tilt - tilt) * p[GMBL_SLEW_RATE];
@@ -139,10 +140,10 @@ void gimbalUpdate(void) {
 
     // trigger output, manual/passthrough or automatic modes
     if (gimbalData.triggerPort) {
-	pwm = RADIO_GEAR + GMBL_TRIG_NTRL_PWM;
+	pwm = rcGetControlValue(GMBL_CTRL_TRG_ON) + GMBL_TRIG_NTRL_PWM;
 
 	// manual trigger active
-	if (RADIO_GEAR > p[GMBL_TRIG_CH_NEU] + p[CTRL_DEAD_BAND] || RADIO_GEAR < p[GMBL_TRIG_CH_NEU] - p[CTRL_DEAD_BAND]) {
+	if (rcIsSwitchActive(GMBL_CTRL_TRG_ON)) {
 	    gimbalData.trigger = 0;		// cancel automatic trigger, if any
 	    gimbalData.triggerTimer = 0;
 	    if (!gimbalData.triggerLogVal)	// first activation after channel had returned to neutral

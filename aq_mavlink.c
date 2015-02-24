@@ -24,6 +24,7 @@
 #include "aq_timer.h"
 #include "imu.h"
 #include "radio.h"
+#include "rc.h"
 #include "gps.h"
 #include "flash.h"
 #include "motors.h"
@@ -102,6 +103,9 @@ void mavlinkSetSystemData(void) {
     else if (supervisorData.state & STATE_FLYING) {
 	mavlinkData.sys_state = MAV_STATE_ACTIVE;
 	mavlinkData.sys_nav_mode = AQ_NAV_STATUS_MANUAL;
+    }
+    else if (supervisorData.state & STATE_CALIBRATION) {
+	mavlinkData.sys_state =  MAV_STATE_CALIBRATING;
     }
 
     switch(navData.mode) {
@@ -207,12 +211,12 @@ void mavlinkDo(void) {
     // rc channels and pwm outputs (would be nice to separate these)
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].enable && mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next < micros)) {
 	if (!mavlinkData.indexPort++) {
-	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, RADIO_THROT+1024, RADIO_ROLL+1024, RADIO_PITCH+1024, RADIO_RUDD+1024,
-		    RADIO_GEAR+1024, RADIO_FLAPS+1024, RADIO_AUX2+1024, RADIO_AUX3+1024, RADIO_QUALITY);
+	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, radioData.channels[0]+1024, radioData.channels[1]+1024, radioData.channels[2]+1024, radioData.channels[3]+1024,
+		    radioData.channels[4]+1024, radioData.channels[5]+1024, radioData.channels[6]+1024, radioData.channels[7]+1024, RADIO_QUALITY);
 	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3],
 		    motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
 	} else {
-	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, RADIO_AUX4+1024, RADIO_AUX5+1024, RADIO_AUX6+1024, RADIO_AUX7+1024,
+	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, radioData.channels[8]+1024, radioData.channels[9]+1024, radioData.channels[10]+1024, radioData.channels[11]+1024,
 		    radioData.channels[12]+1024, radioData.channels[13]+1024, radioData.channels[14]+1024, radioData.channels[15]+1024, RADIO_QUALITY);
 	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 1, motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11],
 		    motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15]);
@@ -273,7 +277,7 @@ void mavlinkDo(void) {
 			RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_LEGACY3 :
-		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, RADIO_FLAPS, RADIO_AUX2,
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, rcGetControlValue(NAV_CTRL_PH), rcGetControlValue(NAV_CTRL_HOM_GO),
 			motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6],
 			motorsData.value[7], motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13]);
 		break;

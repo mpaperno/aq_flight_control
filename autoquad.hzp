@@ -144,6 +144,8 @@
       <file file_name="mlinkrx.h"/>
       <file file_name="calib.c"/>
       <file file_name="calib.h"/>
+      <file file_name="rc.c"/>
+      <file file_name="rc.h"/>
       <folder Name="boards">
         <file file_name="board_6_1.h"/>
         <file file_name="board_6_1a.h"/>

@@ -26,6 +26,7 @@
 #include "pid.h"
 #include "config.h"
 #include "radio.h"
+#include "rc.h"
 #include "gps.h"
 #include "compass.h"
 #include "imu.h"
@@ -126,11 +127,9 @@ void navSetHfReference(uint8_t refType) {
 
 // set headfree mode based on radio command
 void navSetHeadFreeMode(void) {
-    int16_t hfChan = radioData.channels[(int)(p[NAV_HDFRE_CHAN]-1)];
-
     // HF switch to set/dynamic position
     // when disarmed one can also set the orientation heading in this position (for 2-pos control)
-    if (hfChan > 250 || (hfChan < -250 && !(supervisorData.state & STATE_ARMED))) {
+    if (rcIsSwitchActive(NAV_CTRL_HF_SET) || (rcIsSwitchActive(NAV_CTRL_HF_LOCK) && !(supervisorData.state & STATE_ARMED))) {
         if (navData.headFreeMode != NAV_HEADFREE_DYNAMIC) {
             if (navData.headFreeMode != NAV_HEADFREE_SETTING && navData.headFreeMode != NAV_HEADFREE_DYN_DELAY) {
                 navData.headFreeMode = NAV_HEADFREE_SETTING;
@@ -150,7 +149,7 @@ void navSetHeadFreeMode(void) {
 
     }
     // HF switch to locked/on position
-    else if (hfChan < -250) {
+    else if (rcIsSwitchActive(NAV_CTRL_HF_LOCK)) {
         if (navData.headFreeMode != NAV_HEADFREE_LOCKED) {
             AQ_NOTICE("Now in locked Heading-Free DVH mode\n");
             navData.headFreeMode = NAV_HEADFREE_LOCKED;
@@ -261,12 +260,11 @@ void navSetFixType(void) {
 }
 
 void navNavigate(void) {
-    unsigned long currentTime;
+    unsigned long currentTime = IMU_LASTUPD;
     unsigned char leg = navData.missionLeg;
     navMission_t *curLeg = &navData.missionLegs[leg];
+    int reqFlightMode;  // requested flight mode based on user controls or other factors
     float tmp;
-
-    currentTime = IMU_LASTUPD;
 
     navSetFixType();
 
@@ -277,8 +275,23 @@ void navNavigate(void) {
     else if (navData.mode < NAV_STATUS_POSHOLD)
         navData.navCapable = 0;
 
+    // this defines the hierarchy of available flight modes in case of failsafe override or conflicting controls being active
+    if (navData.spvrModeOverride)
+	reqFlightMode = navData.spvrModeOverride;
+    else if (rcIsSwitchActive(NAV_CTRL_MISN))
+	reqFlightMode = NAV_STATUS_MISSION;
+    else if (rcIsSwitchActive(NAV_CTRL_PH)) {
+	if (RADIO_PITCH > p[CTRL_DEAD_BAND] || RADIO_PITCH < -p[CTRL_DEAD_BAND] || RADIO_ROLL > p[CTRL_DEAD_BAND] || RADIO_ROLL < -p[CTRL_DEAD_BAND])
+	    reqFlightMode = NAV_STATUS_DVH;
+	else
+	    reqFlightMode = NAV_STATUS_POSHOLD;
+    }
+    // always default to manual
+    else
+	reqFlightMode = NAV_STATUS_MANUAL;
+
     // Can we navigate && do we want to be in mission mode?
-    if ((supervisorData.state & STATE_ARMED) && navData.navCapable && RADIO_FLAPS > 250) {
+    if ((supervisorData.state & STATE_ARMED) && navData.navCapable && reqFlightMode == NAV_STATUS_MISSION) {
         //  are we currently in position hold mode && do we have a clear mission ahead of us?
         if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
             curLeg = navLoadLeg(leg);
@@ -286,7 +299,7 @@ void navNavigate(void) {
         }
     }
     // do we want to be in position hold mode?
-    else if ((supervisorData.state & STATE_ARMED) && RADIO_FLAPS > -250) {
+    else if ((supervisorData.state & STATE_ARMED) && reqFlightMode > NAV_STATUS_MANUAL) {
         // always allow alt hold
         if (navData.mode < NAV_STATUS_ALTHOLD) {
             // record this altitude as the hold altitude
@@ -342,24 +355,22 @@ void navNavigate(void) {
             AQ_NOTICE("Position Hold engaged\n");
         }
         // DVH
-        else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && (
-            RADIO_PITCH > p[CTRL_DEAD_BAND] ||
-            RADIO_PITCH < -p[CTRL_DEAD_BAND] ||
-            RADIO_ROLL > p[CTRL_DEAD_BAND] ||
-            RADIO_ROLL < -p[CTRL_DEAD_BAND])) {
-                    navData.mode = NAV_STATUS_DVH;
+        else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && reqFlightMode == NAV_STATUS_DVH) {
+            navData.mode = NAV_STATUS_DVH;
         }
+        // coming out of DVH mode?
         else if (navData.mode == NAV_STATUS_DVH) {
             // allow speed to drop before holding position (or if RTH engaged)
-            if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || RADIO_AUX2 < -250) {
+            // FIXME: RTH switch may no longer be engaged but craft is still returning to home?
+            if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
                 navUkfSetHereAsPositionTarget();
 
                 navData.mode = NAV_STATUS_POSHOLD;
             }
         }
     }
+    // default to manual mode
     else {
-        // switch to manual mode
         navData.mode = NAV_STATUS_MANUAL;
         // reset mission legs
         navData.missionLeg = leg = 0;
@@ -390,14 +401,14 @@ void navNavigate(void) {
     }
 
     // home set
-    if ((supervisorData.state & STATE_ARMED) && RADIO_AUX2 > 250) {
+    if ((supervisorData.state & STATE_ARMED) && rcIsSwitchActive(NAV_CTRL_HOM_SET)) {
         if (!navData.homeActionFlag) {
             navSetHomeCurrent();
             navData.homeActionFlag = 1;
         }
     }
     // recall home
-    else if ((supervisorData.state & STATE_ARMED) && RADIO_AUX2 < -250) {
+    else if ((supervisorData.state & STATE_ARMED) && rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
         if (!navData.homeActionFlag) {
             navRecallHome();
             AQ_NOTICE("Returning to home position\n");
@@ -410,7 +421,7 @@ void navNavigate(void) {
     }
 
     // heading-free mode
-    if ((int)p[NAV_HDFRE_CHAN] > 0 && (int)p[NAV_HDFRE_CHAN] <= RADIO_MAX_CHANNELS) {
+    if (rcIsControlConfigured(NAV_CTRL_HF_SET) || rcIsControlConfigured(NAV_CTRL_HF_LOCK)) {
 
         navSetHeadFreeMode();
 

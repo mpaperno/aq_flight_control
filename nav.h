@@ -107,7 +107,8 @@ typedef struct {
 
     uint32_t lastUpdate;
 
-    uint8_t mode;			// navigation mode
+    uint8_t mode;			// navigation mode, one of navStatusTypes
+    uint8_t spvrModeOverride;		// forced navigation mode desired, regardless of user controls (eg. failsafe mode). 0 = no override
     uint8_t navCapable;
     uint8_t missionLeg;
     uint8_t fixType;                    // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)

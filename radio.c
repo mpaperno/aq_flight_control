@@ -147,10 +147,6 @@ void radioInit(void) {
 
     AQ_NOTICE("Radio init\n");
 
-    // TODO: remove RADIO_TYPE
-    if (radioType == 0 && (int8_t)p[RADIO_TYPE] >= 0)
-        radioType = (uint16_t)p[RADIO_TYPE] + 1;
-
     memset((void *)&radioData, 0, sizeof(radioData));
 
     radioData.mode = (radioType>>12) & 0x0f;
@@ -257,8 +253,8 @@ void radioInit(void) {
             break;
     }
 
-    // set mode default
-    radioData.channels[(int)p[RADIO_FLAP_CH]] = -700;
+    // set mode default - not needed anymore ?
+    // radioData.channels[(int)p[RADIO_FLAP_CH]] = -700;
 
     radioTaskStack = aqStackInit(RADIO_STACK_SIZE, "RADIO");
 

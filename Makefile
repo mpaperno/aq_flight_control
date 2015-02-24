@@ -251,7 +251,7 @@ AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o al
 	hmc5983.o imu.o util.o logger.o \
 	main_ctl.o max21100.o mlinkrx.o motors.o mpu6000.o ms5611.o \
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
-	radio.o rotations.o rcc.o rtc.o run.o \
+	radio.o rc.o rcc.o rotations.o rtc.o run.o \
 	sdio.o serial.o signaling.o spektrum.o spi.o srcdkf.o supervisor.o \
 	telemetry.o ublox.o \
 	system_stm32f4xx.o STM32_Startup.o thumb_crt0.o

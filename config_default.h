@@ -16,22 +16,13 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    128
+#define DEFAULT_CONFIG_VERSION	    129
 
-#define DEFAULT_RADIO_TYPE			-1		// depreciated - will be removed
 #define DEFAULT_RADIO_SETUP         0		// 0 = NONE, 1 == Spektrum 11bit, 2 == Spektrum 10bit, 3 == SBUS, 4 == PPM, 5 == SUMD, 6 == M-Link, 7 == Deltang, 8 == CYRF6936
 #define DEFAULT_RADIO_THRO_CH	    0
 #define DEFAULT_RADIO_ROLL_CH	    1
 #define DEFAULT_RADIO_PITC_CH	    2
 #define DEFAULT_RADIO_RUDD_CH	    3
-#define DEFAULT_RADIO_GEAR_CH	    4
-#define DEFAULT_RADIO_FLAP_CH	    5
-#define DEFAULT_RADIO_AUX2_CH	    6
-#define DEFAULT_RADIO_AUX3_CH	    7
-#define DEFAULT_RADIO_AUX4_CH	    8
-#define DEFAULT_RADIO_AUX5_CH	    9
-#define DEFAULT_RADIO_AUX6_CH	    10
-#define DEFAULT_RADIO_AUX7_CH	    11
 
 #define DEFAULT_PPM_SCALER	    3		// good for FrSky & Graupner HOTT
 #define DEFAULT_PPM_THROT_LOW	    1090	// throttle value at low stick
@@ -50,6 +41,7 @@
 #define DEFAULT_CTRL_MAN_YAW_RT	    60.0f	// deg/s
 #define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band (for pitch, roll, & rudder control)
 #define DEFAULT_CTRL_DBAND_THRO	    40.0f	// rc control dead band (for throttle channel only)
+#define DEFAULT_CTRL_DBAND_SWTCH    250.0f	// rc control dead band for switch positions (eg. mode control)
 #define DEFAULT_CTRL_MIN_THROT	    20.0f	// minimum user throttle to activate motors
 #define DEFAULT_CTRL_MAX	    1446.0f	// maximum control applied to motors +- throttle
 #define DEFAULT_CTRL_NAV_YAW_RT	    180.0f	// maximum navigation yaw rate deg/s
@@ -192,7 +184,6 @@
 #define DEFAULT_NAV_MAX_SPEED	    5.0f	// m/s
 #define DEFAULT_NAV_MAX_DECENT	    1.5f	// m/s
 #define DEFAULT_NAV_CEILING         0.0f	// m relative to home alt. Maximum altitude in alt/pos/mission/dvh modes
-#define DEFAULT_NAV_HDFRE_CHAN      0	// radio channel for heading-free mode; set to zero to disable
 #define DEFAULT_NAV_LANDING_VEL	    1.0f	// m/s
 
 // speed => tilt PID
@@ -223,6 +214,16 @@
 #define DEFAULT_NAV_ALT_POS_IM	    0.0f
 #define DEFAULT_NAV_ALT_POS_OM	    2.5f
 
+// Control definitions for flight mode, etc.  16 bits: S VVVVVVVVV CCCCCC
+// 	high bit = value Sign (0=neg,1=pos), next 9b = absolute channel Value (0-511), 6 low bits = Channel number from Rx (0-63, zero == no channel/disabled)
+#define DEFAULT_NAV_CTRL_PH	    ((1<<15) | 0        | 6)  // ch.6, middle position
+#define DEFAULT_NAV_CTRL_MISN	    ((1<<15) | (501<<6) | 6)  // ch.6, high (+501 +/-CTRL_DBAND_SWTCH)
+#define DEFAULT_NAV_CTRL_HOM_SET    ((1<<15) | (501<<6) | 7)  // ch.7 high
+#define DEFAULT_NAV_CTRL_HOM_GO     ((0<<15) | (501<<6) | 7)  // ch.7 low (-501 +/-CTRL_DBAND_SWTCH)
+#define DEFAULT_NAV_CTRL_HF_SET     ((1<<15) | (501<<6) | 0)  // disabled, high
+#define DEFAULT_NAV_CTRL_HF_LOCK    ((0<<15) | (501<<6) | 0)  // disabled, low
+
+
 #define DEFAULT_IMU_FLIP            0                   // flip DIMU: 0 == none, 1 == around x axis, 2 == around y axis
 #define DEFAULT_IMU_ROT		    +0.0		// degrees to rotate the IMU to align with the frame (applied after FLIP)
 #define DEFAULT_IMU_MAG_INCL	    -65.0
@@ -231,6 +232,7 @@
 
 
 #define DEFAULT_GMBL_PITCH_PORT		0		// Gimbal pitch stabilization output port. 0 == disabled
+#define DEFAULT_GMBL_CTRL_TILT		0		// Gimbal manual tilt control definition (channel number).
 #define DEFAULT_GMBL_TILT_PORT		0		// Gimbal manual/PoI tilt control output port (can be same as PITCH_PORT to combine the 2 functions). 0 == disabled
 #define DEFAULT_GMBL_ROLL_PORT		0		// Gimbal roll stabilization output port. 0 == disabled
 #define DEFAULT_GMBL_PWM_MAX_RL		2250
@@ -244,8 +246,8 @@
 #define DEFAULT_GMBL_SCAL_ROLL		(1.0f / 70.0f)
 #define DEFAULT_GMBL_SLEW_RATE		0.005f
 #define DEFAULT_GMBL_ROLL_EXPO		0.0f
-#define DEFAULT_GMBL_TRIG_PORT		0		// Triggering output port. 0 == disabled
-#define DEFAULT_GMBL_TRIG_CH_NEU	0		// Trigger radio channel AQ value at neutral position (to allow automated triggering)
+#define DEFAULT_GMBL_TRIG_PORT		0		// Triggering/passthrough output port. 0 == disabled
+#define DEFAULT_GMBL_CTRL_TRG_ON	0		// Channel & position control definition for trigger (see comment on NAV_CTRL params). Used for passthrough or with automated triggering.
 #define DEFAULT_GMBL_TRIG_ON_PWM	2100		// PWM output of trigger at full-press (on) position (for automated triggering)
 #define DEFAULT_GMBL_TRIG_ON_TIM	1000		// Time to keep shutter at on position, in ms
 #define DEFAULT_GMBL_TRIG_DIST		0.0f		// Activate trigger every this many meters. 0 == disabled

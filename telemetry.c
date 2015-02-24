@@ -23,6 +23,7 @@
 #include "control.h"
 #include "config.h"
 #include "radio.h"
+#include "rc.h"
 #include "imu.h"
 #include "gps.h"
 #include "nav.h"
@@ -111,8 +112,8 @@ void telemetryDo(void) {
 		ptr = telemtrySendInt(ptr, RADIO_RUDD);
 		ptr = telemtrySendInt(ptr, RADIO_PITCH);
 		ptr = telemtrySendInt(ptr, RADIO_ROLL);
-		ptr = telemtrySendInt(ptr, RADIO_FLAPS);
-		ptr = telemtrySendInt(ptr, RADIO_AUX4);
+		ptr = telemtrySendInt(ptr, rcGetControlValue(NAV_CTRL_PH));
+		ptr = telemtrySendInt(ptr, radioData.channels[8]);
 		ptr = telemtrySendFloat(ptr, IMU_RATEX);
 		ptr = telemtrySendFloat(ptr, IMU_RATEY);
 		ptr = telemtrySendFloat(ptr, IMU_RATEZ);
