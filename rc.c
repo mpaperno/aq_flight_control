@@ -17,8 +17,6 @@
 */
 
 #include "rc.h"
-#include "radio.h"
-#include "config.h"
 
 // Returns zero if any valid remote control is active, or an error code otherwise.
 uint8_t rcCheckValidController(void) {
@@ -30,25 +28,20 @@ uint8_t rcCheckValidController(void) {
 
 // Returns true if current controller value (eg. radio channel) matches configured value (channel and position) for a given control parameter.
 uint8_t rcIsSwitchActive(int paramId) {
-    uint32_t param = (uint32_t)p[paramId];
-    uint8_t chan = (param & 0x3F);
-    int16_t val, chanVal;
+    if (rcIsControlConfigured(paramId)) {
+	int16_t chanVal = rcGetControlValue(paramId);
+	int16_t targetVal = (((uint32_t)p[paramId] >> 6) & 0x1FF);
 
-    if (chan--) {
-	chanVal = rcGetChannelValue(chan);
-	val = ((param >> 6) & 0x1FF);
-	if (!(param & (1<<15)))  // check sign bit
-	    val *= -1;
+	if (!((uint32_t)p[paramId] & (1<<15)))  // check sign bit
+	    targetVal *= -1;
 
-#ifdef RC_SWITCH_VALUE_BOUNDS
-	if ((chanVal < -RC_SWITCH_VALUE_BOUNDS && val - (int)p[CTRL_DBAND_SWTCH] <= -RC_SWITCH_VALUE_BOUNDS) ||
-		(chanVal > RC_SWITCH_VALUE_BOUNDS && val + (int)p[CTRL_DBAND_SWTCH] >= RC_SWITCH_VALUE_BOUNDS))
-	    return 1;
-	else
+	return (
+#if defined(RC_SWITCH_VALUE_BOUNDS) && RC_SWITCH_VALUE_BOUNDS
+	    (chanVal < -RC_SWITCH_VALUE_BOUNDS && targetVal - (int)p[CTRL_DBAND_SWTCH] <= -RC_SWITCH_VALUE_BOUNDS) ||
+	    (chanVal > RC_SWITCH_VALUE_BOUNDS && targetVal + (int)p[CTRL_DBAND_SWTCH] >= RC_SWITCH_VALUE_BOUNDS) ||
 #endif
-	if (chanVal > val - (int)p[CTRL_DBAND_SWTCH] && chanVal < val + (int)p[CTRL_DBAND_SWTCH])
-	    return 1;
-
+	    (chanVal > targetVal - (int)p[CTRL_DBAND_SWTCH] && chanVal < targetVal + (int)p[CTRL_DBAND_SWTCH])
+	);
     }
 
     return 0;
@@ -58,15 +51,12 @@ uint8_t rcIsSwitchActive(int paramId) {
 // Currently this would be overwritten if any actual RC is present (eg. an active radio connection).
 /* unused for now
 void rcSetSwitchActive(int paramId) {
-    uint32_t param = (uint32_t)p[paramId];
-    uint8_t chan = (param & 0x3F);
-    int16_t val;
+    if (rcIsControlConfigured(paramId)) {
+	int16_t targetVal = (((uint32_t)p[paramId] >> 6) & 0x1FF);
+	if (!((uint32_t)p[paramId] & (1<<15)))  // check sign bit
+	    targetVal *= -1;
 
-    if (chan--) {
-	val = ((param >> 6) & 0x1FF);
-	if (!(param & (1<<15)))  // check sign bit
-	    val *= -1;
-	rcSetChannelValue(chan, val);
+	rcSetChannelValue(((uint32_t)p[paramId] & 0x3F)-1, targetVal);
     }
 }
- */
+*/
