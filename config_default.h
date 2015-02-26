@@ -216,6 +216,7 @@
 
 // Control definitions for flight mode, etc.  16 bits: S VVVVVVVVV CCCCCC
 // 	high bit = value Sign (0=neg,1=pos), next 9b = absolute channel Value (0-511), 6 low bits = Channel number from Rx (0-63, zero == no channel/disabled)
+#define DEFAULT_NAV_CTRL_AH	    0                         // disabled
 #define DEFAULT_NAV_CTRL_PH	    ((1<<15) | 0        | 6)  // ch.6, middle position
 #define DEFAULT_NAV_CTRL_MISN	    ((1<<15) | (501<<6) | 6)  // ch.6, high (+501 +/-CTRL_DBAND_SWTCH)
 #define DEFAULT_NAV_CTRL_HOM_SET    ((1<<15) | (501<<6) | 7)  // ch.7 high

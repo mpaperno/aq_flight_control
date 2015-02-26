@@ -286,6 +286,8 @@ void navNavigate(void) {
 	else
 	    reqFlightMode = NAV_STATUS_POSHOLD;
     }
+    else if (rcIsSwitchActive(NAV_CTRL_AH))
+	reqFlightMode = NAV_STATUS_ALTHOLD;
     // always default to manual
     else
 	reqFlightMode = NAV_STATUS_MANUAL;
@@ -296,12 +298,14 @@ void navNavigate(void) {
         if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
             curLeg = navLoadLeg(leg);
             navData.mode = NAV_STATUS_MISSION;
+            AQ_NOTICE("Mission mode active\n");
         }
     }
     // do we want to be in position hold mode?
     else if ((supervisorData.state & STATE_ARMED) && reqFlightMode > NAV_STATUS_MANUAL) {
-        // always allow alt hold
-        if (navData.mode < NAV_STATUS_ALTHOLD) {
+
+        // allow alt hold regardless of GPS or flow quality
+        if (navData.mode < NAV_STATUS_ALTHOLD || (navData.mode != NAV_STATUS_ALTHOLD && reqFlightMode == NAV_STATUS_ALTHOLD)) {
             // record this altitude as the hold altitude
             navSetHoldAlt(ALTITUDE, 0);
 
@@ -318,7 +322,7 @@ void navNavigate(void) {
         }
 
         // are we not in position hold mode now?
-        if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
+        if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && reqFlightMode > NAV_STATUS_ALTHOLD && navData.mode != NAV_STATUS_POSHOLD && navData.mode != NAV_STATUS_DVH) {
             // only zero bias if coming from lower mode
             if (navData.mode < NAV_STATUS_POSHOLD) {
                 navData.holdTiltN = 0.0f;
@@ -371,6 +375,9 @@ void navNavigate(void) {
     }
     // default to manual mode
     else {
+	if (navData.mode != NAV_STATUS_MANUAL)
+            AQ_NOTICE("Manual mode active.\n");
+
         navData.mode = NAV_STATUS_MANUAL;
         // reset mission legs
         navData.missionLeg = leg = 0;
