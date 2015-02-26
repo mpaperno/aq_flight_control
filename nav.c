@@ -400,45 +400,46 @@ void navNavigate(void) {
         }
     }
 
-    // home set
-    if ((supervisorData.state & STATE_ARMED) && rcIsSwitchActive(NAV_CTRL_HOM_SET)) {
-        if (!navData.homeActionFlag) {
-            navSetHomeCurrent();
-            navData.homeActionFlag = 1;
-        }
-    }
-    // recall home
-    else if ((supervisorData.state & STATE_ARMED) && rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
-        if (!navData.homeActionFlag) {
-            navRecallHome();
-            AQ_NOTICE("Returning to home position\n");
-            navData.homeActionFlag = 1;
-        }
-    }
-    // switch to middle, clear action flag
-    else {
-        navData.homeActionFlag = 0;
-    }
+    if (!(supervisorData.state & STATE_RADIO_LOSS1)) {
+	// home set
+	if (rcIsSwitchActive(NAV_CTRL_HOM_SET)) {
+	    if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable)
+		navSetHomeCurrent();
+	    navData.homeActionFlag = 1;
+	}
+	// recall home
+	else if (rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
+	    if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable) {
+		navRecallHome();
+		AQ_NOTICE("Returning to home position\n");
+	    }
+	    navData.homeActionFlag = 1;
+	}
+	// switch to middle, clear action flag
+	else {
+	    navData.homeActionFlag = 0;
+	}
 
-    // heading-free mode
-    if (rcIsControlConfigured(NAV_CTRL_HF_SET) || rcIsControlConfigured(NAV_CTRL_HF_LOCK)) {
+	// heading-free mode
+	if (rcIsControlConfigured(NAV_CTRL_HF_SET) || rcIsControlConfigured(NAV_CTRL_HF_LOCK)) {
 
-        navSetHeadFreeMode();
+	    navSetHeadFreeMode();
 
-        // set/maintain headfree frame reference
-        if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
-                (navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
-            uint8_t dfRefTyp = 0;
-            if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
-                if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
-                    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
-                    navData.homeDistanceLastUpdate = currentTime;
-                }
-                if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
-                    dfRefTyp = 1;
-            }
-            navSetHfReference(dfRefTyp);
-        }
+	    // set/maintain headfree frame reference
+	    if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
+		    (navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
+		uint8_t dfRefTyp = 0;
+		if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
+		    if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && navData.navCapable && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
+			navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
+			navData.homeDistanceLastUpdate = currentTime;
+		    }
+		    if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
+			dfRefTyp = 1;
+		}
+		navSetHfReference(dfRefTyp);
+	    }
+	}
     }
 
     if (UKF_POSN != 0.0f || UKF_POSE != 0.0f) {

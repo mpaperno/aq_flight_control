@@ -284,7 +284,6 @@ void supervisorTaskCode(void *unused) {
 
             // hold position
             navData.spvrModeOverride = NAV_STATUS_POSHOLD;
-            //RADIO_AUX2 = 0;     // normal home mode
             RADIO_PITCH = 0;    // center sticks
             RADIO_ROLL = 0;
             RADIO_RUDD = 0;
@@ -368,7 +367,6 @@ void supervisorTaskCode(void *unused) {
             // no GPS, slow decent in PH mode
             else {
         	navData.spvrModeOverride = NAV_STATUS_POSHOLD;
-                //RADIO_AUX2 = 0;     // normal home mode
                 RADIO_PITCH = 0;    // center sticks
                 RADIO_ROLL = 0;
                 RADIO_RUDD = 0;
