@@ -192,8 +192,9 @@ void motorsSendThrust(void) {
                 }
 
                 // battery voltage compensation
-                
-                value /= analogData.vIn;//Express voltage command as a fraction of battery volts!
+                nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
+                if (analogData.vIn > 1.0f) //To prevent division by 0!Would prefer to use nominalBatVolts/2, but what if analogData.batCellCount is not set at startup?
+                    value /= analogData.vIn;//Express voltage command as a fraction of battery volts!
             }
 #else
                 value /= p[MOT_VALUE_SCAL];//Express rpm command as a fraction of max rpm
