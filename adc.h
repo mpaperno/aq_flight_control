@@ -22,7 +22,7 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define ADC_STACK_SIZE		130
+#define ADC_STACK_SIZE		128   // must be evenly divisible by 8
 #define ADC_PRIORITY		10
 
 // 400 Hz inner loop
