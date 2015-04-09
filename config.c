@@ -1021,19 +1021,7 @@ int8_t configReadFile(char *fname) {
 }
 
 int8_t configFormatParam(char *buf, int n) {
-    char *str;
-    int8_t ret = 0;
-
-    if (!(str = (char *)aqCalloc(16, sizeof(char))))
-	return ret;
-
-    ftoa(str, p[n], 10);
-    ret = sprintf(buf, "%-17s\t\t%s\n", configParameterStrings[n], str);
-
-    if (str)
-	aqFree(str, 16, sizeof(char));
-
-    return ret;
+    return sprintf(buf, "%-17s\t\t%.10e\n", configParameterStrings[n], (double)p[n]);
 }
 
 // write config to uSD

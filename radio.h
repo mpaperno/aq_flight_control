@@ -23,7 +23,7 @@
 #include "digital.h"
 #include "util.h"
 
-#define RADIO_STACK_SIZE        120
+#define RADIO_STACK_SIZE        120     // must be evenly divisible by 8
 #define RADIO_PRIORITY          25
 
 #define RADIO_NUM               3       // max number of RC radios
