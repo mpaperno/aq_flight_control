@@ -23,7 +23,7 @@
 #include <CoOS.h>
 
 #define FILER_PRIORITY		62
-#define FILER_STACK_SIZE	200
+#define FILER_STACK_SIZE	200  // must be evenly divisible by 8
 
 #define FILER_SESS_FNAME	"session.txt"
 #define FILER_MAX_FILES		5
