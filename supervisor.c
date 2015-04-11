@@ -98,7 +98,7 @@ void supervisorArm(void) {
 	AQ_NOTICE("Error: Can't arm due to RC error(s):\n");
 	rcReportAllErrors(rcStat);
     }
-    if (rcIsSwitchActive(NAV_CTRL_PH) || rcIsSwitchActive(NAV_CTRL_MISN))
+    else if (rcIsSwitchActive(NAV_CTRL_PH) || rcIsSwitchActive(NAV_CTRL_MISN))
 	AQ_NOTICE("Error: Can't arm, not in manual flight mode.\n");
     else if (rcIsSwitchActive(NAV_CTRL_HOM_SET) || rcIsSwitchActive(NAV_CTRL_HOM_GO))
 	AQ_NOTICE("Error: Can't arm, home command active.\n");
