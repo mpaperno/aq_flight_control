@@ -94,8 +94,10 @@ void supervisorLEDsOff(void) {
 
 void supervisorArm(void) {
     uint8_t rcStat = rcCheckValidController();
-    if (rcStat == RC_ERROR_LOW_RADIO_QUAL)
-	AQ_NOTICE("Error: Can't arm, Radio Quality too low.\n");
+    if (rcStat) {
+	AQ_NOTICE("Error: Can't arm due to RC error(s):\n");
+	rcReportAllErrors(rcStat);
+    }
     if (rcIsSwitchActive(NAV_CTRL_PH) || rcIsSwitchActive(NAV_CTRL_MISN))
 	AQ_NOTICE("Error: Can't arm, not in manual flight mode.\n");
     else if (rcIsSwitchActive(NAV_CTRL_HOM_SET) || rcIsSwitchActive(NAV_CTRL_HOM_GO))
