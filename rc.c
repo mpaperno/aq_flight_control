@@ -17,46 +17,73 @@
 */
 
 #include "rc.h"
+#include "comm.h"
 
-// Returns zero if any valid remote control is active, or an error code otherwise.
-uint8_t rcCheckValidController(void) {
-    if (RADIO_QUALITY < RC_MIN_RADIO_QUALITY_ARM)
-	return RC_ERROR_LOW_RADIO_QUAL;
-    else
-	return RC_ERROR_NONE;
-}
+/* Return true if given controls have overlapping switch positions (eg. if same channel value might mean PH and MISN) */
+static uint8_t rcCheckSwitchRangeOverlap(int *swarry, uint8_t alen) {
+    int i, j;
 
-// Returns true if current controller value (eg. radio channel) matches configured value (channel and position) for a given control parameter.
-uint8_t rcIsSwitchActive(int paramId) {
-    if (rcIsControlConfigured(paramId)) {
-	int16_t chanVal = rcGetControlValue(paramId);
-	int16_t targetVal = (((uint32_t)p[paramId] >> 6) & 0x1FF);
+    for (i=0; i < alen; ++i) {
+	if (!rcIsControlConfigured(swarry[i]))
+	    continue;
 
-	if (!((uint32_t)p[paramId] & (1<<15)))  // check sign bit
-	    targetVal *= -1;
+	for (j=0; j < alen; ++j) {
+	    if (swarry[j] == swarry[i] || !rcIsControlConfigured(swarry[j]) || rcGetControlChannel(swarry[i]) != rcGetControlChannel(swarry[j]))
+		continue;
 
-	return (
-#if defined(RC_SWITCH_VALUE_BOUNDS) && RC_SWITCH_VALUE_BOUNDS
-	    (chanVal < -RC_SWITCH_VALUE_BOUNDS && targetVal - (int)p[CTRL_DBAND_SWTCH] <= -RC_SWITCH_VALUE_BOUNDS) ||
-	    (chanVal > RC_SWITCH_VALUE_BOUNDS && targetVal + (int)p[CTRL_DBAND_SWTCH] >= RC_SWITCH_VALUE_BOUNDS) ||
-#endif
-	    (chanVal > targetVal - (int)p[CTRL_DBAND_SWTCH] && chanVal < targetVal + (int)p[CTRL_DBAND_SWTCH])
-	);
+	    if (rcGetSwitchTargetValue(swarry[i]) - rcGetSwitchDeadband() <= rcGetSwitchTargetValue(swarry[j]) + rcGetSwitchDeadband() &&
+		    rcGetSwitchTargetValue(swarry[j]) - rcGetSwitchDeadband() <= rcGetSwitchTargetValue(swarry[i]) + rcGetSwitchDeadband())
+		return 1;
+	}
     }
 
     return 0;
 }
 
-// Sets a controller channel value to reflect the active state of a given control parameter.
-// Currently this would be overwritten if any actual RC is present (eg. an active radio connection).
-/* unused for now
-void rcSetSwitchActive(int paramId) {
-    if (rcIsControlConfigured(paramId)) {
-	int16_t targetVal = (((uint32_t)p[paramId] >> 6) & 0x1FF);
-	if (!((uint32_t)p[paramId] & (1<<15)))  // check sign bit
-	    targetVal *= -1;
+/* Validate that all important controls don't overlap/contradict each other */
+static uint8_t rcCheckControlsOverlap() {
+    uint8_t ret = RC_ERROR_NONE;
+    int switches[] = { NAV_CTRL_PH, NAV_CTRL_MISN };
 
-	rcSetChannelValue(((uint32_t)p[paramId] & 0x3F)-1, targetVal);
+    if (rcCheckSwitchRangeOverlap(switches, 3))
+	ret |= RC_ERROR_CTRL_OVERLP_MODE;
+
+    switches[0] = NAV_CTRL_HOM_SET;
+    switches[1] = NAV_CTRL_HOM_GO;
+    if (rcCheckSwitchRangeOverlap(switches, 2))
+	ret |= RC_ERROR_CTRL_OVERLP_HOME;
+
+    return ret;
+}
+
+/* Returns zero if any valid remote control is active and no problems detected, or an error code otherwise. */
+uint8_t rcCheckValidController(void) {
+    uint8_t ret = RC_ERROR_NONE;
+    if (RADIO_QUALITY < RC_MIN_RADIO_QUALITY_ARM)
+	ret |= RC_ERROR_LOW_RADIO_QUAL;
+
+    ret |= rcCheckControlsOverlap();
+
+    return ret;
+}
+
+static const char *rcGetErrorString(uint8_t ec) {
+    switch (ec) {
+	case RC_ERROR_LOW_RADIO_QUAL :
+	    return (const char *)"Radio Quality too low";
+	case RC_ERROR_CTRL_OVERLP_MODE :
+	    return (const char *)"Mode controls overlap";
+	case RC_ERROR_CTRL_OVERLP_HOME :
+	    return (const char *)"Home controls overlap";
+	default :
+	    return (const char *)"no error";
     }
 }
-*/
+
+/* Prints all errors contained in errs bitfield, if any. */
+void rcReportAllErrors(uint8_t errs) {
+    for (int i=0; i < 8; ++i) {
+	if (errs & (1 << i))
+	    AQ_NOTICE(rcGetErrorString(1<<i));
+    }
+}

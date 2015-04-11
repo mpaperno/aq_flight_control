@@ -229,51 +229,38 @@ void utilFirFilterInit(utilFirFilter_t *f, const float *window, float *buffer, u
         f->data[i] = 0.0f;
 }
 
+// unused
+/*
 int ftoa(char *buf, float f, unsigned int digits) {
-    int index = 0;
-    int exponent;
-    long multiplier, whole, part;
-    float g;
-    char format[16];
-
-    // handle sign
-    if (f < 0.0f) {
-        buf[index++] = '-';
-        f = -f;
-    }
+    int bl = 0;
+    float whole, frac;
+    long long llfrac;
 
     // handle infinite values
     if (isinf(f)) {
-        strcpy(&buf[index], "INF");
+        strcpy(buf, "INF");
         return 3;
     }
     // handle Not a Number
     else if (isnan(f)) {
-        strcpy(&buf[index], "NaN");
+        strcpy(buf, "NaN");
         return 3;
     }
     else {
-        // max digits
-        if (digits > 6)
-            digits = 6;
-        multiplier = powf(10.0f, digits);     // fix int => long
 
-        if (f > 0.0f)
-            exponent = (int)log10f(f);
-        else
-            exponent = 0;
+	frac = modff(f, &whole);
+	//index = sprintf(buf, "%ld", (long)whole);
+	bl = strlen(ltoa((long)whole, buf, 10));
 
-        g = f / powf(10.0f, exponent);
-        if ((g < 1.0f) && (g != 0.0f)) {
-            g *= 10.0f;
-            exponent--;
-        }
+	if (digits && frac) {
+	    frac *= powf(10.0f, digits + 1);
+	    llfrac = (long long)fabs(frac);
+	    if (llfrac % 10 > 4)
+		llfrac += 10;
+	    bl += sprintf(&buf[bl], ".%0*lld", digits, llfrac / 10);
+	}
 
-        whole = (long)(g);                     // single digit
-        part = (long)((g-whole)*multiplier);   // # digits
-
-        sprintf(format, "%%ld.%%0%dldE%%+.2d", digits);
-        sprintf(&buf[index], format, whole, part, exponent);
-        return strlen(buf);
+	return bl;
     }
 }
+*/

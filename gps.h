@@ -25,7 +25,7 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define GPS_STACK_SIZE          200
+#define GPS_STACK_SIZE          200   // must be evenly divisible by 8
 #define GPS_PRIORITY            35
 
 #define GPS_BAUD_RATE           230400

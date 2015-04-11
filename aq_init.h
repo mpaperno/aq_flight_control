@@ -23,7 +23,7 @@
 #include "digital.h"
 #include <CoOS.h>
 
-#define AQINIT_STACK_SIZE   400
+#define AQINIT_STACK_SIZE   400   // must be evenly divisible by 8
 #define AQINIT_PRIORITY	    12
 
 extern digitalPin *tp;

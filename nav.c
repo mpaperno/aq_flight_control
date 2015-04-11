@@ -129,7 +129,7 @@ void navSetHfReference(uint8_t refType) {
 void navSetHeadFreeMode(void) {
     // HF switch to set/dynamic position
     // when disarmed one can also set the orientation heading in this position (for 2-pos control)
-    if (rcIsSwitchActive(NAV_CTRL_HF_SET) || (rcIsSwitchActive(NAV_CTRL_HF_LOCK) && !(supervisorData.state & STATE_ARMED))) {
+    if (rcIsSwitchActive(NAV_CTRL_HF_SET) || (!(supervisorData.state & STATE_ARMED) && navData.headFreeMode != NAV_HEADFREE_LOCKED && rcIsSwitchActive(NAV_CTRL_HF_LOCK))) {
         if (navData.headFreeMode != NAV_HEADFREE_DYNAMIC) {
             if (navData.headFreeMode != NAV_HEADFREE_SETTING && navData.headFreeMode != NAV_HEADFREE_DYN_DELAY) {
                 navData.headFreeMode = NAV_HEADFREE_SETTING;
@@ -146,7 +146,6 @@ void navSetHeadFreeMode(void) {
             else if (navData.headFreeMode == NAV_HEADFREE_SETTING)
                 navData.headFreeMode = NAV_HEADFREE_DYN_DELAY;
         }
-
     }
     // HF switch to locked/on position
     else if (rcIsSwitchActive(NAV_CTRL_HF_LOCK)) {

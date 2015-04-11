@@ -181,8 +181,8 @@ OTHERLIB_PATH = $(AQLIB_PATH)/aq
 CC_INCLUDES :=  -I$(SRC_PATH) -I$(STMLIB_PATH)/include -I$(STM32DRIVER_PATH)/inc -I$(STM32CMSIS_PATH)/Include -I$(MAVINC_PATH) -I$(CC_INC_PATH)
 
 # compiler flags
-CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -Wall -finline-functions -Wdouble-promotion -std=c99 \
-	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet
+CC_OPTS = -mcpu=cortex-m4 -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -nostdinc -fsingle-precision-constant -Wall -Wdouble-promotion -Winline -finline-functions -std=c99 \
+	-fno-dwarf2-cfi-asm -fno-builtin -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -quiet --param large-function-insns=5400
 # -fno-diagnostics-show-caret -mtp=soft
 
 # macro definitions to pass via compiler command line
