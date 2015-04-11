@@ -43,7 +43,7 @@ static uint8_t rcCheckSwitchRangeOverlap(int *swarry, uint8_t alen) {
 /* Validate that all important controls don't overlap/contradict each other */
 static uint8_t rcCheckControlsOverlap() {
     uint8_t ret = RC_ERROR_NONE;
-    int switches[] = { NAV_CTRL_PH, NAV_CTRL_MISN };
+    int switches[] = { NAV_CTRL_AH, NAV_CTRL_PH, NAV_CTRL_MISN };
 
     if (rcCheckSwitchRangeOverlap(switches, 3))
 	ret |= RC_ERROR_CTRL_OVERLP_MODE;
