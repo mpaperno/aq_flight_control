@@ -16,14 +16,14 @@
     Copyright © 2011-2015  Bill Nesbitt
 */
 
-#ifndef GETBUILDNUM_H
-#define GETBUILDNUM_H
+#ifndef AQ_VERSION_H
+#define AQ_VERSION_H
 
 #include "buildnum.h"
 
-#define FIMRWARE_VERSION "7.1 - EXPR"
-
-extern unsigned long  getBuildNumber(void);
-extern unsigned long  getRevisionNumber(void);
+#define FIMRWARE_VER_MAJ	7
+#define FIMRWARE_VER_MIN	1
+#define FIMRWARE_VER_BLD	BUILDNUMBER
+#define FIMRWARE_VER_STR	"EXPR"
 
 #endif

@@ -132,8 +132,16 @@ BIN_PATH = $(BUILD_PATH)/$(BUILD_TYPE)
 # command to execute (later, if necessary) for increasing build number in buildnum.h
 CMD_BUILDNUMBER = $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{ $$NF=$$NF+1 } 1' $(SRC_PATH)/buildnum.h > $(SRC_PATH)/tmp_buildnum.h && mv $(SRC_PATH)/tmp_buildnum.h $(SRC_PATH)/buildnum.h)
 
+VERSION_FILE = $(SRC_PATH)/aq_version.h
+ifeq ("$(wildcard $(VERSION_FILE))","")
+	VERSION_FILE = $(SRC_PATH)/getbuildnum.h
+endif
 # get current version and build numbers
-FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"]+" }$$2 ~ /FI(MR|RM)WARE_VERSION/{print $$3}' $(SRC_PATH)/getbuildnum.h)
+FW_VER := $(shell $(EXE_AWK) 'BEGIN { FS = "[ \"\t]+" }$$2 ~ /FI(MR|RM)WARE_VER(SION|_MAJ)/{print $$NF}' $(VERSION_FILE))
+ifeq ($(findstring ., $(FW_VER)),)
+	FW_VER := $(FW_VER).$(shell $(EXE_AWK) '$$2 ~ /FIMRWARE_VER_MIN/{print $$NF}' $(VERSION_FILE))
+endif
+
 BUILD_NUM := $(shell $(EXE_AWK) '$$2 ~ /BUILDNUMBER/{print $$NF}' $(SRC_PATH)/buildnum.h)
 ifeq ($(INCR_BUILDNUM), 1)
 	BUILD_NUM := $(shell expr $(BUILD_NUM) + 1)
@@ -247,7 +255,7 @@ AQ_OBJS := 1wire.o adc.o algebra.o analog.o aq_init.o aq_mavlink.o aq_timer.o al
 	can.o canCalib.o canOSD.o canSensors.o canUart.o cyrf6936.o \
 	d_imu.o digital.o dsm.o esc32.o eeprom.o ext_irq.o \
 	ff.o filer.o flash.o fpu.o futaba.o \
-	gimbal.o gps.o getbuildnum.o grhott.o \
+	gimbal.o gps.o grhott.o \
 	hmc5983.o imu.o util.o logger.o \
 	main_ctl.o max21100.o mlinkrx.o motors.o mpu6000.o ms5611.o \
 	nav.o nav_ukf.o pid.o ppm.o pwm.o \
