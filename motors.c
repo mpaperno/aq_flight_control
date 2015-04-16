@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Š 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
 */
 
 #include "aq.h"
@@ -175,33 +175,33 @@ void motorsSendThrust(void) {
 	    value = motorsThrust2Value(motorsData.thrust[i]);
 
 #ifdef HAS_ONBOARD_ESC
-            if (motorsData.pwm[i]) {
-                // preload the request to accelerate setpoint changes
-                if (motorsData.oldValues[i] != value) {
-                    float v = (value -  motorsData.oldValues[i]);
+	    if (motorsData.pwm[i]) {
+		// preload the request to accelerate setpoint changes
+		if (motorsData.oldValues[i] != value) {
+		    float v = (value -  motorsData.oldValues[i]);
 
-                    // increase
-                    if (v > 0.0f)
-                        value += v * MOTORS_COMP_PRELOAD_PTERM;
-                    // decrease
-                    else
-                        value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
+		    // increase
+		    if (v > 0.0f)
+			value += v * MOTORS_COMP_PRELOAD_PTERM;
+		    // decrease
+		    else
+			value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
 
-                    // slowly follow setpoint
-                    motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
-                }
+		    // slowly follow setpoint
+		    motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
+		}
 
-                // battery voltage compensation
-                nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
-                //Express voltage command as fraction of battery volts & prevent possible division by 0 during startup
-                if (analogData.vIn > nominalBatVolts*0.5f) 
-                    value /= analogData.vIn;
-            }
+		// battery voltage compensation
+		nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
+		//Express voltage command as fraction of battery volts & prevent possible division by 0 during startup
+		if (analogData.vIn > nominalBatVolts*0.5f)
+		    value /= analogData.vIn;
+	    }
 #else
-                value /= p[MOT_VALUE_SCAL];
+	    value /= p[MOT_VALUE_SCAL];
 #endif
 
-	        motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);//scale output rpm or voltage from 0 to MOTORS_SCALE
+	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);//scale output rpm or voltage from 0 to MOTORS_SCALE
 	}
     }
 

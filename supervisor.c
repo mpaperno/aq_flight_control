@@ -154,7 +154,7 @@ static void supervisorSetSystemStatus(void) {
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_LOCKED;
 
     // FIXME: we need a better indicator of whether we're actually RingTH
-    if (RADIO_AUX2 < -250)
+    if (rcIsSwitchActive(NAV_CTRL_HOM_GO))
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_RTH;
 
 }

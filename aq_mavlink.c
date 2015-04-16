@@ -102,9 +102,6 @@ void mavlinkSetSystemData(void) {
 	mavlinkData.sys_state =  MAV_STATE_CALIBRATING;
     else
 	mavlinkData.sys_state = MAV_STATE_STANDBY;
-    else if (supervisorData.state & STATE_CALIBRATION) {
-	mavlinkData.sys_state =  MAV_STATE_CALIBRATING;
-    }
 
     if (navData.mode > NAV_STATUS_MANUAL) {
 	mavlinkData.sys_mode = MAV_MODE_FLAG_STABILIZE_ENABLED;
@@ -117,7 +114,7 @@ void mavlinkSetSystemData(void) {
 
 	    if (navData.mode == NAV_STATUS_DVH)
 		mavlinkData.sys_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
-    }
+	}
     }
     else
 	mavlinkData.sys_mode = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED;
