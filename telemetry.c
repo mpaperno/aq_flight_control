@@ -75,19 +75,13 @@ static uint8_t *telemtrySendInt(uint8_t *ptr, uint32_t i) {
 }
 
 void telemetryDo(void) {
-    static unsigned long lastAqUpdate;
-    static unsigned long aqCounter;
+    static unsigned long lastAqUpdate = 0;
     commTxBuf_t *txBuf;
     uint8_t *ptr;
 
     telemetryData.loops++;
 
     if (!(telemetryData.loops % (unsigned int)p[TELEMETRY_RATE])) {
-	aqCounter = counter;
-
-	// calculate idle time
-	telemetryData.idlePercent = (aqCounter - telemetryData.lastAqCounter) * (1e6 / (IMU_LASTUPD - lastAqUpdate)) / p[TELEMETRY_RATE] / (rccClocks.SYSCLK_Frequency / minCycles) * 100.0f;
-	telemetryData.lastAqCounter = aqCounter;
 
 	if (telemetryData.telemetryEnable) {
 	    txBuf = commGetTxBuf(COMM_STREAM_TYPE_TELEMETRY, 256);
@@ -151,7 +145,7 @@ void telemetryDo(void) {
 		ptr = telemtrySendFloat(ptr, motorsData.value[1]);
 		ptr = telemtrySendFloat(ptr, motorsData.value[2]);
 		ptr = telemtrySendFloat(ptr, motorsData.value[3]);
-		ptr = telemtrySendFloat(ptr, telemetryData.idlePercent);
+		ptr = telemtrySendFloat(ptr, supervisorData.idlePercent);
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_X);
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_Y);
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_Z);

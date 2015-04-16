@@ -33,6 +33,7 @@
 #include "motors.h"
 #include "calib.h"
 #include "run.h"
+#include "canSensors.h"
 #ifdef USE_SIGNALING
 #include "signaling.h"
 #endif
@@ -91,6 +92,72 @@ void supervisorLEDsOff(void) {
     digitalLo(supervisorData.gpsLed);
 }
 
+static void supervisorSetSystemStatus(void) {
+
+    // set the base status (these are mutually exclusive)
+    if (supervisorData.state & STATE_FLYING)
+	supervisorData.systemStatus = SPVR_AQ_STATUS_ACTIVE;
+    else if (supervisorData.state & STATE_ARMED)
+	supervisorData.systemStatus = SPVR_AQ_STATUS_STANDBY;
+    else if (supervisorData.state & STATE_CALIBRATION)
+    	supervisorData.systemStatus =  SPVR_AQ_STATUS_CALIBRATING;
+    else
+	supervisorData.systemStatus = SPVR_AQ_STATUS_READY;
+
+    // rest of the status flags can be cumulative
+
+    if ((supervisorData.state & STATE_RADIO_LOSS1))
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_NO_RC;
+
+    if ((supervisorData.state & STATE_RADIO_LOSS2))
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_FAILSAFE;
+
+    if (supervisorData.state & STATE_LOW_BATTERY2)
+	supervisorData.systemStatus |=  SPVR_AQ_STATUS_FUEL_CRITICAL;
+    else if (supervisorData.state & STATE_LOW_BATTERY1)
+	supervisorData.systemStatus |=  SPVR_AQ_STATUS_FUEL_LOW;
+
+    if (navData.ceilingAlt) {
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_CEILING;
+	if (navData.setCeilingReached)
+	    supervisorData.systemStatus |= SPVR_AQ_STATUS_CEILING_REACHED;
+    }
+
+    if (navData.mode <= NAV_STATUS_MANUAL)
+	return;
+
+    switch(navData.mode) {
+	case NAV_STATUS_ALTHOLD:
+	    supervisorData.systemStatus |= SPVR_AQ_STATUS_ALTHOLD;
+	    break;
+
+	case NAV_STATUS_POSHOLD:
+	    supervisorData.systemStatus |= SPVR_AQ_STATUS_ALTHOLD | SPVR_AQ_STATUS_POSHOLD;
+	    break;
+
+	case NAV_STATUS_DVH:
+	    supervisorData.systemStatus |= SPVR_AQ_STATUS_ALTHOLD | SPVR_AQ_STATUS_POSHOLD | SPVR_AQ_STATUS_DVH;
+	    break;
+
+	case NAV_STATUS_MISSION:
+	    supervisorData.systemStatus |= SPVR_AQ_STATUS_MISSION;
+	    break;
+    }
+
+    if (navData.verticalOverride)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_DAO;
+
+    if (navData.headFreeMode == NAV_HEADFREE_DYNAMIC)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_DYNAMIC;
+    else if (navData.headFreeMode == NAV_HEADFREE_LOCKED)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_LOCKED;
+
+    // FIXME: we need a better indicator of whether we're actually RingTH
+    if (RADIO_AUX2 < -250)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_RTH;
+
+}
+
 void supervisorArm(void) {
     if (motorsArm()) {
         supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
@@ -130,6 +197,7 @@ void supervisorTare(void) {
 }
 
 void supervisorTaskCode(void *unused) {
+    unsigned long lastAqCounter = 0;  // used for idle time calc
     uint32_t count = 0;
 
     AQ_NOTICE("Supervisor task started\n");
@@ -142,6 +210,16 @@ void supervisorTaskCode(void *unused) {
 
     supervisorData.vInLPF = analogData.vIn;
     supervisorData.soc = 100.0f;
+
+    if (analogData.extAmp > 0.0f)
+        supervisorData.currentSenseValPtr = &analogData.extAmp;
+    else if (canSensorsData.values[CAN_SENSORS_PDB_BATA] > 0.0f)
+        supervisorData.currentSenseValPtr = &canSensorsData.values[CAN_SENSORS_PDB_BATA];
+    else
+        supervisorData.aOutLPF = SUPERVISOR_INVALID_AMPSOUT_VALUE;
+
+    if (supervisorData.currentSenseValPtr)
+        supervisorData.aOutLPF = *supervisorData.currentSenseValPtr;
 
     while (1) {
         yield(1000/SUPERVISOR_RATE);
@@ -282,7 +360,7 @@ void supervisorTaskCode(void *unused) {
         // loss 2
         else if (!(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS2) {
             supervisorData.state |= STATE_RADIO_LOSS2;
-            AQ_NOTICE("Warning: Radio loss stage 2! Initiating recovery mission.\n");
+            AQ_NOTICE("Warning: Radio loss stage 2! Initiating recovery.\n");
 
             // only available with GPS
             if (navData.navCapable) {
@@ -366,11 +444,23 @@ void supervisorTaskCode(void *unused) {
         }
     }
 
+
+    // calculate idle time
+    supervisorData.idlePercent = (counter - lastAqCounter) * minCycles * 100.0f / ((1e6f / SUPERVISOR_RATE) * rccClocks.SYSCLK_Frequency / 1e6f);
+    lastAqCounter = counter;
+
     // smooth vIn readings
     supervisorData.vInLPF += (analogData.vIn - supervisorData.vInLPF) * (0.1f / SUPERVISOR_RATE);
 
+    // smooth current flow readings, if any
+    if (supervisorData.currentSenseValPtr)
+        supervisorData.aOutLPF += (*supervisorData.currentSenseValPtr - supervisorData.aOutLPF) * (0.1f / SUPERVISOR_RATE);
+
     // determine battery state of charge
     supervisorData.soc = supervisorSOCTableLookup(supervisorData.vInLPF);
+
+    //calculate remaining battery % based on configured low batt stg 2 level -- ASSumes 4.2v/cell maximum
+    supervisorData.battRemainingPrct = (supervisorData.vInLPF - p[SPVR_LOW_BAT2] * analogData.batCellCount) / ((4.2f - p[SPVR_LOW_BAT2]) * analogData.batCellCount) * 100;
 
     // low battery
     if (!(supervisorData.state & STATE_LOW_BATTERY1) && supervisorData.vInLPF < (p[SPVR_LOW_BAT1]*analogData.batCellCount)) {
@@ -385,6 +475,8 @@ void supervisorTaskCode(void *unused) {
 
         // TODO: something
     }
+
+    supervisorSetSystemStatus();
 
     if (supervisorData.state & STATE_FLYING) {
         // count flight time in seconds
@@ -478,6 +570,7 @@ void supervisorInit(void) {
     supervisorData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     supervisorData.state = STATE_INITIALIZING;
+    supervisorData.systemStatus = SPVR_AQ_STATUS_INIT;
     supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE, "SUPERVISOR");
 
     supervisorData.supervisorTask = CoCreateTask(supervisorTaskCode, (void *)0, SUPERVISOR_PRIORITY, &supervisorTaskStack[SUPERVISOR_STACK_SIZE-1], SUPERVISOR_STACK_SIZE);
