@@ -208,17 +208,17 @@ void mavlinkDo(void) {
 	uint8_t mId[4], dataVer[4];
 	uint16_t statAge[4];
 	uint32_t data[2][4];
-	uint32_t ms = micros * 1e-3;
+	uint32_t ms = micros / 1000;
 	memset(data, 0, sizeof(data));
 	i = m = s = 0;
 	for (; i < motorsData.numActive; ++i) {
 	    id = motorsData.activeList[i];
 	    mId[m] = id + 1;
-	    dataVer[m] = (uint8_t)(motorsData.esc32Version[id] * 1e-1);
+	    dataVer[m] = (uint8_t)(motorsData.esc32Version[id] / 10);
 	    if (!motorsData.canTelemReqTime[id] || micros - motorsData.canStatusTime[id] > 3e6)
 		statAge[m] = 0xffff;
 	    else {
-		statAge[m] = ms - (motorsData.canStatusTime[id] * 1e-3);
+		statAge[m] = ms - (motorsData.canStatusTime[id] / 1000);
 		memcpy(&data[0][m], &motorsData.canStatus[id], sizeof(uint32_t));
 		memcpy(&data[1][m], (uint32_t *)&motorsData.canStatus[id] + 1, sizeof(uint32_t));
 	    }
