@@ -21,6 +21,16 @@
 
 #include "arm_math.h"
 
+#ifndef MIN
+#define MIN(a, b) ((a < b) ? a : b)
+#endif
+#ifndef MAX
+#define MAX(a, b) ((a > b) ? a : b)
+#endif
+#ifndef LROUNDF
+#define LROUNDF(Xx) (Xx >= 0.0f ? (long)(Xx + 0.5f) : (long)(Xx - 0.5f))
+#endif
+
 // first order quat filter
 typedef struct {
     float tc;

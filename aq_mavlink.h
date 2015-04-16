@@ -72,7 +72,6 @@ typedef struct {
     uint8_t sys_type;		    // System type (MAV_TYPE enum)
     uint8_t sys_state;		    // System state (MAV_STATE enum)
     uint8_t sys_mode;		    // System operating mode (MAV_MODE_FLAG enum bitmask)
-    uint32_t sys_nav_mode;	    // System navigation mode (AUTOQUAD_NAV_STATUS enum)
 
     mavlink_status_t mavlinkStatus;
     mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
@@ -83,8 +82,6 @@ typedef struct {
     unsigned int currentParam;
 
     uint16_t packetDrops;	// global packet drop counter
-    uint16_t idlePercent;	// MCU idle time
-    unsigned long lastCounter;	// used to calculate idle time
     uint8_t indexPort;		// current port # in channels/servo outputs sequence
 
     // waypoint programming from mission planner

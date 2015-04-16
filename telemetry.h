@@ -29,8 +29,6 @@ typedef struct {
 
     unsigned long loops;
     unsigned char telemetryEnable;
-    unsigned long lastAqCounter;
-    float idlePercent;
 
     uint8_t ckA, ckB;
 } telemetryStruct_t;

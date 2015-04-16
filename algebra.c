@@ -22,9 +22,6 @@
 #include <intrinsics.h>
 #endif
 
-#define MIN(a, b) ((a < b) ? a : b)
-#define MAX(a, b) ((a > b) ? a : b)
-
 void matrixInit(arm_matrix_instance_f32 *m, int rows, int cols) {
     float32_t *d;
 
