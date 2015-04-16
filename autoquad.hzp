@@ -87,7 +87,9 @@
       <file file_name="1wire.h"/>
       <file file_name="esc32.h"/>
       <file file_name="esc32.c"/>
-      <file file_name="buildnum.h"/>
+      <file file_name="buildnum.h">
+        <configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
+      </file>
       <file file_name="spi.h"/>
       <file file_name="spi.c"/>
       <file file_name="signaling.h"/>
@@ -134,10 +136,7 @@
         <file file_name="usb.c"/>
         <file file_name="usbd_storage_msd.c"/>
       </folder>
-      <file file_name="getbuildnum.c">
-        <configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
-      </file>
-      <file file_name="getbuildnum.h"/>
+      <file file_name="aq_version.h"/>
       <file file_name="grhott.c"/>
       <file file_name="grhott.h"/>
       <file file_name="mlinkrx.c"/>

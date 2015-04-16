@@ -24,7 +24,7 @@
 #include "comm.h"
 #include "aq_mavlink.h"
 #include "aq_timer.h"
-#include "getbuildnum.h"
+#include "aq_version.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,7 +150,7 @@ void utilSerialNoString(void) {
 }
 
 void utilVersionString(void) {
-    AQ_PRINTF("AQ FW ver: %s rev%d b%d, HW ver: %d rev%d\n", FIMRWARE_VERSION, getRevisionNumber(), getBuildNumber(), BOARD_VERSION, BOARD_REVISION);
+    AQ_PRINTF("AQ FW ver: %d.%d.%d-%s, HW ver: %d.%d\n", FIMRWARE_VER_MAJ, FIMRWARE_VER_MIN, FIMRWARE_VER_BLD, FIMRWARE_VER_STR, BOARD_VERSION, BOARD_REVISION);
 }
 
 void info(void) {
