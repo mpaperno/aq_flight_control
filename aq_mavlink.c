@@ -179,21 +179,22 @@ void mavlinkDo(void) {
 	mavlink_msg_local_position_ned_send(MAVLINK_COMM_0, micros, UKF_POSN, UKF_POSE, -UKF_POSD, UKF_VELN, UKF_VELE, -VELOCITYD);
 	mavlinkData.streams[MAV_DATA_STREAM_POSITION].next = micros + mavlinkData.streams[MAV_DATA_STREAM_POSITION].interval;
     }
-    // rc channels and pwm outputs (would be nice to separate these)
+    // radio channels
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].enable && mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next < micros)) {
-	if (!mavlinkData.indexPort++) {
-	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 0, radioData.channels[0]+1024, radioData.channels[1]+1024, radioData.channels[2]+1024, radioData.channels[3]+1024,
-		    radioData.channels[4]+1024, radioData.channels[5]+1024, radioData.channels[6]+1024, radioData.channels[7]+1024, RADIO_QUALITY);
-	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 0, motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3],
-		    motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7]);
+	int16_t *rc;
+	mavlinkData.indexPort++;
+	if (radioData.mode == RADIO_MODE_SPLIT) {
+	    rc = radioData.allChannels;
+	    if (mavlinkData.indexPort > 4)
+		mavlinkData.indexPort = 0;
 	} else {
-	    mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, 1, radioData.channels[8]+1024, radioData.channels[9]+1024, radioData.channels[10]+1024, radioData.channels[11]+1024,
-		    radioData.channels[12]+1024, radioData.channels[13]+1024, radioData.channels[14]+1024, radioData.channels[15]+1024, RADIO_QUALITY);
-	    mavlink_msg_servo_output_raw_send(MAVLINK_COMM_0, micros, 1, motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11],
-		    motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15]);
-	    mavlinkData.indexPort = 0;
+	    rc = radioData.channels;
+	    if (mavlinkData.indexPort > 1)
+		mavlinkData.indexPort = 0;
 	}
-	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].interval / 2;
+	uint8_t ci = mavlinkData.indexPort * 8;
+	mavlink_msg_rc_channels_raw_send(MAVLINK_COMM_0, micros, mavlinkData.indexPort, rc[ci]+1024, rc[ci+1]+1024, rc[ci+2]+1024, rc[ci+3]+1024, rc[ci+4]+1024, rc[ci+5]+1024, rc[ci+6]+1024, rc[ci+7]+1024, RADIO_QUALITY);
+	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].next = micros + mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].interval;
     }
     // raw controller -- attitude and nav data
     if (streamAll || (mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].enable && mavlinkData.streams[MAV_DATA_STREAM_RAW_CONTROLLER].next < micros)) {
@@ -252,17 +253,17 @@ void mavlinkDo(void) {
 			motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6],
 			motorsData.value[7], motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13]);
 		break;
-	    case AQMAV_DATASET_GPS_XTRA :
+	    case AQMAV_DATASET_GPS :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, gpsData.pDOP, gpsData.tDOP, gpsData.sAcc, gpsData.cAcc, gpsData.velN, gpsData.velE, gpsData.velD,
-			gpsData.lastPosUpdate, gpsData.lastMessage, 0,0,0,0,0,0,0,0,0,0,0);
+			gpsData.lastPosUpdate, gpsData.lastMessage, gpsData.vAcc, gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.iTOW, 0,0,0,0);
 		break;
-	    case AQMAV_DATASET_UKF_XTRA :
+	    case AQMAV_DATASET_UKF :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, UKF_GYO_BIAS_X, UKF_GYO_BIAS_Y, UKF_GYO_BIAS_Z, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, UKF_Q1, UKF_Q2, UKF_Q3, UKF_Q4,
-			0,0,0,0,0,0,0,0,0,0);
+			ALTITUDE, UKF_POSN, UKF_POSE, UKF_POSD, UKF_VELN, UKF_VELE, VELOCITYD, 0,0,0);
 		break;
 	    case AQMAV_DATASET_SUPERVISOR :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, supervisorData.state, supervisorData.flightTime, supervisorData.flightTimeRemaining, supervisorData.flightSecondsAvg,
-			supervisorData.vInLPF, supervisorData.soc, supervisorData.lastGoodRadioMicros, 0,0,0,0,0,0,0,0,0,0,0,0,0);
+			supervisorData.vInLPF, supervisorData.soc, supervisorData.lastGoodRadioMicros, supervisorData.idlePercent, 0,0,0,0,0,0,0,0,0, analogData.vIn, RADIO_QUALITY, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_STACKSFREE :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, utilGetStackFree("INIT"), utilGetStackFree("FILER"), utilGetStackFree("SUPERVISOR"), utilGetStackFree("ADC"),
@@ -273,6 +274,30 @@ void mavlinkDo(void) {
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, *gimbalData.pitchPort->ccr, *gimbalData.tiltPort->ccr, *gimbalData.rollPort->ccr, *gimbalData.triggerPort->ccr,
 			*gimbalData.passthroughPort->ccr, gimbalData.tilt, gimbalData.trigger, gimbalData.triggerLastTime, gimbalData.triggerLastLat, gimbalData.triggerLastLon,
 			gimbalData.triggerCount, 0,0,0,0,0,0,0,0,0);
+		break;
+	    case AQMAV_DATASET_MOTORS :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
+			motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7],
+			motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15], 0, 0, 0, 0);
+		break;
+	    case AQMAV_DATASET_MOTORS_PWM :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
+			*motorsData.pwm[0]->ccr, *motorsData.pwm[1]->ccr, *motorsData.pwm[2]->ccr, *motorsData.pwm[3]->ccr, *motorsData.pwm[4]->ccr, *motorsData.pwm[5]->ccr, *motorsData.pwm[6]->ccr, *motorsData.pwm[7]->ccr,
+			*motorsData.pwm[8]->ccr, *motorsData.pwm[9]->ccr, *motorsData.pwm[10]->ccr, *motorsData.pwm[11]->ccr, *motorsData.pwm[12]->ccr, *motorsData.pwm[13]->ccr, 0, 0, 0, 0, 0, 0);
+		break;
+	    case AQMAV_DATASET_NAV :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE,
+			navData.holdSpeedN, navData.holdSpeedE, navData.holdSpeedAlt, navData.targetHoldSpeedAlt, 0, 0, 0, 0, 0, 0, 0, 0, micros - navData.lastUpdate, navData.fixType);
+		break;
+	    case AQMAV_DATASET_IMU :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, AQ_ROLL, AQ_PITCH, AQ_YAW, IMU_RATEX, IMU_RATEY, IMU_RATEZ, IMU_ACCX, IMU_ACCY, IMU_ACCZ, IMU_MAGX, IMU_MAGY, IMU_MAGZ,
+			IMU_TEMP, 0, 0, 0, 0, 0, 0, AQ_PRESSURE);
+		break;
+	    case AQMAV_DATASET_DEBUG :
+		// First 10 values are displayed in QGC as integers, the other 10 as floats.
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
+			/* ints */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			/*floats*/ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		break;
 	    }
 	}
@@ -435,8 +460,6 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		if ((uint8_t)param3 == AQMAV_DATASET_LEGACY1) {
 		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY2] = enable;
 		    mavlinkData.customDatasets[AQMAV_DATASET_LEGACY3] = enable;
-		    // toggle all other streams because legacy mode sends a lot of data
-		    mavlinkToggleStreams(!enable);
 		}
 
 		// check if any datasets are active and enable/disable EXTRA3 stream accordingly

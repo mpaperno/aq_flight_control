@@ -40,24 +40,29 @@
 #define AQMAVLINK_STREAM_RATE_ALL		0
 #define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0	    // IMU and baro
 #define AQMAVLINK_STREAM_RATE_EXTENDED_STATUS	1e6	    // system status at 1Hz
-#define AQMAVLINK_STREAM_RATE_RC_CHANNELS	1e6	    // channels and outputs at 1Hz
+#define AQMAVLINK_STREAM_RATE_RC_CHANNELS	0	    // radio channels
 #define AQMAVLINK_STREAM_RATE_RAW_CONTROLLER	(1e6/10)    // attitude at 10Hz
-#define AQMAVLINK_STREAM_RATE_POSITION		1e6	    // position at 1Hz
+#define AQMAVLINK_STREAM_RATE_POSITION		1e6	    // GPS and UKF position/velocity at 1Hz
 #define AQMAVLINK_STREAM_RATE_EXTRA1		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA2		0	    // unused
 #define AQMAVLINK_STREAM_RATE_EXTRA3		0	    // AQ custom telemetry options
 #define AQMAVLINK_STREAM_RATE_PROPULSION	0	    // ESC/Motor telemetry
 
 enum mavlinkCustomDataSets {
-    AQMAV_DATASET_LEGACY1 = 0,	// legacy sets can eventually be phased out
+    AQMAV_DATASET_LEGACY1 = 0,  // legacy sets can eventually be phased out
     AQMAV_DATASET_LEGACY2,
     AQMAV_DATASET_LEGACY3,
-    AQMAV_DATASET_ALL,		// use this to toggle all datasets at once
-    AQMAV_DATASET_GPS_XTRA,
-    AQMAV_DATASET_UKF_XTRA,
+    AQMAV_DATASET_ALL,          // use this to toggle all datasets at once
+    AQMAV_DATASET_GPS,
+    AQMAV_DATASET_UKF,
     AQMAV_DATASET_SUPERVISOR,
     AQMAV_DATASET_STACKSFREE,
     AQMAV_DATASET_GIMBAL,
+    AQMAV_DATASET_MOTORS,
+    AQMAV_DATASET_MOTORS_PWM,
+    AQMAV_DATASET_NAV,
+    AQMAV_DATASET_IMU,
+    AQMAV_DATASET_DEBUG,
     AQMAV_DATASET_ENUM_END
 };
 
@@ -82,7 +87,7 @@ typedef struct {
     unsigned int currentParam;
 
     uint16_t packetDrops;	// global packet drop counter
-    uint8_t indexPort;		// current port # in channels/servo outputs sequence
+    uint8_t indexPort;		// current port # in channels outputs sequence
 
     // waypoint programming from mission planner
     uint8_t wpTargetSysId;
