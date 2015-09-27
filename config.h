@@ -218,6 +218,7 @@ enum configParameters {
     NAV_ALT_POS_PM,
     NAV_ALT_POS_IM,
     NAV_ALT_POS_OM,
+    NAV_ALT_GPS_ACC,
     NAV_CTRL_AH,
     NAV_CTRL_PH,
     NAV_CTRL_MISN,
