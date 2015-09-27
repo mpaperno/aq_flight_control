@@ -383,6 +383,31 @@ static void motorsSetCanGroup(void) {
     }
 }
 
+void motorsPwmToAll(float pwmValue) {
+    for (int i = 0; i < PWM_NUM_PORTS; i++)
+	if (motorsData.active[i] && motorsData.pwm[i])
+	    *motorsData.pwm[i]->ccr = constrainInt(pwmValue, p[MOT_MIN], p[MOT_MAX]);
+}
+
+void motorsEscPwmCalibration(void) {
+    if ((int)p[MOT_ESC_CALI] != 1)
+	return;
+
+    // reset and store calibration request
+    p[MOT_ESC_CALI] = 0.0f;
+    if (!configFlashWrite())
+	return;
+    AQ_NOTICE("Warning: ESC calibration, full throttle in 5 sec!\n");
+    yield(5000);
+    AQ_NOTICE("Motors: Setting ESC Maximum\n");
+    motorsPwmToAll(p[MOT_MAX]);
+    yield(4000);
+    AQ_NOTICE("Motors: Setting ESC Minimum\n");
+    motorsPwmToAll(p[MOT_MIN]);
+    yield(3000);
+    AQ_NOTICE("Motors: Finished ESC calibration.\n");
+}
+
 void motorsInit(void) {
     float sumPitch, sumRoll, sumYaw;
     int i;
@@ -440,6 +465,7 @@ void motorsInit(void) {
         motorsSetupLogging();
 #endif
 
+    motorsEscPwmCalibration();
     motorsSetCanGroup();
     motorsOff();
     canTelemRegister(motorsReceiveTelem, CAN_TYPE_ESC);

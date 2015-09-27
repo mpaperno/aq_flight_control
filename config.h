@@ -115,6 +115,7 @@ enum configParameters {
     MOT_VALUE2T_A2,
     MOT_VALUE_SCAL,
     MOT_MAX,
+    MOT_ESC_CALI,
     MOT_PWRD_01_T,
     MOT_PWRD_01_P,
     MOT_PWRD_01_R,
