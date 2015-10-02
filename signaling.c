@@ -47,9 +47,12 @@ const uint16_t sig_pattern[SIG_EVENT_ENUM_END][31] = {
   { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,1,1,0,0,0,0,1,1,0,0 ,1475 },	// 11 (Radio loss 1/Low batt 2)	L1 & L2 alternating fast flashing (5Hz); 2x200ms beeps per sec
   { 0,1,0,0,1,1,0,0,1,0  ,1,0,0,1,0,0,1,0,0,0  ,1,1,0,1,0,1,1,0,1,0 ,1525 },	// 12 (Radio loss 2)		L1 & L2 alternating fast flashing (5Hz); 2x200ms 1x100ms beep per sec
 // one-time events
-  { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,0,0,0,0,0  ,0,0,1,0,0,0,0,0,0,0 ,1025 }, 	// 13 (Arming)			L1: On, L2: 500ms; 1x100ms beep
-  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,1,1,1,1  ,0,0,1,0,1,0,0,0,0,0 ,1125 }, 	// 14 (Disarming)		L1: On, L2: 500ms; 2x100ms beeps
-  { 1,1,0,0,1,1,0,0,1,1  ,0,0,1,1,0,0,1,1,0,0  ,1,1,1,1,1,1,1,1,1,1 ,1525 }, 	// 15 (HeadingFree ref. set)	L1 & L2 alternating 200ms flashes; 1s beep
+  { 1,1,1,1,1,1,1,1,1,1  ,1,1,1,1,1,0,0,0,0,0  ,0,0,1,0,0,0,0,0,0,0 ,1800 }, 	// 13 (Arming)			L1: On, L2: 500ms; 1x100ms beep
+  { 1,1,1,1,1,1,1,1,1,1  ,0,0,0,0,0,1,1,1,1,1  ,0,0,1,0,1,0,0,0,0,0 ,1825 }, 	// 14 (Disarming)		L1: On, L2: 500ms; 2x100ms beeps
+  { 1,1,0,0,1,1,0,0,1,1  ,0,0,1,1,0,0,1,1,0,0  ,1,1,1,1,1,1,1,1,1,1 ,1850 }, 	// 15 (HeadingFree ref. set)	L1 & L2 alternating 200ms flashes; 1s beep
+  { 0,0,1,1,0,0,1,1,0,0  ,0,0,1,1,0,0,1,1,0,0  ,1,1,0,0,1,1,0,0,1,1 ,1875 }, 	// 16 (Waypoint reached)	L1 & L2 simultaneous 200ms flashes @ 3Hz; 200ms beeps @ 3Hz
+  { 0,0,0,1,1,1,1,0,0,0  ,0,0,0,1,1,1,1,0,0,0  ,1,1,1,0,0,0,0,1,1,1 ,1900 }, 	// 17 (Waypoint recorded)	L1 & L2 simultaneous 400ms flash @ 1Hz; 2x300ms beeps
+  { 1,0,1,0,1,0,1,0,1,0  ,1,0,1,0,1,0,1,0,1,0  ,1,0,1,0,1,0,1,0,1,0 ,1925 }, 	// 18 (Waypoints cleared)	L1 & L2 simultaneous 100ms flashes @ 5hz; 100ms beeps @ 5hz
 };
 
 sigStruct_t sigData __attribute__((section(".ccm")));
