@@ -292,7 +292,7 @@ void supervisorTaskCode(void *unused) {
             digitalTogg(supervisorData.readyLed);
 
         // Attempt to arm if throttle down and yaw full right for 2sec.
-        if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500) {
+        if (RADIO_VALID && RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500) {
             if (!supervisorData.armTime) {
                 supervisorData.armTime = timerMicros();
             }
@@ -306,28 +306,46 @@ void supervisorTaskCode(void *unused) {
         }
 
         // various functions
-        if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
-#ifdef HAS_DIGITAL_IMU
-            // tare function (lower left)
-            if (RADIO_ROLL < -500 && RADIO_PITCH > +500) {
-                supervisorTare();
-            }
-#endif
-            // config write (upper right)
-            if (RADIO_VALID && RADIO_ROLL > +500 && RADIO_PITCH < -500) {
-                supervisorLEDsOn();
-                configFlashWrite();
-#ifdef DIMU_HAVE_EEPROM
-                dIMURequestCalibWrite();
-#endif
-                supervisorLEDsOff();
-            }
+        if (RADIO_VALID && RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
+            if (!supervisorData.stickCmdTimer) {
+        	supervisorData.stickCmdTimer = timerMicros();
+            } else if ((timerMicros() - supervisorData.stickCmdTimer) > SUPERVISOR_STICK_CMD_TIME) {
 
-            // calibration mode (upper left)
-            if (RADIO_ROLL < -500 && RADIO_PITCH < -500) {
-                supervisorCalibrate();
+#ifdef HAS_DIGITAL_IMU
+		// tare function (lower left)
+		if (RADIO_ROLL < -500 && RADIO_PITCH > +500) {
+		    supervisorTare();
+	            supervisorData.stickCmdTimer = 0;
+		}
+		else
+#endif
+
+		// config write (upper right)
+		if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
+		    supervisorLEDsOn();
+		    configFlashWrite();
+#ifdef DIMU_HAVE_EEPROM
+		    dIMURequestCalibWrite();
+#endif
+		    supervisorLEDsOff();
+	            supervisorData.stickCmdTimer = 0;
+		}
+
+		// calibration mode (upper left)
+		else if (RADIO_ROLL < -500 && RADIO_PITCH < -500) {
+		    supervisorCalibrate();
+	            supervisorData.stickCmdTimer = 0;
+		}
+
+		// clear waypoints (lower right with WP Record switch active)
+		else if (RADIO_ROLL > 500 && RADIO_PITCH > 500 && rcIsSwitchActive(NAV_CTRL_WP_REC)) {
+		    navClearWaypoints();
+	            supervisorData.stickCmdTimer = 0;
+		}
             }
         }
+        else
+            supervisorData.stickCmdTimer = 0;
     }
     else if (supervisorData.state & STATE_ARMED) {
         // Disarm only if in manual mode
@@ -442,6 +460,7 @@ void supervisorTaskCode(void *unused) {
 
                 // go
                 navData.missionLeg = 0;
+                navData.tempMissionLoaded = 1;
                 navData.spvrModeOverride = NAV_STATUS_MISSION;
             }
             // no GPS, slow decent in PH mode

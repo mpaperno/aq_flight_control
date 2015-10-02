@@ -26,7 +26,8 @@
 #define SUPERVISOR_PRIORITY	    34
 
 #define SUPERVISOR_RATE		    20		    // Hz
-#define SUPERVISOR_DISARM_TIME	    (1e6*2)	    // 2 seconds
+#define SUPERVISOR_DISARM_TIME	    (1e6*2)	    // 2 seconds delay for arm/disarm stick commands
+#define SUPERVISOR_STICK_CMD_TIME   (1e6*2)	    // 2 seconds delay for other stick commands
 #define SUPERVISOR_RADIO_LOSS1	    ((int)1e6)	    // 1 second
 #define SUPERVISOR_RADIO_LOSS2	    ((int)15e6)	    // 15 seconds
 
@@ -97,6 +98,7 @@ typedef struct {
     float flightSecondsAvg;	    // avg flight time seconds for every percentage of SOC
     float flightTimeRemaining;	    // seconds
     uint32_t armTime;
+    uint32_t stickCmdTimer;
     uint32_t lastGoodRadioMicros;
     uint32_t systemStatus;          // supervisorSystemStatusBits
     float vInLPF;
