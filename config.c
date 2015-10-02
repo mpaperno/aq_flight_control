@@ -203,6 +203,7 @@ const char *configParameterStrings[] = {
     "NAV_CTRL_HOM_GO",
     "NAV_CTRL_HF_SET",
     "NAV_CTRL_HF_LOCK",
+    "NAV_CTRL_WP_REC",
     "IMU_ROT",
     "IMU_FLIP",
     "IMU_ACC_BIAS_X",
@@ -570,6 +571,7 @@ void configLoadDefault(void) {
     p[NAV_CTRL_HOM_GO] = DEFAULT_NAV_CTRL_HOM_GO;
     p[NAV_CTRL_HF_SET] = DEFAULT_NAV_CTRL_HF_SET;
     p[NAV_CTRL_HF_LOCK] = DEFAULT_NAV_CTRL_HF_LOCK;
+    p[NAV_CTRL_WP_REC] = DEFAULT_NAV_CTRL_WP_REC;
     p[IMU_ROT] = DEFAULT_IMU_ROT;
     p[IMU_FLIP] = DEFAULT_IMU_FLIP;
     p[IMU_ACC_BIAS_X] = DEFAULT_IMU_ACC_BIAS_X;

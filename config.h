@@ -225,6 +225,7 @@ enum configParameters {
     NAV_CTRL_HOM_GO,
     NAV_CTRL_HF_SET,
     NAV_CTRL_HF_LOCK,
+    NAV_CTRL_WP_REC,
     IMU_ROT,
     IMU_FLIP,
     IMU_ACC_BIAS_X,

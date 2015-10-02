@@ -111,11 +111,15 @@ typedef struct {
     uint8_t spvrModeOverride;		// forced navigation mode desired, regardless of user controls (eg. failsafe mode). 0 = no override
     uint8_t navCapable;
     uint8_t missionLeg;
+    uint8_t tempMissionLoaded;		// flag indicating that a temporary/default mission has been loaded (not a user-specified one)
     uint8_t fixType;                    // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)
     uint8_t homeActionFlag;		// flag to avoid repeating set/recall home actions until switch is moved back to midpoint
     float distanceToHome;		// current distance to home position in m, if set (only updated when in headfree mode)
     float bearingToHome;		// current bearing to home position in rad, if set (only updated when in headfree mode)
     uint32_t homeDistanceLastUpdate;	// timestamp of last home position update (only updated when in headfree mode)
+
+    uint32_t wpRecTimer;		// track how long WP recording switch is active before taking action
+    uint8_t wpActionFlag;		// flag to avoid repeating waypoint record/skip actions until switch is turned back off
 
     uint8_t headFreeMode;		// headfree/carefree mode status
     uint32_t hfDynamicModeTimer;	// track how long switch is active before entering dynamic HF mode
@@ -133,10 +137,10 @@ typedef struct {
 extern navStruct_t navData;
 
 extern void navInit(void);
-extern void navAccelUpdate(void);
-extern void navGpsUpdate(void);
-extern float navGetVel(char direction);
-extern float navGetPos(char direction);
+//extern void navAccelUpdate(void);
+//extern void navGpsUpdate(void);
+//extern float navGetVel(char direction);
+//extern float navGetPos(char direction);
 extern unsigned int navGetWaypointCount(void);
 extern unsigned char navClearWaypoints(void);
 extern navMission_t *navGetWaypoint(int seqId);
@@ -145,8 +149,11 @@ extern void navSetHomeCurrent(void);
 extern navMission_t *navLoadLeg(unsigned char leg);
 extern void navNavigate(void);
 extern void navResetHoldAlt(float delta);
+extern void navSetHoldAlt(float alt, uint8_t relative);
+extern void navSetHoldHeading(float targetHeading);
 extern float navCalcDistance(double lat1, double lon1, double lat2, double lon2);
 extern float navCalcBearing(double lat1, double lon1, double lat2, double lon2);
 extern void navPressureAdjust(float altitude);
+extern uint8_t navRecordWaypoint(void);
 
 #endif

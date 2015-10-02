@@ -81,7 +81,9 @@ void navSetHomeCurrent(void) {
     navData.homeLeg.targetAlt = ALTITUDE;
     navData.homeLeg.targetLat = gpsData.lat;
     navData.homeLeg.targetLon = gpsData.lon;
+    navData.homeLeg.targetRadius = 1.0f;
     navData.homeLeg.maxHorizSpeed = p[NAV_MAX_SPEED];
+    navData.homeLeg.maxVertSpeed = p[NAV_ALT_POS_OM];
     navData.homeLeg.poiHeading = AQ_YAW;
     if (p[NAV_CEILING])
         navData.ceilingAlt = (ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
@@ -94,6 +96,8 @@ void navSetHomeCurrent(void) {
 }
 
 void navRecallHome(void) {
+    if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
+	return;
     navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
     navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
     navData.holdMaxHorizSpeed = navData.homeLeg.maxHorizSpeed;
@@ -258,6 +262,74 @@ void navSetFixType(void) {
     }
 }
 
+void navDoUserCommands(unsigned char *leg, navMission_t *curLeg) {
+
+    // home set
+    if (rcIsSwitchActive(NAV_CTRL_HOM_SET)) {
+	if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable)
+	    navSetHomeCurrent();
+	navData.homeActionFlag = 1;
+    }
+    // recall home
+    else if (rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
+	if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable) {
+	    navRecallHome();
+	    AQ_NOTICE("Returning to home position\n");
+	}
+	navData.homeActionFlag = 1;
+    }
+    // switch to middle, clear action flag
+    else {
+	navData.homeActionFlag = 0;
+    }
+
+    // heading-free mode
+    if (rcIsControlConfigured(NAV_CTRL_HF_SET) || rcIsControlConfigured(NAV_CTRL_HF_LOCK)) {
+
+	navSetHeadFreeMode();
+
+	// set/maintain headfree frame reference
+	if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
+		(navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
+	    uint8_t dfRefTyp = 0;
+	    unsigned long currentTime = IMU_LASTUPD;
+	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
+		if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && navData.navCapable && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
+		    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
+		    navData.homeDistanceLastUpdate = currentTime;
+		}
+		if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
+		    dfRefTyp = 1;
+	    }
+	    navSetHfReference(dfRefTyp);
+	}
+    }
+
+    // waypoint recording/skip: switch active for 1s = record waypoint or skip to next wpt if already in mission mode
+    if (rcIsControlConfigured(NAV_CTRL_WP_REC)) {
+	if (rcIsSwitchActive(NAV_CTRL_WP_REC)) {
+	    if (!navData.wpActionFlag) {
+		if (!navData.wpRecTimer) {
+		    navData.wpRecTimer = timerMicros();
+		}
+		else if (timerMicros() - navData.wpRecTimer > 1e6) {
+		    if (navData.mode == NAV_STATUS_MISSION) {
+			if (*leg + 1 < navGetWaypointCount())
+			    curLeg = navLoadLeg(++*leg);
+		    } else
+			navRecordWaypoint();
+
+		    navData.wpRecTimer = 0;
+		    navData.wpActionFlag = 1;
+		}
+	    }
+	} else {
+	    navData.wpRecTimer = 0;
+	    navData.wpActionFlag = 0;
+	}
+    }
+}
+
 void navNavigate(void) {
     unsigned long currentTime = IMU_LASTUPD;
     unsigned char leg = navData.missionLeg;
@@ -406,47 +478,8 @@ void navNavigate(void) {
         }
     }
 
-    if (!(supervisorData.state & STATE_RADIO_LOSS1)) {
-	// home set
-	if (rcIsSwitchActive(NAV_CTRL_HOM_SET)) {
-	    if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable)
-		navSetHomeCurrent();
-	    navData.homeActionFlag = 1;
-	}
-	// recall home
-	else if (rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
-	    if (!navData.homeActionFlag && (supervisorData.state & STATE_ARMED) && navData.navCapable) {
-		navRecallHome();
-		AQ_NOTICE("Returning to home position\n");
-	    }
-	    navData.homeActionFlag = 1;
-	}
-	// switch to middle, clear action flag
-	else {
-	    navData.homeActionFlag = 0;
-	}
-
-	// heading-free mode
-	if (rcIsControlConfigured(NAV_CTRL_HF_SET) || rcIsControlConfigured(NAV_CTRL_HF_LOCK)) {
-
-	    navSetHeadFreeMode();
-
-	    // set/maintain headfree frame reference
-	    if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
-		    (navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
-		uint8_t dfRefTyp = 0;
-		if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
-		    if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && navData.navCapable && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
-			navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
-			navData.homeDistanceLastUpdate = currentTime;
-		    }
-		    if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
-			dfRefTyp = 1;
-		}
-		navSetHfReference(dfRefTyp);
-	    }
-	}
-    }
+    if (!(supervisorData.state & STATE_RADIO_LOSS1))
+	navDoUserCommands(&leg, curLeg);
 
     if (UKF_POSN != 0.0f || UKF_POSE != 0.0f) {
         navData.holdCourse = compassNormalize(atan2f(-UKF_POSE, -UKF_POSN) * RAD_TO_DEG);
@@ -480,6 +513,7 @@ void navNavigate(void) {
 
                     // start the loiter clock
                     navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
+                    signalingOnetimeEvent(SIG_EVENT_OT_WP_REACHED);
 #ifdef USE_MAVLINK
                     // notify ground
                     mavlinkWpReached(leg);
@@ -632,8 +666,27 @@ void navNavigate(void) {
     navData.lastUpdate = currentTime;
 }
 
-void navInit(void) {
+void navLoadDefaultMission(void) {
     int i = 0;
+
+    // HOME
+    navData.missionLegs[i].type = NAV_LEG_HOME;
+    navData.missionLegs[i].targetRadius = 1.0f;
+    navData.missionLegs[i].loiterTime = 0;
+    navData.missionLegs[i].poiAltitude = ALTITUDE;
+    ++i;
+
+    // land
+    navData.missionLegs[i].type = NAV_LEG_LAND;
+    navData.missionLegs[i].maxHorizSpeed = 1.0f;
+    navData.missionLegs[i].poiAltitude = 0.0f;
+    navData.missionLegs[i].targetRadius = 1.0f;
+    navData.missionLegs[i].poiHeading = 0.0f;
+
+    navData.tempMissionLoaded = 1;
+}
+
+void navInit(void) {
 
     AQ_NOTICE("Nav init\n");
 
@@ -647,29 +700,12 @@ void navInit(void) {
     navData.altPosPID = pidInit(&p[NAV_ALT_POS_P], &p[NAV_ALT_POS_I], 0, 0, &p[NAV_ALT_POS_PM], &p[NAV_ALT_POS_IM], 0, &p[NAV_ALT_POS_OM], 0, 0, 0, 0);
 
     navData.mode = NAV_STATUS_MANUAL;
-    navData.ceilingAlt = 0.0f;
-    navData.setCeilingFlag = 0;
-    navData.setCeilingReached = 0;
-    navData.homeActionFlag = 0;
-    navData.distanceToHome = 0.0f;
     navData.headFreeMode = NAV_HEADFREE_OFF;
-    navData.hfUseStoredReference = 0;
 
     navSetHoldHeading(AQ_YAW);
     navSetHoldAlt(ALTITUDE, 0);
 
-    // HOME
-    navData.missionLegs[i].type = NAV_LEG_HOME;
-    navData.missionLegs[i].targetRadius = 0.10f;
-    navData.missionLegs[i].loiterTime = 0;
-    navData.missionLegs[i].poiAltitude = ALTITUDE;
-    i++;
-
-    // land
-    navData.missionLegs[i].type = NAV_LEG_LAND;
-    navData.missionLegs[i].maxHorizSpeed = 1.0f;
-    navData.missionLegs[i].poiAltitude = 0.0f;
-    i++;
+    navLoadDefaultMission();
 }
 
 unsigned int navGetWaypointCount(void) {
@@ -683,16 +719,17 @@ unsigned int navGetWaypointCount(void) {
 }
 
 unsigned char navClearWaypoints(void) {
-    unsigned char ack = 0;
-    int i;
+    if (navData.mode >= NAV_STATUS_MISSION)
+	return 0;
 
-    if (navData.mode != NAV_STATUS_MISSION) {
-        for (i = 0; i < NAV_MAX_MISSION_LEGS; i++)
-            navData.missionLegs[i].type = 0;
-        ack = 1;
-    }
+    for (int i = 0; i < NAV_MAX_MISSION_LEGS; i++)
+	navData.missionLegs[i].type = 0;
 
-    return ack;
+    navData.tempMissionLoaded = 0;
+    signalingOnetimeEvent(SIG_EVENT_OT_WP_CLEARED);
+    AQ_NOTICE("Waypoints cleared.\n");
+
+    return 1;
 }
 
 navMission_t *navGetWaypoint(int seqId) {
@@ -701,6 +738,36 @@ navMission_t *navGetWaypoint(int seqId) {
 
 navMission_t *navGetHomeWaypoint(void) {
     return &navData.homeLeg;
+}
+
+uint8_t navRecordWaypoint(void) {
+    if (!navData.navCapable || navData.mode >= NAV_STATUS_MISSION)
+	return 0;
+
+    uint8_t idx = 0;
+    if (navData.tempMissionLoaded)
+	navClearWaypoints();
+    else
+    	idx = navGetWaypointCount();
+
+    if (idx >= NAV_MAX_MISSION_LEGS)
+	return 0;
+
+    navData.missionLegs[idx].type = NAV_LEG_GOTO;
+    navData.missionLegs[idx].targetAlt = ALTITUDE;
+    navData.missionLegs[idx].targetLat = gpsData.lat;
+    navData.missionLegs[idx].targetLon = gpsData.lon;
+    navData.missionLegs[idx].maxHorizSpeed = configGetAdjParamValue(NAV_MAX_SPEED);
+    navData.missionLegs[idx].maxVertSpeed = configGetAdjParamValue(NAV_ALT_POS_OM);
+    navData.missionLegs[idx].targetRadius = 1.0f;
+    navData.missionLegs[idx].loiterTime = 1e6;
+    navData.missionLegs[idx].poiHeading = AQ_YAW;
+    navData.missionLegs[idx].relativeAlt = 0;
+    navData.missionLegs[idx].poiAltitude = 0;
+
+    signalingOnetimeEvent(SIG_EVENT_OT_WP_RECORDED);
+    AQ_PRINTF("Waypoint %d recorded\n", idx);
+    return 1;
 }
 
 // input lat/lon in degrees, returns distance in meters
