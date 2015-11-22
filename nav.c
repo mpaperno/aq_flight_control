@@ -513,7 +513,9 @@ void navNavigate(void) {
 
                     // start the loiter clock
                     navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
+#ifdef USE_SIGNALING
                     signalingOnetimeEvent(SIG_EVENT_OT_WP_REACHED);
+#endif
 #ifdef USE_MAVLINK
                     // notify ground
                     mavlinkWpReached(leg);
@@ -726,8 +728,14 @@ unsigned char navClearWaypoints(void) {
 	navData.missionLegs[i].type = 0;
 
     navData.tempMissionLoaded = 0;
-    signalingOnetimeEvent(SIG_EVENT_OT_WP_CLEARED);
+
     AQ_NOTICE("Waypoints cleared.\n");
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_WP_CLEARED);
+#endif
+#ifdef USE_MAVLINK
+    mavlinkWpSendCount();
+#endif
 
     return 1;
 }
@@ -754,19 +762,25 @@ uint8_t navRecordWaypoint(void) {
 	return 0;
 
     navData.missionLegs[idx].type = NAV_LEG_GOTO;
-    navData.missionLegs[idx].targetAlt = ALTITUDE;
+    navData.missionLegs[idx].targetAlt = gpsData.height;
     navData.missionLegs[idx].targetLat = gpsData.lat;
     navData.missionLegs[idx].targetLon = gpsData.lon;
-    navData.missionLegs[idx].maxHorizSpeed = configGetAdjParamValue(NAV_MAX_SPEED);
-    navData.missionLegs[idx].maxVertSpeed = configGetAdjParamValue(NAV_ALT_POS_OM);
+    navData.missionLegs[idx].maxHorizSpeed = p[NAV_MAX_SPEED];
+    navData.missionLegs[idx].maxVertSpeed = p[NAV_ALT_POS_OM];
     navData.missionLegs[idx].targetRadius = 1.0f;
     navData.missionLegs[idx].loiterTime = 1e6;
     navData.missionLegs[idx].poiHeading = AQ_YAW;
     navData.missionLegs[idx].relativeAlt = 0;
     navData.missionLegs[idx].poiAltitude = 0;
 
-    signalingOnetimeEvent(SIG_EVENT_OT_WP_RECORDED);
     AQ_PRINTF("Waypoint %d recorded\n", idx);
+#ifdef USE_SIGNALING
+    signalingOnetimeEvent(SIG_EVENT_OT_WP_RECORDED);
+#endif
+#ifdef USE_MAVLINK
+    mavlinkWpSendCount();
+#endif
+
     return 1;
 }
 

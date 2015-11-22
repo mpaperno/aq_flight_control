@@ -106,6 +106,7 @@ extern void mavlinkInit(void);
 extern void mavlinkSendNotice(const char *s);
 extern void mavlinkWpReached(uint16_t seqId);
 extern void mavlinkWpAnnounceCurrent(uint16_t seqId);
+extern void mavlinkWpSendCount(void);
 extern void mavlinkAnnounceHome(void);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 extern void mavlinkDo(void);

@@ -72,6 +72,10 @@ void mavlinkWpAnnounceCurrent(uint16_t seqId) {
     mavlink_msg_mission_current_send(MAVLINK_COMM_0, seqId);
 }
 
+void mavlinkWpSendCount(void) {
+    mavlink_msg_mission_count_send(MAVLINK_COMM_0, mavlinkData.wpTargetSysId, mavlinkData.wpTargetCompId, navGetWaypointCount());
+}
+
 // send new home position coordinates
 void mavlinkAnnounceHome(void) {
     mavlink_msg_gps_global_origin_send(MAVLINK_COMM_0, navData.homeLeg.targetLat*(double)1e7f, navData.homeLeg.targetLon*(double)1e7, (navData.homeLeg.targetAlt + navData.presAltOffset)*1e3);
@@ -136,6 +140,7 @@ void mavlinkDo(void) {
     if (micros < lastMicros) {
 	mavlinkData.nextHeartbeat = 0;
 	mavlinkData.nextParam = 0;
+	mavlinkData.wpNext = 0;
 	for (uint8_t i=0; i < AQMAVLINK_TOTAL_STREAMS; ++i)
 	    mavlinkData.streams[i].next = 0;
     }
@@ -540,9 +545,8 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 //		    break;
 
 		case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
-		    if (mavlink_msg_mission_request_list_get_target_system(&msg) == mavlink_system.sysid) {
-			mavlink_msg_mission_count_send(MAVLINK_COMM_0, msg.sysid, msg.compid, navGetWaypointCount());
-		    }
+		    if (mavlink_msg_mission_request_list_get_target_system(&msg) == mavlink_system.sysid)
+			mavlinkWpSendCount();
 		    break;
 
 		case MAVLINK_MSG_ID_MISSION_CLEAR_ALL:
@@ -889,6 +893,7 @@ void mavlinkInit(void) {
     mavlinkData.currentParam = CONFIG_NUM_PARAMS;
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
+    mavlinkData.wpTargetCompId = MAV_COMP_ID_MISSIONPLANNER;
     mavlinkData.sys_mode = MAV_MODE_PREFLIGHT;
     mavlinkData.sys_state = MAV_STATE_BOOT;
     mavlink_system.sysid = flashSerno(0) % 250;
