@@ -117,6 +117,7 @@ EXTRA_OBJECTS ?= 0
 EXE_AWK ?= gawk 
 EXE_MKDIR ?= mkdir
 #EXE_MKDIR = C:/cygwin/bin/mkdir
+EXE_TEST ?= test
 EXE_ZIP ?= zip -j
 # file extention for compressed files (gz for gzip, etc)
 ZIP_EXT ?= zip
@@ -352,7 +353,7 @@ DEPS := $(C_OBJECTS:.o=.d)
 
 .PHONY: build-common-start build-common-end build-copy-hex build-copy-bin all hex bin clean-all clean clean-bin clean-pack pack pack-hex pack-bin CREATE_BUILD_FOLDER BUILDNUMBER SIZEREPORT
 
-build-common-start: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(BIN_PATH)/$(BIN_NAME).elf
+build-common-start: $(BIN_PATH)/$(BIN_NAME).elf
 build-common-end: SIZEREPORT
 build-copy-hex: $(BIN_PATH)/$(BIN_NAME).hex
 build-copy-bin: $(BIN_PATH)/$(BIN_NAME).bin
@@ -423,7 +424,7 @@ $(OBJ_PATH)/thumb_crt0.o: $(SRC_PATH)/thumb_crt0.s
 	$(AS) $(AS_OPTS) -gdwarf-2 $(basename $@).lst -o $@
 	@rm -f $(basename $@).lst
 
-$(BIN_PATH)/$(BIN_NAME).elf: $(C_OBJECTS)
+$(BIN_PATH)/$(BIN_NAME).elf: CREATE_BUILD_FOLDER $(EXTRA_TARGETS) $(C_OBJECTS)
 	@echo "## Linking --> $@ ##"
 	$(LD) -X $(LINKER_OPTS) -o $@ --start-group $(C_OBJECTS) $(EXTRA_LIBS) --end-group
 
@@ -445,8 +446,8 @@ BUILDNUMBER :
 	@echo "Incrementing Build Number"
 	$(CMD_BUILDNUMBER)
 
-SIZEREPORT:
-	@if test -f $(SIZE); then echo; echo "---- Size report ----"; echo "${CMD_SIZE_REPORT}"; fi
+SIZEREPORT: $(BIN_PATH)/$(BIN_NAME).elf
+	@if $(EXE_TEST) -f $(SIZE); then echo; echo "---- Size report ----"; echo "${CMD_SIZE_REPORT}"; else echo "$(SIZE) not found!"; fi
 	
 ## Flash-Loader (Linux only) 			##
 ## Requires AQ ground tools sources	##
