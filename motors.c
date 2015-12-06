@@ -135,29 +135,29 @@ static void motorsCheckCanStatus(int motorId) {
 void motorsSendValues(void) {
     int i;
 
-    for (i = 0; i < MOTORS_NUM; i++)
-	if (motorsData.active[i]) {
-	    // ensure motor output is constrained
-	    motorsData.value[i] = constrainInt(motorsData.value[i], 0, MOTORS_SCALE);
+    for (int j = 0; j < motorsData.numActive; ++j) {
+	i = motorsData.activeList[j];
+	// ensure motor output is constrained
+	motorsData.value[i] = constrainInt(motorsData.value[i], 0, MOTORS_SCALE);
 
-	    // PWM
-	    if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
-		if (supervisorData.state & STATE_ARMED)
-		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] -  p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
-		else
-		    *motorsData.pwm[i]->ccr = 0;
-	    }
-	    // CAN
-	    else if (motorsData.can[i]) {
-		motorsCheckCanStatus(i);
-
-		if (supervisorData.state & STATE_ARMED)
-		    // convert to 16 bit
-		    *motorsData.canPtrs[i] = constrainInt(motorsData.value[i], MOTORS_SCALE * 0.1f, MOTORS_SCALE)<<4;
-		else
-		    *motorsData.canPtrs[i] = 0;
-	    }
+	// PWM
+	if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
+	    if (supervisorData.state & STATE_ARMED)
+		*motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] - p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
+	    else
+		*motorsData.pwm[i]->ccr = 0;
 	}
+	// CAN
+	else if (motorsData.can[i]) {
+	    motorsCheckCanStatus(i);
+
+	    if (supervisorData.state & STATE_ARMED)
+		// convert to 16 bit
+		*motorsData.canPtrs[i] = constrainInt(motorsData.value[i], MOTORS_SCALE * 0.1f, MOTORS_SCALE)<<4;
+	    else
+		*motorsData.canPtrs[i] = 0;
+	}
+    }
 
     motorsCanSendGroups();
 }
@@ -165,44 +165,38 @@ void motorsSendValues(void) {
 // thrust in gram-force
 void motorsSendThrust(void) {
     float value;
-#ifdef HAS_ONBOARD_ESC
-    float nominalBatVolts, voltageFactor;
-#endif
     int i;
 
-    for (i = 0; i < MOTORS_NUM; i++) {
-	if (motorsData.active[i]) {
-	    value = motorsThrust2Value(motorsData.thrust[i]);
+    for (int j = 0; j < motorsData.numActive; ++j) {
+	i = motorsData.activeList[j];
+	value = motorsThrust2Value(motorsData.thrust[i]);
 
-#ifdef HAS_ONBOARD_ESC
-	    if (motorsData.pwm[i]) {
-		// preload the request to accelerate setpoint changes
-		if (motorsData.oldValues[i] != value) {
-		    float v = (value -  motorsData.oldValues[i]);
+	// using open-loop PWM ESC?
+	if (i < PWM_NUM_PORTS && motorsData.pwm[i] && MOTORS_ESC_TYPE != ESC_TYPE_ESC32) {
+	    // preload the request to accelerate setpoint changes
+	    if (motorsData.oldValues[i] != value) {
+		float v = (value -  motorsData.oldValues[i]);
 
-		    // increase
-		    if (v > 0.0f)
-			value += v * MOTORS_COMP_PRELOAD_PTERM;
-		    // decrease
-		    else
-			value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
+		// increase
+		if (v > 0.0f)
+		    value += v * MOTORS_COMP_PRELOAD_PTERM;
+		// decrease
+		else
+		    value += v * MOTORS_COMP_PRELOAD_PTERM * MOTORS_COMP_PRELOAD_NFACT;
 
-		    // slowly follow setpoint
-		    motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
-		}
-
-		// battery voltage compensation
-		nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
-		//Express voltage command as fraction of battery volts & prevent possible division by 0 during startup
-		if (analogData.vIn > nominalBatVolts*0.5f)
-		    value /= analogData.vIn;
+		// slowly follow setpoint
+		motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
 	    }
-#else
-	    value /= p[MOT_VALUE_SCAL];
-#endif
 
-	    motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);//scale output rpm or voltage from 0 to MOTORS_SCALE
+	    // Express voltage compensation as fraction of battery volts & prevent possible division by 0 during startup
+	    if (analogData.vIn > MOTORS_CELL_VOLTS * analogData.batCellCount * 0.5f)
+		value /= analogData.vIn;
 	}
+	// using ESC32 in closed-loop mode via CAN or PWM
+	else
+	    value /= p[MOT_VALUE_SCAL];
+
+	motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);
     }
 
     motorsSendValues();
@@ -211,21 +205,20 @@ void motorsSendThrust(void) {
 void motorsOff(void) {
     int i;
 
-    for (i = 0; i < MOTORS_NUM; i++)
-	if (motorsData.active[i]) {
-	    motorsData.value[i] = 0;
+    for (int j = 0; j < motorsData.numActive; ++j) {
+	i = motorsData.activeList[j];
+	motorsData.value[i] = 0;
 
-	    // PWM
-	    if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
-		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
-	    }
-	    // CAN
-	    else if (motorsData.can[i]) {
-		motorsCheckCanStatus(i);
-		*motorsData.canPtrs[i] = 0;
-	    }
+	// PWM
+	if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
+	    *motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
 	}
-
+	// CAN
+	else if (motorsData.can[i]) {
+	    motorsCheckCanStatus(i);
+	    *motorsData.canPtrs[i] = 0;
+	}
+    }
     motorsCanSendGroups();
 
     motorsData.throttle = 0;
@@ -247,24 +240,23 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
 
     // calculate and set each motor value
-    for (i = 0; i < MOTORS_NUM; i++) {
-	if (motorsData.active[i]) {
-	    motorsPowerStruct_t *d = &motorsData.distribution[i];
+    for (int j = 0; j < motorsData.numActive; ++j) {
+	i = motorsData.activeList[j];
+	motorsPowerStruct_t *d = &motorsData.distribution[i];
 
-	    value = 0.0f;
-	    value += (throttle * d->throttle * 0.01f);
-	    value += (pitchCommand * d->pitch * 0.01f);
-	    value += (rollCommand * d->roll * 0.01f);
-	    value += (ruddCommand * d->yaw * 0.01f);
+	value = 0.0f;
+	value += (throttle * d->throttle * 0.01f);
+	value += (pitchCommand * d->pitch * 0.01f);
+	value += (rollCommand * d->roll * 0.01f);
+	value += (ruddCommand * d->yaw * 0.01f);
 
-	    value *= voltageFactor;
+	value *= voltageFactor;
 
-	    // check for over throttle
-	    if (value >= MOTORS_SCALE)
-		motorsData.throttleLimiter += MOTORS_THROTTLE_LIMITER;
+	// check for over throttle
+	if (value >= MOTORS_SCALE)
+	    motorsData.throttleLimiter += MOTORS_THROTTLE_LIMITER;
 
-	    motorsData.value[i] = constrainInt(value, 0, MOTORS_SCALE);
-	}
+	motorsData.value[i] = constrainInt(value, 0, MOTORS_SCALE);
     }
 
     motorsSendValues();
@@ -278,9 +270,10 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
     motorsData.throttle = throttle;
 }
 
-static void motorsCanInit(int i) {
+static int motorsCanInit(int i) {
     uint8_t numTry = CAN_RETRIES;
     uint8_t motorId = i;
+    int ret = 1;
     float escVer;
 
     // canId's 17-32 map to motorId's 1-16
@@ -292,6 +285,7 @@ static void motorsCanInit(int i) {
 
     if (motorsData.can[motorId] == 0) {
 	AQ_PRINTF("Motors: cannot find CAN id [%d]\n", i+1);
+	ret = 0;
     }
     else {
 #ifdef USE_QUATOS
@@ -303,18 +297,41 @@ static void motorsCanInit(int i) {
 	motorsData.esc32Version[motorId] = (uint16_t)(escVer / 0.01f);
     	motorsCanRequestTelem(motorId);
     }
+
+    return ret;
 }
 
-static void motorsPwmInit(int i) {
+static int motorsPwmInit(int i) {
+    uint32_t res = PWM_RESOLUTION;
+    uint32_t freq = MOTORS_PWM_FREQ;
+    int8_t  esc32Mode = -1;
+    int ret = 1;
+
+    if (i >= PWM_NUM_PORTS) {
+	AQ_PRINTF("Error: Motor PWM port number %d is out of range!\n", i);
+	ret = 0;
+    }
+    else if (MOTORS_ESC_TYPE == ESC_TYPE_ONBOARD_PWM) {
 #if defined(HAS_ONBOARD_ESC)
-    motorsData.pwm[i] = pwmInitOut(i, HAS_ONBOARD_ESC, MOTORS_PWM_FREQ, 0, 0);
+	res = ONBOARD_ESC_PWM_RESOLUTION;
+	freq = MOTORS_ONBOARD_PWM_FREQ;
 #else
+	AQ_NOTICE("Error: Onboard ESC not supported on this hardware!\n");
+	ret = 0;
+#endif
+    }
+    else if (MOTORS_ESC_TYPE == ESC_TYPE_ESC32) {
 #if defined(USE_QUATOS)
-    motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 1);	    // closed loop RPM mode
+	esc32Mode = 1;
 #else
-    motorsData.pwm[i] = pwmInitOut(i, 1000000, MOTORS_PWM_FREQ, 0, 0);	    // open loop mode
-#endif  // USE_QUATOS
-#endif  // HAS_ONBOARD_ESC
+	esc32Mode = 0;
+#endif
+    }
+
+    if (ret)
+	motorsData.pwm[i] = pwmInitOut(i, res, freq, 0, esc32Mode);
+
+    return ret;
 }
 
 int motorsArm(void) {
@@ -384,21 +401,29 @@ static void motorsSetCanGroup(void) {
 }
 
 void motorsPwmToAll(float pwmValue) {
-    for (int i = 0; i < PWM_NUM_PORTS; i++)
-	if (motorsData.active[i] && motorsData.pwm[i])
+    int i;
+    for (int j = 0; j < motorsData.numActive; ++j) {
+	i = motorsData.activeList[j];
+	if (i < PWM_NUM_PORTS && motorsData.pwm[i])
 	    *motorsData.pwm[i]->ccr = constrainInt(pwmValue, p[MOT_MIN], p[MOT_MAX]);
+    }
 }
 
 void motorsEscPwmCalibration(void) {
-    if ((int)p[MOT_ESC_CALI] != 1)
+    // check esc type and calibration request bit
+    if (MOTORS_ESC_TYPE != ESC_TYPE_STD_PWM || !((uint32_t)p[MOT_ESC_TYPE] & 0x800000))
 	return;
 
-    // reset and store calibration request
-    p[MOT_ESC_CALI] = 0.0f;
+    // reset calibration request bit
+    p[MOT_ESC_TYPE] = (uint32_t)p[MOT_ESC_TYPE] & 0x7FFFFF;
+    // store new param, or fail
     if (!configFlashWrite())
 	return;
-    AQ_NOTICE("Warning: ESC calibration, full throttle in 5 sec!\n");
-    yield(5000);
+
+    for (int i = 5; i > 0; --i) {
+	AQ_PRINTF("Warning: ESC calibration, full throttle in %d sec!\n", i);
+	yield(1000);
+    }
     AQ_NOTICE("Motors: Setting ESC Maximum\n");
     motorsPwmToAll(p[MOT_MAX]);
     yield(4000);
@@ -410,7 +435,7 @@ void motorsEscPwmCalibration(void) {
 
 void motorsInit(void) {
     float sumPitch, sumRoll, sumYaw;
-    int i;
+    int i, initOk;
 
     AQ_NOTICE("Motors init\n");
 
@@ -434,20 +459,22 @@ void motorsInit(void) {
 
 	    // CAN LO
 	    if (((uint32_t)p[MOT_CANL]) & (1<<i))
-		motorsCanInit(i);
+		initOk = motorsCanInit(i);
             // CAN HI (PDB)
 	    else if (((uint32_t)p[MOT_CANH]) & (1<<i))
-		motorsCanInit(i+16);
+		initOk = motorsCanInit(i+16);
 	    // PWM
-	    else if (i < PWM_NUM_PORTS)
-		motorsPwmInit(i);
+	    else
+		initOk = motorsPwmInit(i);
 
-	    motorsData.active[i] = 1;
-	    motorsData.activeList[motorsData.numActive++] = i;
+	    if (initOk) {
+		motorsData.active[i] = 1;
+		motorsData.activeList[motorsData.numActive++] = i;
 
-	    sumPitch += d->pitch;
-	    sumRoll += d->roll;
-	    sumYaw += d->yaw;
+		sumPitch += d->pitch;
+		sumRoll += d->roll;
+		sumYaw += d->yaw;
+	    }
 	}
     }
 

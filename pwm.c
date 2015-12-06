@@ -155,7 +155,7 @@ pwmPortStruct_t *pwmInitOut(uint8_t pwmPort, uint32_t resolution, uint32_t freq,
 	pwmTimeBase(pwmTimers[pwmPort], period, pwmClocks[pwmPort] / resolution);
 
 	// set ESC32 mode via 1-wire protocol if necessary before activating PWM output
-	if (ESC32Mode > 0)
+	if (ESC32Mode > -1)
 	    esc32SetupOw(pwmPorts[pwmPort], pwmPins[pwmPort], ESC32Mode);
 
 	pwmOCInit(pwmTimers[pwmPort], pwmTimerChannels[pwmPort], inititalValue);
