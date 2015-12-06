@@ -142,9 +142,14 @@ void motorsSendValues(void) {
 
 	// PWM
 	if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
-	    if (supervisorData.state & STATE_ARMED)
-		*motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] - p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
-	    else
+	    if (supervisorData.state & STATE_ARMED) {
+#ifdef HAS_ONBOARD_ESC
+		if (MOTORS_ESC_TYPE == ESC_TYPE_ONBOARD_PWM)
+		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (ONBOARD_ESC_PWM_MAX - ONBOARD_ESC_PWM_MIN) / MOTORS_SCALE + ONBOARD_ESC_PWM_MIN, ONBOARD_ESC_PWM_START, ONBOARD_ESC_PWM_MAX);
+		else
+#endif
+		    *motorsData.pwm[i]->ccr = constrainInt((float)motorsData.value[i] * (p[MOT_MAX] - p[MOT_MIN]) / MOTORS_SCALE + p[MOT_MIN], p[MOT_START], p[MOT_MAX]);
+	    } else
 		*motorsData.pwm[i]->ccr = 0;
 	}
 	// CAN
@@ -211,7 +216,12 @@ void motorsOff(void) {
 
 	// PWM
 	if (i < PWM_NUM_PORTS && motorsData.pwm[i]) {
-	    *motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
+#ifdef HAS_ONBOARD_ESC
+	    if (MOTORS_ESC_TYPE == ESC_TYPE_ONBOARD_PWM)
+		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? ONBOARD_ESC_PWM_ARM : 0;
+	    else
+#endif
+		*motorsData.pwm[i]->ccr = (supervisorData.state & STATE_ARMED) ? p[MOT_ARM] : 0;
 	}
 	// CAN
 	else if (motorsData.can[i]) {
