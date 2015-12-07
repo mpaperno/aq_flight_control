@@ -93,6 +93,12 @@ float motorsMax(void) {
     return MOTORS_SCALE;
 }
 
+float motorsVFactor() {
+    // calculate voltage factor
+    float nominalBatVolts = MOTORS_CELL_VOLTS * analogData.batCellCount;
+    return 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
+}
+
 static void motorsCanSendGroups(void) {
     int i;
 
@@ -169,7 +175,7 @@ void motorsSendValues(void) {
 
 // thrust in gram-force
 void motorsSendThrust(void) {
-    float value;
+    float value, v;
     int i;
 
     for (int j = 0; j < motorsData.numActive; ++j) {
@@ -180,7 +186,7 @@ void motorsSendThrust(void) {
 	if (i < PWM_NUM_PORTS && motorsData.pwm[i] && MOTORS_ESC_TYPE != ESC_TYPE_ESC32) {
 	    // preload the request to accelerate setpoint changes
 	    if (motorsData.oldValues[i] != value) {
-		float v = (value -  motorsData.oldValues[i]);
+		v = (value -  motorsData.oldValues[i]);
 
 		// increase
 		if (v > 0.0f)
@@ -193,15 +199,11 @@ void motorsSendThrust(void) {
 		motorsData.oldValues[i] += v * MOTORS_COMP_PRELOAD_TAU;
 	    }
 
-	    // Express voltage compensation as fraction of battery volts & prevent possible division by 0 during startup
-	    if (analogData.vIn > MOTORS_CELL_VOLTS * analogData.batCellCount * 0.5f)
-		value /= analogData.vIn;
+	    // adjust for voltage factor
+	    value *= motorsVFactor();
 	}
-	// using ESC32 in closed-loop mode via CAN or PWM
-	else
-	    value /= p[MOT_VALUE_SCAL];
 
-	motorsData.value[i] = constrainInt(value * MOTORS_SCALE, 0, MOTORS_SCALE);
+	motorsData.value[i] = constrainInt(value * MOTORS_SCALE / p[MOT_VALUE_SCAL], 0, MOTORS_SCALE);
     }
 
     motorsSendValues();
@@ -237,17 +239,11 @@ void motorsOff(void) {
 
 void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, float ruddCommand) {
     float throttle;
-    float voltageFactor;
     float value;
-    float nominalBatVolts;
     int i;
 
     // throttle limiter to prevent control saturation
     throttle = constrainFloat(throtCommand - motorsData.throttleLimiter, 0.0f, MOTORS_SCALE);
-
-    // calculate voltage factor
-    nominalBatVolts = MOTORS_CELL_VOLTS*analogData.batCellCount;
-    voltageFactor = 1.0f + (nominalBatVolts - analogData.vIn) / nominalBatVolts;
 
     // calculate and set each motor value
     for (int j = 0; j < motorsData.numActive; ++j) {
@@ -260,7 +256,8 @@ void motorsCommands(float throtCommand, float pitchCommand, float rollCommand, f
 	value += (rollCommand * d->roll * 0.01f);
 	value += (ruddCommand * d->yaw * 0.01f);
 
-	value *= voltageFactor;
+	// adjust for voltage factor
+	value *= motorsVFactor();
 
 	// check for over throttle
 	if (value >= MOTORS_SCALE)
@@ -318,7 +315,7 @@ static int motorsPwmInit(int i) {
     int ret = 1;
 
     if (i >= PWM_NUM_PORTS) {
-	AQ_PRINTF("Error: Motor PWM port number %d is out of range!\n", i);
+	AQ_PRINTF("Motors: PWM port number %d does not exist!\n", i);
 	ret = 0;
     }
     else if (MOTORS_ESC_TYPE == ESC_TYPE_ONBOARD_PWM) {
@@ -326,7 +323,7 @@ static int motorsPwmInit(int i) {
 	res = ONBOARD_ESC_PWM_RESOLUTION;
 	freq = MOTORS_ONBOARD_PWM_FREQ;
 #else
-	AQ_NOTICE("Error: Onboard ESC not supported on this hardware!\n");
+	AQ_NOTICE("Motors: Onboard ESC not supported on this hardware!\n");
 	ret = 0;
 #endif
     }
@@ -434,13 +431,13 @@ void motorsEscPwmCalibration(void) {
 	AQ_PRINTF("Warning: ESC calibration, full throttle in %d sec!\n", i);
 	yield(1000);
     }
-    AQ_NOTICE("Motors: Setting ESC Maximum\n");
+    AQ_NOTICE("ESC Calibration: Setting maximum.\n");
     motorsPwmToAll(p[MOT_MAX]);
     yield(4000);
-    AQ_NOTICE("Motors: Setting ESC Minimum\n");
+    AQ_NOTICE("ESC Calibration: Setting minimum.\n");
     motorsPwmToAll(p[MOT_MIN]);
     yield(3000);
-    AQ_NOTICE("Motors: Finished ESC calibration.\n");
+    AQ_NOTICE("ESC Calibration: Finished. Restart system now.\n");
 }
 
 void motorsInit(void) {
