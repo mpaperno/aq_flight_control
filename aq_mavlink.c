@@ -283,13 +283,18 @@ void mavlinkDo(void) {
 	    case AQMAV_DATASET_MOTORS :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
 			motorsData.value[0], motorsData.value[1], motorsData.value[2], motorsData.value[3], motorsData.value[4], motorsData.value[5], motorsData.value[6], motorsData.value[7],
-			motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15], 0, 0, 0, 0);
+			motorsData.value[8], motorsData.value[9], motorsData.value[10], motorsData.value[11], motorsData.value[12], motorsData.value[13], motorsData.value[14], motorsData.value[15],
+			motorsData.throttle, motorsData.pitch, motorsData.roll, motorsData.yaw);
 		break;
 	    case AQMAV_DATASET_MOTORS_PWM :
-		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
-			*motorsData.pwm[0]->ccr, *motorsData.pwm[1]->ccr, *motorsData.pwm[2]->ccr, *motorsData.pwm[3]->ccr, *motorsData.pwm[4]->ccr, *motorsData.pwm[5]->ccr, *motorsData.pwm[6]->ccr, *motorsData.pwm[7]->ccr,
-			*motorsData.pwm[8]->ccr, *motorsData.pwm[9]->ccr, *motorsData.pwm[10]->ccr, *motorsData.pwm[11]->ccr, *motorsData.pwm[12]->ccr, *motorsData.pwm[13]->ccr, 0, 0, 0, 0, 0, 0);
+	    {
+		uint32_t pwm[14];
+		for (int i = 0; i < 14; ++i)
+		    pwm[i] = PWM_NUM_PORTS > i && motorsData.pwm[i] ? *motorsData.pwm[i]->ccr : 0;
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, pwm[0], pwm[1], pwm[2], pwm[3], pwm[4], pwm[5], pwm[6], pwm[7], pwm[8], pwm[9], pwm[10], pwm[11], pwm[12], pwm[13],
+			0, 0, 0, 0, 0, 0);
 		break;
+	    }
 	    case AQMAV_DATASET_NAV :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, navData.holdHeading, navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE,
 			navData.holdSpeedN, navData.holdSpeedE, navData.holdSpeedAlt, navData.targetHoldSpeedAlt, 0, 0, 0, 0, 0, 0, 0, 0, micros - navData.lastUpdate, navData.fixType);
@@ -497,9 +502,8 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 #endif
 	    utilVersionString();
 	    utilSerialNoString();
-#ifdef USE_QUATOS
-	    AQ_NOTICE("Quatos enabled.");
-#endif
+	    if (USE_QUATOS)
+		AQ_NOTICE("Quatos enabled.");
 	    ack = MAV_CMD_ACK_OK;
 	    break;
 

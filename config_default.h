@@ -16,7 +16,7 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    129
+#define DEFAULT_CONFIG_VERSION	    130
 
 #define DEFAULT_RADIO_SETUP         0		// 0 = NONE, 1 == Spektrum 11bit, 2 == Spektrum 10bit, 3 == SBUS, 4 == PPM, 5 == SUMD, 6 == M-Link, 7 == Deltang, 8 == CYRF6936
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -96,6 +96,8 @@
 #define DEFAULT_MOT_VALUE2T_A1	    0.0f
 #define DEFAULT_MOT_VALUE2T_A2	    0.0f
 #define DEFAULT_MOT_VALUE_SCAL	    0.0f
+
+#define DEFAULT_MOT_ESC_TYPE        0        // ESC Type; 0 = standard PWM, 1 = M4 onboard, 2 = AQ ESC32; add 24th bit to run PWM ESC endpoint calibration on next bootup (eg: 8388608 for std ESC); bits 20-24 are reserved
 
 #define DEFAULT_MOT_PWRD_01_T	    0.0
 #define DEFAULT_MOT_PWRD_01_P	    0.0
@@ -274,6 +276,7 @@
 #define DEFAULT_SPVR_VIN_SOURCE     0           // source to use for measuring primary voltage (0 = mains voltage on all boards; 1 = onboard external voltage divider)
 
 
+#define DEFAULT_QUATOS_ENABLE		1		    // 0 = do not use Quatos; 1 = use Quatos
 #define DEFAULT_QUATOS_J_ROLL		0.0127f		    // J matrix
 #define DEFAULT_QUATOS_J_PITCH		0.0127f		    // J matrix
 #define DEFAULT_QUATOS_J_YAW		0.024661f	    // J matrix

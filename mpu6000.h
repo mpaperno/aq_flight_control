@@ -31,12 +31,19 @@
 #define MPU6000_BYTES		    15
 #define MPU6000_SLOT_SIZE	    ((MPU6000_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 
-#ifdef USE_QUATOS
+#ifndef MPU6000_SLOTS
     #define MPU6000_SLOTS	    80						    // 100Hz bandwidth
-    #define MPU6000_DRATE_SLOTS	    (MPU6000_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
-#else
-    #define MPU6000_SLOTS	    80						    // 100Hz bandwidth
-    #define MPU6000_DRATE_SLOTS	    40						    // 200Hz
+#endif
+
+#define MPU6000_DRATE_SLOTS_QUATOS	(MPU6000_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
+#define MPU6000_DRATE_SLOTS_PID		40  // 200Hz
+
+#ifndef MPU6000_DRATE_SLOTS
+    #ifdef HAS_QUATOS
+	#define MPU6000_DRATE_SLOTS	((int)p[QUATOS_ENABLE] ? MPU6000_DRATE_SLOTS_QUATOS : MPU6000_DRATE_SLOTS_PID)
+    #else
+	#define MPU6000_DRATE_SLOTS	MPU6000_DRATE_SLOTS_PID
+    #endif
 #endif
 
 typedef struct {

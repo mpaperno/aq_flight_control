@@ -93,6 +93,7 @@ const char *configParameterStrings[] = {
     "MOT_VALUE2T_A2",
     "MOT_VALUE_SCAL",
     "MOT_MAX",
+    "MOT_ESC_TYPE",
     "MOT_PWRD_01_T",
     "MOT_PWRD_01_P",
     "MOT_PWRD_01_R",
@@ -325,6 +326,8 @@ const char *configParameterStrings[] = {
     "SPVR_FS_RAD_ST2",
     "SPVR_FS_ADD_ALT",
     "SPVR_VIN_SOURCE",
+#ifdef HAS_QUATOS
+    "QUATOS_ENABLE",
     "QUATOS_J_ROLL",
     "QUATOS_J_PITCH",
     "QUATOS_J_YAW",
@@ -389,6 +392,7 @@ const char *configParameterStrings[] = {
     "QUATOS_MM_R16",
     "QUATOS_MM_P16",
     "QUATOS_MM_Y16",
+#endif
     "SIG_LED_1_PRT",
     "SIG_LED_2_PRT",
     "SIG_BEEP_PRT",
@@ -461,6 +465,7 @@ void configLoadDefault(void) {
     p[MOT_VALUE2T_A2] = DEFAULT_MOT_VALUE2T_A2;
     p[MOT_VALUE_SCAL] = DEFAULT_MOT_VALUE_SCAL;
     p[MOT_MAX] = DEFAULT_MOT_MAX;
+    p[MOT_ESC_TYPE] = DEFAULT_MOT_ESC_TYPE;
     p[MOT_PWRD_01_T] = DEFAULT_MOT_PWRD_01_T;
     p[MOT_PWRD_01_P] = DEFAULT_MOT_PWRD_01_P;
     p[MOT_PWRD_01_R] = DEFAULT_MOT_PWRD_01_R;
@@ -693,6 +698,8 @@ void configLoadDefault(void) {
     p[SPVR_FS_RAD_ST2] = DEFAULT_SPVR_FS_RAD_ST2;
     p[SPVR_FS_ADD_ALT] = DEFAULT_SPVR_FS_ADD_ALT;
     p[SPVR_VIN_SOURCE] = DEFAULT_SPVR_VIN_SOURCE;
+#ifdef HAS_QUATOS
+    p[QUATOS_ENABLE] = DEFAULT_QUATOS_ENABLE;
     p[QUATOS_J_ROLL] = DEFAULT_QUATOS_J_ROLL;
     p[QUATOS_J_PITCH] = DEFAULT_QUATOS_J_PITCH;
     p[QUATOS_J_YAW] = DEFAULT_QUATOS_J_YAW;
@@ -757,6 +764,7 @@ void configLoadDefault(void) {
     p[QUATOS_MM_R16] = DEFAULT_QUATOS_MM_R16;
     p[QUATOS_MM_P16] = DEFAULT_QUATOS_MM_P16;
     p[QUATOS_MM_Y16] = DEFAULT_QUATOS_MM_Y16;
+#endif
     p[SIG_LED_1_PRT] = DEFAULT_SIG_LED_1_PRT;
     p[SIG_LED_2_PRT] = DEFAULT_SIG_LED_2_PRT;
     p[SIG_BEEP_PRT] = DEFAULT_SIG_BEEP_PRT;

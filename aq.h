@@ -27,8 +27,7 @@
 #define USE_MAVLINK
 #define USE_PRES_ALT		 	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING                   // uncomment to use external signaling events and ports
-//#define USE_QUATOS
-//#define USE_EXTERNAL_ESC              // uncomment to use external ESCs on board version 8
+//#define HAS_QUATOS                      // build including Quatos library
 
 #ifndef BOARD_VERSION
     #define BOARD_VERSION	6
@@ -57,9 +56,7 @@
 	    #define BOARD_HEADER_FILE "board_m4.h"
 	#elif BOARD_REVISION == 3
 	    #define BOARD_HEADER_FILE "board_m4_r3.h"
-	#elif BOARD_REVISION == 4
-	    #define BOARD_HEADER_FILE "board_m4_r4.h"
-	#elif BOARD_REVISION == 5
+	#elif BOARD_REVISION == 4 || BOARD_REVISION == 5
 	    #define BOARD_HEADER_FILE "board_m4_r5.h"
 	#elif BOARD_REVISION == 6
 	    #define BOARD_HEADER_FILE "board_m4_r6.h"

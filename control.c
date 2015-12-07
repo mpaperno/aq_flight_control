@@ -34,7 +34,7 @@
 #include "supervisor.h"
 #include "gps.h"
 #include "run.h"
-#ifdef USE_QUATOS
+#ifdef HAS_QUATOS
 #include "quatos.h"
 #endif
 #include <CoOS.h>
@@ -50,13 +50,12 @@ void controlTaskCode(void *unused) {
     float throttle;
     float ratesDesired[3];
     uint16_t overrides[3];
-#ifdef USE_QUATOS
-    float quatDesired[4];
-    float ratesActual[3];
-#else
     float pitch, roll;
     float pitchCommand, rollCommand, ruddCommand;
-#endif	// USE_QUATOS
+#ifdef HAS_QUATOS
+    float quatDesired[4];
+    float ratesActual[3];
+#endif
 
     AQ_NOTICE("Control task started\n");
 
@@ -166,88 +165,92 @@ void controlTaskCode(void *unused) {
 		    }
 		}
 
-#ifdef USE_QUATOS
-		// determine which frame of reference to control from
-		if (navData.mode <= NAV_STATUS_ALTHOLD)
-		    // craft frame - manual
-		    eulerToQuatYPR(quatDesired, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
+#ifdef HAS_QUATOS
+		if ((int)p[QUATOS_ENABLE]) {
+		    // determine which frame of reference to control from
+		    if (navData.mode <= NAV_STATUS_ALTHOLD)
+			// craft frame - manual
+			eulerToQuatYPR(quatDesired, controlData.yaw, controlData.userPitchTarget, controlData.userRollTarget);
+		    else
+			// world frame - autonomous
+			eulerToQuatRPY(quatDesired, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
+
+		    // reset controller on startup
+		    if (motorsData.throttle == 0) {
+			quatDesired[0] = UKF_Q1;
+			quatDesired[1] = UKF_Q2;
+			quatDesired[2] = UKF_Q3;
+			quatDesired[3] = UKF_Q4;
+			quatosReset(quatDesired);
+		    }
+
+		    ratesActual[0] = IMU_DRATEX + UKF_GYO_BIAS_X;
+		    ratesActual[1] = IMU_DRATEY + UKF_GYO_BIAS_Y;
+		    ratesActual[2] = IMU_DRATEZ + UKF_GYO_BIAS_Z;
+		    quatos(&UKF_Q1, quatDesired, ratesActual, ratesDesired, overrides);
+
+		    quatosPowerDistribution(throttle);
+		    motorsSendThrust();
+		    motorsData.throttle = throttle;
+		}
 		else
-		    // world frame - autonomous
-		    eulerToQuatRPY(quatDesired, controlData.navRollTarget, controlData.navPitchTarget, controlData.yaw);
-
-		// reset controller on startup
-		if (motorsData.throttle == 0) {
-		    quatDesired[0] = UKF_Q1;
-		    quatDesired[1] = UKF_Q2;
-		    quatDesired[2] = UKF_Q3;
-		    quatDesired[3] = UKF_Q4;
-		    quatosReset(quatDesired);
-		}
-
-		ratesActual[0] = IMU_DRATEX + UKF_GYO_BIAS_X;
-		ratesActual[1] = IMU_DRATEY + UKF_GYO_BIAS_Y;
-		ratesActual[2] = IMU_DRATEZ + UKF_GYO_BIAS_Z;
-		quatos(&UKF_Q1, quatDesired, ratesActual, ratesDesired, overrides);
-
-		quatosPowerDistribution(throttle);
-		motorsSendThrust();
-		motorsData.throttle = throttle;
-#else
-
-		// smooth
-		controlData.userPitchTarget = utilFilter3(controlData.userPitchFilter, controlData.userPitchTarget);
-		controlData.userRollTarget = utilFilter3(controlData.userRollFilter, controlData.userRollTarget);
-
-		// smooth
-		controlData.navPitchTarget = utilFilter3(controlData.navPitchFilter, controlData.navPitchTarget);
-		controlData.navRollTarget = utilFilter3(controlData.navRollFilter, controlData.navRollTarget);
-
-		// rotate nav's NE frame of reference to our craft's local frame of reference
-		pitch = controlData.navPitchTarget * navUkfData.yawCos - controlData.navRollTarget * navUkfData.yawSin;
-		roll  = controlData.navRollTarget * navUkfData.yawCos + controlData.navPitchTarget * navUkfData.yawSin;
-
-		// combine nav & user requests (both are already smoothed)
-		controlData.pitch = pitch + controlData.userPitchTarget;
-		controlData.roll = roll + controlData.userRollTarget;
-
-		if (p[CTRL_PID_TYPE] == 0) {
-		    // pitch angle
-		    pitchCommand = pidUpdate(controlData.pitchAnglePID, controlData.pitch, AQ_PITCH);
-		    // rate
-		    pitchCommand += pidUpdate(controlData.pitchRatePID, 0.0f, IMU_DRATEY);
-
-		    // roll angle
-		    rollCommand = pidUpdate(controlData.rollAnglePID, controlData.roll, AQ_ROLL);
-		    // rate
-		    rollCommand += pidUpdate(controlData.rollRatePID, 0.0f, IMU_DRATEX);
-		}
-		else if (p[CTRL_PID_TYPE] == 1) {
-		    // pitch rate from angle
-		    pitchCommand = pidUpdate(controlData.pitchRatePID, pidUpdate(controlData.pitchAnglePID, controlData.pitch, AQ_PITCH), IMU_DRATEY);
-
-		    // roll rate from angle
-		    rollCommand = pidUpdate(controlData.rollRatePID, pidUpdate(controlData.rollAnglePID, controlData.roll, AQ_ROLL), IMU_DRATEX);
-		}
-		else {
-		    pitchCommand = 0.0f;
-		    rollCommand = 0.0f;
-		    ruddCommand = 0.0f;
-		}
-
-		// yaw rate override?
-		if (overrides[2] > 0)
-		    // manual yaw rate
-		    ruddCommand = pidUpdate(controlData.yawRatePID, ratesDesired[2], IMU_DRATEZ);
-		else
-		    // seek a 0 deg difference between hold heading and actual yaw
-		    ruddCommand = pidUpdate(controlData.yawRatePID, pidUpdate(controlData.yawAnglePID, 0.0f, compassDifference(controlData.yaw, AQ_YAW)), IMU_DRATEZ);
-
-		rollCommand = constrainFloat(rollCommand, -p[CTRL_MAX], p[CTRL_MAX]);
-		pitchCommand = constrainFloat(pitchCommand, -p[CTRL_MAX], p[CTRL_MAX]);
-		ruddCommand = constrainFloat(ruddCommand, -p[CTRL_MAX], p[CTRL_MAX]);
-
-		motorsCommands(throttle, pitchCommand, rollCommand, ruddCommand);
 #endif
+		// PID
+		{
+		    // smooth
+		    controlData.userPitchTarget = utilFilter3(controlData.userPitchFilter, controlData.userPitchTarget);
+		    controlData.userRollTarget = utilFilter3(controlData.userRollFilter, controlData.userRollTarget);
+
+		    // smooth
+		    controlData.navPitchTarget = utilFilter3(controlData.navPitchFilter, controlData.navPitchTarget);
+		    controlData.navRollTarget = utilFilter3(controlData.navRollFilter, controlData.navRollTarget);
+
+		    // rotate nav's NE frame of reference to our craft's local frame of reference
+		    pitch = controlData.navPitchTarget * navUkfData.yawCos - controlData.navRollTarget * navUkfData.yawSin;
+		    roll  = controlData.navRollTarget * navUkfData.yawCos + controlData.navPitchTarget * navUkfData.yawSin;
+
+		    // combine nav & user requests (both are already smoothed)
+		    controlData.pitch = pitch + controlData.userPitchTarget;
+		    controlData.roll = roll + controlData.userRollTarget;
+
+		    if (p[CTRL_PID_TYPE] == 0) {
+			// pitch angle
+			pitchCommand = pidUpdate(controlData.pitchAnglePID, controlData.pitch, AQ_PITCH);
+			// rate
+			pitchCommand += pidUpdate(controlData.pitchRatePID, 0.0f, IMU_DRATEY);
+
+			// roll angle
+			rollCommand = pidUpdate(controlData.rollAnglePID, controlData.roll, AQ_ROLL);
+			// rate
+			rollCommand += pidUpdate(controlData.rollRatePID, 0.0f, IMU_DRATEX);
+		    }
+		    else if (p[CTRL_PID_TYPE] == 1) {
+			// pitch rate from angle
+			pitchCommand = pidUpdate(controlData.pitchRatePID, pidUpdate(controlData.pitchAnglePID, controlData.pitch, AQ_PITCH), IMU_DRATEY);
+
+			// roll rate from angle
+			rollCommand = pidUpdate(controlData.rollRatePID, pidUpdate(controlData.rollAnglePID, controlData.roll, AQ_ROLL), IMU_DRATEX);
+		    }
+		    else {
+			pitchCommand = 0.0f;
+			rollCommand = 0.0f;
+			ruddCommand = 0.0f;
+		    }
+
+		    // yaw rate override?
+		    if (overrides[2] > 0)
+			// manual yaw rate
+			ruddCommand = pidUpdate(controlData.yawRatePID, ratesDesired[2], IMU_DRATEZ);
+		    else
+			// seek a 0 deg difference between hold heading and actual yaw
+			ruddCommand = pidUpdate(controlData.yawRatePID, pidUpdate(controlData.yawAnglePID, 0.0f, compassDifference(controlData.yaw, AQ_YAW)), IMU_DRATEZ);
+
+		    rollCommand = constrainFloat(rollCommand, -p[CTRL_MAX], p[CTRL_MAX]);
+		    pitchCommand = constrainFloat(pitchCommand, -p[CTRL_MAX], p[CTRL_MAX]);
+		    ruddCommand = constrainFloat(ruddCommand, -p[CTRL_MAX], p[CTRL_MAX]);
+
+		    motorsCommands(throttle, pitchCommand, rollCommand, ruddCommand);
+		} // end if PID controller type
 
 	    }
 	    // no throttle input
@@ -272,8 +275,9 @@ void controlInit(void) {
 
     memset((void *)&controlData, 0, sizeof(controlData));
 
-#ifdef USE_QUATOS
-    quatosInit(AQ_INNER_TIMESTEP, AQ_OUTER_TIMESTEP);
+#ifdef HAS_QUATOS
+    if ((int)p[QUATOS_ENABLE])
+	quatosInit(AQ_INNER_TIMESTEP, AQ_OUTER_TIMESTEP);
 #endif
 
     utilFilterInit3(controlData.userPitchFilter, AQ_INNER_TIMESTEP, 0.1f, 0.0f);

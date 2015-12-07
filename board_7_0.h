@@ -545,7 +545,8 @@ enum pwmPorts {
 #define UKF_VEL_DELAY           -1.0182e+05     // -101820.000000000000  0.000000500000 +0.00000000000000000
 
 
-#define MOTORS_PWM_FREQ		    400	// Hz
+#define MOTORS_PWM_FREQ		400	// Hz
+#define PWM_RESOLUTION		1000000
 
 #define DEFAULT_IMU_ACC_BIAS_X      0.0
 #define DEFAULT_IMU_ACC_BIAS_Y      0.0

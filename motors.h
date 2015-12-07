@@ -36,7 +36,20 @@
 #define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
 #define MOTORS_COMP_PRELOAD_NFACT   2.0f//3.0f
 
+#define MOTORS_ESC_TYPE		    ((uint32_t)p[MOT_ESC_TYPE] & 0x0FFFFF)  // actual ESC type, ignore calibration bits
+#ifdef HAS_QUATOS
+    #define USE_QUATOS		    (int)p[QUATOS_ENABLE]
+#else
+    #define USE_QUATOS		    0
+#endif
+
 //#define MOTORS_CAN_LOGGING          256             // number of records in log buffer, comment out to disable logging
+
+enum escTypes {
+    ESC_TYPE_STD_PWM = 0,
+    ESC_TYPE_ONBOARD_PWM,
+    ESC_TYPE_ESC32
+};
 
 typedef struct {
     float throttle;
@@ -60,7 +73,7 @@ typedef struct {
     esc32CanStatus_t canStatus[MOTORS_NUM];
     uint32_t canStatusTime[MOTORS_NUM];
     uint32_t canTelemReqTime[MOTORS_NUM];
-    pwmPortStruct_t *pwm[14];           // max number on any board yet
+    pwmPortStruct_t *pwm[14];           // max number on any board yet -- array size cannot be variable (PWM_NUM_PORTS) due to Quatos library compatibility constraints
     uint16_t esc32Version[MOTORS_NUM];  // currently only storing this if using CAN
     uint16_t value[MOTORS_NUM];
     float thrust[MOTORS_NUM];
