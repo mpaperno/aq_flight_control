@@ -295,12 +295,7 @@ static int motorsCanInit(int i) {
 	ret = 0;
     }
     else {
-#ifdef USE_QUATOS
-	escVer = esc32SetupCan(motorsData.can[motorId], 1);
-#else
-	escVer = esc32SetupCan(motorsData.can[motorId], 0);
-#endif
-
+	escVer = esc32SetupCan(motorsData.can[motorId], USE_QUATOS);
 	motorsData.esc32Version[motorId] = (uint16_t)(escVer / 0.01f);
     	motorsCanRequestTelem(motorId);
     }
@@ -328,11 +323,7 @@ static int motorsPwmInit(int i) {
 #endif
     }
     else if (MOTORS_ESC_TYPE == ESC_TYPE_ESC32) {
-#if defined(USE_QUATOS)
-	esc32Mode = 1;
-#else
-	esc32Mode = 0;
-#endif
+	esc32Mode = USE_QUATOS;
     }
 
     if (ret)

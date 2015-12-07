@@ -36,7 +36,12 @@
 #define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
 #define MOTORS_COMP_PRELOAD_NFACT   2.0f//3.0f
 
-#define MOTORS_ESC_TYPE             ((uint32_t)p[MOT_ESC_TYPE] & 0x0FFFFF)  // actual ESC type, ignore calibration bits
+#define MOTORS_ESC_TYPE		    ((uint32_t)p[MOT_ESC_TYPE] & 0x0FFFFF)  // actual ESC type, ignore calibration bits
+#ifdef HAS_QUATOS
+    #define USE_QUATOS		    (int)p[QUATOS_ENABLE]
+#else
+    #define USE_QUATOS		    0
+#endif
 
 //#define MOTORS_CAN_LOGGING          256             // number of records in log buffer, comment out to disable logging
 

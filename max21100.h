@@ -32,12 +32,14 @@
 #define MAX21100_BYTES              21
 #define MAX21100_SLOT_SIZE          ((MAX21100_BYTES+sizeof(int)-1) / sizeof(int) * sizeof(int))
 
-#ifdef USE_QUATOS
-    #define MAX21100_SLOTS          80						    // 100Hz bandwidth
-    #define MAX21100_DRATE_SLOTS	(MAX21100_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
+#define MAX21100_SLOTS          	80						    // 100Hz bandwidth
+#define MAX21100_DRATE_SLOTS_QUATOS	(MAX21100_SLOTS * 100.0f * DIMU_INNER_DT * 2.0f) // variable
+#define MAX21100_DRATE_SLOTS_PID	40  // 200Hz
+
+#ifdef HAS_QUATOS
+    #define MAX21100_DRATE_SLOTS	((int)p[QUATOS_ENABLE] ? MAX21100_DRATE_SLOTS_QUATOS : MAX21100_DRATE_SLOTS_PID)
 #else
-    #define MAX21100_SLOTS          80						    // 100Hz bandwidth
-    #define MAX21100_DRATE_SLOTS    40						    // 200Hz
+    #define MAX21100_DRATE_SLOTS	MAX21100_DRATE_SLOTS_PID
 #endif
 
 typedef struct {

@@ -310,7 +310,7 @@ ifneq ($(QUATOS), 0)
 	ifeq ($(QUATOS), 1)
 		EXTRA_LIBS += $(OTHERLIB_PATH)/quatos.a
 	endif
-	CFLAGS += -DUSE_QUATOS
+	CFLAGS += -DHAS_QUATOS
 endif
 
 ifneq ($(EXTRA_OBJECTS), 0)

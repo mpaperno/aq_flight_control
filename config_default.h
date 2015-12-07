@@ -275,6 +275,7 @@
 #define DEFAULT_SPVR_VIN_SOURCE     0           // source to use for measuring primary voltage (0 = mains voltage on all boards; 1 = onboard external voltage divider)
 
 
+#define DEFAULT_QUATOS_ENABLE		1		    // 0 = do not use Quatos; 1 = use Quatos
 #define DEFAULT_QUATOS_J_ROLL		0.0127f		    // J matrix
 #define DEFAULT_QUATOS_J_PITCH		0.0127f		    // J matrix
 #define DEFAULT_QUATOS_J_YAW		0.024661f	    // J matrix

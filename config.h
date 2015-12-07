@@ -347,6 +347,8 @@ enum configParameters {
     SPVR_FS_RAD_ST2,
     SPVR_FS_ADD_ALT,
     SPVR_VIN_SOURCE,
+#ifdef HAS_QUATOS
+    QUATOS_ENABLE,
     QUATOS_J_ROLL,
     QUATOS_J_PITCH,
     QUATOS_J_YAW,
@@ -411,6 +413,7 @@ enum configParameters {
     QUATOS_MM_R16,
     QUATOS_MM_P16,
     QUATOS_MM_Y16,
+#endif
     SIG_LED_1_PRT,
     SIG_LED_2_PRT,
     SIG_BEEP_PRT,
