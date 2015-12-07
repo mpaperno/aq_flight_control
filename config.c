@@ -197,6 +197,7 @@ const char *configParameterStrings[] = {
     "NAV_ALT_POS_PM",
     "NAV_ALT_POS_IM",
     "NAV_ALT_POS_OM",
+    "NAV_ALT_GPS_ACC",
     "NAV_CTRL_AH",
     "NAV_CTRL_PH",
     "NAV_CTRL_MISN",
@@ -569,6 +570,7 @@ void configLoadDefault(void) {
     p[NAV_ALT_POS_PM] = DEFAULT_NAV_ALT_POS_PM;
     p[NAV_ALT_POS_IM] = DEFAULT_NAV_ALT_POS_IM;
     p[NAV_ALT_POS_OM] = DEFAULT_NAV_ALT_POS_OM;
+    p[NAV_ALT_GPS_ACC] = DEFAULT_NAV_ALT_GPS_ACC;
     p[NAV_CTRL_AH] = DEFAULT_NAV_CTRL_AH;
     p[NAV_CTRL_PH] = DEFAULT_NAV_CTRL_PH;
     p[NAV_CTRL_MISN] = DEFAULT_NAV_CTRL_MISN;

@@ -216,6 +216,7 @@
 #define DEFAULT_NAV_ALT_POS_IM	    0.0f
 #define DEFAULT_NAV_ALT_POS_OM	    2.5f
 
+#define DEFAULT_NAV_ALT_GPS_ACC     0.8f     // Maximum GPS accuracy at which GPS vertical position is preferred over pressure sensor. 0 to always use PS.
 
 // Control definitions for flight mode, etc.  20 bits: SVVV_VVVV_VVVV_CCCC_CCCC
 // 	high bit = value Sign (0=neg,1=pos), next 11b = absolute channel Value (0-2047), 8 low bits = Channel number (0-255, zero == no channel/disabled)

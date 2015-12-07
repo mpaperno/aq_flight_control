@@ -151,7 +151,7 @@ void runTaskCode(void *unused) {
         altUkfProcess(AQ_PRESSURE);
 
         // determine which altitude estimate to use
-        if (gpsData.hAcc > 0.8f) {
+        if (gpsData.hAcc > p[NAV_ALT_GPS_ACC]) {
             runData.altPos = &ALT_POS;
             runData.altVel = &ALT_VEL;
         }
