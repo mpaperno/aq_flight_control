@@ -16,7 +16,7 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#define DEFAULT_CONFIG_VERSION	    130
+#define DEFAULT_CONFIG_VERSION	    131
 
 #define DEFAULT_RADIO_SETUP         0		// 0 = NONE, 1 == Spektrum 11bit, 2 == Spektrum 10bit, 3 == SBUS, 4 == PPM, 5 == SUMD, 6 == M-Link, 7 == Deltang, 8 == CYRF6936
 #define DEFAULT_RADIO_THRO_CH	    0
@@ -216,7 +216,7 @@
 #define DEFAULT_NAV_ALT_POS_IM	    0.0f
 #define DEFAULT_NAV_ALT_POS_OM	    2.5f
 
-#define DEFAULT_NAV_ALT_GPS_ACC     0.8f     // Maximum GPS accuracy at which GPS vertical position is preferred over pressure sensor. 0 to always use PS.
+#define DEFAULT_NAV_ALT_GPS_ACC     0.8f     // Maximum (worst) GPS accuracy at which GPS vertical position is preferred over pressure sensor. 0 to always use PS.
 
 // Control definitions for flight mode, etc.  20 bits: SVVV_VVVV_VVVV_CCCC_CCCC
 // 	high bit = value Sign (0=neg,1=pos), next 11b = absolute channel Value (0-2047), 8 low bits = Channel number (0-255, zero == no channel/disabled)
