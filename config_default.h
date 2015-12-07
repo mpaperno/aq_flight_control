@@ -97,6 +97,8 @@
 #define DEFAULT_MOT_VALUE2T_A2	    0.0f
 #define DEFAULT_MOT_VALUE_SCAL	    0.0f
 
+#define DEFAULT_MOT_ESC_CALI        0           // set to 1 to run standard esc calibration on next bootup
+
 #define DEFAULT_MOT_PWRD_01_T	    0.0
 #define DEFAULT_MOT_PWRD_01_P	    0.0
 #define DEFAULT_MOT_PWRD_01_R	    0.0

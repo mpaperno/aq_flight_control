@@ -93,6 +93,7 @@ const char *configParameterStrings[] = {
     "MOT_VALUE2T_A2",
     "MOT_VALUE_SCAL",
     "MOT_MAX",
+    "MOT_ESC_CALI",
     "MOT_PWRD_01_T",
     "MOT_PWRD_01_P",
     "MOT_PWRD_01_R",
@@ -460,6 +461,7 @@ void configLoadDefault(void) {
     p[MOT_VALUE2T_A2] = DEFAULT_MOT_VALUE2T_A2;
     p[MOT_VALUE_SCAL] = DEFAULT_MOT_VALUE_SCAL;
     p[MOT_MAX] = DEFAULT_MOT_MAX;
+    p[MOT_ESC_CALI] = DEFAULT_MOT_ESC_CALI;
     p[MOT_PWRD_01_T] = DEFAULT_MOT_PWRD_01_T;
     p[MOT_PWRD_01_P] = DEFAULT_MOT_PWRD_01_P;
     p[MOT_PWRD_01_R] = DEFAULT_MOT_PWRD_01_R;
