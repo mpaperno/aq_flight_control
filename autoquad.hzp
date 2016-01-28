@@ -1,302 +1,396 @@
 <!DOCTYPE CrossStudio_Project_File>
 <solution Name="autoquad" target="8" version="2">
   <project Name="autoquad">
-    <configuration Name="Common" Placement="Flash" Target="STM32F407VG" arm_architecture="v7EM" arm_core_type="Cortex-M4" arm_fp_abi="Hard" arm_fpu_type="FPv4-SP-D16" arm_gcc_target="arm-unknown-eabi" arm_linker_heap_size="18432" arm_linker_jtag_pad_pre_dr="1" arm_linker_jtag_pad_pre_ir="5" arm_linker_process_stack_size="0" arm_linker_stack_size="1024" arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="STM32F407VG;0x100000;0x20000" arm_target_debug_interface_type="ADIv5" arm_target_loader_applicable_loaders="Flash" arm_target_loader_default_loader="Flash" arm_target_loader_parameter="25000000" build_remove_unused_symbols="Yes" c_additional_options="-I." c_only_additional_options="-fsingle-precision-constant;-Wall;-Wdouble-promotion;-Winline;-finline-functions;--param;large-function-insns=5400" c_preprocessor_definitions="__FPU_PRESENT;ARM_MATH_CM4;STM32F40XX" c_user_include_directories="$(TargetsDir)/STM32/include;$(ProjectDir)/../STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/STM32F4xx_StdPeriph_Driver/inc;$(ProjectDir)/../STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/CMSIS/Include;$(ProjectDir)/../mavlink/include/autoquad" double_is_float="No" linker_memory_map_file="$(TargetsDir)/STM32/STM32F407VG_MemoryMap.xml" linker_output_format="hex" linker_printf_fp_enabled="Yes" linker_scanf_fp_enabled="Yes" linker_section_placement_file="$(ProjectDir)/flash_placement.xml" oscillator_frequency="25MHz" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml" target_reset_script="Reset()"/>
-    <configuration Name="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/STM32/Release/STM32F2xx_Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader" arm_target_loader_can_lock_all="No" arm_target_loader_can_lock_range="No" arm_target_loader_can_unlock_all="No" arm_target_loader_can_unlock_range="No" target_reset_script="FLASHReset()"/>
-    <folder Name="Source Files" file_name="">
-      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc"/>
-      <file file_name="main_ctl.c"/>
-      <file file_name="digital.c"/>
-      <file file_name="digital.h"/>
-      <file file_name="util.c"/>
-      <file file_name="util.h"/>
-      <file file_name="aq.h"/>
-      <file file_name="rcc.c"/>
-      <file file_name="rcc.h"/>
-      <file file_name="serial.c"/>
-      <file file_name="serial.h"/>
-      <file file_name="config.c"/>
-      <file file_name="config.h"/>
-      <file file_name="flash.c"/>
-      <file file_name="flash.h"/>
-      <file file_name="motors.c"/>
-      <file file_name="motors.h"/>
-      <file file_name="spektrum.c"/>
-      <file file_name="spektrum.h"/>
-      <file file_name="analog.c"/>
-      <file file_name="analog.h"/>
-      <file file_name="adc.c"/>
-      <file file_name="adc.h"/>
-      <file file_name="control.c"/>
-      <file file_name="control.h"/>
-      <file file_name="comm.c"/>
-      <file file_name="comm.h"/>
-      <file file_name="nav.c"/>
-      <file file_name="nav.h"/>
-      <file file_name="telemetry.c"/>
-      <file file_name="telemetry.h"/>
-      <file file_name="ublox.c"/>
-      <file file_name="ublox.h"/>
-      <file file_name="pid.c"/>
-      <file file_name="pid.h"/>
-      <file file_name="aq_mavlink.c"/>
-      <file file_name="aq_mavlink.h"/>
-      <file file_name="compass.c"/>
-      <file file_name="compass.h"/>
-      <file file_name="gps.c"/>
-      <file file_name="gps.h"/>
-      <file file_name="command.c"/>
-      <file file_name="command.h"/>
-      <file file_name="aq_timer.c"/>
-      <file file_name="aq_timer.h"/>
-      <file file_name="aq_init.c"/>
-      <file file_name="aq_init.h"/>
-      <file file_name="logger.c"/>
-      <file file_name="logger.h"/>
-      <file file_name="rtc.c"/>
-      <file file_name="rtc.h"/>
-      <file file_name="sdio.c"/>
-      <file file_name="sdio.h"/>
-      <file file_name="imu.c"/>
-      <file file_name="imu.h"/>
-      <file file_name="supervisor.c"/>
-      <file file_name="supervisor.h"/>
-      <file file_name="fpu.h"/>
-      <file file_name="fpu.c"/>
-      <file file_name="nav_ukf.h"/>
-      <file file_name="nav_ukf.c"/>
-      <file file_name="alt_ukf.h"/>
-      <file file_name="alt_ukf.c"/>
-      <file file_name="run.h"/>
-      <file file_name="run.c"/>
-      <file file_name="radio.c"/>
-      <file file_name="radio.h"/>
-      <file file_name="futaba.c"/>
-      <file file_name="futaba.h"/>
-      <file file_name="ppm.c"/>
-      <file file_name="ppm.h"/>
-      <file file_name="filer.c"/>
-      <file file_name="filer.h"/>
-      <file file_name="pwm.h"/>
-      <file file_name="pwm.c"/>
-      <file file_name="gimbal.h"/>
-      <file file_name="gimbal.c"/>
-      <file file_name="config_default.h"/>
-      <file file_name="quatos.h"/>
-      <file file_name="1wire.c"/>
-      <file file_name="1wire.h"/>
-      <file file_name="esc32.h"/>
-      <file file_name="esc32.c"/>
-      <file file_name="buildnum.h">
-        <configuration Name="Common" build_always_rebuild="Yes" compile_post_build_command="" compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;"/>
+    <configuration
+      Name="Common"
+      Placement="Flash"
+      Target="STM32F407VG"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_linker_heap_size="18432"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="1024"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll"
+      arm_simulator_memory_simulation_parameter="STM32F407VG;0x100000;0x20000"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_loader_parameter="25000000"
+      build_intermediate_directory="build/$(Configuration)/obj"
+      build_output_directory="build/$(Configuration)"
+      build_remove_unused_symbols="Yes"
+      c_additional_options="-I."
+      c_only_additional_options="-fsingle-precision-constant;-Wall;-Wdouble-promotion;-Winline;-finline-functions;--param;large-function-insns=5400"
+      c_preprocessor_definitions="NESTED_INTERRUPTS;CTL_TASKING;USE_STDPERIPH_DRIVER;__FPU_PRESENT;ARM_MATH_CM4;STM32F40XX"
+      c_user_include_directories="lib/STM32F4xx_StdPeriph_Driver/inc;lib/CMSIS/Include;lib/CMSIS/Device/ST/STM32F4xx/Include;lib/mavlink/include/autoquad;src/;src/co_os;src/drivers;src/drivers/can;src/drivers/usb;src/drivers/disk;src/math;src/radio;src/targets"
+      double_is_float="No"
+      link_include_standard_libraries="No"
+      link_symbol_definitions="__vfprintf=__vfprintf_double_long_long;__vfscanf=__vfscanf_double_long_long"
+      linker_additional_files="$(StudioDir)/lib/libm$(LibExt)$(LIB);$(StudioDir)/lib/libc$(LibExt)$(LIB);$(StudioDir)/lib/libcpp$(LibExt)$(LIB);$(StudioDir)/lib/libc_user_libc$(LibExt)$(LIB)"
+      linker_additional_options="-u__vfprintf_double_long_long;-u__vfscanf_double_long_long"
+      linker_memory_map_file="$(ProjectDir)/src/targets/cw/STM32F407VG_MemoryMap.xml"
+      linker_output_format="hex"
+      linker_printf_fp_enabled="Yes"
+      linker_scanf_fp_enabled="Yes"
+      linker_section_placement_file="$(ProjectDir)/src/targets/cw/flash_placement.xml"
+      oscillator_frequency="25MHz"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(ProjectDir)/src/targets/cw/propertyGroups.xml"
+      target_reset_script="Reset()" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(TargetsDir)/STM32/Release/STM32F2xx_Loader_rpc.elf"
+      arm_target_flash_loader_type="LIBMEM RPC Loader"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <folder Name="System Files">
+      <file file_name="src/targets/STM32_Startup.s" />
+      <file file_name="$(ProjectDir)/src/targets/cw/STM32_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
       </file>
-      <file file_name="spi.h"/>
-      <file file_name="spi.c"/>
-      <file file_name="signaling.h"/>
-      <file file_name="signaling.c"/>
-      <file file_name="ext_irq.c"/>
-      <file file_name="ext_irq.h"/>
-      <folder Name="CAN" file_name="">
-        <file file_name="can.h"/>
-        <file file_name="can.c"/>
-        <file file_name="canSensors.h"/>
-        <file file_name="canSensors.c"/>
-        <file file_name="canCalib.c"/>
-        <file file_name="canCalib.h"/>
-        <file file_name="canUart.c"/>
-        <file file_name="canUart.h"/>
-        <file file_name="canOSD.c"/>
-        <file file_name="canOSD.h"/>
+      <file file_name="src/targets/system_stm32f4xx.c" />
+      <file file_name="src/targets/flash_placement.xml" />
+      <file file_name="src/targets/thumb_crt0.s" />
+      <file file_name="src/targets/stm32f4xx_conf.h" />
+    </folder>
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <file file_name="src/buildnum.h">
+        <configuration
+          Name="Common"
+          build_always_rebuild="Yes"
+          compile_post_build_command=""
+          compile_pre_build_command="&quot;$(StudioDir)/bin/crossscript&quot; &quot;load(\&quot;$(ProjectDir)/incbuild.js\&quot;);incbuild();&quot;" />
+      </file>
+      <file file_name="src/main_ctl.c" />
+      <file file_name="src/drivers/digital.c" />
+      <file file_name="src/drivers/digital.h" />
+      <file file_name="src/util.c" />
+      <file file_name="src/util.h" />
+      <file file_name="src/aq.h" />
+      <file file_name="src/drivers/rcc.c" />
+      <file file_name="src/drivers/rcc.h" />
+      <file file_name="src/drivers/serial.c" />
+      <file file_name="src/drivers/serial.h" />
+      <file file_name="src/config.c" />
+      <file file_name="src/config.h" />
+      <file file_name="src/drivers/flash.c" />
+      <file file_name="src/drivers/flash.h" />
+      <file file_name="src/motors.c" />
+      <file file_name="src/motors.h" />
+      <file file_name="src/radio/spektrum.c" />
+      <file file_name="src/radio/spektrum.h" />
+      <file file_name="src/drivers/analog.c" />
+      <file file_name="src/drivers/analog.h" />
+      <file file_name="src/drivers/adc.c" />
+      <file file_name="src/drivers/adc.h" />
+      <file file_name="src/control.c" />
+      <file file_name="src/control.h" />
+      <file file_name="src/comm.c" />
+      <file file_name="src/comm.h" />
+      <file file_name="src/nav.c" />
+      <file file_name="src/nav.h" />
+      <file file_name="src/telemetry.c" />
+      <file file_name="src/telemetry.h" />
+      <file file_name="src/drivers/ublox.c" />
+      <file file_name="src/drivers/ublox.h" />
+      <file file_name="src/pid.c" />
+      <file file_name="src/pid.h" />
+      <file file_name="src/aq_mavlink.c" />
+      <file file_name="src/aq_mavlink.h" />
+      <file file_name="src/compass.c" />
+      <file file_name="src/compass.h" />
+      <file file_name="src/gps.c" />
+      <file file_name="src/gps.h" />
+      <file file_name="src/command.c" />
+      <file file_name="src/command.h" />
+      <file file_name="src/aq_timer.c" />
+      <file file_name="src/aq_timer.h" />
+      <file file_name="src/aq_init.c" />
+      <file file_name="src/aq_init.h" />
+      <file file_name="src/logger.c" />
+      <file file_name="src/logger.h" />
+      <file file_name="src/drivers/rtc.c" />
+      <file file_name="src/drivers/rtc.h" />
+      <file file_name="src/imu.c" />
+      <file file_name="src/imu.h" />
+      <file file_name="src/supervisor.c" />
+      <file file_name="src/supervisor.h" />
+      <file file_name="src/drivers/fpu.h" />
+      <file file_name="src/drivers/fpu.c" />
+      <file file_name="src/nav_ukf.h" />
+      <file file_name="src/nav_ukf.c" />
+      <file file_name="src/alt_ukf.h" />
+      <file file_name="src/alt_ukf.c" />
+      <file file_name="src/run.h" />
+      <file file_name="src/run.c" />
+      <file file_name="src/radio/radio.c" />
+      <file file_name="src/radio/radio.h" />
+      <file file_name="src/radio/futaba.c" />
+      <file file_name="src/radio/futaba.h" />
+      <file file_name="src/radio/ppm.c" />
+      <file file_name="src/radio/ppm.h" />
+      <file file_name="src/filer.c" />
+      <file file_name="src/filer.h" />
+      <file file_name="src/drivers/pwm.h" />
+      <file file_name="src/drivers/pwm.c" />
+      <file file_name="src/gimbal.h" />
+      <file file_name="src/gimbal.c" />
+      <file file_name="src/config_default.h" />
+      <file file_name="src/quatos.h" />
+      <file file_name="src/drivers/1wire.c" />
+      <file file_name="src/drivers/1wire.h" />
+      <file file_name="src/esc32.h" />
+      <file file_name="src/esc32.c" />
+      <file file_name="src/drivers/spi.h" />
+      <file file_name="src/drivers/spi.c" />
+      <file file_name="src/signaling.h" />
+      <file file_name="src/signaling.c" />
+      <file file_name="src/drivers/ext_irq.c" />
+      <file file_name="src/drivers/ext_irq.h" />
+      <file file_name="src/aq_version.h" />
+      <file file_name="src/radio/grhott.c" />
+      <file file_name="src/radio/grhott.h" />
+      <file file_name="src/radio/mlinkrx.c" />
+      <file file_name="src/radio/mlinkrx.h" />
+      <file file_name="src/calib.c" />
+      <file file_name="src/calib.h" />
+      <file file_name="src/rc.c" />
+      <file file_name="src/rc.h" />
+      <folder Name="CAN" path="src/drivers/can" recurse="Yes" />
+      <folder Name="digitalIMU">
+        <file file_name="src/drivers/mpu6000.c" />
+        <file file_name="src/drivers/mpu6000.h" />
+        <file file_name="src/d_imu.c" />
+        <file file_name="src/d_imu.h" />
+        <file file_name="src/drivers/hmc5983.h" />
+        <file file_name="src/drivers/hmc5983.c" />
+        <file file_name="src/drivers/ms5611.c" />
+        <file file_name="src/drivers/ms5611.h" />
+        <file file_name="src/drivers/eeprom.h" />
+        <file file_name="src/drivers/eeprom.c" />
+        <file file_name="src/targets/board_dimu_v1.h" />
+        <file file_name="src/targets/board_dimu_v1_1.h" />
+        <file file_name="src/targets/board_dimu_v2.h" />
+        <file file_name="src/targets/board_dimu_v21.h" />
+        <file file_name="src/drivers/max21100.h" />
+        <file file_name="src/drivers/max21100.c" />
       </folder>
-      <folder Name="digitalIMU" file_name="">
-        <file file_name="mpu6000.c"/>
-        <file file_name="mpu6000.h"/>
-        <file file_name="d_imu.c"/>
-        <file file_name="d_imu.h"/>
-        <file file_name="hmc5983.h"/>
-        <file file_name="hmc5983.c"/>
-        <file file_name="ms5611.c"/>
-        <file file_name="ms5611.h"/>
-        <file file_name="eeprom.h"/>
-        <file file_name="eeprom.c"/>
-        <file file_name="board_dimu_v1.h"/>
-        <file file_name="board_dimu_v1_1.h"/>
-        <file file_name="board_dimu_v2.h"/>
-        <file file_name="board_dimu_v21.h"/>
-        <file file_name="max21100.h"/>
-        <file file_name="max21100.c"/>
+      <folder Name="USB">
+        <file file_name="src/drivers/usb/usbd_conf.h" />
+        <file file_name="src/drivers/usb/usbd_desc.h" />
+        <file file_name="src/drivers/usb/usb_bsp.c" />
+        <file file_name="src/drivers/usb/usbd_desc.c" />
+        <file file_name="src/drivers/usb/usb_conf.h" />
+        <file file_name="src/drivers/usb/usb.h" />
+        <file file_name="src/drivers/usb/usb.c" />
+        <file file_name="src/drivers/usb/usbd_storage_msd.c" />
       </folder>
-      <folder Name="USB" file_name="">
-        <file file_name="usbd_conf.h"/>
-        <file file_name="usbd_desc.h"/>
-        <file file_name="usb_bsp.c"/>
-        <file file_name="usbd_desc.c"/>
-        <file file_name="usb_conf.h"/>
-        <file file_name="usb.h"/>
-        <file file_name="usb.c"/>
-        <file file_name="usbd_storage_msd.c"/>
-      </folder>
-      <file file_name="aq_version.h"/>
-      <file file_name="grhott.c"/>
-      <file file_name="grhott.h"/>
-      <file file_name="mlinkrx.c"/>
-      <file file_name="mlinkrx.h"/>
-      <file file_name="calib.c"/>
-      <file file_name="calib.h"/>
-      <file file_name="rc.c"/>
-      <file file_name="rc.h"/>
-      <folder Name="boards">
-        <file file_name="board_6_1.h"/>
-        <file file_name="board_6_1a.h"/>
-        <file file_name="board_7.h"/>
-        <file file_name="board_m4.h"/>
-        <file file_name="board_m4_r3.h"/>
-        <file file_name="board_m4_r4.h"/>
-        <file file_name="board_m4_r5.h"/>
-        <file file_name="board_m4_r6.h"/>
-      </folder>
+      <folder
+        Name="boards"
+        filter="board_*.h"
+        path="src/targets"
+        recurse="No" />
       <folder Name="DSM">
-        <file file_name="cyrf6936.h"/>
-        <file file_name="cyrf6936.c"/>
-        <file file_name="cyrf6936_regs.h"/>
-        <file file_name="dsm.h"/>
-        <file file_name="dsm.c"/>
+        <file file_name="src/drivers/cyrf6936.h" />
+        <file file_name="src/drivers/cyrf6936.c" />
+        <file file_name="src/drivers/cyrf6936_regs.h" />
+        <file file_name="src/radio/dsm.h" />
+        <file file_name="src/radio/dsm.c" />
       </folder>
     </folder>
-    <folder Name="System Files" file_name="">
-      <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
-      <file file_name="$(TargetsDir)/STM32/STM32_Target.js">
-        <configuration Name="Common" file_type="Reset Script"/>
-      </file>
-      <file file_name="system_stm32f4xx.c"/>
-      <file file_name="flash_placement.xml"/>
-      <file file_name="thumb_crt0.s"/>
-      <file file_name="stm32f4xx_conf.h"/>
-    </folder>
-    <folder Name="mavlink" filter="*.h" path="../mavlink/include" recurse="No"/>
-    <folder Name="CoOS" file_name="">
-      <folder Name="kernel">
-        <file file_name="CoOS.h"/>
-        <file file_name="OsConfig.h"/>
-        <file file_name="OsCore.h"/>
-        <file file_name="OsError.h"/>
-        <file file_name="OsEvent.h"/>
-        <file file_name="OsFlag.h"/>
-        <file file_name="OsKernelHeap.h"/>
-        <file file_name="OsMM.h"/>
-        <file file_name="OsMutex.h"/>
-        <file file_name="OsQueue.h"/>
-        <file file_name="OsServiceReq.h"/>
-        <file file_name="OsTask.h"/>
-        <file file_name="OsTime.h"/>
-        <file file_name="OsTimer.h"/>
-        <file file_name="coocox.h"/>
-        <file file_name="core.c"/>
-        <file file_name="event.c"/>
-        <file file_name="flag.c"/>
-        <file file_name="hook.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="Yes"/>
-          <configuration Name="THUMB Release" build_exclude_from_build="Yes"/>
-        </file>
-        <file file_name="kernelHeap.c"/>
-        <file file_name="mbox.c"/>
-        <file file_name="mm.c"/>
-        <file file_name="mutex.c"/>
-        <file file_name="queue.c"/>
-        <file file_name="sem.c"/>
-        <file file_name="serviceReq.c"/>
-        <file file_name="task.c"/>
-        <file file_name="time.c"/>
-        <file file_name="timer.c"/>
-        <file file_name="utility.c"/>
-        <file file_name="utility.h"/>
-      </folder>
-      <folder Name="portable">
-        <file file_name="OsArch.h"/>
-        <file file_name="arch.c"/>
-        <file file_name="port.c"/>
-      </folder>
-    </folder>
-    <folder Name="fatFS" file_name="">
-      <file file_name="diskio.h"/>
-      <file file_name="ff.h"/>
-      <file file_name="ffconf.h"/>
-      <file file_name="integer.h"/>
-      <file file_name="ff.c"/>
-    </folder>
+    <folder
+      Name="mavlink"
+      exclude=""
+      filter="*.h"
+      path="lib/mavlink/include"
+      recurse="Yes" />
+    <folder
+      Name="CoOS"
+      exclude="hook.c"
+      filter="*.c;*.h"
+      path="src/co_os"
+      recurse="Yes" />
+    <folder Name="fatFS" path="src/drivers/disk" recurse="Yes" />
     <folder Name="KFLIB">
-      <file file_name="srcdkf.c"/>
-      <file file_name="srcdkf.h"/>
+      <file file_name="src/math/srcdkf.c" />
+      <file file_name="src/math/srcdkf.h" />
     </folder>
     <folder Name="MATHLIB">
-      <file file_name="algebra.c"/>
-      <file file_name="aq_math.h"/>
-      <file file_name="rotations.c"/>
+      <file file_name="src/math/algebra.c" />
+      <file file_name="src/math/aq_math.h" />
+      <file file_name="src/math/rotations.c" />
     </folder>
     <folder Name="USB Drivers">
       <folder Name="Device">
         <folder Name="Core">
-          <folder Name="src" file_name="">
-            <file file_name="usbd_core.c"/>
-            <file file_name="usbd_ioreq.c"/>
-            <file file_name="usbd_req.c"/>
+          <folder Name="src">
+            <file file_name="src/drivers/usb/usbd_core.c" />
+            <file file_name="src/drivers/usb/usbd_ioreq.c" />
+            <file file_name="src/drivers/usb/usbd_req.c" />
           </folder>
-          <folder Name="inc" file_name="">
-            <file file_name="usbd_core.h"/>
-            <file file_name="usbd_def.h"/>
-            <file file_name="usbd_ioreq.h"/>
-            <file file_name="usbd_req.h"/>
+          <folder Name="inc">
+            <file file_name="src/drivers/usb/usbd_core.h" />
+            <file file_name="src/drivers/usb/usbd_def.h" />
+            <file file_name="src/drivers/usb/usbd_ioreq.h" />
+            <file file_name="src/drivers/usb/usbd_req.h" />
           </folder>
         </folder>
         <folder Name="Class">
           <folder Name="msc">
-            <folder Name="inc" file_name="">
-              <file file_name="usbd_msc_bot.h"/>
-              <file file_name="usbd_msc_data.h"/>
-              <file file_name="usbd_msc_mem.h"/>
-              <file file_name="usbd_msc_scsi.h"/>
+            <folder Name="inc">
+              <file file_name="src/drivers/usb/usbd_msc_bot.h" />
+              <file file_name="src/drivers/usb/usbd_msc_data.h" />
+              <file file_name="src/drivers/usb/usbd_msc_mem.h" />
+              <file file_name="src/drivers/usb/usbd_msc_scsi.h" />
             </folder>
-            <folder Name="src" file_name="">
-              <file file_name="usbd_msc_bot.c"/>
-              <file file_name="usbd_msc_data.c"/>
-              <file file_name="usbd_msc_scsi.c"/>
+            <folder Name="src">
+              <file file_name="src/drivers/usb/usbd_msc_bot.c" />
+              <file file_name="src/drivers/usb/usbd_msc_data.c" />
+              <file file_name="src/drivers/usb/usbd_msc_scsi.c" />
             </folder>
           </folder>
           <folder Name="cdc_msc">
-            <folder Name="inc" file_name="">
-              <file file_name="usbd_cdc_msc_core.h"/>
+            <folder Name="inc">
+              <file file_name="src/drivers/usb/usbd_cdc_msc_core.h" />
             </folder>
-            <folder Name="src" file_name="">
-              <file file_name="usbd_cdc_msc_core.c"/>
+            <folder Name="src">
+              <file file_name="src/drivers/usb/usbd_cdc_msc_core.c" />
             </folder>
           </folder>
         </folder>
       </folder>
       <folder Name="OTG">
-        <folder Name="inc" file_name="">
-          <file file_name="usb_bsp.h"/>
-          <file file_name="usb_core.h"/>
-          <file file_name="usb_dcd.h"/>
-          <file file_name="usb_dcd_int.h"/>
-          <file file_name="usb_defines.h"/>
-          <file file_name="usb_regs.h"/>
+        <folder Name="inc">
+          <file file_name="src/drivers/usb/usb_bsp.h" />
+          <file file_name="src/drivers/usb/usb_core.h" />
+          <file file_name="src/drivers/usb/usb_dcd.h" />
+          <file file_name="src/drivers/usb/usb_dcd_int.h" />
+          <file file_name="src/drivers/usb/usb_defines.h" />
+          <file file_name="src/drivers/usb/usb_regs.h" />
         </folder>
-        <folder Name="src" file_name="">
-          <file file_name="usb_core.c"/>
-          <file file_name="usb_dcd.c"/>
-          <file file_name="usb_dcd_int.c"/>
+        <folder Name="src">
+          <file file_name="src/drivers/usb/usb_core.c" />
+          <file file_name="src/drivers/usb/usb_dcd.c" />
+          <file file_name="src/drivers/usb/usb_dcd_int.c" />
         </folder>
       </folder>
     </folder>
-    <configuration Name="Release" c_preprocessor_definitions="STARTUP_FROM_RESET" gcc_debugging_level="Level 2" gcc_optimization_level="Level 2" gcc_strip_symbols="No"/>
-    <configuration Name="Debug" c_preprocessor_definitions="USE_FULL_ASSERT" gcc_optimization_level="Level 1"/>
-    <folder Name="STM STD Periph Drivers" exclude="stm32f4xx_fmc.c" filter="*.c;*.h" path="../STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/STM32F4xx_StdPeriph_Driver/" recurse="Yes"/>
-    <folder Name="CMSIS DSP_Lib" exclude="" filter="*.c;*.h" path="../STM32F4xx_DSP_StdPeriph_Lib_V1.3.0/Libraries/CMSIS/DSP_Lib/Source" recurse="Yes"/>
+    <folder
+      Name="STM STD Periph Drivers"
+      exclude="stm32f4xx_fmc.c"
+      filter="*.c;*.h"
+      path="lib/STM32F4xx_StdPeriph_Driver/"
+      recurse="Yes" />
+    <folder Name="CMSIS DSP_Lib">
+      <folder Name="BasicMathFunctions">
+        <file file_name="lib/CMSIS/DSP_Lib/Source/BasicMathFunctions/arm_scale_f32.c" />
+      </folder>
+      <folder Name="SupportFunctions">
+        <file file_name="lib/CMSIS/DSP_Lib/Source/SupportFunctions/arm_copy_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/SupportFunctions/arm_fill_f32.c" />
+      </folder>
+      <folder Name="MatrixFunctions">
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_add_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_init_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_inverse_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_mult_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_sub_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/MatrixFunctions/arm_mat_trans_f32.c" />
+      </folder>
+      <folder Name="StatisticsFunctions">
+        <file file_name="lib/CMSIS/DSP_Lib/Source/StatisticsFunctions/arm_mean_f32.c" />
+        <file file_name="lib/CMSIS/DSP_Lib/Source/StatisticsFunctions/arm_std_f32.c" />
+      </folder>
+    </folder>
+    <configuration
+      Name="Release"
+      c_preprocessor_definitions="NDEBUG;STARTUP_FROM_RESET"
+      gcc_debugging_level="Level 2"
+      gcc_optimization_level="Level 2"
+      gcc_strip_symbols="No" />
+    <configuration
+      Name="Debug"
+      build_debug_information="Yes"
+      c_preprocessor_definitions="DEBUG;USE_FULL_ASSERT"
+      gcc_debugging_level="Level 2"
+      gcc_optimization_level="Level 1"
+      link_symbol_definitions="__do_debug_operation=__do_debug_operation_mempoll"
+      linker_additional_files="$(StudioDir)/lib/libdebugio$(LibExt)$(LIB);$(StudioDir)/lib/libc_targetio_impl$(LibExt)$(LIB)"
+      linker_additional_options="-u__do_debug_operation_mempoll" />
+    <configuration
+      Name="M4"
+      c_preprocessor_definitions="BOARD_VERSION=8"
+      linker_output_format="bin" />
+    <configuration
+      Name="quatos"
+      c_preprocessor_definitions="HAS_QUATOS"
+      linker_additional_files="lib/quatos/quatos.a" />
+    <configuration Name="AQ6" c_preprocessor_definitions="BOARD_VERSION=6" />
+    <configuration
+      Name="DIMU11"
+      c_preprocessor_definitions="DIMU_VERSION=11" />
+    <configuration Name="r0" c_preprocessor_definitions="BOARD_REVISION=0" />
+    <configuration Name="r1" c_preprocessor_definitions="BOARD_REVISION=1" />
+    <configuration Name="r3" c_preprocessor_definitions="BOARD_REVISION=3" />
+    <configuration Name="r5" c_preprocessor_definitions="BOARD_REVISION=5" />
+    <configuration Name="r6" c_preprocessor_definitions="BOARD_REVISION=6" />
   </project>
-  <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug"/>
-  <configuration Name="THUMB" Platform="ARM" arm_instruction_set="THUMB" arm_library_instruction_set="THUMB" c_preprocessor_definitions="__THUMB" hidden="Yes"/>
-  <configuration Name="Debug" build_debug_information="Yes" c_preprocessor_definitions="DEBUG" gcc_debugging_level="Level 2" gcc_optimization_level="None" hidden="Yes" link_include_startup_code="No"/>
-  <configuration Name="THUMB Release" inherited_configurations="THUMB;Release"/>
-  <configuration Name="Release" c_preprocessor_definitions="NDEBUG" gcc_debugging_level="Level 1" gcc_optimization_level="Level 1" hidden="Yes" link_include_startup_code="No"/>
-  <configuration Name="Common" c_preprocessor_definitions="NESTED_INTERRUPTS;CTL_TASKING;USE_STDPERIPH_DRIVER"/>
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="THUMB"
+    arm_library_instruction_set="THUMB"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration Name="Release" hidden="Yes" link_include_startup_code="No" />
+  <configuration Name="Debug" hidden="Yes" link_include_startup_code="No" />
+  <configuration Name="AQ6" hidden="Yes" />
+  <configuration Name="M4" hidden="Yes" />
+  <configuration Name="r0" hidden="Yes" />
+  <configuration Name="r1" hidden="Yes" />
+  <configuration Name="r3" hidden="Yes" />
+  <configuration Name="r5" hidden="Yes" />
+  <configuration Name="r6" hidden="Yes" />
+  <configuration Name="DIMU11" hidden="Yes" />
+  <configuration Name="quatos" hidden="Yes" />
+  <configuration
+    Name="Release-AQ6.r0-AIMU-PID"
+    inherited_configurations="THUMB;Release" />
+  <configuration
+    Name="Debug-AQ6.r0-AIMU-PID"
+    inherited_configurations="THUMB;Debug" />
+  <configuration
+    Name="Release-AQ6.r0-DIMU-PID"
+    inherited_configurations="DIMU11;Release;THUMB" />
+  <configuration
+    Name="Release-AQ6.r0-DIMU-Quatos"
+    inherited_configurations="AQ6;r0;DIMU11;quatos;Release;THUMB" />
+  <configuration
+    Name="Release-AQ6.r1-DIMU-PID"
+    inherited_configurations="AQ6;r1;DIMU11;Release;THUMB" />
+  <configuration
+    Name="Release-AQ6.r1-DIMU-Quatos"
+    inherited_configurations="AQ6;r1;DIMU11;quatos;Release;THUMB" />
+  <configuration
+    Name="Release-M4.r5-PID"
+    inherited_configurations="M4;r5;Release;THUMB" />
+  <configuration
+    Name="Release-M4.r5-Quatos"
+    inherited_configurations="M4;quatos;r5;Release;THUMB" />
+  <configuration
+    Name="Release-M4.r6-PID"
+    inherited_configurations="M4;r6;Release;THUMB" />
+  <configuration
+    Name="Release-M4.r6-Quatos"
+    inherited_configurations="M4;quatos;r6;Release;THUMB" />
 </solution>
