@@ -339,9 +339,9 @@ enum pwmPorts {
 #define DIMU_MPU6000_INT_ISR	    EXTI3_IRQHandler
 
 
-#define COMM_PORT1		    USART1	    // expansion header J2:8, J2:9
-//#define COMM_PORT2		    USART5
-//#define COMM_PORT3		    USART6
+#define COMM_PORT1		    USART1	    // expansion header J2:8  (Rx), J2:9  (Tx)
+#define COMM_PORT2		    USART6	    // expansion header J1:10 (Rx), J2:10 (Tx) (shared with PWM_8 & PWM_7)
+//#define COMM_PORT3		    USART5
 
 
 #define SERIAL_UART1_PORT	GPIOA
