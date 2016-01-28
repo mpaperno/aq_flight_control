@@ -16,8 +16,8 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#ifndef _board_h
-#define _board_h
+#ifndef _board_6_r1_h
+#define _board_6_r1_h
 
 #include "board_6_r0.h"
 

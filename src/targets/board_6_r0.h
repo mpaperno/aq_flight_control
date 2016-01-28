@@ -16,8 +16,8 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#ifndef _board_h
-#define _board_h
+#ifndef _board_6_r0_h
+#define _board_6_r0_h
 
 #define SDIO_DMA			DMA2
 #define SDIO_DMA_STREAM			DMA2_Stream3
