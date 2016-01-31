@@ -32,8 +32,9 @@
 
 #define yield(n)		    CoTickDelay(n)
 
-#define constrainInt(v, lo, hi)	    (((int)(v) < (int)(lo)) ? (int)(lo) : (((int)(v) > (int)(hi)) ? (int)(hi) : (int)(v)))
-#define constrainFloat(v, lo, hi)   (((float)(v) < (float)(lo)) ? (float)(lo) : (((float)(v) > (float)(hi)) ? (float)(hi) : (float)(v)))
+#define constrainT(t, v, lo, hi)    ({ t __v = (t)(v), __l = (t)(lo), __h = (t)(hi); (__v < __l) ? __l : ((__v > __h) ? __h : __v); })
+#define constrainInt(v, lo, hi)     constrainT(int, v, lo, hi)
+#define constrainFloat(v, lo, hi)   constrainT(float, v, lo, hi)
 
 #define PERIPH2BB(addr, bit)        ((uint32_t *)(PERIPH_BB_BASE + ((addr) - PERIPH_BASE) * 32 + ((bit) * 4)))
 
@@ -49,6 +50,8 @@ typedef struct {
     uint8_t n;
     uint8_t i;
 } utilFirFilter_t;
+
+extern uint32_t heapUsed, heapHighWater, dataSramUsed;
 
 extern void delay(unsigned long t);
 extern void delayMicros(unsigned long t);

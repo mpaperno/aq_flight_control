@@ -24,8 +24,6 @@
 #define SRCDKF_H	(__sqrtf(3.0f) * 3.0f)
 #define SRCDKF_RM	0.0001f		// Robbins-Monro stochastic term
 
-#define MAX(a, b)	((a > b) ? a : b)
-
 typedef void SRCDKFTimeUpdate_t(float32_t *x_I, float32_t *noise_I, float32_t *x_O, float32_t *u, float32_t dt, int n);
 typedef void SRCDKFMeasurementUpdate_t(float32_t *u, float32_t *x, float32_t *noise_I, float32_t *y);
 
