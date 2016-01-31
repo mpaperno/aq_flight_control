@@ -410,9 +410,10 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.portHandles[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYP1];
-    commData.portTypes[0] = COMM_PORT_TYPE_SERIAL;
+    if ((commData.portStreams[0] = (uint8_t)p[COMM_STREAM_TYP1])) {
+	commData.portHandles[0] = serialOpen(COMM_PORT1, p[COMM_BAUD1], flowControl, COMM_RX_BUF_SIZE, 0);
+	commData.portTypes[0] = COMM_PORT_TYPE_SERIAL;
+    }
 #endif
 
 #ifdef COMM_PORT2
@@ -421,9 +422,10 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.portHandles[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYP2];
-    commData.portTypes[1] = COMM_PORT_TYPE_SERIAL;
+    if ((commData.portStreams[1] = (uint8_t)p[COMM_STREAM_TYP2])) {
+	commData.portHandles[1] = serialOpen(COMM_PORT2, p[COMM_BAUD2], flowControl, COMM_RX_BUF_SIZE, 0);
+	commData.portTypes[1] = COMM_PORT_TYPE_SERIAL;
+    }
 #endif
 
 #ifdef COMM_PORT3
@@ -432,9 +434,10 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.portHandles[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYP3];
-    commData.portTypes[2] = COMM_PORT_TYPE_SERIAL;
+    if ((commData.portStreams[2] = (uint8_t)p[COMM_STREAM_TYP3])) {
+	commData.portHandles[2] = serialOpen(COMM_PORT3, p[COMM_BAUD3], flowControl, COMM_RX_BUF_SIZE, 0);
+	commData.portTypes[2] = COMM_PORT_TYPE_SERIAL;
+    }
 #endif
 
 #ifdef COMM_PORT4
@@ -443,9 +446,10 @@ void commInit(void) {
 #else
     flowControl = USART_HardwareFlowControl_RTS_CTS;
 #endif
-    commData.portHandles[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
-    commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYP4];
-    commData.portTypes[3] = COMM_PORT_TYPE_SERIAL;
+    if ((commData.portStreams[3] = (uint8_t)p[COMM_STREAM_TYP4])) {
+	commData.portHandles[3] = serialOpen(COMM_PORT4, p[COMM_BAUD4], flowControl, COMM_RX_BUF_SIZE, 0);
+	commData.portTypes[3] = COMM_PORT_TYPE_SERIAL;
+    }
 #endif
 
     // record which stream types that we are working with
