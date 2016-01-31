@@ -13,7 +13,8 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _supervisor_h
@@ -92,11 +93,7 @@ typedef struct {
     digitalPin *debugLed;
     digitalPin *gpsLed;
 
-    float socTable[SUPERVISOR_SOC_TABLE_SIZE+1];
-    float soc;
     float flightTime;		    // seconds
-    float flightSecondsAvg;	    // avg flight time seconds for every percentage of SOC
-    float flightTimeRemaining;	    // seconds
     uint32_t armTime;
     uint32_t stickCmdTimer;
     uint32_t lastGoodRadioMicros;

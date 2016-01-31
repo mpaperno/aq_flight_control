@@ -251,7 +251,7 @@ void mavlinkDo(void) {
 	    case AQMAV_DATASET_LEGACY2 :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, gpsData.lat, gpsData.lon, gpsData.hAcc, gpsData.heading, gpsData.height, gpsData.pDOP,
 			navData.holdCourse, navData.holdDistance, navData.holdAlt, navData.holdTiltN, navData.holdTiltE, UKF_VELN, UKF_VELE, VELOCITYD,
-			RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, supervisorData.flightTimeRemaining, RADIO_ERROR_COUNT);
+			RADIO_QUALITY, UKF_ACC_BIAS_X, UKF_ACC_BIAS_Y, UKF_ACC_BIAS_Z, 0, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_LEGACY3 :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, RADIO_THROT, RADIO_RUDD, RADIO_PITCH, RADIO_ROLL, rcGetControlValue(NAV_CTRL_PH), rcGetControlValue(NAV_CTRL_HOM_GO),
@@ -267,8 +267,8 @@ void mavlinkDo(void) {
 			ALTITUDE, UKF_POSN, UKF_POSE, UKF_POSD, UKF_VELN, UKF_VELE, VELOCITYD, 0,0,0);
 		break;
 	    case AQMAV_DATASET_SUPERVISOR :
-		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, supervisorData.state, supervisorData.flightTime, supervisorData.flightTimeRemaining, supervisorData.flightSecondsAvg,
-			supervisorData.vInLPF, supervisorData.soc, supervisorData.lastGoodRadioMicros, supervisorData.idlePercent, 0,0,0,0,0,0,0,0,0, analogData.vIn, RADIO_QUALITY, RADIO_ERROR_COUNT);
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, supervisorData.state, supervisorData.flightTime, 0, 0,
+			supervisorData.vInLPF, 0, supervisorData.lastGoodRadioMicros, supervisorData.idlePercent, 0,0,0,0,0,0,0,0,0, analogData.vIn, RADIO_QUALITY, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_STACKSFREE :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, utilGetStackFree("INIT"), utilGetStackFree("FILER"), utilGetStackFree("SUPERVISOR"), utilGetStackFree("ADC"),

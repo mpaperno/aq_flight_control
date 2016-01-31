@@ -1,7 +1,7 @@
 # Makefile for AutoQuad Flight Controller firmware
 #
 # ! Use of this makefile requires setup of a compatible development environment.
-# ! For latest development recommendations, check here: http://autoquad.org/wiki/wiki/development/
+# ! For latest development recommendations, check the README file distributed with this project.
 # ! This file is ignored when building with CrossWorks Studio.
 #
 # All paths are relative to Makefile location.  Possible make targets:
@@ -459,14 +459,17 @@ CMD_SIZE_REPORT = `$(SIZE) -A -x $(BIN_PATH)/$(TARGET).elf | $(EXE_AWK) -n '\
 		printf("%-10s\t%7d\t\t0x%08x\t", $$1, $$2, $$3); \
 		if      ($$1 == ".data")            {f += $$2; print "F"}   \
 		else if ($$3 >= $(MEM_START_SRAM2)) {r2 += $$2; print "S2"} \
+		else if ($$3 + $$2 >= $(MEM_START_SRAM2)) {t = $$3 + $$2 - $(MEM_START_SRAM2); r2 += t; r += $$2 - t; print "S1+S2"} \
 		else if ($$3 >= $(MEM_START_SRAM1)) {r += $$2; print "S1"}  \
 		else if ($$3 >= $(MEM_START_CCM))   {c += $$2; print "C"}   \
 		else if ($$3 >= $(MEM_START_FLASH)) {f += $$2; print "F"}   \
 	} \
 	END { \
-		printf("\nTotals: %10s\t usage\tof ttl\n Flash: %10.2f\t%5.2f%\t%6d\n   CCM: %10.2f\t%5.2f%\t%6d\n SRAM1: %10.2f\t%5.2f%\t%6d\n SRAM2: %10.2f\t%5.2f%\t%6d\n", "KB", \
-		f/1024, f/($(MEM_SIZE_FLASH)*1024)*100, $(MEM_SIZE_FLASH), c/1024, c/($(MEM_SIZE_CCM)*1024)*100, $(MEM_SIZE_CCM), \
-		r/1024, r/($(MEM_SIZE_SRAM1)*1024)*100, $(MEM_SIZE_SRAM1), r2/1024, r2/($(MEM_SIZE_SRAM2)*1024)*100, $(MEM_SIZE_SRAM2)); \
+		printf("\nTotals: %10s\t  usage\tof ttl\tKB free\n Flash: %10.2f\t%6.2f%\t%6d\t%7.2f\n   CCM: %10.2f\t%6.2f%\t%6d\t%7.2f\n SRAM1: %10.2f\t%6.2f%\t%6d\t%7.2f\n SRAM2: %10.2f\t%6.2f%\t%6d\t%7.2f\n", "KB", \
+		f/1024, f/($(MEM_SIZE_FLASH)*1024)*100, $(MEM_SIZE_FLASH), $(MEM_SIZE_FLASH) - f/1024, \
+		c/1024, c/($(MEM_SIZE_CCM)*1024)*100, $(MEM_SIZE_CCM), $(MEM_SIZE_CCM) - c/1024, \
+		r/1024, r/($(MEM_SIZE_SRAM1)*1024)*100, $(MEM_SIZE_SRAM1), $(MEM_SIZE_SRAM1) - r/1024, \
+		r2/1024, r2/($(MEM_SIZE_SRAM2)*1024)*100, $(MEM_SIZE_SRAM2), $(MEM_SIZE_SRAM2) - r2/1024 ); \
 	}'`
 
 

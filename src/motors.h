@@ -81,13 +81,12 @@ typedef struct {
     float pitch, roll, yaw;
     float throttle;
     float throttleLimiter;
-    uint8_t active[MOTORS_NUM];
     uint8_t activeList[MOTORS_NUM];
     uint8_t numActive;
     uint8_t numGroups;
 #ifdef MOTORS_CAN_LOGGING
-    uint16_t head;
     uint8_t logHandle;
+    uint16_t head;
 #endif
 } motorsStruct_t;
 

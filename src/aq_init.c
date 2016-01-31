@@ -24,8 +24,6 @@
 #include "config.h"
 #include "serial.h"
 #include "comm.h"
-#include "telemetry.h"
-#include "command.h"
 #include "motors.h"
 #include "radio.h"
 #include "imu.h"
@@ -43,7 +41,13 @@
 #include "sdio.h"
 #include "can.h"
 #include "analog.h"
-#include "canCalib.h"
+#ifdef HAS_AQ_TELEMETRY
+    #include "telemetry.h"
+    #include "command.h"
+#endif
+#ifdef CAN_CALIB
+    #include "canCalib.h"
+#endif
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
@@ -71,7 +75,9 @@ void aqInit(void *pdata) {
 #ifdef USE_MAVLINK
     mavlinkInit();
 #endif
+#ifdef HAS_AQ_TELEMETRY
     telemetryInit();
+#endif
     imuInit();
     analogInit();
     navUkfInit();
@@ -79,7 +85,9 @@ void aqInit(void *pdata) {
     radioInit();
     gpsInit();
     navInit();
+#ifdef HAS_AQ_TELEMETRY
     commandInit();
+#endif
 #ifdef USE_SIGNALING
     signalingInit();
 #endif
@@ -107,8 +115,10 @@ void aqInit(void *pdata) {
     if (commData.commTask)
 	CoSetPriority(commData.commTask, COMM_PRIORITY);
 
+#ifdef HAS_AQ_TELEMETRY
     // start telemetry
     telemetryEnable();
+#endif
 
     // reset idle loop calibration now that everything is running
     minCycles = 999999999;

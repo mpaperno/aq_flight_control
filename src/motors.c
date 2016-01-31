@@ -466,7 +466,6 @@ void motorsInit(void) {
 		initOk = motorsPwmInit(i);
 
 	    if (initOk) {
-		motorsData.active[i] = 1;
 		motorsData.activeList[motorsData.numActive++] = i;
 
 		sumPitch += d->pitch;
