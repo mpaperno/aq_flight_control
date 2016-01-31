@@ -96,9 +96,11 @@ static uint16_t usbVcpCtrl(uint32_t Cmd, uint8_t* Buf, uint32_t Len) {
 	    usbData.lineCoding.dataType = Buf[6];
 
 	    switch (usbData.lineCoding.bitrate) {
+#ifdef HAS_AQ_TELEMETRY
 		case USB_STREAM_TELEMETRY:
 		    commSetStreamType(COMM_USB_PORT, COMM_STREAM_TYPE_TELEMETRY);
 		    break;
+#endif
 
 		case USB_STREAM_MAVLINK:
 		    commSetStreamType(COMM_USB_PORT, COMM_STREAM_TYPE_MAVLINK);

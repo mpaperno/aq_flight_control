@@ -28,6 +28,7 @@
 #define USE_PRES_ALT		 	// uncomment to use pressure altitude instead of GPS
 #define USE_SIGNALING                   // uncomment to use external signaling events and ports
 //#define HAS_QUATOS                      // build including Quatos library
+//#define HAS_AQ_TELEMETRY                // uncomment to include AQ native binary telemetry and command interface
 
 #ifndef BOARD_VERSION
     #define BOARD_VERSION	6
@@ -82,7 +83,26 @@
 #define NAN	__float32_nan
 #endif
 
+#ifndef bool
+#define bool _Bool
+#ifndef true
+#define true 1
+#define false 0
+#endif // true,false
+#endif // bool
+
 //#define CAN_CALIB	// transmit IMU data over CAN
+
+enum dataTypesEnum {
+    AQ_TYPE_DBL = 0,
+    AQ_TYPE_FLT,
+    AQ_TYPE_U32,
+    AQ_TYPE_S32,
+    AQ_TYPE_U16,
+    AQ_TYPE_S16,
+    AQ_TYPE_U8,
+    AQ_TYPE_S8
+};
 
 extern volatile unsigned long counter;
 extern volatile unsigned long minCycles;
