@@ -150,7 +150,7 @@ void telemetryDo(void) {
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_X);
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_Y);
 		ptr = telemtrySendFloat(ptr, UKF_ACC_BIAS_Z);
-		ptr = telemtrySendFloat(ptr, supervisorData.flightTimeRemaining);
+		//ptr = telemtrySendFloat(ptr, supervisorData.flightTimeRemaining);
 
 		*ptr++ = telemetryData.ckA;
 		*ptr++ = telemetryData.ckB;
