@@ -25,8 +25,6 @@
 #define TELEMETRY_COMMAND_BUFSIZE     256
 
 typedef struct {
-    OS_TID telemetryTask;
-
     unsigned long loops;
     unsigned char telemetryEnable;
 

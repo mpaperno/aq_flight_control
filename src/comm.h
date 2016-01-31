@@ -109,6 +109,8 @@ typedef struct {
     OS_TID commTask;
     OS_MutexID txBufferMutex;
     OS_EventID notices;
+
+    uint8_t streamRcvrs[COMM_MAX_CONSUMERS]; // (40b)
     void *noticeQueue[COMM_NOTICE_DEPTH*2];
     char noticeStrings[COMM_NOTICE_DEPTH][COMM_NOTICE_LENGTH];
 
@@ -116,7 +118,6 @@ typedef struct {
 
     commNoticeCallback_t *noticeFuncs[COMM_MAX_CONSUMERS];  // notice callbacks
     commTelemCallback_t *telemFuncs[COMM_MAX_CONSUMERS];    // telemetry callbacks
-    uint8_t streamRcvrs[COMM_MAX_CONSUMERS];
     commRcvrCallback_t *rcvrFuncs[COMM_MAX_CONSUMERS];
 
     commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
@@ -132,9 +133,9 @@ typedef struct {
     uint32_t txBufUpgrades[COMM_TX_NUM_SIZES];		    // number of times we needed to up size
 
     uint16_t txPacketBufSizes[COMM_TX_NUM_SIZES];	    // list of packet sizes
-    uint8_t txPacketBufNum[COMM_TX_NUM_SIZES];		    // list of number of buffers per size
     void *txPacketBufs[COMM_TX_NUM_SIZES];		    // pointers to start of block for each buffer size
     uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
+    uint8_t txPacketBufNum[COMM_TX_NUM_SIZES]; //(48b)	    // list of number of buffers per size
     int logPointer;
 
     uint8_t typesUsed;					    // types configured

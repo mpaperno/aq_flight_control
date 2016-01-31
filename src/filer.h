@@ -52,6 +52,10 @@ enum {
 typedef struct {
     OS_FlagID completeFlag;
 
+    uint8_t open;
+    uint8_t function;
+    uint8_t allocated;
+
     char fileName[32];
     FIL fp;
     void *buf;
@@ -59,14 +63,14 @@ typedef struct {
     uint32_t length;
     int32_t status;
     volatile int32_t head, tail;
-    uint8_t open;
-    uint8_t function;
-    uint8_t allocated;
 } filerFileStruct_t;
 
 typedef struct {
     OS_TID filerTask;
     OS_FlagID filerFlag;
+
+    uint8_t initialized;
+    volatile uint8_t mscState;
 
     filerFileStruct_t files[FILER_MAX_FILES];
     FATFS fs;
@@ -75,8 +79,6 @@ typedef struct {
     char buf[64];
     uint32_t session;
     uint32_t loops;
-    uint8_t initialized;
-    volatile uint8_t mscState;
 } filerStruct_t;
 
 extern filerStruct_t filerData;
