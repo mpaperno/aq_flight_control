@@ -13,11 +13,51 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011-2015  Bill Nesbitt
+    Copyright 2015-2016 Maxim Paperno
 */
 
 #include "rc.h"
 #include "comm.h"
+
+/* Return the current value of a radio channel. Typically you'd wan to use rcGetControlValue() or rcIsSwitchActive() instead. */
+__attribute__((always_inline))
+inline int16_t rcGetChannelValue(int chan) {
+    if (chan >= 0) {
+	if (radioData.mode == RADIO_MODE_SPLIT) {
+	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
+		return radioData.allChannels[chan];
+	}
+	else if (chan < RADIO_MAX_CHANNELS)
+	    return radioData.channels[chan];
+    }
+    return 0;
+}
+
+/* Sets a radio channel to a specified value. This would get overwritten if an active radio is controlling the same channel.
+ * Typically you'd wan to use rcSetControlValue() or rcSetSwitchActive() instead. */
+__attribute__((always_inline))
+inline void rcSetChannelValue(int chan, int val) {
+    if (chan >= 0) {
+	if (radioData.mode == RADIO_MODE_SPLIT) {
+	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
+		radioData.allChannels[chan] = val;
+	} else if (chan < RADIO_MAX_CHANNELS)
+	    radioData.channels[chan] = val;
+    }
+}
+
+
+/* Returns true if current RC controller value (eg. radio channel) matches configured value (channel and position) for a given control parameter. */
+__attribute__((always_inline))
+inline uint8_t rcIsSwitchActive(int paramId) {
+    if (rcIsControlConfigured(paramId)) {
+	int16_t chanVal = rcGetControlValue(paramId);
+	int16_t targetVal = rcGetSwitchTargetValue(paramId);
+
+	return (chanVal >= targetVal - rcGetSwitchDeadband() && chanVal <= targetVal + rcGetSwitchDeadband());
+    }
+    return 0;
+}
 
 /* Return true if given controls have overlapping switch positions (eg. if same channel value might mean PH and MISN) */
 static uint8_t rcCheckSwitchRangeOverlap(int *swarry, uint8_t alen) {

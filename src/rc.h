@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011-2015  Bill Nesbitt
+    Copyright 2015-2016 Maxim Paperno
 */
 
 #ifndef _rc_h
@@ -33,7 +33,7 @@
 #define rcIsControlConfigured(Pid_p)      rcGetControlChannel(Pid_p)
 
 /* Returns the raw value of a control channel (eg. radio channel). Default value is zero. */
-#define rcGetControlValue(Pid_p)          _rcGetChannelValue(rcGetControlChannel(Pid_p)-1)
+#define rcGetControlValue(Pid_p)          rcGetChannelValue(rcGetControlChannel(Pid_p)-1)
 
 /* Return the configured channel value for a switch based on control param ID */
 #define rcGetSwitchTargetValue(Pid_p)     ((((uint32_t)p[Pid_p] >> 8) & 0x7FF) * (((uint32_t)p[Pid_p] & (1<<19)) ? 1 : -1))
@@ -44,7 +44,6 @@
 /* Sets a controller channel to the given value.
  * This would be overwritten if an active radio is controlling the same channel. */
 #define rcSetControlValue(Pid_p, Chv_p)   _rcSetChannelValue(rcGetControlChannel(Pid_p)-1, Chv_p)
-
 /* Sets a controller channel value to reflect the active state of a given switch-type control.
  * This would be overwritten if an active radio is controlling the same channel. */
 #define rcSetSwitchActive(Pid_p)          { if (rcIsControlConfigured(Pid_p)) rcSetControlValue(Pid_p, rcGetSwitchTargetValue(Pid_p)); }
@@ -57,46 +56,9 @@ enum rcErrorCodes {
     RC_ERROR_CTRL_OVERLP_HOME  = 0x04,
 };
 
-/* Return the current value of a radio channel. Typically you'd wan to use rcGetControlValue() or rcIsSwitchActive() instead. */
-__attribute__((always_inline))
-static inline int16_t _rcGetChannelValue(int chan) {
-    if (chan >= 0) {
-	if (radioData.mode == RADIO_MODE_SPLIT) {
-	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
-		return radioData.allChannels[chan];
-	}
-	else if (chan < RADIO_MAX_CHANNELS)
-	    return radioData.channels[chan];
-    }
-    return 0;
-}
-
-/* Sets a radio channel to a specified value. This would get overwritten if an active radio is controlling the same channel.
- * Typically you'd wan to use rcSetControlValue() or rcSetSwitchActive() instead. */
-__attribute__((always_inline))
-static inline void _rcSetChannelValue(int chan, int val) {
-    if (chan >= 0) {
-	if (radioData.mode == RADIO_MODE_SPLIT) {
-	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
-		radioData.allChannels[chan] = val;
-	} else if (chan < RADIO_MAX_CHANNELS)
-	    radioData.channels[chan] = val;
-    }
-}
-
-
-/* Returns true if current RC controller value (eg. radio channel) matches configured value (channel and position) for a given control parameter. */
-__attribute__((always_inline))
-static inline uint8_t rcIsSwitchActive(int paramId) {
-    if (rcIsControlConfigured(paramId)) {
-	int16_t chanVal = rcGetControlValue(paramId);
-	int16_t targetVal = rcGetSwitchTargetValue(paramId);
-
-	return (chanVal >= targetVal - rcGetSwitchDeadband() && chanVal <= targetVal + rcGetSwitchDeadband());
-    }
-    return 0;
-}
-
+extern int16_t rcGetChannelValue(int chan);
+extern void rcSetChannelValue(int chan, int val);
+extern uint8_t rcIsSwitchActive(int paramId);
 extern uint8_t rcCheckValidController(void);
 extern void rcReportAllErrors(uint8_t errs);
 
