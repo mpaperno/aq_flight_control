@@ -693,6 +693,7 @@ FRESULT put_fat (
 
 		default :
 			res = FR_INT_ERR;
+			break;
 		}
 		fs->wflag = 1;
 	}

@@ -29,6 +29,7 @@
 #define USE_SIGNALING                   // uncomment to use external signaling events and ports
 //#define HAS_QUATOS                      // build including Quatos library
 //#define HAS_AQ_TELEMETRY                // uncomment to include AQ native binary telemetry and command interface
+//#define DIMU_VERSION		11        // uncomment to build for AQ6 hardware with DIMU add-on
 
 #ifndef BOARD_VERSION
     #define BOARD_VERSION	6

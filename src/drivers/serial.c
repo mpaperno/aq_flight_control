@@ -101,7 +101,9 @@ void serialOpenUART(serialPort_t *s) {
 #ifdef SERIAL_UART1_PORT
 serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     GPIO_InitTypeDef GPIO_InitStructure;
+#if !defined(SERIAL_UART1_RX_DMA_ST) || defined(SERIAL_UART1_TX_PIN)
     NVIC_InitTypeDef NVIC_InitStructure;
+#endif
     serialPort_t *s;
 
     s = serialPort1 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
@@ -186,7 +188,9 @@ serialPort_t *serialUSART1(unsigned int flowControl, unsigned int rxBufSize, uns
 #ifdef SERIAL_UART2_PORT
 serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     GPIO_InitTypeDef GPIO_InitStructure;
+#if !defined(SERIAL_UART2_RX_DMA_ST) || defined(SERIAL_UART2_TX_PIN)
     NVIC_InitTypeDef NVIC_InitStructure;
+#endif
     serialPort_t *s;
 
     s = serialPort2 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
@@ -271,7 +275,9 @@ serialPort_t *serialUSART2(unsigned int flowControl, unsigned int rxBufSize, uns
 #ifdef SERIAL_UART3_PORT
 serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     GPIO_InitTypeDef GPIO_InitStructure;
+#if !defined(SERIAL_UART3_RX_DMA_ST) || defined(SERIAL_UART3_TX_PIN)
     NVIC_InitTypeDef NVIC_InitStructure;
+#endif
     serialPort_t *s;
 
     s = serialPort3 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
@@ -356,7 +362,9 @@ serialPort_t *serialUSART3(unsigned int flowControl, unsigned int rxBufSize, uns
 #ifdef SERIAL_UART4_PORT
 serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     GPIO_InitTypeDef GPIO_InitStructure;
+#if !defined(SERIAL_UART4_RX_DMA_ST) || defined(SERIAL_UART4_TX_PIN)
     NVIC_InitTypeDef NVIC_InitStructure;
+#endif
     serialPort_t *s;
 
     s = serialPort4 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));
@@ -430,7 +438,9 @@ serialPort_t *serialUSART4(unsigned int flowControl, unsigned int rxBufSize, uns
 #ifdef SERIAL_UART5_PORT
 serialPort_t *serialUSART5(unsigned int flowControl, unsigned int rxBufSize, unsigned int txBufSize) {
     GPIO_InitTypeDef GPIO_InitStructure;
+#if !defined(SERIAL_UART5_RX_DMA_ST) || defined(SERIAL_UART5_TX_PIN)
     NVIC_InitTypeDef NVIC_InitStructure;
+#endif
     serialPort_t *s;
 
     s = serialPort5 = (serialPort_t *)aqCalloc(1, sizeof(serialPort_t));

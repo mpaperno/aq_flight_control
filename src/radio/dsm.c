@@ -973,10 +973,10 @@ uint8_t dsmReceive(radioInstance_t *r) {
 }
 
 uint8_t dsmInit(void) {
-    configToken_t *t;
     uint8_t ret = 0;
 
 #ifdef CYRF_SPI
+    configToken_t *t;
     ret = cyrfInit();
 
     if (ret) {

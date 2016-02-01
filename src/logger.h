@@ -136,17 +136,6 @@ enum {
     LOG_NUM_IDS
 };
 
-enum {
-    LOG_TYPE_DOUBLE = 0,
-    LOG_TYPE_FLOAT,
-    LOG_TYPE_U32,
-    LOG_TYPE_S32,
-    LOG_TYPE_U16,
-    LOG_TYPE_S16,
-    LOG_TYPE_U8,
-    LOG_TYPE_S8
-};
-
 typedef struct {
     uint8_t fieldId;
     uint8_t fieldType;

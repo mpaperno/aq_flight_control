@@ -242,12 +242,9 @@ CDEFS += \
 	-DCTL_TASKING							\
 	-DUSE_STDPERIPH_DRIVER				\
 	-DBOARD_VERSION=$(BOARD_VER)		\
-	-DBOARD_REVISION=$(BOARD_REV)
+	-DBOARD_REVISION=$(BOARD_REV)		\
+	-DDIMU_VERSION=$(subst .,,$(DIMU_VER))
 
-# build AQ with specific digital IMU version, if specified (fall back to AIMU on v6 hardware)
-ifneq ($(DIMU_VER), 0)
-	CDEFS += -DDIMU_VERSION=$(subst .,,$(DIMU_VER))
-endif
 ifneq ($(CONFIG_FILE), 0)
 	CDEFS += -DCONFIG_DEFAULTS_FILE=\"$(CONFIG_FILE)\"
 endif
