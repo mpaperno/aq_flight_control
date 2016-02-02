@@ -24,7 +24,7 @@
 
 #define COMM_STACK_SIZE		336   // must be evenly divisible by 8
 #define COMM_PRIORITY		40
-#define COMM_NOTICE_DEPTH	16    // must be power of 2
+#define COMM_NOTICE_DEPTH	24    // must be power of 2
 #define COMM_NOTICE_LENGTH	64
 
 #define COMM_LOG_BUF_SIZE	512
@@ -140,12 +140,13 @@ typedef struct {
 
     uint8_t typesUsed;					    // types configured
     uint8_t noticePointer;
-    int8_t initialized;
+    int8_t noticeQueueInit;
     uint8_t logHandle;
 } commStruct_t;
 
 extern commStruct_t commData;
 
+extern void commNoticesInit(void);
 extern void commInit(void);
 extern void commRegisterNoticeFunc(commNoticeCallback_t *func);
 extern void commRegisterTelemFunc(commTelemCallback_t *func);

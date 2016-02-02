@@ -67,6 +67,7 @@ void aqInit(void *pdata) {
 #endif
     rtcInit();	    // have to do this first as it requires our microsecond timer to calibrate
     timerInit();    // now setup the microsecond timer before everything else
+    commNoticesInit();  // set up notice queue
     sdioLowLevelInit();
     filerInit();
     supervisorInit();

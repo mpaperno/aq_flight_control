@@ -48,7 +48,7 @@ char *commGetNoticeBuf(void) {
 
 void commNotice(const char *s) {
     // post message and leave
-    if (commData.initialized)
+    if (commData.noticeQueueInit)
         CoPostQueueMail(commData.notices, (void *)s);
 }
 
@@ -392,12 +392,20 @@ void commSetStreamType(uint8_t port, uint8_t type) {
     commSetTypesUsed();
 }
 
+void commNoticesInit(void) {
+
+    memset((void *)&commData, 0, sizeof(commData));
+
+    // notice queue
+    commData.notices = CoCreateQueue(commData.noticeQueue, COMM_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
+    if (commData.notices != E_CREATE_FAIL)
+	commData.noticeQueueInit = 1;
+}
+
 void commInit(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
     uint16_t flowControl;
     int i;
-
-    memset((void *)&commData, 0, sizeof(commData));
 
 #ifdef COMM_LOG_FNAME
     commData.logHandle = filerGetHandle(COMM_LOG_FNAME);
@@ -484,9 +492,6 @@ void commInit(void) {
     // setup mutex
     commData.txBufferMutex = CoCreateMutex();
 
-    // notice queue
-    commData.notices = CoCreateQueue(commData.noticeQueue, COMM_NOTICE_DEPTH, EVENT_SORT_TYPE_FIFO);
-
     commTaskStack = aqStackInit(COMM_STACK_SIZE, "COMM");
 
     commData.commTask = CoCreateTask(commTaskCode, (void *)0, 5, &commTaskStack[COMM_STACK_SIZE-1], COMM_STACK_SIZE);
@@ -495,7 +500,6 @@ void commInit(void) {
     usbInit();
     commData.portTypes[COMM_USB_PORT] = COMM_PORT_TYPE_USB;
 #endif
-    commData.initialized = 1;
 }
 
 void commRegisterCanUart(void *ptr, uint8_t type, uint8_t n) {
