@@ -335,6 +335,7 @@ void mavlinkDo(void) {
 	mavlinkData.wpCurrent++;
 	AQ_PRINTF("%u waypoints loaded.", mavlinkData.wpCount);
     } else if (mavlinkData.wpAttempt > AQMAVLINK_WP_MAX_ATTEMPTS) {
+	mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
 	AQ_NOTICE("Error: Waypoint request timeout!");
     }
 
