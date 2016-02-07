@@ -21,7 +21,7 @@
 
 #include "aq.h"
 
-#if BOARD_VERSION == 6 && defined DIMU_VERSION
+#if BOARD_VERSION == 6 && defined DIMU_VERSION && DIMU_VERSION > 0
     #if DIMU_VERSION == 10
         #include "board_dimu_v1.h"
     #elif DIMU_VERSION == 11
@@ -339,12 +339,6 @@ enum configParameters {
     GMBL_PSTHR_PORT,
     SPVR_LOW_BAT1,
     SPVR_LOW_BAT2,
-    SPVR_BAT_CRV1,
-    SPVR_BAT_CRV2,
-    SPVR_BAT_CRV3,
-    SPVR_BAT_CRV4,
-    SPVR_BAT_CRV5,
-    SPVR_BAT_CRV6,
     SPVR_FS_RAD_ST1,
     SPVR_FS_RAD_ST2,
     SPVR_FS_ADD_ALT,

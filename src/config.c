@@ -317,12 +317,6 @@ const char *configParameterStrings[] = {
     "GMBL_PSTHR_PORT",
     "SPVR_LOW_BAT1",
     "SPVR_LOW_BAT2",
-    "SPVR_BAT_CRV1",
-    "SPVR_BAT_CRV2",
-    "SPVR_BAT_CRV3",
-    "SPVR_BAT_CRV4",
-    "SPVR_BAT_CRV5",
-    "SPVR_BAT_CRV6",
     "SPVR_FS_RAD_ST1",
     "SPVR_FS_RAD_ST2",
     "SPVR_FS_ADD_ALT",
@@ -690,12 +684,6 @@ void configLoadDefault(void) {
     p[GMBL_PSTHR_PORT] = DEFAULT_GMBL_PSTHR_PORT;
     p[SPVR_LOW_BAT1] = DEFAULT_SPVR_LOW_BAT1;
     p[SPVR_LOW_BAT2] = DEFAULT_SPVR_LOW_BAT2;
-    p[SPVR_BAT_CRV1] = DEFAULT_SPVR_BAT_CRV1;
-    p[SPVR_BAT_CRV2] = DEFAULT_SPVR_BAT_CRV2;
-    p[SPVR_BAT_CRV3] = DEFAULT_SPVR_BAT_CRV3;
-    p[SPVR_BAT_CRV4] = DEFAULT_SPVR_BAT_CRV4;
-    p[SPVR_BAT_CRV5] = DEFAULT_SPVR_BAT_CRV5;
-    p[SPVR_BAT_CRV6] = DEFAULT_SPVR_BAT_CRV6;
     p[SPVR_FS_RAD_ST1] = DEFAULT_SPVR_FS_RAD_ST1;
     p[SPVR_FS_RAD_ST2] = DEFAULT_SPVR_FS_RAD_ST2;
     p[SPVR_FS_ADD_ALT] = DEFAULT_SPVR_FS_ADD_ALT;
@@ -925,6 +913,11 @@ void configInit(void) {
     // if loaded version greater than flash version
     if (p[CONFIG_VERSION] > ver)
 	configFlashWrite();
+
+#ifdef HAS_QUATOS
+    if (p[LIC_KEY1] == 0)
+	p[QUATOS_ENABLE] = 0;
+#endif
 }
 
 unsigned int configParameterRead(void *data) {

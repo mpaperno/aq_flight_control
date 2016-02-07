@@ -265,12 +265,6 @@
 
 #define DEFAULT_SPVR_LOW_BAT1	    3.5f	    // cell volts
 #define DEFAULT_SPVR_LOW_BAT2	    3.3f	    // cell volts
-#define DEFAULT_SPVR_BAT_CRV1	    +9.210144e+00f
-#define DEFAULT_SPVR_BAT_CRV2	    +1.481796e+01f
-#define DEFAULT_SPVR_BAT_CRV3	    -5.890255e+01f
-#define DEFAULT_SPVR_BAT_CRV4	    +1.166082e+02f
-#define DEFAULT_SPVR_BAT_CRV5	    -1.074193e+02f
-#define DEFAULT_SPVR_BAT_CRV6	    +3.779082e+01f
 #define DEFAULT_SPVR_FS_RAD_ST1     0           // radio failsafe stage 1 action (0 = position hold)
 #define DEFAULT_SPVR_FS_RAD_ST2     0           // radio failsafe stage 2 action (0 = land, 1 = RTH, land, 2 = Ascend if needed, RTH, land)
 #define DEFAULT_SPVR_FS_ADD_ALT     0.0f        // meters to add to home alt. for falisafe stg.2 action == 2
