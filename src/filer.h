@@ -45,6 +45,19 @@ enum {
     FILER_STATE_MSC_ACTIVE
 };
 
+enum fileReturnStatus {
+    FILER_STATUS_ERR_CLOSE = -9,	// error while closing an opened file
+    FILER_STATUS_ERR_SYNC  = -8,	// synch error on opened file
+    FILER_STATUS_ERR_WRITE = -7,	// error writing to opened file
+    FILER_STATUS_ERR_READ  = -6,	// error reading from opened file
+    FILER_STATUS_ERR_SEEK  = -5,	// seek error on opened file
+    FILER_STATUS_ERR_OPEN  = -4,	// no file/could not open
+    FILER_STATUS_ERR_FNF   = -3,	// file/path not found
+    FILER_STATUS_ERR_ALLOC = -2,	// could not allocate file handle, too many files open
+    FILER_STATUS_ERR_INIT  = -1,	// file system not initialized or resource not allocated
+    FILER_STATUS_OK        =  0,	// anything this or greater is OK (FR_OK equivalent)
+};
+
 #define filerEnableMSC()	{if (filerData.mscState == FILER_STATE_MSC_DISABLE) filerData.mscState = FILER_STATE_MSC_REQUEST;}
 #define filerEjectMSC()		{filerData.mscState = FILER_STATE_MSC_EJECT;}
 #define filerGetMSCState()	(filerData.mscState)

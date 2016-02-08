@@ -40,7 +40,7 @@ static int32_t filerProcessWrite(filerFileStruct_t *f) {
     if (!f->open) {
 	res = f_open(&f->fp, f->fileName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res != FR_OK)
-	    return -1;
+	    return FILER_STATUS_ERR_OPEN;
 
 	f->open = 1;
     }
@@ -49,14 +49,14 @@ static int32_t filerProcessWrite(filerFileStruct_t *f) {
 	res = f_lseek(&f->fp, f->seek);
 	if (res != FR_OK) {
 	    f->open = 0;
-	    return -1;
+	    return FILER_STATUS_ERR_SEEK;
 	}
     }
 
     res = f_write(&f->fp, f->buf, f->length, &bytes);
     if (res != FR_OK) {
 	f->open = 0;
-	return -1;
+	return FILER_STATUS_ERR_WRITE;
     }
 
     return bytes;
@@ -68,8 +68,12 @@ static int32_t filerProcessRead(filerFileStruct_t *f) {
 
     if (!f->open) {
 	res = f_open(&f->fp, f->fileName, FA_OPEN_EXISTING | FA_READ);
-	if (res != FR_OK)
-	    return -1;
+	if (res != FR_OK) {
+	    if (res == FR_NO_FILE || res == FR_NO_PATH)
+		return FILER_STATUS_ERR_FNF;
+	    else
+		return FILER_STATUS_ERR_OPEN;
+	}
 
 	f->open = 1;
     }
@@ -78,14 +82,14 @@ static int32_t filerProcessRead(filerFileStruct_t *f) {
 	res = f_lseek(&f->fp, f->seek);
 	if (res != FR_OK) {
 	    f->open = 0;
-	    return -1;
+	    return FILER_STATUS_ERR_SEEK;
 	}
     }
 
     res = f_read(&f->fp, f->buf, f->length, &bytes);
     if (res != FR_OK) {
 	f->open = 0;
-	return -1;
+	return FILER_STATUS_ERR_READ;
     }
 
     return bytes;
@@ -95,13 +99,13 @@ static int32_t filerProcessSync(filerFileStruct_t *f) {
     uint32_t res;
 
     if (!f->open) {
-	return -1;
+	return FILER_STATUS_ERR_OPEN;
     }
 
     res = f_sync(&f->fp);
     if (res != FR_OK) {
 	f->open = 0;
-	return -1;
+	return FILER_STATUS_ERR_SYNC;
     }
 
     return 0;
@@ -116,7 +120,7 @@ static int32_t filerProcessStream(filerFileStruct_t *f, uint8_t final) {
 	sprintf(filerData.buf, "%03d-%s.LOG", filerData.session, f->fileName);
 	res = f_open(&f->fp, filerData.buf, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res != FR_OK)
-	    return -1;
+	    return FILER_STATUS_ERR_OPEN;
 
 	f->open = 1;
     }
@@ -132,7 +136,7 @@ static int32_t filerProcessStream(filerFileStruct_t *f, uint8_t final) {
 	f->tail = (f->tail + bytes) % f->length;
 
 	if (res != FR_OK)
-	    return -1;
+	    return FILER_STATUS_ERR_WRITE;
     }
 
     return bytes;
@@ -147,9 +151,9 @@ static int32_t filerProcessClose(filerFileStruct_t *f) {
     }
 
     if (res != FR_OK)
-	return -1;
+	return FILER_STATUS_ERR_CLOSE;
     else
-	return 0;
+	return FILER_STATUS_OK;
 }
 
 static void filerProcessRequest(filerFileStruct_t *f) {
@@ -369,13 +373,13 @@ int8_t filerGetHandle(char *fileName) {
     }
 
     // too many files open
-    return -1;
+    return FILER_STATUS_ERR_ALLOC;
 }
 
 int32_t filerReadWrite(filerFileStruct_t *f, void *buf, int32_t seek, uint32_t length, uint8_t function) {
     // handle allocated yet?
     if (!f->allocated || !filerData.initialized)
-	return -1;
+	return FILER_STATUS_ERR_INIT;
 
     f->buf = buf;
     f->function = function;
@@ -404,7 +408,7 @@ int32_t filerSync(int8_t handle) {
 
     // handle allocated yet?
     if (!f->allocated)
-	    return -1;
+	return FILER_STATUS_ERR_INIT;
 
     if (f->open) {
 	f->function = FILER_FUNC_SYNC;
@@ -422,7 +426,7 @@ int32_t filerClose(int8_t handle) {
 
     // handle allocated yet?
     if (!f->allocated)
-	    return -1;
+	return FILER_STATUS_ERR_INIT;
 
     if (f->open) {
 	f->function = FILER_FUNC_CLOSE;
@@ -450,7 +454,7 @@ int32_t filerStream(int8_t handle, void *buf, uint32_t length) {
 
     // handle allocated yet?
     if (!f->allocated)
-	    return -1;
+	return FILER_STATUS_ERR_INIT;
 
     f->function = FILER_FUNC_STREAM;
     f->buf = buf;

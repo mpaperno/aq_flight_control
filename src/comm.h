@@ -24,7 +24,7 @@
 
 #define COMM_STACK_SIZE		336   // must be evenly divisible by 8
 #define COMM_PRIORITY		40
-#define COMM_NOTICE_DEPTH	24    // must be power of 2
+#define COMM_NOTICE_DEPTH	36    // must be power of 2
 #define COMM_NOTICE_LENGTH	64
 
 #define COMM_LOG_BUF_SIZE	512
