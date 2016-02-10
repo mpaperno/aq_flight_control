@@ -170,8 +170,10 @@ navMission_t *navLoadLeg(uint8_t leg) {
     navMission_t *curLeg = &navData.missionLegs[leg];
 
     // invalid type?
-    if (!curLeg->type || curLeg->type >= NAV_NUM_LEG_TYPES)
+    if (!curLeg->type || curLeg->type >= NAV_NUM_LEG_TYPES) {
+        navData.hasMissionLeg = 0;
         return &navData.missionLegs[0];
+    }
 
     // common
     if (curLeg->relativeAlt)
@@ -230,8 +232,10 @@ navMission_t *navLoadLeg(uint8_t leg) {
         navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
 
     navData.loiterCompleteTime = 0;
-
+    navData.hasMissionLeg = 1;
     navData.missionLeg = leg;
+
+    AQ_PRINTF("NAV: Loaded waypoint %d.\n", leg);
 
 #ifdef USE_MAVLINK
     // notify ground
@@ -313,10 +317,13 @@ void navDoUserCommands(unsigned char *leg, navMission_t *curLeg) {
 		    navData.wpRecTimer = timerMicros();
 		}
 		else if (timerMicros() - navData.wpRecTimer > 1e6) {
-		    if (navData.mode == NAV_STATUS_MISSION) {
+		    if (rcIsSwitchActive(NAV_CTRL_MISN)) {
 			if (*leg + 1 < navGetWaypointCount())
-			    curLeg = navLoadLeg(++*leg);
-		    } else
+			    ++*leg;
+			else
+			    *leg = 0;
+			curLeg = navLoadLeg(*leg);
+		    } else if (RADIO_ROLL < 500 && RADIO_PITCH < 500)
 			navRecordWaypoint();
 
 		    navData.wpRecTimer = 0;
@@ -346,16 +353,18 @@ void navNavigate(void) {
     else if (navData.mode < NAV_STATUS_POSHOLD)
         navData.navCapable = 0;
 
+    bool hasViableMission = (navData.navCapable && ((navData.mode != NAV_STATUS_MISSION && leg < NAV_MAX_MISSION_LEGS && curLeg->type) || (navData.mode == NAV_STATUS_MISSION && navData.hasMissionLeg)));
+
     // this defines the hierarchy of available flight modes in case of failsafe override or conflicting controls being active
     if (navData.spvrModeOverride)
 	reqFlightMode = navData.spvrModeOverride;
     else if (rcIsSwitchActive(NAV_CTRL_MISN))
-	reqFlightMode = NAV_STATUS_MISSION;
-    else if (rcIsSwitchActive(NAV_CTRL_PH)) {
-	if (RADIO_PITCH > p[CTRL_DEAD_BAND] || RADIO_PITCH < -p[CTRL_DEAD_BAND] || RADIO_ROLL > p[CTRL_DEAD_BAND] || RADIO_ROLL < -p[CTRL_DEAD_BAND])
-	    reqFlightMode = NAV_STATUS_DVH;
+	if (hasViableMission)
+	    reqFlightMode = NAV_STATUS_MISSION;
 	else
 	    reqFlightMode = NAV_STATUS_POSHOLD;
+    else if (rcIsSwitchActive(NAV_CTRL_PH)) {
+	reqFlightMode = NAV_STATUS_POSHOLD;
     }
     else if (rcIsSwitchActive(NAV_CTRL_AH))
 	reqFlightMode = NAV_STATUS_ALTHOLD;
@@ -364,9 +373,9 @@ void navNavigate(void) {
 	reqFlightMode = NAV_STATUS_MANUAL;
 
     // Can we navigate && do we want to be in mission mode?
-    if ((supervisorData.state & STATE_ARMED) && navData.navCapable && reqFlightMode == NAV_STATUS_MISSION) {
+    if ((supervisorData.state & STATE_ARMED) && reqFlightMode == NAV_STATUS_MISSION && hasViableMission) {
         //  are we currently in position hold mode && do we have a clear mission ahead of us?
-        if ((navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) && leg < NAV_MAX_MISSION_LEGS && curLeg->type > 0) {
+        if (navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) {
             curLeg = navLoadLeg(leg);
             navData.mode = NAV_STATUS_MISSION;
             AQ_NOTICE("Mission mode active\n");
@@ -374,6 +383,10 @@ void navNavigate(void) {
     }
     // do we want to be in position hold mode?
     else if ((supervisorData.state & STATE_ARMED) && reqFlightMode > NAV_STATUS_MANUAL) {
+
+	// check for DVH
+	if (reqFlightMode == NAV_STATUS_POSHOLD && (RADIO_PITCH > p[CTRL_DEAD_BAND] || RADIO_PITCH < -p[CTRL_DEAD_BAND] || RADIO_ROLL > p[CTRL_DEAD_BAND] || RADIO_ROLL < -p[CTRL_DEAD_BAND]))
+	    reqFlightMode = NAV_STATUS_DVH;
 
         // allow alt hold regardless of GPS or flow quality
         if (navData.mode < NAV_STATUS_ALTHOLD || (navData.mode != NAV_STATUS_ALTHOLD && reqFlightMode == NAV_STATUS_ALTHOLD)) {
@@ -513,6 +526,7 @@ void navNavigate(void) {
 
                     // start the loiter clock
                     navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
+                    AQ_PRINTF("NAV: Reached waypoint %d.\n", leg);
 #ifdef USE_SIGNALING
                     signalingOnetimeEvent(SIG_EVENT_OT_WP_REACHED);
 #endif
@@ -525,12 +539,10 @@ void navNavigate(void) {
         // have we loitered long enough?
         else if (currentTime > navData.loiterCompleteTime && curLeg->type != NAV_LEG_LAND) {
             // next leg
-            if (++leg < NAV_MAX_MISSION_LEGS && navData.missionLegs[leg].type > 0) {
-                curLeg = navLoadLeg(leg);
-            }
-            else {
+            leg = ++navData.missionLeg;
+            curLeg = navLoadLeg(leg);
+            if (!navData.hasMissionLeg)
                 navData.mode = NAV_STATUS_POSHOLD;
-            }
         }
     }
 
@@ -729,7 +741,7 @@ unsigned char navClearWaypoints(void) {
 
     navData.tempMissionLoaded = 0;
 
-    AQ_NOTICE("Waypoints cleared.\n");
+    AQ_NOTICE("NAV: Waypoints cleared.\n");
 #ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_WP_CLEARED);
 #endif
@@ -773,7 +785,7 @@ uint8_t navRecordWaypoint(void) {
     navData.missionLegs[idx].relativeAlt = 0;
     navData.missionLegs[idx].poiAltitude = 0;
 
-    AQ_PRINTF("Waypoint %d recorded\n", idx);
+    AQ_PRINTF("NAV: Waypoint %d recorded\n", idx);
 #ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_WP_RECORDED);
 #endif

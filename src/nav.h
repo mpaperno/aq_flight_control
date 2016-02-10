@@ -131,6 +131,7 @@ typedef struct {
     uint8_t setCeilingReached;
     uint8_t ceilingTimer;
     uint8_t verticalOverride;
+    uint8_t hasMissionLeg;
     float ceilingAlt;
 } navStruct_t;
 
