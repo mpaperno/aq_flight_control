@@ -14,6 +14,7 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #include "nav.h"
@@ -82,8 +83,8 @@ void navSetHomeCurrent(void) {
     navData.homeLeg.targetLat = gpsData.lat;
     navData.homeLeg.targetLon = gpsData.lon;
     navData.homeLeg.targetRadius = 1.0f;
-    navData.homeLeg.maxHorizSpeed = p[NAV_MAX_SPEED];
-    navData.homeLeg.maxVertSpeed = p[NAV_ALT_POS_OM];
+    navData.homeLeg.maxHorizSpeed = NAV_DFLT_HOR_SPEED;
+    navData.homeLeg.maxVertSpeed = NAV_DFLT_VRT_SPEED;
     navData.homeLeg.poiHeading = AQ_YAW;
     if (p[NAV_CEILING])
         navData.ceilingAlt = (ALTITUDE + p[NAV_CEILING]);    // home altitude + x meter as ceiling
@@ -105,9 +106,9 @@ void navRecallHome(void) {
     navSetHoldHeading(navData.homeLeg.poiHeading);
 
     if (navData.holdMaxHorizSpeed == 0.0f)
-        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        navData.holdMaxHorizSpeed = NAV_DFLT_HOR_SPEED;
     if (navData.holdMaxVertSpeed == 0.0f)
-        navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+        navData.holdMaxVertSpeed = NAV_DFLT_VRT_SPEED;
 }
 
 // set reference frame angle for heading-free mode
@@ -189,7 +190,6 @@ navMission_t *navLoadLeg(uint8_t leg) {
         navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
         navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
         navData.targetHeading = navData.homeLeg.poiHeading;
-
         navData.holdMaxHorizSpeed = navData.homeLeg.maxHorizSpeed;
         navData.holdMaxVertSpeed = navData.homeLeg.maxVertSpeed;
     }
@@ -202,17 +202,13 @@ navMission_t *navLoadLeg(uint8_t leg) {
         if (curLeg->targetLat != (double)0.0 && curLeg->targetLon != (double)0.0)
             navUkfSetGlobalPositionTarget(curLeg->targetLat, curLeg->targetLon);
         navData.targetHeading = curLeg->poiHeading;
-        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        navData.holdMaxHorizSpeed = NAV_DFLT_HOR_SPEED;
     }
     else if (curLeg->type == NAV_LEG_TAKEOFF) {
         // store this position as the takeoff position
         navUkfSetHereAsPositionTarget();
         navData.targetHeading = AQ_YAW;
-
-        if (curLeg->maxVertSpeed == 0.0f)
-            navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
-        else
-            navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
+        navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
 
         // set the launch location as home
         navSetHomeCurrent();
@@ -220,16 +216,15 @@ navMission_t *navLoadLeg(uint8_t leg) {
         navData.homeLeg.poiHeading = -0.0f;                // relative
     }
     else if (curLeg->type == NAV_LEG_LAND) {
-        if (curLeg->maxVertSpeed == 0.0f)
-            navData.holdMaxVertSpeed = p[NAV_LANDING_VEL];
-        else
-            navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
+        navUkfSetHereAsPositionTarget();  // hold current position
+        navData.targetHeading = fabsf(curLeg->poiHeading);  // always fixed
+        navData.holdMaxVertSpeed = curLeg->maxVertSpeed;
     }
 
     if (navData.holdMaxHorizSpeed == 0.0f)
-        navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
+        navData.holdMaxHorizSpeed = NAV_DFLT_HOR_SPEED;
     if (navData.holdMaxVertSpeed == 0.0f)
-        navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+        navData.holdMaxVertSpeed = NAV_DFLT_VRT_SPEED;
 
     navData.loiterCompleteTime = 0;
     navData.hasMissionLeg = 1;
@@ -398,7 +393,7 @@ void navNavigate(void) {
             pidZeroIntegral(navData.altPosPID, ALTITUDE, 0.0f);
 
             navData.holdSpeedAlt = navData.targetHoldSpeedAlt = -VELOCITYD;
-            navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+            navData.holdMaxVertSpeed = NAV_DFLT_VRT_SPEED;
             navData.mode = NAV_STATUS_ALTHOLD;
 
             // notify ground
@@ -436,8 +431,8 @@ void navNavigate(void) {
             navData.holdSpeedN = 0.0f;
             navData.holdSpeedE = 0.0f;
 
-            navData.holdMaxHorizSpeed = p[NAV_MAX_SPEED];
-            navData.holdMaxVertSpeed = p[NAV_ALT_POS_OM];
+            navData.holdMaxHorizSpeed = NAV_DFLT_HOR_SPEED;
+            navData.holdMaxVertSpeed = NAV_DFLT_VRT_SPEED;
 
             // notify ground
             AQ_NOTICE("Position Hold engaged\n");
@@ -618,7 +613,7 @@ void navNavigate(void) {
         vertStick = RADIO_THROT - RADIO_MID_THROTTLE;
         if ((vertStick > p[CTRL_DBAND_THRO]  && !navData.setCeilingReached)  || vertStick < -p[CTRL_DBAND_THRO]) {
             // altitude velocity proportional to throttle stick
-            navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * p[NAV_ALT_POS_OM] * (1.0f / RADIO_MID_THROTTLE);
+            navData.targetHoldSpeedAlt = (vertStick - p[CTRL_DBAND_THRO] * (vertStick > 0.0f ? 1.0f : -1.0f)) * NAV_DFLT_VRT_SPEED * (1.0f / RADIO_MID_THROTTLE);
 
             navData.verticalOverride = 1;
         }
@@ -644,7 +639,9 @@ void navNavigate(void) {
         }
 
         // constrain vertical velocity
-        navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, (navData.holdMaxVertSpeed < p[NAV_MAX_DECENT]) ? -navData.holdMaxVertSpeed : -p[NAV_MAX_DECENT], navData.holdMaxVertSpeed);
+        tmp = p[NAV_MAX_DECENT];
+        tmp = (navData.holdMaxVertSpeed < tmp) ? -navData.holdMaxVertSpeed : -tmp;
+        navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, tmp, navData.holdMaxVertSpeed);
 
         // smooth vertical velocity changes
         navData.holdSpeedAlt += (navData.targetHoldSpeedAlt - navData.holdSpeedAlt) * 0.05f;
@@ -777,8 +774,8 @@ uint8_t navRecordWaypoint(void) {
     navData.missionLegs[idx].targetAlt = gpsData.height;
     navData.missionLegs[idx].targetLat = gpsData.lat;
     navData.missionLegs[idx].targetLon = gpsData.lon;
-    navData.missionLegs[idx].maxHorizSpeed = p[NAV_MAX_SPEED];
-    navData.missionLegs[idx].maxVertSpeed = p[NAV_ALT_POS_OM];
+    navData.missionLegs[idx].maxHorizSpeed = NAV_DFLT_HOR_SPEED;
+    navData.missionLegs[idx].maxVertSpeed = NAV_DFLT_VRT_SPEED;
     navData.missionLegs[idx].targetRadius = 1.0f;
     navData.missionLegs[idx].loiterTime = 1e6;
     navData.missionLegs[idx].poiHeading = AQ_YAW;

@@ -14,6 +14,7 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2015  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _nav_h
@@ -34,7 +35,12 @@
 #define NAV_HF_HOME_DIST_D_MIN	2.0f						// do not compute dynamic bearing when closer than this to home position (zero to never compute)
 #define NAV_HF_HOME_DIST_FREQ	4						// update distance to home at this Hz, should be > 0 and <= 400
 #define NAV_HF_HOME_BRG_D_MAX	1.0f * DEG_TO_RAD				// re-compute headfree reference angles when bearing to home changes by this many degrees (zero to always re-compute)
-#define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch it toggled high
+#define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch is toggled high
+
+#define NAV_DFLT_HOR_SPEED	p[NAV_MAX_SPEED]	    // default horizontal navigation speed
+#define NAV_DFLT_VRT_SPEED	p[NAV_ALT_POS_OM]	    // default vertical navigation speed
+#define NAV_DFLT_TOF_SPEED	p[NAV_LANDING_VEL]	    // default autonomous takeoff speed
+#define NAV_DFLT_LND_SPEED	p[NAV_LANDING_VEL]	    // default autonomous landing speed
 
 enum navStatusTypes {
     NAV_STATUS_MANUAL = 0,              // full manual control
@@ -73,8 +79,8 @@ typedef struct {
     float maxVertSpeed;			// m/s
     float poiHeading;			// POI heading (>= 0 is absolute, < 0 is relative to target bearing)
     float poiAltitude;			// altitude of POI - used for camera tilting
-    uint8_t relativeAlt;		// 0 == absolute, 1 == relative
-    uint8_t type;
+    uint8_t type:4;
+    uint8_t relativeAlt:1;		// 0 == absolute, 1 == relative
 } navMission_t;
 
 typedef struct {
@@ -93,6 +99,11 @@ typedef struct {
     float holdSpeedAlt;			// required speed (Up/Down)
     float targetHoldSpeedAlt;
     float presAltOffset;
+    float distanceToHome;		// current distance to home position in m, if set (only updated when in headfree mode)
+    float bearingToHome;		// current bearing to home position in rad, if set (only updated when in headfree mode)
+    float hfReferenceCos;		// stored reference heading for HF mode
+    float hfReferenceSin;
+    float ceilingAlt;
 
     pidStruct_t *speedNPID;		// PID to control N/S speed - output tilt in degrees
     pidStruct_t *speedEPID;		// PID to control E/W speed - output tilt in degrees
@@ -103,36 +114,32 @@ typedef struct {
 
     navMission_t missionLegs[NAV_MAX_MISSION_LEGS];
     navMission_t homeLeg;
-    uint32_t loiterCompleteTime;
 
     uint32_t lastUpdate;
-
-    uint8_t mode;			// navigation mode, one of navStatusTypes
-    uint8_t spvrModeOverride;		// forced navigation mode desired, regardless of user controls (eg. failsafe mode). 0 = no override
-    uint8_t navCapable;
-    uint8_t missionLeg;
-    uint8_t tempMissionLoaded;		// flag indicating that a temporary/default mission has been loaded (not a user-specified one)
-    uint8_t fixType;                    // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)
-    uint8_t homeActionFlag;		// flag to avoid repeating set/recall home actions until switch is moved back to midpoint
-    float distanceToHome;		// current distance to home position in m, if set (only updated when in headfree mode)
-    float bearingToHome;		// current bearing to home position in rad, if set (only updated when in headfree mode)
-    uint32_t homeDistanceLastUpdate;	// timestamp of last home position update (only updated when in headfree mode)
-
+    uint32_t loiterCompleteTime;
     uint32_t wpRecTimer;		// track how long WP recording switch is active before taking action
-    uint8_t wpActionFlag;		// flag to avoid repeating waypoint record/skip actions until switch is turned back off
-
-    uint8_t headFreeMode;		// headfree/carefree mode status
     uint32_t hfDynamicModeTimer;	// track how long switch is active before entering dynamic HF mode
-    float hfReferenceCos;		// stored reference heading for HF mode
-    float hfReferenceSin;
-    uint8_t hfUseStoredReference;	// set to true to use stored reference in HF mode instead of N/E
+    uint32_t homeDistanceLastUpdate;	// timestamp of last home position update (only updated when in headfree mode)
+    uint32_t ceilingTimer;
 
-    uint8_t setCeilingFlag;
-    uint8_t setCeilingReached;
-    uint8_t ceilingTimer;
-    uint8_t verticalOverride;
-    uint8_t hasMissionLeg;
-    float ceilingAlt;
+    uint8_t missionLeg;
+
+    uint8_t mode:3;			// navigation mode, one of navStatusTypes
+    uint8_t spvrModeOverride:3;		// forced navigation mode desired, regardless of user controls (eg. failsafe mode). 0 = no override
+    uint8_t headFreeMode:3;		// headfree/carefree mode status
+    uint8_t fixType:2;                   // GPS fix type, 0 = no fix, 2 = 2D, 3 = 3D (navCapable)
+
+    uint8_t navCapable:1;
+    uint8_t tempMissionLoaded:1;	// flag indicating that a temporary/default mission has been loaded (not a user-specified one)
+    uint8_t verticalOverride:1;
+    uint8_t homeActionFlag:1;		// flag to avoid repeating set/recall home actions until switch is moved back to midpoint
+    uint8_t wpActionFlag:1;		// flag to avoid repeating waypoint record/skip actions until switch is turned back off
+    uint8_t hfUseStoredReference:1;	// set to true to use stored reference in HF mode instead of N/E
+    uint8_t setCeilingFlag:1;
+    uint8_t setCeilingReached:1;
+    uint8_t hasMissionLeg:1;
+    // padding bits: 10
+
 } navStruct_t;
 
 extern navStruct_t navData;
