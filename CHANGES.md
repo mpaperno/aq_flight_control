@@ -10,6 +10,13 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1887 - Feb. 21, 2016
+
+'*' Fix random yawing on Landing-type waypoint when previous wpt type used relative heading.  
+`*` Fix setting of desired yaw/heading for Landing waypoint via MAVLink/QGC.  
+`~` Specifically hold current position for Landing waypoint (possibly prevent diagonal descent). (Note that Lat/Lon cannot be specified for landing-type waypoint, which has always been the case but is not obvious when using the QGC mission planner.)  
+`+` Add more diagnostic telemetry data (RC switch statuses and RAM usage).  
+
 ##### 7.1.1885 - Feb. 9, 2016
 
 `!` Waypoint skip switch will now go back to start of mission after the last waypoint, allows restarting a mission in flight.  
@@ -23,7 +30,7 @@ This file describes changes in the firmware, typically since the previous minor 
 `~` Enable 2nd serial port option on M4 boards (COMM 2). Shared with PWM ports 7 (Serial Tx, J2.10 on expansion header) and 8 (Serial Rx, J1.10 on header).  When using those ports for PWM (motor) outputs, be sure to **disable any protocol on Serial 2** (QGC Misc. Settings/Serial Port 2/Protocol = None).  
 `*` Fix possible endless notification loop if sending of waypoints times out.  
 `-` Remove State Of Charge (SOC) parameters and functions since they're not used.  
-`~` Start up message notification queue early to allow more startup messages to come through.  Increase size of notification queue to avoid loosing startup messages before comm system is active.
+`~` Start up message notification queue early to allow more startup messages to come through.  Increase size of notification queue to avoid loosing startup messages before comm system is active.  
 `~` Exclude unused AQ binary telemetry/command interface from default builds (define HAS_AQ_TELEMETRY to include it).
 
 ##### 7.1.1871 - Dec. 7, 2015

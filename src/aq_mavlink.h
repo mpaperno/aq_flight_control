@@ -14,6 +14,7 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _aq_mavlink_h
@@ -33,6 +34,7 @@
 #define AQMAVLINK_PARAM_INTERVAL		(1e6f / 150.0f)	    // 150Hz
 #define AQMAVLINK_WP_TIMEOUT			1e6f		    // 1 second - retry frequency for waypoint requests to planner
 #define AQMAVLINK_WP_MAX_ATTEMPTS		20		    // maximum number of retries for wpnt. requests
+#define AQMAVLINK_DEFAULT_COMP_ID		MAV_COMP_ID_MISSIONPLANNER
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
 #define AQMAVLINK_TOTAL_STREAMS			14
@@ -49,10 +51,10 @@
 #define AQMAVLINK_STREAM_RATE_PROPULSION	0	    // ESC/Motor telemetry
 
 enum mavlinkCustomDataSets {
-    AQMAV_DATASET_LEGACY1 = 0,  // legacy sets can eventually be phased out
-    AQMAV_DATASET_LEGACY2,
-    AQMAV_DATASET_LEGACY3,
-    AQMAV_DATASET_ALL,          // use this to toggle all datasets at once
+//  AQMAV_DATASET_LEGACY1 = 0,  // legacy sets can eventually be phased out
+//  AQMAV_DATASET_LEGACY2,
+//  AQMAV_DATASET_LEGACY3,
+    AQMAV_DATASET_ALL = 3,        // use this to toggle all datasets at once
     AQMAV_DATASET_GPS,
     AQMAV_DATASET_UKF,
     AQMAV_DATASET_SUPERVISOR,
@@ -63,39 +65,42 @@ enum mavlinkCustomDataSets {
     AQMAV_DATASET_NAV,
     AQMAV_DATASET_IMU,
     AQMAV_DATASET_DEBUG,
+    AQMAV_DATASET_RC,
     AQMAV_DATASET_ENUM_END
 };
 
 typedef struct {
-    unsigned long interval;	    // how often to send stream in us (zero to disable)
-    unsigned long dfltInterval;	    // default stream interval at startup
-    unsigned long next;		    // when to send next stream data
-    uint8_t enable;		    // enable/disable stream
+    uint32_t interval;		// how often to send stream in us (zero to disable)
+    uint32_t dfltInterval;	// default stream interval at startup
+    uint32_t next;		// when to send next stream data
+    uint8_t enable;		// enable/disable stream
 } mavlinkStreams_t;
 
 typedef struct {
-    uint8_t sys_type;		    // System type (MAV_TYPE enum)
-    uint8_t sys_state;		    // System state (MAV_STATE enum)
-    uint8_t sys_mode;		    // System operating mode (MAV_MODE_FLAG enum bitmask)
-
     mavlink_status_t mavlinkStatus;
     mavlinkStreams_t streams[AQMAVLINK_TOTAL_STREAMS];
-    uint8_t customDatasets[AQMAV_DATASET_ENUM_END];
 
-    unsigned long nextHeartbeat;
-    unsigned long nextParam;
-    unsigned int currentParam;
+    uint32_t nextHeartbeat;	// time when to send next heartbeat
+    uint32_t nextParam;		// time when to send next param value
+    uint32_t nextWP;		// when to send the next wpt request to planner
 
+    uint16_t currentParam;	// keep track of parameter send sequence
     uint16_t packetDrops;	// global packet drop counter
-    uint8_t indexPort;		// current port # in channels outputs sequence
 
+    uint8_t sys_type;		// System type (MAV_TYPE enum)
+    uint8_t sys_state;		// System state (MAV_STATE enum)
+    uint8_t sys_mode;		// System operating mode (MAV_MODE_FLAG enum bitmask)
+
+    uint8_t indexPort;		// current port # in channels outputs sequence
+    uint8_t paramCompId;	// component ID to use for params list
     // waypoint programming from mission planner
     uint8_t wpTargetSysId;
     uint8_t wpTargetCompId;
     uint8_t wpCount;		// total waypoints to expect from planner after mission_count msg
     uint8_t wpCurrent;		// current wpt sequence # requested/expected from planner
-    uint32_t wpNext;		// when to send the next wpt request to planner
     uint8_t wpAttempt;		// count of consecutive wpt requests for same sequence #
+
+    uint8_t customDatasets[AQMAV_DATASET_ENUM_END];
 
 } mavlinkStruct_t;
 
