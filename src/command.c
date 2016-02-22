@@ -171,8 +171,7 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FLASH_READ:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		    configFlashRead();
+	    if (!(supervisorData.state & STATE_FLYING) && configLoadParamsFromFlash()) {
 		    commandAck(NULL, 0);
 	    }
 	    else {
@@ -181,11 +180,8 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FLASH_WRITE:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		    if (configFlashWrite())
-			    commandAck(NULL, 0);
-		    else
-			    commandNack(NULL, 0);
+	    if (!(supervisorData.state & STATE_FLYING) && configSaveParamsToFlash()) {
+		    commandAck(NULL, 0);
 	    }
 	    else {
 		    commandNack(NULL, 0);
@@ -193,8 +189,7 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FACTORY_RESET:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		    configLoadDefault();
+	    if (!(supervisorData.state & STATE_FLYING) && configLoadParamsFromDefault()) {
 		    commandAck(NULL, 0);
 	    }
 	    else {

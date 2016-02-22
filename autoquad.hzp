@@ -84,6 +84,8 @@
       <file file_name="src/drivers/serial.h" />
       <file file_name="src/config.c" />
       <file file_name="src/config.h" />
+      <file file_name="src/config_default.h" />
+      <file file_name="src/config_params.h" />
       <file file_name="src/drivers/flash.c" />
       <file file_name="src/drivers/flash.h" />
       <file file_name="src/motors.c" />
@@ -146,7 +148,6 @@
       <file file_name="src/drivers/pwm.c" />
       <file file_name="src/gimbal.h" />
       <file file_name="src/gimbal.c" />
-      <file file_name="src/config_default.h" />
       <file file_name="src/quatos.h" />
       <file file_name="src/drivers/1wire.c" />
       <file file_name="src/drivers/1wire.h" />

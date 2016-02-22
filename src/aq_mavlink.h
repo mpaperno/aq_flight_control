@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
     Copyright 2013-2016 Maxim Paperno
 */
 
@@ -66,6 +66,7 @@ enum mavlinkCustomDataSets {
     AQMAV_DATASET_IMU,
     AQMAV_DATASET_DEBUG,
     AQMAV_DATASET_RC,
+    AQMAV_DATASET_CONFIG,
     AQMAV_DATASET_ENUM_END
 };
 
