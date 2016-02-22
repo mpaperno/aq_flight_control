@@ -13,7 +13,8 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2016 Maxim Paperno
 */
 
 #include "pid.h"
@@ -23,24 +24,21 @@
 #include "config.h"
 #include "nav.h"
 #include <stdlib.h>
+#include <math.h>
 
-pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float *iMax, float *dMax, float *oMax, int16_t *pTrim, int16_t *iTrim, int16_t *dTrim, int16_t *fTrim) {
+pidStruct_t *pidInit(int pParam, int iParam, int dParam, int fParam, int pMaxParam, int iMaxParam, int dMaxParam, int oMaxParam) {
     pidStruct_t *pid;
 
     pid = (pidStruct_t *)aqDataCalloc(1, sizeof(pidStruct_t));
 
-    pid->pMax = pMax;
-    pid->iMax = iMax;
-    pid->dMax = dMax;
-    pid->oMax = oMax;
-    pid->pGain = p;
-    pid->iGain = i;
-    pid->dGain = d;
-    pid->fGain = f;
-    pid->pTrim = pTrim;
-    pid->iTrim = iTrim;
-    pid->dTrim = dTrim;
-    pid->fTrim = fTrim;
+    pid->pParam = pParam;
+    pid->iParam = iParam;
+    pid->dParam = dParam;
+    pid->fParam = fParam;
+    pid->pMaxParam = pMaxParam;
+    pid->iMaxParam = iMaxParam;
+    pid->dMaxParam = dMaxParam;
+    pid->oMaxParam = oMaxParam;
 
     return pid;
 }
@@ -107,56 +105,36 @@ pidStruct_t *pidInit(float *p, float *i, float *d, float *f, float *pMax, float 
 
 float pidUpdate(pidStruct_t *pid, float setpoint, float position) {
     float error;
-    float p = *pid->pGain;
-    float i = *pid->iGain;
-    float d = (pid->dGain) ? *pid->dGain : 0.0f;
-    float f = (pid->fGain) ? *pid->fGain : 1.0f;
+    float p = configGetParamValue(pid->pParam);
+    float i = configGetParamValue(pid->iParam);
+    float d = pid->dParam ? configGetParamValue(pid->dParam) : 0.0f;
+    float f = pid->fParam ? configGetParamValue(pid->fParam) : 1.0f;
 
-    if (pid->pTrim)
-	p += (*pid->pTrim * p * 0.002f);
-    if (pid->iTrim)
-	i += (*pid->iTrim * i * 0.002f);
-    if (pid->dTrim)
-	d += (*pid->dTrim * d * 0.002f);
-    if (pid->fTrim)
-	f += (*pid->fTrim * f * 0.002f);
+    float pMax = configGetParamValue(pid->pMaxParam);
+    float iMax = configGetParamValue(pid->iMaxParam);
+    float dMax = pid->dMaxParam ? configGetParamValue(pid->dMaxParam) : 0.0f;
+    float oMax = configGetParamValue(pid->oMaxParam);
 
     error = setpoint - position;
 
     // calculate the proportional term
-    pid->pTerm_1 = p * error;
-    if (pid->pTerm_1 > *pid->pMax) {
-	pid->pTerm_1 = *pid->pMax;
-    }
-    else if (pid->pTerm_1 < -*pid->pMax) {
-	pid->pTerm_1 = -*pid->pMax;
-    }
+    pid->pTerm_1 = constrainFloat(p * error, -pMax, pMax);
 
     // calculate the integral state with appropriate limiting
     pid->iState += error;
     pid->iTerm_1 = i * pid->iState;
-    if (pid->iTerm_1 > *pid->iMax) {
-	pid->iTerm_1 = *pid->iMax;
-	pid->iState = pid->iTerm_1 / i;
-    }
-    else if (pid->iTerm_1 < -*pid->iMax) {
-	pid->iTerm_1 = -*pid->iMax;
+    if (fabsf(pid->iTerm_1) > iMax) {
+	pid->iTerm_1 = constrainFloat(pid->iTerm_1, -iMax, iMax);
 	pid->iState = pid->iTerm_1 / i;
     }
 
     // derivative
-    if (pid->dGain) {
+    if (pid->dParam) {
 	// uncomment this line if you want the D term to ignore set point changes
 	error = -position;
 
-	pid->dTerm_1 = (d * f) * (error - pid->dState);
+	pid->dTerm_1 = constrainFloat((d * f) * (error - pid->dState), -dMax, dMax);
 	pid->dState += f * (error - pid->dState);
-	if (pid->dTerm_1 > *pid->dMax) {
-	    pid->dTerm_1 = *pid->dMax;
-	}
-	else if (pid->dTerm_1 < -*pid->dMax) {
-	    pid->dTerm_1 = -*pid->dMax;
-	}
     }
     else {
 	pid->dTerm_1 = 0.0f;
@@ -164,18 +142,12 @@ float pidUpdate(pidStruct_t *pid, float setpoint, float position) {
 
     pid->pv_1 = position;
     pid->sp_1 = setpoint;
-    pid->co_1 = pid->pTerm_1 + pid->iTerm_1 + pid->dTerm_1;
-
-    if (pid->co_1 > *pid->oMax) {
-	pid->co_1 = *pid->oMax;
-    }
-    else if (pid->co_1 < -*pid->oMax) {
-	pid->co_1 = -*pid->oMax;
-    }
+    pid->co_1 = constrainFloat(pid->pTerm_1 + pid->iTerm_1 + pid->dTerm_1, -oMax, oMax);
 
     return pid->co_1;
 }
 
+/*
 float pidUpdate2(pidStruct_t *pid, float setpoint, float position) {
     float error;
     float p = *pid->pGain;
@@ -238,6 +210,7 @@ float pidUpdate2(pidStruct_t *pid, float setpoint, float position) {
 
     return pid->co_1;
 }
+*/
 
 /*
 // P & I tracking setpoint, D resisting change in position
@@ -390,8 +363,9 @@ float pidUpdateC(pidStruct_t *pid, float setpoint, float position) {
 */
 
 void pidZeroIntegral(pidStruct_t *pid, float pv, float iState) {
-    if (*pid->iGain != 0.0f)
-	pid->iState = iState / *pid->iGain;
+    float i = configGetParamValue(pid->iParam);
+    if (i != 0.0f)
+	pid->iState = iState / i;
     pid->dState = -pv;
     pid->sp_1 = pv;
     pid->co_1 = 0.0f;

@@ -14,7 +14,6 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2015  Bill Nesbitt
-    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _nav_h
@@ -37,10 +36,10 @@
 #define NAV_HF_HOME_BRG_D_MAX	1.0f * DEG_TO_RAD				// re-compute headfree reference angles when bearing to home changes by this many degrees (zero to always re-compute)
 #define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch is toggled high
 
-#define NAV_DFLT_HOR_SPEED	p[NAV_MAX_SPEED]	    // default horizontal navigation speed
-#define NAV_DFLT_VRT_SPEED	p[NAV_ALT_POS_OM]	    // default vertical navigation speed
-#define NAV_DFLT_TOF_SPEED	p[NAV_LANDING_VEL]	    // default autonomous takeoff speed
-#define NAV_DFLT_LND_SPEED	p[NAV_LANDING_VEL]	    // default autonomous landing speed
+#define NAV_DFLT_HOR_SPEED	configGetParamValue(NAV_MAX_SPEED)	    // default horizontal navigation speed
+#define NAV_DFLT_VRT_SPEED	configGetParamValue(NAV_ALT_POS_OM)	    // default vertical navigation speed
+#define NAV_DFLT_TOF_SPEED	configGetParamValue(NAV_LANDING_VEL)	    // default autonomous takeoff speed
+#define NAV_DFLT_LND_SPEED	configGetParamValue(NAV_LANDING_VEL)	    // default autonomous landing speed
 
 enum navStatusTypes {
     NAV_STATUS_MANUAL = 0,              // full manual control

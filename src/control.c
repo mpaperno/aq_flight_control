@@ -14,6 +14,7 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2015-2016 Maxim Paperno
 */
 
 #include "aq.h"
@@ -46,7 +47,7 @@ controlStruct_t controlData __attribute__((section(".ccm")));
 OS_STK *controlTaskStack;
 
 void controlTaskCode(void *unused) {
-    float yaw;
+    float yaw, yawRateLimits;
     float throttle;
     float ratesDesired[3];
     uint16_t overrides[3];
@@ -83,7 +84,7 @@ void controlTaskCode(void *unused) {
                       navData.altSpeedPID->iState = 0.0f;
 		}
 		else {
-		    throttle = ((uint32_t)RADIO_THROT - p[CTRL_MIN_THROT]) * MOTORS_SCALE / RADIO_MID_THROTTLE * p[CTRL_FACT_THRO];
+		    throttle = ((uint32_t)RADIO_THROT - p[CTRL_MIN_THROT]) * MOTORS_SCALE / RADIO_MID_THROTTLE * configGetParamValue(CTRL_FACT_THRO);
 		}
 		// limit
 		throttle = constrainInt(throttle, 1, MOTORS_SCALE);
@@ -109,7 +110,8 @@ void controlTaskCode(void *unused) {
 
 		// constrict nav (only) yaw rates
 		yaw = compassDifference(controlData.yaw, navData.holdHeading);
-		yaw = constrainFloat(yaw, -p[CTRL_NAV_YAW_RT]/400.0f, +p[CTRL_NAV_YAW_RT]/400.0f);
+		yawRateLimits = configGetParamValue(CTRL_NAV_YAW_RT) / 400.0f;
+		yaw = constrainFloat(yaw, -yawRateLimits, +yawRateLimits);
 		controlData.yaw = compassNormalize(controlData.yaw + yaw);
 
 		// DVH overrides direct user pitch / roll requests
@@ -141,7 +143,7 @@ void controlTaskCode(void *unused) {
 			ratesDesired[2] = (RADIO_RUDD + p[CTRL_DEAD_BAND]);
 
 		    // calculate desired rate based on full stick scale
-		    ratesDesired[2] = ratesDesired[2] * p[CTRL_MAN_YAW_RT] * DEG_TO_RAD * (1.0f / 700.0f);
+		    ratesDesired[2] = ratesDesired[2] * configGetParamValue(CTRL_MAN_YAW_RT) * DEG_TO_RAD * (1.0f / 700.0f);
 
 		    // keep up with actual craft heading
 		    controlData.yaw = AQ_YAW;
@@ -166,7 +168,7 @@ void controlTaskCode(void *unused) {
 		}
 
 #ifdef HAS_QUATOS
-		if ((int)p[QUATOS_ENABLE]) {
+		if (USE_QUATOS) {
 		    // determine which frame of reference to control from
 		    if (navData.mode <= NAV_STATUS_ALTHOLD)
 			// craft frame - manual
@@ -276,7 +278,7 @@ void controlInit(void) {
     memset((void *)&controlData, 0, sizeof(controlData));
 
 #ifdef HAS_QUATOS
-    if ((int)p[QUATOS_ENABLE])
+    if (USE_QUATOS)
 	quatosInit(AQ_INNER_TIMESTEP, AQ_OUTER_TIMESTEP);
 #endif
 
@@ -285,13 +287,13 @@ void controlInit(void) {
     utilFilterInit3(controlData.navPitchFilter, AQ_INNER_TIMESTEP, 0.125f, 0.0f);
     utilFilterInit3(controlData.navRollFilter, AQ_INNER_TIMESTEP, 0.125f, 0.0f);
 
-    controlData.pitchRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
-    controlData.rollRatePID = pidInit(&p[CTRL_TLT_RTE_P], &p[CTRL_TLT_RTE_I], &p[CTRL_TLT_RTE_D], &p[CTRL_TLT_RTE_F], &p[CTRL_TLT_RTE_PM], &p[CTRL_TLT_RTE_IM], &p[CTRL_TLT_RTE_DM], &p[CTRL_TLT_RTE_OM], 0, 0, 0, 0);
-    controlData.yawRatePID = pidInit(&p[CTRL_YAW_RTE_P], &p[CTRL_YAW_RTE_I], &p[CTRL_YAW_RTE_D], &p[CTRL_YAW_RTE_F], &p[CTRL_YAW_RTE_PM], &p[CTRL_YAW_RTE_IM], &p[CTRL_YAW_RTE_DM], &p[CTRL_YAW_RTE_OM], 0, 0, 0, 0);
+    controlData.pitchRatePID  = pidInit(CTRL_TLT_RTE_P, CTRL_TLT_RTE_I, CTRL_TLT_RTE_D, CTRL_TLT_RTE_F, CTRL_TLT_RTE_PM, CTRL_TLT_RTE_IM, CTRL_TLT_RTE_DM, CTRL_TLT_RTE_OM);
+    controlData.rollRatePID   = pidInit(CTRL_TLT_RTE_P, CTRL_TLT_RTE_I, CTRL_TLT_RTE_D, CTRL_TLT_RTE_F, CTRL_TLT_RTE_PM, CTRL_TLT_RTE_IM, CTRL_TLT_RTE_DM, CTRL_TLT_RTE_OM);
+    controlData.yawRatePID    = pidInit(CTRL_YAW_RTE_P, CTRL_YAW_RTE_I, CTRL_YAW_RTE_D, CTRL_YAW_RTE_F, CTRL_YAW_RTE_PM, CTRL_YAW_RTE_IM, CTRL_YAW_RTE_DM, CTRL_YAW_RTE_OM);
 
-    controlData.pitchAnglePID = pidInit(&p[CTRL_TLT_ANG_P], &p[CTRL_TLT_ANG_I], &p[CTRL_TLT_ANG_D], &p[CTRL_TLT_ANG_F], &p[CTRL_TLT_ANG_PM], &p[CTRL_TLT_ANG_IM], &p[CTRL_TLT_ANG_DM], &p[CTRL_TLT_ANG_OM], 0, 0, 0, 0);
-    controlData.rollAnglePID = pidInit(&p[CTRL_TLT_ANG_P], &p[CTRL_TLT_ANG_I], &p[CTRL_TLT_ANG_D], &p[CTRL_TLT_ANG_F], &p[CTRL_TLT_ANG_PM], &p[CTRL_TLT_ANG_IM], &p[CTRL_TLT_ANG_DM], &p[CTRL_TLT_ANG_OM], 0, 0, 0, 0);
-    controlData.yawAnglePID = pidInit(&p[CTRL_YAW_ANG_P], &p[CTRL_YAW_ANG_I], &p[CTRL_YAW_ANG_D], &p[CTRL_YAW_ANG_F], &p[CTRL_YAW_ANG_PM], &p[CTRL_YAW_ANG_IM], &p[CTRL_YAW_ANG_DM], &p[CTRL_YAW_ANG_OM], 0, 0, 0, 0);
+    controlData.pitchAnglePID = pidInit(CTRL_TLT_ANG_P, CTRL_TLT_ANG_I, CTRL_TLT_ANG_D, CTRL_TLT_ANG_F, CTRL_TLT_ANG_PM, CTRL_TLT_ANG_IM, CTRL_TLT_ANG_DM, CTRL_TLT_ANG_OM);
+    controlData.rollAnglePID  = pidInit(CTRL_TLT_ANG_P, CTRL_TLT_ANG_I, CTRL_TLT_ANG_D, CTRL_TLT_ANG_F, CTRL_TLT_ANG_PM, CTRL_TLT_ANG_IM, CTRL_TLT_ANG_DM, CTRL_TLT_ANG_OM);
+    controlData.yawAnglePID   = pidInit(CTRL_YAW_ANG_P, CTRL_YAW_ANG_I, CTRL_YAW_ANG_D, CTRL_YAW_ANG_F, CTRL_YAW_ANG_PM, CTRL_YAW_ANG_IM, CTRL_YAW_ANG_DM, CTRL_YAW_ANG_OM);
 
     controlTaskStack = aqStackInit(CONTROL_STACK_SIZE, "CONTROL");
 
