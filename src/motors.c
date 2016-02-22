@@ -183,7 +183,7 @@ void motorsSendThrust(void) {
 	value = motorsThrust2Value(motorsData.thrust[i]);
 
 	// using open-loop PWM ESC?
-	if (i < PWM_NUM_PORTS && motorsData.pwm[i] && MOTORS_ESC_TYPE != ESC_TYPE_ESC32) {
+	if (i < PWM_NUM_PORTS && motorsData.pwm[i] && (uint8_t)p[MOT_ESC_TYPE] != ESC_TYPE_ESC32) {
 	    // preload the request to accelerate setpoint changes
 	    if (motorsData.oldValues[i] != value) {
 		v = (value -  motorsData.oldValues[i]);
@@ -409,13 +409,13 @@ void motorsPwmToAll(float pwmValue) {
 
 void motorsEscPwmCalibration(void) {
     // check esc type and calibration request bit
-    if (MOTORS_ESC_TYPE != ESC_TYPE_STD_PWM || !((uint32_t)p[MOT_ESC_TYPE] & 0x800000))
+    if (MOTORS_ESC_TYPE != ESC_TYPE_STD_PWM || !((uint32_t)p[MOT_ESC_TYPE] & MOT_ESC_TYPE_CALIB_ENABLE))
 	return;
 
     // reset calibration request bit
-    p[MOT_ESC_TYPE] = (uint32_t)p[MOT_ESC_TYPE] & 0x7FFFFF;
+    p[MOT_ESC_TYPE] = (uint32_t)p[MOT_ESC_TYPE] & ~(MOT_ESC_TYPE_CALIB_ENABLE);
     // store new param, or fail
-    if (!configFlashWrite())
+    if (!configSaveParamsToFlash())
 	return;
 
     for (int i = 5; i > 0; --i) {
@@ -444,7 +444,7 @@ void motorsInit(void) {
 	return;
     }
 
-    motorsData.distribution = (motorsPowerStruct_t *)&p[MOT_PWRD_01_T];
+    motorsData.distribution = (motorsPowerStruct_t *)configGetParamPtr(MOT_PWRD_01_T);
 
     sumPitch = 0.0f;
     sumRoll = 0.0f;
@@ -493,4 +493,9 @@ void motorsInit(void) {
     motorsSetCanGroup();
     motorsOff();
     canTelemRegister(motorsReceiveTelem, CAN_TYPE_ESC);
+
+    if ((uint32_t)p[MOT_ESC_TYPE] & MOT_ESC_TYPE_CALIB_ENABLE) {
+	AQ_NOTICE("Motors: ERROR! ESC calibration bit still set.\n");
+	motorsData.numActive = 0;
+    }
 }

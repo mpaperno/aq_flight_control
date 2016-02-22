@@ -32,11 +32,11 @@
 #define MOTORS_CAN_GROUP_SIZE	    4
 #define MOTORS_CAN_TELEM_RATE	    100		    // Hz
 
-#define MOTORS_COMP_PRELOAD_TAU	    0.3f//0.4f
-#define MOTORS_COMP_PRELOAD_PTERM   3.0f//3.5f
-#define MOTORS_COMP_PRELOAD_NFACT   2.0f//3.0f
+#define MOTORS_COMP_PRELOAD_TAU	    0.3f  //0.4f
+#define MOTORS_COMP_PRELOAD_PTERM   3.0f  //3.5f
+#define MOTORS_COMP_PRELOAD_NFACT   2.0f  //3.0f
 
-#define MOTORS_ESC_TYPE		    ((uint32_t)p[MOT_ESC_TYPE] & 0x0FFFFF)  // actual ESC type, ignore calibration bits
+#define MOTORS_ESC_TYPE		    ((uint32_t)p[MOT_ESC_TYPE] & ~(MOT_ESC_TYPE_CALIB_ENABLE))  // actual ESC type, ignore calibration bits
 #ifdef HAS_QUATOS
     #define USE_QUATOS		    (int)p[QUATOS_ENABLE]
 #else
@@ -49,6 +49,10 @@ enum escTypes {
     ESC_TYPE_STD_PWM = 0,
     ESC_TYPE_ONBOARD_PWM,
     ESC_TYPE_ESC32
+};
+
+enum motorConfigFlags {
+    MOT_ESC_TYPE_CALIB_ENABLE = 0x800000,   // perform standard pwm esc calibration on next boot
 };
 
 typedef struct {
