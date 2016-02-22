@@ -10,6 +10,10 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1892 - Feb. 22, 2016 - EXPERIMENTAL (`config_rebase` branch)
+
+`*` Fix Thrust Factor A1/A2 params not allowing negative values (introduced in 7.1.1891).
+
 ##### 7.1.1891 - Feb. 21, 2016 - EXPERIMENTAL (`config_rebase` branch)
 
 `+` Add ability to adjust some parameter values live using RC, e.g. attitude/nav PIDs, all Quatos settings, live gimbal tuning, default nav speed limits, control factors, etc.  
