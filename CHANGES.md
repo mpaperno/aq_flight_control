@@ -10,9 +10,20 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1891 - Feb. 21, 2016 - EXPERIMENTAL (`config_rebase` branch)
+
+`+` Add ability to adjust some parameter values live using RC, e.g. attitude/nav PIDs, all Quatos settings, live gimbal tuning, default nav speed limits, control factors, etc.  
+        Adds option to save the resulting adjusted values directly to permanent onboard storage.  
+        Use QGC 1.7.B1 or newer for setup, full list of adjustable params, and instructions (or see notes in config_default.h).  
+`*` Fix issues with CONFIG_VERSION changes, eg. ignoring all saved params when version changes and vice versa when new params were not properly assigned defaults. New system allows loading defaults selectively vs. all at once.  
+        *From here on, please do not manually change the CONFIG_VERSION parameter onboard or in saved files, it is no longer a necessary workaround and may lead to problems later.*  
+`~` Improved initial parameter loading sequence will never overwrite params saved in flash (until/unless user requests it).  
+`+` Adds some basic paramater value sanity checking (min/max) when loading/assigning values.  
+`~` Provides more detailed feedback (messages) during param loading/assignment operations (status/warnings/errors).  
+
 ##### 7.1.1887 - Feb. 21, 2016
 
-'*' Fix random yawing on Landing-type waypoint when previous wpt type used relative heading.  
+`*` Fix random yawing on Landing-type waypoint when previous wpt type used relative heading.  
 `*` Fix setting of desired yaw/heading for Landing waypoint via MAVLink/QGC.  
 `~` Specifically hold current position for Landing waypoint (possibly prevent diagonal descent). (Note that Lat/Lon cannot be specified for landing-type waypoint, which has always been the case but is not obvious when using the QGC mission planner.)  
 `+` Add more diagnostic telemetry data (RC switch statuses and RAM usage).  
@@ -45,7 +56,7 @@ This file describes changes in the firmware, typically since the previous minor 
 `+` Reverted change for voltage compensation on M4 with onboard ESCs (from 7.1.1853).  
 `~` For building FW: Macro USE_QUATOS replaced with HAS_QUATOS (aq.h). If undefined (default), Quatos code and all QUATOS_* params are excluded entirely from the build. In this case obviously QUATOS_ENABLE param isn't available.
 
-##### 7.1.1861 - Oct. 2, 2015
+##### 7.1.1861 - Oct. 2, 2015 (`waypoint_recording` branch)
 
 `+` Add live waypoint recording feature.  
 
