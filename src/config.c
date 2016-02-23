@@ -96,8 +96,12 @@ bool configFlashRead(void) {
 
     recs = (void *)flashStartAddr();
 
-    for (i = 0; i < CONFIG_NUM_PARAMS; i++)
+    for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
+	// avoid reading past end of valid flash storge
+	if (!memcmp(recs + i, "\xFF", 1) || (uint32_t)recs[i].val == 0xFFFFFFFF)
+	    break;
 	configSetParamByName(recs[i].name, recs[i].val);
+    }
 
     AQ_NOTICE("config: Parameters restored from flash memory.\n");
 
@@ -132,7 +136,7 @@ uint8_t configFlashWrite(void) {
             }
         } while (tf);
 
-        ret = flashErase(flashStartAddr(), CONFIG_NUM_PARAMS*sizeof(configRec_t)/sizeof(uint32_t));
+        ret = flashErase(flashStartAddr(), CONFIG_NUM_PARAMS * sizeof(configRec_t) / sizeof(uint32_t));
 
         // invalidate the flash data cache
         FLASH_DataCacheCmd(DISABLE);
@@ -148,7 +152,7 @@ uint8_t configFlashWrite(void) {
 
             // create param list in RAM
             for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
-                memcpy(recs[i].name, configParamMeta[i].name, CONFIG_PNAME_MAX_LEN);
+                strncpy(recs[i].name, configParamMeta[i].name, CONFIG_PNAME_MAX_LEN);
                 recs[i].val = configGetParamValueForSave(i);
             }
 

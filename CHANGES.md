@@ -10,6 +10,10 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1893 - Feb. 23, 2016 - EXPERIMENTAL (`config_rebase` branch)
+
+`*` Fix possible crash at startup when updating from an old version or one w/out Quatos params onboard (introduced in 7.1.1891).
+
 ##### 7.1.1892 - Feb. 22, 2016 - EXPERIMENTAL (`config_rebase` branch)
 
 `*` Fix Thrust Factor A1/A2 params not allowing negative values (introduced in 7.1.1891).
