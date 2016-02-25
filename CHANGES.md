@@ -10,6 +10,10 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1894 - Feb. 24, 2016 - EXPERIMENTAL (`config_rebase` branch)
+
+`*` Fix possible issue when loading params from flash storage does not properly overwrite defaults (introduced in 7.1.1893).
+
 ##### 7.1.1893 - Feb. 23, 2016 - EXPERIMENTAL (`config_rebase` branch)
 
 `*` Fix possible crash at startup when updating from an old version or one w/out Quatos params onboard (introduced in 7.1.1891).

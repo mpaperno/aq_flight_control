@@ -97,8 +97,8 @@ bool configFlashRead(void) {
     recs = (void *)flashStartAddr();
 
     for (i = 0; i < CONFIG_NUM_PARAMS; i++) {
-	// avoid reading past end of valid flash storge
-	if (!memcmp(recs + i, "\xFF", 1) || (uint32_t)recs[i].val == 0xFFFFFFFF)
+	// avoid reading past end of populated flash storage
+	if (!memcmp(recs + i, "\xFF", 1))
 	    break;
 	configSetParamByName(recs[i].name, recs[i].val);
     }
