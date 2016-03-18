@@ -19,7 +19,7 @@
 
 // Misc config bitfield, 24b max.
 //    b0: 1=save adjusted params back to flash/SD; 0=save defined param value
-#define DEFAULT_CONFIG_FLAGS	    (CONFIG_FLAG_SAVE_ADJUSTED)
+#define DEFAULT_CONFIG_FLAGS	    0
 
 // Remote control adjustable parameters.  24 bits: SSSS_SSSS_CCCC_CCPP_PPPP_PPPP
 // 	8 high bits = Scale of adjustment in 100ths of 1% (0-255, eg. 2 = 0.02%, 20 = 0.2% and 200 = 2%), next 6b = Channel number (0-63, zero = no channel/disabled), 10 low bits = Parameter ID to adjust (0-1024).
