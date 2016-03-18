@@ -337,6 +337,7 @@
       c_preprocessor_definitions="HAS_QUATOS"
       linker_additional_files="lib/quatos/quatos.a" />
     <configuration Name="AQ6" c_preprocessor_definitions="BOARD_VERSION=6" />
+    <configuration Name="AIMU" c_preprocessor_definitions="DIMU_VERSION=0" />
     <configuration
       Name="DIMU11"
       c_preprocessor_definitions="DIMU_VERSION=11" />
@@ -362,17 +363,24 @@
   <configuration Name="r3" hidden="Yes" />
   <configuration Name="r5" hidden="Yes" />
   <configuration Name="r6" hidden="Yes" />
+  <configuration Name="AIMU" hidden="Yes" />
   <configuration Name="DIMU11" hidden="Yes" />
   <configuration Name="quatos" hidden="Yes" />
   <configuration
-    Name="Release-AQ6.r0-AIMU-PID"
-    inherited_configurations="THUMB;Release" />
-  <configuration
     Name="Debug-AQ6.r0-AIMU-PID"
-    inherited_configurations="THUMB;Debug" />
+    inherited_configurations="AQ6;r0;AIMU;Debug;THUMB" />
+  <configuration
+    Name="Debug-AQ6.r0-AIMU-Quatos"
+    inherited_configurations="AQ6;r0;AIMU;quatos;Debug;THUMB" />
+  <configuration
+    Name="Release-AQ6.r0-AIMU-PID"
+    inherited_configurations="AQ6;r0;AIMU;Release;THUMB" />
+  <configuration
+    Name="Release-AQ6.r0-AIMU-Quatos"
+    inherited_configurations="AQ6;r0;AIMU;quatos;Release;THUMB" />
   <configuration
     Name="Release-AQ6.r0-DIMU-PID"
-    inherited_configurations="DIMU11;Release;THUMB" />
+    inherited_configurations="AQ6;r0;DIMU11;Release;THUMB" />
   <configuration
     Name="Release-AQ6.r0-DIMU-Quatos"
     inherited_configurations="AQ6;r0;DIMU11;quatos;Release;THUMB" />
@@ -387,11 +395,11 @@
     inherited_configurations="M4;r5;Release;THUMB" />
   <configuration
     Name="Release-M4.r5-Quatos"
-    inherited_configurations="M4;quatos;r5;Release;THUMB" />
+    inherited_configurations="M4;r5;quatos;Release;THUMB" />
   <configuration
     Name="Release-M4.r6-PID"
     inherited_configurations="M4;r6;Release;THUMB" />
   <configuration
     Name="Release-M4.r6-Quatos"
-    inherited_configurations="M4;quatos;r6;Release;THUMB" />
+    inherited_configurations="M4;r6;quatos;Release;THUMB" />
 </solution>

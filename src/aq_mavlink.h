@@ -27,8 +27,15 @@
 #include "config.h"
 #include "../mavlink_types.h"
 
+#include <stdint.h>
+
 #define MAVLINK_USE_CONVENIENCE_FUNCTIONS
 #define MAVLINK_SEND_UART_BYTES			mavlinkSendPacket
+
+extern mavlink_system_t mavlink_system;
+extern void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len);
+
+#include "mavlink.h"
 
 #define AQMAVLINK_HEARTBEAT_INTERVAL		1e6f		    // 1Hz
 #define AQMAVLINK_PARAM_INTERVAL		(1e6f / 150.0f)	    // 150Hz
@@ -37,7 +44,7 @@
 #define AQMAVLINK_DEFAULT_COMP_ID		MAV_COMP_ID_MISSIONPLANNER
 
 // this should equal MAV_DATA_STREAM_ENUM_END from mavlink.h
-#define AQMAVLINK_TOTAL_STREAMS			14
+#define AQMAVLINK_TOTAL_STREAMS			MAV_DATA_STREAM_ENUM_END
 // default stream rates in microseconds
 #define AQMAVLINK_STREAM_RATE_ALL		0
 #define AQMAVLINK_STREAM_RATE_RAW_SENSORS	0	    // IMU and baro
@@ -94,6 +101,7 @@ typedef struct {
 
     uint8_t indexPort;		// current port # in channels outputs sequence
     uint8_t paramCompId;	// component ID to use for params list
+
     // waypoint programming from mission planner
     uint8_t wpTargetSysId;
     uint8_t wpTargetCompId;
@@ -106,7 +114,6 @@ typedef struct {
 } mavlinkStruct_t;
 
 extern mavlinkStruct_t mavlinkData;
-extern mavlink_system_t mavlink_system;
 
 extern void mavlinkInit(void);
 extern void mavlinkSendNotice(const char *s);
@@ -116,8 +123,7 @@ extern void mavlinkWpSendCount(void);
 extern void mavlinkAnnounceHome(void);
 extern void comm_send_ch(mavlink_channel_t chan, uint8_t ch);
 extern void mavlinkDo(void);
-extern void mavlinkSendPacket(mavlink_channel_t chan, const uint8_t *buf, uint16_t len);
 extern void mavlinkSendParameter(uint8_t sysId, uint8_t compId, const char *paramName, float value);
 
-#endif
 #endif	// USE_MAVLINK
+#endif  // _aq_mavlink_h
