@@ -520,40 +520,40 @@ $(OBJ_PATH)/%.o: %.s
 	@rm -f $(basename $@).lst
 
 $(BIN_PATH)/$(TARGET).elf: $(EXTRA_TARGET_DEPS) $(ALL_OBJ)
-	@echo.
+	@echo
 	@echo "## Linking --> $@ ##"
 	$(LD) -X $(LDFLAGS) -o $@ --start-group $(ALL_OBJ) $(LDLIBS) --end-group
 	@$(EXE_TEST) -f $(SIZE) && echo "${CMD_SIZE_REPORT}";
 
 $(BIN_PATH)/$(TARGET).bin: $(BIN_PATH)/$(TARGET).elf
-	@echo.
+	@echo
 	@echo "## Objcopy $< --> $@ ##"
 	$(OBJCP) -O binary $< $@
 
 $(BIN_PATH)/$(TARGET).hex: $(BIN_PATH)/$(TARGET).elf
-	@echo.
+	@echo
 	@echo "## Objcopy $< --> $@ ##"
 	$(OBJCP) -O ihex $< $@
 
 BUILDNUMBER :
-	@echo.
+	@echo
 	@echo "Incrementing Build Number"
 	$(CMD_BUILDNUMBER)
-	@echo.
+	@echo
 
 size:
-	@if $(EXE_TEST) -f $(SIZE) AND $(EXE_TEST) -f $(BIN_PATH)/$(TARGET).elf; then echo "${CMD_SIZE_REPORT}"; else echo.; echo "$(SIZE) or elf file not found!"; fi
+	@if $(EXE_TEST) -f $(SIZE) AND $(EXE_TEST) -f $(BIN_PATH)/$(TARGET).elf; then echo "${CMD_SIZE_REPORT}"; else echo ; echo "$(SIZE) or elf file not found!"; fi
 
 makefile-debug:
-	@echo.
+	@echo
 	@echo AQ_OBJ = $(AQ_OBJ)
-	@echo.
+	@echo
 	@echo LIB_OBJ = $(LIB_OBJ)
-	@echo.
+	@echo
 	@echo ALL_OBJ = $(ALL_OBJ)
 
 pack-hex pack-bin: pack-% : %
-	@echo.
+	@echo
 	@echo "Compressing $< files... "
 	$(EXE_ZIP) $(BIN_PATH)/$(TARGET).$(ZIP_EXT) $(BIN_PATH)/$(TARGET).$<
 	

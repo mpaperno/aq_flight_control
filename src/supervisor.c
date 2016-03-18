@@ -291,7 +291,7 @@ void supervisorTaskCode(void *unused) {
 		    // config write (upper right)
 		    if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
 			supervisorLEDsOn();
-			configFlashWrite();
+			configSaveParamsToFlash();
 #ifdef DIMU_HAVE_EEPROM
 			dIMURequestCalibWrite();
 #endif
@@ -423,7 +423,7 @@ void supervisorTaskCode(void *unused) {
 
 		    // land
 		    wp->type = NAV_LEG_LAND;
-		    wp->maxVertSpeed = p[NAV_LANDING_VEL];
+		    wp->maxVertSpeed = NAV_DFLT_LND_SPEED;
 		    wp->maxHorizSpeed = 0.0f;
 		    wp->poiAltitude = 0.0f;
 

@@ -43,7 +43,7 @@
 
 /* Sets a controller channel to the given value.
  * This would be overwritten if an active radio is controlling the same channel. */
-#define rcSetControlValue(Pid_p, Chv_p)   _rcSetChannelValue(rcGetControlChannel(Pid_p)-1, Chv_p)
+#define rcSetControlValue(Pid_p, Chv_p)   rcSetChannelValue(rcGetControlChannel(Pid_p)-1, Chv_p)
 /* Sets a controller channel value to reflect the active state of a given switch-type control.
  * This would be overwritten if an active radio is controlling the same channel. */
 #define rcSetSwitchActive(Pid_p)          { if (rcIsControlConfigured(Pid_p)) rcSetControlValue(Pid_p, rcGetSwitchTargetValue(Pid_p)); }

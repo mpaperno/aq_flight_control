@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
     Copyright 2013-2016 Maxim Paperno
 */
 
@@ -90,6 +90,35 @@ void mavlinkAnnounceHome(void) {
 
 void mavlinkSendNotice(const char *s) {
     mavlink_msg_statustext_send(MAVLINK_COMM_0, MAV_SEVERITY_INFO, (const char *)s);
+}
+
+static uint8_t mavlinkConvertDataTypeAQ2MAV(uint8_t typ) {
+    switch (typ) {
+	case AQ_TYPE_DBL:
+	    return MAV_PARAM_TYPE_REAL64;
+	case AQ_TYPE_U32:
+	    return MAV_PARAM_TYPE_UINT32;
+	case AQ_TYPE_S32:
+	    return MAV_PARAM_TYPE_INT32;
+	case AQ_TYPE_U16:
+	    return MAV_PARAM_TYPE_UINT16;
+	case AQ_TYPE_S16:
+	    return MAV_PARAM_TYPE_INT16;
+	case AQ_TYPE_U8:
+	    return MAV_PARAM_TYPE_UINT8;
+	case AQ_TYPE_S8:
+	    return MAV_PARAM_TYPE_INT8;
+	case AQ_TYPE_FLT:
+	default:
+	    return MAV_PARAM_TYPE_REAL32;
+    }
+}
+
+static void mavlinkSendParamValue(uint16_t id, uint16_t ttl, bool raw) {
+    mavlink_system.compid = mavlinkData.paramCompId;
+    mavlink_msg_param_value_send(MAVLINK_COMM_0, configGetParamName(id), raw ? configGetParamValueRaw(id) : configGetParamValueForSave(id),
+	    mavlinkConvertDataTypeAQ2MAV(configGetParamDataType(id)), ttl, id);
+    mavlink_system.compid = AQMAVLINK_DEFAULT_COMP_ID;
 }
 
 static void mavlinkToggleStreams(uint8_t enable) {
@@ -296,6 +325,16 @@ void mavlinkDo(void) {
 			rcIsSwitchActive(NAV_CTRL_WP_REC), 0, 0, 0, 0, 0,
 			rcIsSwitchActive(GMBL_CTRL_TRG_ON), rcGetControlValue(GMBL_CTRL_TILT), rcGetControlValue(GMBL_PSTHR_CHAN));
 		break;
+	    case AQMAV_DATASET_CONFIG :
+		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
+			configGetAdjParamId(CONFIG_ADJUST_P1), (configGetAdjParamId(CONFIG_ADJUST_P1) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P1)) : 0),
+			configGetAdjParamId(CONFIG_ADJUST_P2), (configGetAdjParamId(CONFIG_ADJUST_P2) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P2)) : 0),
+			configGetAdjParamId(CONFIG_ADJUST_P3), (configGetAdjParamId(CONFIG_ADJUST_P3) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P3)) : 0),
+			configGetAdjParamId(CONFIG_ADJUST_P4), (configGetAdjParamId(CONFIG_ADJUST_P4) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P4)) : 0),
+			configGetAdjParamId(CONFIG_ADJUST_P5), (configGetAdjParamId(CONFIG_ADJUST_P5) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P5)) : 0),
+			configGetAdjParamId(CONFIG_ADJUST_P6), (configGetAdjParamId(CONFIG_ADJUST_P6) ? configGetParamValue(configGetAdjParamId(CONFIG_ADJUST_P6)) : 0),
+			0, 0, 0, 0, 0, 0, 0, 0);
+		break;
 	    case AQMAV_DATASET_DEBUG :
 		// First 10 values are displayed in QGC as integers, the other 10 as floats.
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i,
@@ -311,8 +350,23 @@ void mavlinkDo(void) {
 
     // list all requested/remaining parameters
     if (mavlinkData.currentParam < CONFIG_NUM_PARAMS && mavlinkData.nextParam < micros) {
-	mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[mavlinkData.currentParam], p[mavlinkData.currentParam], MAVLINK_TYPE_FLOAT, CONFIG_NUM_PARAMS, mavlinkData.currentParam);
-	mavlinkData.currentParam++;
+	uint16_t totalParams = CONFIG_NUM_PARAMS;
+
+	// check if only adjustable params are being requested
+	if (mavlinkData.paramCompId == MAV_COMP_ID_SYSTEM_CONTROL) {
+	    totalParams = configGetNumPossibleAdjParams();
+	    int16_t t = configGetNextAdjustableParam(mavlinkData.currentParam);
+	    if (t > -1)
+		mavlinkData.currentParam = t;
+	    else {
+		mavlinkData.currentParam = CONFIG_NUM_PARAMS;
+		return;
+	    }
+	}
+	mavlinkSendParamValue(mavlinkData.currentParam, totalParams, false);
+
+	++mavlinkData.currentParam;
+
 	mavlinkData.nextParam = micros + AQMAVLINK_PARAM_INTERVAL;
     }
 
@@ -398,20 +452,16 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 		    // main parameters
 		    default:
-			if (param == 0.0f) {  					// read flash
-			    configFlashRead();
+			if (param == 0.0f && configLoadParamsFromFlash())	// read flash
 			    ack = MAV_CMD_ACK_OK;
-			}
-			else if (param == 1.0f && configFlashWrite()) 		// write flash
+			else if (param == 1.0f && configSaveParamsToFlash()) 	// write flash
 			    ack = MAV_CMD_ACK_OK;
-			else if (param == 2.0f && configReadFile(0) >= 0)	// read file
+			else if (param == 2.0f && configLoadParamsFromFile())	// read file
 			    ack = MAV_CMD_ACK_OK;
-			else if (param == 3.0f && configWriteFile(0) >= 0)	// write file
+			else if (param == 3.0f && configSaveParamsToFile())     // write file
 			    ack = MAV_CMD_ACK_OK;
-			else if (param == 4.0f) {				// load defaults
-			    configLoadDefault();
+			else if (param == 4.0f && configLoadParamsFromDefault()) // load all defaults
 			    ack = MAV_CMD_ACK_OK;
-			}
 			else
 			    ack = MAV_CMD_ACK_ERR_FAIL;
 
@@ -761,14 +811,16 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 		    if (mavlink_msg_param_request_read_get_target_system(&msg) == mavlink_system.sysid) {
 			uint16_t paramIndex;
 
+			mavlinkData.paramCompId = mavlink_msg_param_request_read_get_target_component(&msg);
 			paramIndex = mavlink_msg_param_request_read_get_param_index(&msg);
 			if (paramIndex < CONFIG_NUM_PARAMS)
-			    mavlink_msg_param_value_send(MAVLINK_COMM_0, configParameterStrings[paramIndex], p[paramIndex], MAVLINK_TYPE_FLOAT, CONFIG_NUM_PARAMS, paramIndex);
+			    mavlinkSendParamValue(paramIndex, CONFIG_NUM_PARAMS, false);
 		    }
 		    break;
 
 		case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
 		    if (mavlink_msg_param_request_list_get_target_system(&msg) == mavlink_system.sysid) {
+			mavlinkData.paramCompId = mavlink_msg_param_request_list_get_target_component(&msg);
 			mavlinkData.currentParam = 0;
 			mavlinkData.nextParam = 0;
 		    }
@@ -776,18 +828,17 @@ void mavlinkRecvTaskCode(commRcvrStruct_t *r) {
 
 		case MAVLINK_MSG_ID_PARAM_SET:
 		    if (mavlink_msg_param_set_get_target_system(&msg) == mavlink_system.sysid) {
-			int paramIndex = -1;
-			float paramValue;
+			int paramIndex;
 			char paramName[17];
 
 			mavlink_msg_param_set_get_param_id(&msg, paramName);
 			paramIndex = configGetParamIdByName((char *)paramName);
-			if (paramIndex >= 0 && paramIndex < CONFIG_NUM_PARAMS) {
-			    paramValue = mavlink_msg_param_set_get_param_value(&msg);
-			    if (!isnan(paramValue) && !isinf(paramValue) && !(supervisorData.state & STATE_FLYING))
-				p[paramIndex] = paramValue;
+			if (paramIndex > -1) {
+			    if (!(supervisorData.state & STATE_FLYING))
+				configSetParamByID(paramIndex, mavlink_msg_param_set_get_param_value(&msg));
 			    // send back what we have no matter what
-			    mavlink_msg_param_value_send(MAVLINK_COMM_0, paramName, p[paramIndex], MAVLINK_TYPE_FLOAT, CONFIG_NUM_PARAMS, paramIndex);
+			    mavlinkData.paramCompId = mavlink_msg_param_set_get_target_component(&msg);
+			    mavlinkSendParamValue(paramIndex, CONFIG_NUM_PARAMS, true);
 			}
 		    }
 		    break;
@@ -887,6 +938,7 @@ void mavlinkInit(void) {
     mavlinkData.wpCount = navGetWaypointCount();
     mavlinkData.wpCurrent = mavlinkData.wpCount + 1;
     mavlinkData.wpTargetCompId = MAV_COMP_ID_MISSIONPLANNER;
+    mavlinkData.paramCompId = MAV_COMP_ID_ALL;
     mavlinkData.sys_mode = MAV_MODE_PREFLIGHT;
     mavlinkData.sys_state = MAV_STATE_BOOT;
     mavlink_system.sysid = flashSerno(0) % 250;
@@ -914,4 +966,5 @@ void mavlinkInit(void) {
 	mavlink_msg_data_stream_send(MAVLINK_COMM_0, i, hz, mavlinkData.streams[i].enable);
     }
 }
+
 #endif	// USE_MAVLINK

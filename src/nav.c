@@ -13,7 +13,7 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2014  Bill Nesbitt
+    Copyright © 2011-2014  Bill Nesbitt
     Copyright 2013-2016 Maxim Paperno
 */
 
@@ -639,7 +639,7 @@ void navNavigate(void) {
         }
 
         // constrain vertical velocity
-        tmp = p[NAV_MAX_DECENT];
+        tmp = configGetParamValue(NAV_MAX_DECENT);
         tmp = (navData.holdMaxVertSpeed < tmp) ? -navData.holdMaxVertSpeed : -tmp;
         navData.targetHoldSpeedAlt = constrainFloat(navData.targetHoldSpeedAlt, tmp, navData.holdMaxVertSpeed);
 
@@ -703,12 +703,12 @@ void navInit(void) {
 
     memset((void *)&navData, 0, sizeof(navData));
 
-    navData.speedNPID = pidInit(&p[NAV_SPEED_P], &p[NAV_SPEED_I], 0, 0, &p[NAV_SPEED_PM], &p[NAV_SPEED_IM], 0, &p[NAV_SPEED_OM], 0, 0, 0, 0);
-    navData.speedEPID = pidInit(&p[NAV_SPEED_P], &p[NAV_SPEED_I], 0, 0, &p[NAV_SPEED_PM], &p[NAV_SPEED_IM], 0, &p[NAV_SPEED_OM], 0, 0, 0, 0);
-    navData.distanceNPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
-    navData.distanceEPID = pidInit(&p[NAV_DIST_P], &p[NAV_DIST_I], 0, 0, &p[NAV_DIST_PM], &p[NAV_DIST_IM], 0, &p[NAV_DIST_OM], 0, 0, 0, 0);
-    navData.altSpeedPID = pidInit(&p[NAV_ALT_SPED_P], &p[NAV_ALT_SPED_I], 0, 0, &p[NAV_ALT_SPED_PM], &p[NAV_ALT_SPED_IM], 0, &p[NAV_ALT_SPED_OM], 0, 0, 0, 0);
-    navData.altPosPID = pidInit(&p[NAV_ALT_POS_P], &p[NAV_ALT_POS_I], 0, 0, &p[NAV_ALT_POS_PM], &p[NAV_ALT_POS_IM], 0, &p[NAV_ALT_POS_OM], 0, 0, 0, 0);
+    navData.speedNPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
+    navData.speedEPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
+    navData.distanceNPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
+    navData.distanceEPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
+    navData.altSpeedPID  = pidInit(NAV_ALT_SPED_P, NAV_ALT_SPED_I, 0, 0, NAV_ALT_SPED_PM, NAV_ALT_SPED_IM, 0, NAV_ALT_SPED_OM);
+    navData.altPosPID    = pidInit(NAV_ALT_POS_P,  NAV_ALT_POS_I,  0, 0, NAV_ALT_POS_PM,  NAV_ALT_POS_IM,  0, NAV_ALT_POS_OM);
 
     navData.mode = NAV_STATUS_MANUAL;
     navData.headFreeMode = NAV_HEADFREE_OFF;

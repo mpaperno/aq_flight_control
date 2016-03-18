@@ -14,12 +14,22 @@
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
     Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _config_h
 #define _config_h
 
 #include "aq.h"
+
+#define CONFIG_CURRENT_VERSION	    132	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
+
+#define CONFIG_FILE_NAME	    "params.txt"
+#define CONFIG_FILE_BUF_SIZE	    512
+#define CONFIG_LINE_BUF_SIZE	    128
+#define CONFIG_PNAME_MAX_LEN	    16
+
+#define CONFIG_MAX_ADJUSTABLE_PARAMS 6  // total number of CONFIG_ADJUST_Pn params
 
 #if BOARD_VERSION == 6 && defined DIMU_VERSION && DIMU_VERSION > 0
     #if DIMU_VERSION == 10
@@ -43,17 +53,20 @@
 
 #include CONFIG_DEFAULTS_FILE
 
-#ifndef DEFAULT_CONFIG_VERSION
+#ifndef DEFAULT_CONFIG_FLAGS
     #error "Configuration defaults not properly defined."
 #endif
 
-#define CONFIG_FILE_NAME	    "params.txt"
-#define CONFIG_FILE_BUF_SIZE	    512
-#define CONFIG_LINE_BUF_SIZE	    128
-
-// param names must be kept <= 16 chars for mavlink
+// all parameters, order must match initialization order of configParamMeta[] in config_params.h
 enum configParameters {
     CONFIG_VERSION = 0,
+    CONFIG_FLAGS,
+    CONFIG_ADJUST_P1,
+    CONFIG_ADJUST_P2,
+    CONFIG_ADJUST_P3,
+    CONFIG_ADJUST_P4,
+    CONFIG_ADJUST_P5,
+    CONFIG_ADJUST_P6,
     RADIO_SETUP,
     RADIO_THRO_CH,
     RADIO_ROLL_CH,
@@ -357,10 +370,6 @@ enum configParameters {
     QUATOS_QUAT_TAU,
     QUATOS_L1_ASP,
     QUATOS_L1_K1,
-    QUATOS_AM1_KNOB,
-    QUATOS_AM2_KNOB,
-    QUATOS_K1_KNOB,
-    QUATOS_PT_KNOB,
     QUATOS_MM_R01,
     QUATOS_MM_P01,
     QUATOS_MM_Y01,
@@ -420,13 +429,18 @@ enum configParameters {
     CONFIG_NUM_PARAMS
 };
 
+// bitmasks for CONFIG_FLAGS param
+enum configFlags {
+    CONFIG_FLAG_SAVE_ADJUSTED = 0x01	// save adjusted params values back to flash/SD, true/false
+};
+
 typedef struct {
     uint32_t key;
     char data[24];
 } configToken_t;
 
 typedef struct {
-    char name[16];
+    char name[CONFIG_PNAME_MAX_LEN];
     float val;
 } configRec_t;
 
@@ -436,22 +450,62 @@ typedef struct {
     float values[CONFIG_NUM_PARAMS];
 } __attribute__((packed)) paramStruct_t;
 
+typedef struct {
+    uint16_t id;
+    char *name;
+    uint16_t sinceVersion:10;
+    uint8_t dataType:4;
+    uint8_t adjustable:1;
+    float minVal;
+    float maxVal;
+    float defaultVal;
+} paramRecordMeta_t;
+
+typedef struct {
+    float adjScale;	// multiplier for scaling the adjustment
+    float minVal;	// min and max values are copied into here from the const meta array for speed
+    float maxVal;
+    uint8_t adjChan;	// radio channel used for adjustment
+} paramAdjustSpec_t;
+
+typedef struct {
+    uint16_t numPossibleAdjParams;		// track total number of params flagged as adjustable in definitions
+    uint8_t paramFlags[CONFIG_NUM_PARAMS];	// track index of a currently adjustable param in the adjustParams[] array
+    paramAdjustSpec_t adjustParams[CONFIG_MAX_ADJUSTABLE_PARAMS];  // param adjustment data
+} configData_t;
+
 extern float p[CONFIG_NUM_PARAMS];
-extern const char *configParameterStrings[];
+
+// extract the parameter ID being adjusted from a CONFIG_ADJUST_Pn parameter value.
+#define configGetAdjParamId(Pid_p)	((uint32_t)p[Pid_p] & 0x3FF)
+
+extern void configTokenStore(configToken_t *token);
+extern configToken_t *configTokenGet(uint32_t key);
+
+extern int16_t configGetParamIdByName(char *name);
+extern char *configGetParamName(uint16_t id);
+extern float configGetParamValue(uint16_t id);
+extern float configGetParamValueRaw(uint16_t id);
+extern float configGetParamValueByName(char *name);
+extern float configGetParamValueForSave(uint16_t id);
+extern float *configGetParamPtr(uint16_t id);
+extern uint8_t configGetParamDataType(uint16_t id);
+extern int16_t configGetNextAdjustableParam(uint16_t startId);
+extern uint16_t configGetNumPossibleAdjParams(void);
+
+extern bool configSetParamByID(uint16_t id, float value);
+extern bool configSetParamByName(char *name, float value);
+
+extern bool configLoadParamsFromDefault(void);
+extern bool configLoadParamsFromFile(void);
+extern bool configLoadParamsFromFlash(void);
+extern bool configSaveParamsToFile(void);
+extern bool configSaveParamsToFlash(void);
 
 extern void configInit(void);
-extern void configFlashRead(void);
-extern uint8_t configFlashWrite(void);
-extern void configLoadDefault(void);
-extern unsigned int configParameterRead(void *data);
-extern unsigned int configParameterWrite(void *data);
-extern int8_t configReadFile(char *fname);
-extern int8_t configWriteFile(char *fname);
-extern void configSetParamByID(int id, float value);
-extern int configGetParamIdByName(char *name);
 extern int8_t configFormatParam(char *buf, int n);
 extern int configParseParams(char *fileBuf, int size, int p1);
-extern configToken_t *configTokenGet(uint32_t key);
-extern void configTokenStore(configToken_t *token);
+extern unsigned int configParameterRead(void *data);
+extern unsigned int configParameterWrite(void *data);
 
 #endif

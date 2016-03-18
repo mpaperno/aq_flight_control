@@ -28,6 +28,12 @@
 #define GMBL_TRIG_MIN_PWM	750			// minimum pulse width
 #define GMBL_TRIG_MAX_PWM	2250			// maximum pulse width
 
+#define GMBL_PITCH_NTRL_PWM	constrainInt(configGetParamValue(GMBL_NTRL_PITCH), p[GMBL_PWM_MIN_PT], p[GMBL_PWM_MAX_PT])
+#define GMBL_PITCH_SCALE	configGetParamValue(GMBL_SCAL_PITCH)
+
+#define GMBL_ROLL_NTRL_PWM	constrainInt(configGetParamValue(GMBL_NTRL_ROLL), p[GMBL_PWM_MIN_RL], p[GMBL_PWM_MAX_RL])
+#define GMBL_ROLL_SCALE		configGetParamValue(GMBL_SCAL_ROLL)
+
 typedef struct {
     float tilt;			// last gimbal pitch output position
     uint8_t trigger;		// boolean indicating automatic trigger is activated (can be set externally, eg. to trigger photo at wpt)
