@@ -17,28 +17,29 @@
     Copyright 2013-2016 Maxim Paperno
 */
 
-#include "aq.h"
-#include "config.h"
 #include "supervisor.h"
+
+#include "analog.h"
 #include "aq_mavlink.h"
+#include "aq_timer.h"
+#include "calib.h"
+#include "canSensors.h"
 #include "comm.h"
-#include "digital.h"
+#include "config.h"
+#include "control.h"
+#include "d_imu.h"
+#include "gps.h"
+#include "motors.h"
+#include "nav_ukf.h"
+#include "nav.h"
 #include "radio.h"
 #include "rc.h"
-#include "nav.h"
-#include "analog.h"
-#include "aq_timer.h"
-#include "util.h"
-#include "nav_ukf.h"
-#include "gps.h"
-#include "d_imu.h"
-#include "motors.h"
-#include "calib.h"
 #include "run.h"
-#include "canSensors.h"
+#include "util.h"
 #ifdef USE_SIGNALING
 #include "signaling.h"
 #endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -74,7 +75,7 @@ static void supervisorSetSystemStatus(void) {
     else
 	supervisorData.systemStatus = SPVR_AQ_STATUS_READY;
 
-    // rest of the status flags can be cumulative
+    // rest of the status flags are cumulative
 
     if ((supervisorData.state & STATE_RADIO_LOSS1))
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_NO_RC;
@@ -92,6 +93,16 @@ static void supervisorSetSystemStatus(void) {
 	if (navData.setCeilingReached)
 	    supervisorData.systemStatus |= SPVR_AQ_STATUS_CEILING_REACHED;
     }
+
+    if (controlData.controlMode == CTRL_MODE_LTD_RATE)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_LTD_RATE_MODE;
+    else if (controlData.controlMode == CTRL_MODE_RATE)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_FUL_RATE_MODE;
+
+    if (navData.headFreeMode == NAV_HEADFREE_DYNAMIC)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_DYNAMIC;
+    else if (navData.headFreeMode == NAV_HEADFREE_LOCKED)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_LOCKED;
 
     if (navData.mode <= NAV_STATUS_MANUAL)
 	return;
@@ -117,11 +128,6 @@ static void supervisorSetSystemStatus(void) {
     if (navData.verticalOverride)
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_DAO;
 
-    if (navData.headFreeMode == NAV_HEADFREE_DYNAMIC)
-	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_DYNAMIC;
-    else if (navData.headFreeMode == NAV_HEADFREE_LOCKED)
-	supervisorData.systemStatus |= SPVR_AQ_STATUS_HF_LOCKED;
-
     // FIXME: we need a better indicator of whether we're actually RingTH
     if (rcIsSwitchActive(NAV_CTRL_HOM_GO))
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_RTH;
@@ -138,7 +144,7 @@ void supervisorArm(void) {
 	AQ_NOTICE("Error: Can't arm, not in manual flight mode.\n");
     else if (rcIsSwitchActive(NAV_CTRL_HOM_SET) || rcIsSwitchActive(NAV_CTRL_HOM_GO))
 	AQ_NOTICE("Error: Can't arm, home command active.\n");
-    else if (rcIsSwitchActive(NAV_CTRL_HF_SET) || rcIsSwitchActive(NAV_CTRL_HF_LOCK))
+    else if (rcIsSwitchActive(NAV_CTRL_HF_SET) /*|| rcIsSwitchActive(NAV_CTRL_HF_LOCK)*/)
 	AQ_NOTICE("Error: Can't arm, heading-free mode active.\n");
     else if (motorsArm()) {
 	supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
@@ -165,16 +171,24 @@ void supervisorDisarm(void) {
 }
 
 void supervisorCalibrate(void) {
-    supervisorData.state = STATE_CALIBRATION;
+    if ((supervisorData.state & STATE_ARMED))
+	return;
+    supervisorData.state |= STATE_CALIBRATION;
     AQ_NOTICE("Starting MAG calibration mode.\n");
     calibInit();
 }
 
 void supervisorTare(void) {
+    if ((supervisorData.state & STATE_ARMED))
+	return;
+#ifdef USE_DIGITAL_IMU
     supervisorLEDsOn();
     dIMUTare();
     AQ_NOTICE("Level calibration complete.\n");
     supervisorLEDsOff();
+#else
+    AQ_NOTICE("Cannot perform AIMU tare.\n");
+#endif // HAS_DIGITAL_IMU
 }
 
 void supervisorTaskCode(void *unused) {
@@ -280,34 +294,26 @@ void supervisorTaskCode(void *unused) {
 		    supervisorData.stickCmdTimer = timerMicros();
 		} else if ((timerMicros() - supervisorData.stickCmdTimer) > SUPERVISOR_STICK_CMD_TIME) {
 
-#ifdef HAS_DIGITAL_IMU
 		    // tare function (lower left)
-		    if (RADIO_ROLL < -500 && RADIO_PITCH > +500) {
+		    if (RADIO_ROLL < -500 && RADIO_PITCH > +500)
 			supervisorTare();
-			supervisorData.stickCmdTimer = 0;
-		    }
-		    else
-#endif // HAS_DIGITAL_IMU
+		    // calibration mode (upper left)
+		    else if (RADIO_ROLL < -500 && RADIO_PITCH < -500)
+			supervisorCalibrate();
+		    // clear waypoints (lower right with WP Record switch active)
+		    else if (RADIO_ROLL > 500 && RADIO_PITCH > 500 && rcIsSwitchActive(NAV_CTRL_WP_REC))
+			navClearWaypoints();
 		    // config write (upper right)
-		    if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
+		    else if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
 			supervisorLEDsOn();
 			configSaveParamsToFlash();
-#ifdef DIMU_HAVE_EEPROM
+#ifdef HAS_DIGITAL_IMU
 			dIMURequestCalibWrite();
 #endif
 			supervisorLEDsOff();
-			supervisorData.stickCmdTimer = 0;
 		    }
-		    // calibration mode (upper left)
-		    else if (RADIO_ROLL < -500 && RADIO_PITCH < -500) {
-			supervisorCalibrate();
-			supervisorData.stickCmdTimer = 0;
-		    }
-		    // clear waypoints (lower right with WP Record switch active)
-		    else if (RADIO_ROLL > 500 && RADIO_PITCH > 500 && rcIsSwitchActive(NAV_CTRL_WP_REC)) {
-			navClearWaypoints();
-			supervisorData.stickCmdTimer = 0;
-		    }
+
+		    supervisorData.stickCmdTimer = 0;
 		} // end stick timer check
 	    }
 	    // no stick commands detected

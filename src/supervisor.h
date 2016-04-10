@@ -63,11 +63,13 @@ enum supervisorFailsafeStg2Options {
 enum supervisorSystemStatusBits {
     SPVR_AQ_STATUS_INIT            = 0,          // System is initializing
     SPVR_AQ_STATUS_STANDBY         = 0x00000001, // b00 System is *armed* standing by, with no throttle input and no autonomous mode
-    SPVR_AQ_STATUS_ACTIVE          = 0x00000002, // b01 Flying (throttle input detected), assumed under manual control unless other mode bits are set
+    SPVR_AQ_STATUS_ACTIVE          = 0x00000002, // b01 Active/flying, assumed under full manual angle-mode control unless other mode bits are set
     SPVR_AQ_STATUS_ALTHOLD         = 0x00000004, // b02 Altitude hold engaged
     SPVR_AQ_STATUS_POSHOLD         = 0x00000008, // b03 Position hold engaged
     //SPVR_AQ_STATUS_RESRVD        = 0x00000010, // b04 reserved
     SPVR_AQ_STATUS_MISSION         = 0x00000020, // b05 Autonomous mission execution mode
+    SPVR_AQ_STATUS_LTD_RATE_MODE   = 0x00000040, // b06 Manual limited rate-control mode is active
+    SPVR_AQ_STATUS_FUL_RATE_MODE   = 0x00000080, // b07 Manual full rate-control "acro" mode is active
 
     SPVR_AQ_STATUS_READY           = 0x00000100, // b08 Ready but *not armed*
     SPVR_AQ_STATUS_CALIBRATING     = 0x00000200, // b09 Calibration mode active
