@@ -803,6 +803,7 @@ static uint8_t  usbd_cdc_msc_Setup (void  *pdev,
 	  MSC_BOT_CplClrFeature(pdev, (uint8_t)req->wIndex);
 	  break;
     }
+    break;  // case USB_REQ_TYPE_STANDARD
   }
   return USBD_OK;
 }

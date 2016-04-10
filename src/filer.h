@@ -58,7 +58,7 @@ enum fileReturnStatus {
     FILER_STATUS_OK        =  0,	// anything this or greater is OK (FR_OK equivalent)
 };
 
-#define filerEnableMSC()	{if (filerData.mscState == FILER_STATE_MSC_DISABLE) filerData.mscState = FILER_STATE_MSC_REQUEST;}
+//#define filerEnableMSC()	{if (filerData.mscState == FILER_STATE_MSC_DISABLE) filerData.mscState = FILER_STATE_MSC_REQUEST;}
 #define filerEjectMSC()		{filerData.mscState = FILER_STATE_MSC_EJECT;}
 #define filerGetMSCState()	(filerData.mscState)
 
@@ -107,5 +107,6 @@ extern void filerSetHead(int8_t handle, int32_t head);
 extern int32_t filerSync(int8_t handle);
 extern int32_t filerClose(int8_t handle);
 extern int8_t filerAvailable(void);
+extern int8_t filerEnableMSC(void);
 
 #endif
