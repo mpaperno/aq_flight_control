@@ -105,40 +105,43 @@ pidStruct_t *pidInit(int pParam, int iParam, int dParam, int fParam, int pMaxPar
 
 float pidUpdate(pidStruct_t *pid, float setpoint, float position) {
     float error;
-    float p = configGetParamValue(pid->pParam);
-    float i = configGetParamValue(pid->iParam);
-    float d = pid->dParam ? configGetParamValue(pid->dParam) : 0.0f;
-    float f = pid->fParam ? configGetParamValue(pid->fParam) : 1.0f;
-
-    float pMax = configGetParamValue(pid->pMaxParam);
-    float iMax = configGetParamValue(pid->iMaxParam);
-    float dMax = pid->dMaxParam ? configGetParamValue(pid->dMaxParam) : 0.0f;
-    float oMax = configGetParamValue(pid->oMaxParam);
+    float v, f, vMax, oMax;
 
     error = setpoint - position;
 
     // calculate the proportional term
-    pid->pTerm_1 = constrainFloat(p * error, -pMax, pMax);
+    vMax = configGetParamValue(pid->pMaxParam);
+    pid->pTerm_1 = constrainFloat(configGetParamValue(pid->pParam) * error, -vMax, vMax);
+
+    // set output maximum to param value or pMax.
+    oMax = pid->oMaxParam ? configGetParamValue(pid->oMaxParam) : vMax;
 
     // calculate the integral state with appropriate limiting
-    pid->iState += error;
-    pid->iTerm_1 = i * pid->iState;
-    if (fabsf(pid->iTerm_1) > iMax) {
-	pid->iTerm_1 = constrainFloat(pid->iTerm_1, -iMax, iMax);
-	pid->iState = pid->iTerm_1 / i;
-    }
+    if (pid->iParam) {
+	v = configGetParamValue(pid->iParam);
+	vMax = configGetParamValue(pid->iMaxParam);
+	pid->iState += error;
+	pid->iTerm_1 = v * pid->iState;
+	if (fabsf(pid->iTerm_1) > vMax) {
+	    pid->iTerm_1 = constrainFloat(pid->iTerm_1, -vMax, vMax);
+	    pid->iState = pid->iTerm_1 / v;
+	}
+    } else
+	pid->iTerm_1 = 0.0f;
 
     // derivative
     if (pid->dParam) {
+	v = configGetParamValue(pid->dParam);
+	vMax = configGetParamValue(pid->dMaxParam);
+	f = pid->fParam ? configGetParamValue(pid->fParam) : 1.0f;
 	// uncomment this line if you want the D term to ignore set point changes
 	error = -position;
 
-	pid->dTerm_1 = constrainFloat((d * f) * (error - pid->dState), -dMax, dMax);
+	pid->dTerm_1 = constrainFloat((v * f) * (error - pid->dState), -vMax, vMax);
 	pid->dState += f * (error - pid->dState);
     }
-    else {
+    else
 	pid->dTerm_1 = 0.0f;
-    }
 
     pid->pv_1 = position;
     pid->sp_1 = setpoint;
@@ -363,7 +366,7 @@ float pidUpdateC(pidStruct_t *pid, float setpoint, float position) {
 */
 
 void pidZeroIntegral(pidStruct_t *pid, float pv, float iState) {
-    float i = configGetParamValue(pid->iParam);
+    float i = pid->iParam ? configGetParamValue(pid->iParam) : 0.0f;
     if (i != 0.0f)
 	pid->iState = iState / i;
     pid->dState = -pv;

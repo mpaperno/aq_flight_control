@@ -694,10 +694,10 @@ void navInit(void) {
 
     navData.speedNPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
     navData.speedEPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
-    navData.distanceNPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
-    navData.distanceEPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
+    navData.distanceNPID = pidInit(NAV_DIST_P,     0,              0, 0, NAV_DIST_PM,     0,               0, 0);
+    navData.distanceEPID = pidInit(NAV_DIST_P,     0,              0, 0, NAV_DIST_PM,     0,               0, 0);
     navData.altSpeedPID  = pidInit(NAV_ALT_SPED_P, NAV_ALT_SPED_I, 0, 0, NAV_ALT_SPED_PM, NAV_ALT_SPED_IM, 0, NAV_ALT_SPED_OM);
-    navData.altPosPID    = pidInit(NAV_ALT_POS_P,  NAV_ALT_POS_I,  0, 0, NAV_ALT_POS_PM,  NAV_ALT_POS_IM,  0, NAV_ALT_POS_OM);
+    navData.altPosPID    = pidInit(NAV_ALT_POS_P,  0,              0, 0, NAV_ALT_POS_PM,  0,               0, 0);
 
     navData.mode = NAV_STATUS_MANUAL;
     navData.headFreeMode = NAV_HEADFREE_OFF;
