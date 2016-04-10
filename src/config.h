@@ -478,6 +478,7 @@ extern float p[CONFIG_NUM_PARAMS];
 
 // extract the parameter ID being adjusted from a CONFIG_ADJUST_Pn parameter value.
 #define configGetAdjParamId(Pid_p)	((uint32_t)p[Pid_p] & 0x3FF)
+#define configCheckFlag(Flg_id)		((uint32_t)p[CONFIG_FLAGS] & Flg_id)
 
 extern void configTokenStore(configToken_t *token);
 extern configToken_t *configTokenGet(uint32_t key);
