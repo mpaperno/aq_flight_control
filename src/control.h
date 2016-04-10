@@ -26,38 +26,58 @@
 #define CONTROL_STACK_SIZE	    200     // must be evenly divisible by 8
 #define CONTROL_PRIORITY	    5
 
-#define CONTROL_MIN_YAW_OVERRIDE    300	    // in cycles (0.75 s)
+// time before recovery of angle control after manual rotation rate override of pitch/roll/yaw, in cycles @ 400Hz
+#define CONTROL_MIN_PR_OVERRIDE     50	    // (0.125 s)
+#define CONTROL_MIN_YAW_OVERRIDE    300	    // (0.75 s)
+
+#define CONTROL_RADIO_THROT_SCALE   MOTORS_SCALE / RADIO_MID_THROTTLE        // thottle stick scaling
+#define CONTROL_RADIO_VALUE_SCALE   DEG_TO_RAD * (1.0f / RADIO_STICK_SCALE)  // convert RC-desired angle deg to rad
+
+#ifdef HAS_QUATOS
+    #define USE_QUATOS		    (controlData.controllerType == CONTROLLER_TYPE_QUATOS)
+#else
+    #define USE_QUATOS		    0
+#endif
+
+enum controlAxes {
+    RPY_R = 0,
+    RPY_P,
+    RPY_Y
+};
+
+enum controllerTypes {
+    CONTROLLER_TYPE_PID_P = 0,
+    CONTROLLER_TYPE_PID_C,
+    CONTROLLER_TYPE_QUATOS
+};
+
+enum controlModes {
+    CTRL_MODE_NAV = 0,    // nav controller is active
+    CTRL_MODE_ANGLE,      // angle-control mode
+    CTRL_MODE_RATE,       // pure rate-of-rotation control
+    CTRL_MODE_LTD_RATE    // rate control with limited tilt angles
+};
 
 typedef struct {
+    // RPY PIDs
+    pidStruct_t *anglePID[3];    // for angle-control mode
+    pidStruct_t *ratePID[3];     // for angle-control mode
+    pidStruct_t *rateModePID[3]; // for rates-only control mode
+
+    // input filters
+    utilFilter_t angleFilter[3][3];
+    utilFilter_t rateFilter[3][3];
+
+    float anglesDesired[3];      // final requested RPY rotation angles, degrees
+    float ratesDesired[3];       // final requested RPY rotation rates, radians
+
+    uint32_t loops;
+    uint32_t lastUpdate;         // time of raw data that this structure is based on
+    uint8_t controllerType;      // PID type 0, type 1, or Quatos
+    uint8_t controlMode;         // control input type, one of controlModes enum
+
     OS_TID controlTask;
 
-    unsigned long loops;
-
-    float userPitchTarget;  // smoothed user pitch
-    float userRollTarget;   // smoothed user roll
-
-    float navPitchTarget;   // smoothed nav pitch
-    float navRollTarget;    // smoothed nav roll
-
-    float pitch;	    // final requested pitch
-    float roll;		    // final requested roll
-    float yaw;
-
-    utilFilter_t userPitchFilter[3];
-    utilFilter_t userRollFilter[3];
-
-    utilFilter_t navPitchFilter[3];
-    utilFilter_t navRollFilter[3];
-
-    pidStruct_t *rollRatePID;
-    pidStruct_t *pitchRatePID;
-    pidStruct_t *yawRatePID;
-
-    pidStruct_t *rollAnglePID;
-    pidStruct_t *pitchAnglePID;
-    pidStruct_t *yawAnglePID;
-
-    unsigned long lastUpdate;		// time of raw data that this structure is based on
 } controlStruct_t;
 
 extern controlStruct_t controlData;

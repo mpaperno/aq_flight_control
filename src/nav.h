@@ -99,9 +99,9 @@ typedef struct {
     float targetHoldSpeedAlt;
     float presAltOffset;
     float distanceToHome;		// current distance to home position in m, if set (only updated when in headfree mode)
-    float bearingToHome;		// current bearing to home position in rad, if set (only updated when in headfree mode)
     float hfReferenceCos;		// stored reference heading for HF mode
     float hfReferenceSin;
+    float hfReferenceYaw;		// stored yaw angle for heading-free modes
     float ceilingAlt;
 
     pidStruct_t *speedNPID;		// PID to control N/S speed - output tilt in degrees
@@ -133,11 +133,10 @@ typedef struct {
     uint8_t verticalOverride:1;
     uint8_t homeActionFlag:1;		// flag to avoid repeating set/recall home actions until switch is moved back to midpoint
     uint8_t wpActionFlag:1;		// flag to avoid repeating waypoint record/skip actions until switch is turned back off
-    uint8_t hfUseStoredReference:1;	// set to true to use stored reference in HF mode instead of N/E
     uint8_t setCeilingFlag:1;
     uint8_t setCeilingReached:1;
     uint8_t hasMissionLeg:1;
-    // padding bits: 10
+    // padding bits: 5
 
 } navStruct_t;
 

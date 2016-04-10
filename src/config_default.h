@@ -18,8 +18,13 @@
 */
 
 // Misc config bitfield, 24b max.
-//    b0: 1=save adjusted params back to flash/SD; 0=save defined param value
-#define DEFAULT_CONFIG_FLAGS	    0
+//    b0: 1 = save adjusted params back to flash/SD; 0 = save defined param value
+//    b1: enable/disable heading-free mode option in all flight modes (not just DVH)
+//    b2: 1 = cascading TILT/RATE PIDs, 0 = parallel TILT/RATE PIDs
+//    b3: 1 = disable mass storage component (MSC) on USB connection (allows logging/etc)
+//    b4: scale down (cut) throttle when inverted and in altitude-hold mode
+//    b5: scale down throttle when inverted in manual modes
+#define DEFAULT_CONFIG_FLAGS	    (0 | CONFIG_FLAG_INVRT_TCUT_AUTO)
 
 // Remote control adjustable parameters.  24 bits: SSSS_SSSS_CCCC_CCPP_PPPP_PPPP
 // 	8 high bits = Scale of adjustment in 100ths of 1% (0-255, eg. 2 = 0.02%, 20 = 0.2% and 200 = 2%), next 6b = Channel number (0-63, zero = no channel/disabled), 10 low bits = Parameter ID to adjust (0-1024).
@@ -46,24 +51,34 @@
 #define DEFAULT_SIG_BEEP_PRT        0		// negative sign before port number when using a piezo speaker, no sign when using a piezo buzzer
 #define DEFAULT_SIG_PWM_PRT         0		// External PWM-controlled signaling port, 0 to disable
 
-#define DEFAULT_CTRL_PID_TYPE	    0		// 0 == parallel TILT/RATE PIDs, 1 == cascading TILT/RATE PIDs
-
 #define DEFAULT_CTRL_FACT_THRO	    0.70f	// user throttle multiplier
 #define DEFAULT_CTRL_FACT_PITC	    0.05f	// user pitch multiplier
 #define DEFAULT_CTRL_FACT_ROLL	    0.05f	// user roll multiplier
+#define DEFAULT_CTRL_MAN_TLT_RT	    180.0f	// maximum rotation speed around pitch/roll axes in rate-control mode deg/s
 #define DEFAULT_CTRL_MAN_YAW_RT	    60.0f	// deg/s
-#define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band (for pitch, roll, & rudder control)
-#define DEFAULT_CTRL_DBAND_THRO	    40.0f	// rc control dead band (for throttle channel only)
+#define DEFAULT_CTRL_DEAD_BAND	    40.0f	// rc control dead band for pitch & roll axes to enter DVH mode from pos. hold
+#define DEFAULT_CTRL_DBAND_YAW	    40.0f	// rc control dead band for yaw override when in all angle-control modes (not rate mode)
+#define DEFAULT_CTRL_DBAND_THRO	    40.0f	// rc control dead band for throttle override in altitude-hold modes
 #define DEFAULT_CTRL_DBAND_SWTCH    250.0f	// rc control dead band for switch positions (eg. mode control)
 #define DEFAULT_CTRL_MIN_THROT	    20.0f	// minimum user throttle to activate motors
 #define DEFAULT_CTRL_MAX	    1446.0f	// maximum control applied to motors +- throttle
 #define DEFAULT_CTRL_NAV_YAW_RT	    180.0f	// maximum navigation yaw rate deg/s
+#define DEFAULT_CTRL_TLT_ANG_TAU    0.1f	// filter constant for tilt angle requests (user or nav), larger value is smoother
+#define DEFAULT_CTRL_YAW_ANG_TAU    0.15f	// filter constant for yaw angle requests (nav only), larger value is smoother
+#define DEFAULT_CTRL_TLT_RTE_TAU    0.005f	// filter constant for tilt rotation rate requests (user in rate mode only), larger value is smoother
+#define DEFAULT_CTRL_YAW_RTE_TAU    0.01f	// filter constant for yaw rotation rate requests (user only, manual yaw is always rate-based), larger value is smoother
 
-// TILT rate PID
+// TILT rate PID for angle-control mode
 #define DEFAULT_CTRL_TLT_RTE_P	    0.0f
 #define DEFAULT_CTRL_TLT_RTE_I	    0.0f
 #define DEFAULT_CTRL_TLT_RTE_D	    34600.0f
 #define DEFAULT_CTRL_TLT_RTE_F	    0.25f
+// TILT rate PID for rate-of-rotation manual control mode
+#define DEFAULT_CTRL_TLT_RTE_R_P    1000.0f
+#define DEFAULT_CTRL_TLT_RTE_R_I    0.5f
+#define DEFAULT_CTRL_TLT_RTE_R_D    3500.0f
+#define DEFAULT_CTRL_TLT_RTE_R_F    0.25f
+// TILT rate PID overall maximum outputs per timestep
 #define DEFAULT_CTRL_TLT_RTE_PM	    9999.0f
 #define DEFAULT_CTRL_TLT_RTE_IM	    9999.0f
 #define DEFAULT_CTRL_TLT_RTE_DM	    9999.0f
@@ -233,6 +248,7 @@
 
 // Control definitions for flight mode, etc.  20 bits: SVVV_VVVV_VVVV_CCCC_CCCC
 // 	high bit = value Sign (0=neg,1=pos), next 11b = absolute channel Value (0-2047), 8 low bits = Channel number (0-255, zero == no channel/disabled)
+//  Set bit 23 high (0x800000) to reverse a radio channel.
 
 #define DEFAULT_NAV_CTRL_AH	    0                         // disabled
 #define DEFAULT_NAV_CTRL_PH	    6                         // ch.6, middle (zero value) position
@@ -242,6 +258,8 @@
 #define DEFAULT_NAV_CTRL_HF_SET     ((1<<19) | (501<<8) | 0)  // disabled, high
 #define DEFAULT_NAV_CTRL_HF_LOCK    ((0<<19) | (501<<8) | 0)  // disabled, low
 #define DEFAULT_NAV_CTRL_WP_REC     ((1<<19) | (501<<8) | 0)  // disabled, high
+#define DEFAULT_NAV_CTRL_RT_MODE    ((0<<19) | (501<<8) | 0)  // rate control mode switch
+#define DEFAULT_NAV_CTRL_LR_MODE    ((0<<19) | (501<<8) | 0)  // limited-rate (with maximum angles) control mode switch  ("beginner acro")
 
 
 #define DEFAULT_IMU_FLIP            0                   // flip DIMU: 0 == none, 1 == around roll axis (left becomes right), 2 == around pitch axis (front becomes back)

@@ -22,7 +22,7 @@
 
 #include "aq.h"
 
-#define CONFIG_CURRENT_VERSION	    132	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
+#define CONFIG_CURRENT_VERSION	    133	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -75,21 +75,30 @@ enum configParameters {
     PPM_SCALER,
     PPM_THROT_LOW,
     PPM_CHAN_MID,
-    CTRL_PID_TYPE,
     CTRL_FACT_THRO,
     CTRL_FACT_PITC,
     CTRL_FACT_ROLL,
+    CTRL_MAN_TLT_RT,
     CTRL_MAN_YAW_RT,
     CTRL_DEAD_BAND,
+    CTRL_DBAND_YAW,
     CTRL_DBAND_THRO,
     CTRL_DBAND_SWTCH,
     CTRL_MIN_THROT,
     CTRL_MAX,
     CTRL_NAV_YAW_RT,
+    CTRL_TLT_ANG_TAU,
+    CTRL_YAW_ANG_TAU,
+    CTRL_TLT_RTE_TAU,
+    CTRL_YAW_RTE_TAU,
     CTRL_TLT_RTE_P,
     CTRL_TLT_RTE_I,
     CTRL_TLT_RTE_D,
     CTRL_TLT_RTE_F,
+    CTRL_TLT_RTE_R_P,
+    CTRL_TLT_RTE_R_I,
+    CTRL_TLT_RTE_R_D,
+    CTRL_TLT_RTE_R_F,
     CTRL_TLT_RTE_PM,
     CTRL_TLT_RTE_IM,
     CTRL_TLT_RTE_DM,
@@ -241,6 +250,8 @@ enum configParameters {
     NAV_CTRL_HF_SET,
     NAV_CTRL_HF_LOCK,
     NAV_CTRL_WP_REC,
+    NAV_CTRL_RT_MODE,
+    NAV_CTRL_LR_MODE,
     IMU_ROT,
     IMU_FLIP,
     IMU_ACC_BIAS_X,
@@ -431,7 +442,12 @@ enum configParameters {
 
 // bitmasks for CONFIG_FLAGS param
 enum configFlags {
-    CONFIG_FLAG_SAVE_ADJUSTED = 0x01	// save adjusted params values back to flash/SD, true/false
+    CONFIG_FLAG_SAVE_ADJUSTED   = (1<<0),   // save adjusted params values back to flash/SD, true/false
+    CONFIG_FLAG_ALWAYS_ALLOW_HF = (1<<1),   // enable/disable heading-free mode option in all flight modes (not just DVH)
+    CONFIG_FLAG_PID_CTRL_TYPE_C = (1<<2),   // use cascading PID controller type
+    CONFIG_FLAG_DISABLE_MSC     = (1<<3),   // disable mass storage component on USB connection
+    CONFIG_FLAG_INVRT_TCUT_AUTO = (1<<4),   // sharply scale (cut) throttle when inverted and in altitude-hold
+    CONFIG_FLAG_INVRT_TCUT_MAN  = (1<<5),   // cut throttle when inverted in manual modes
 };
 
 typedef struct {
