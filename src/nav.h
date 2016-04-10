@@ -37,7 +37,7 @@
 #define NAV_HF_DYNAMIC_DELAY	((int)3e6f)					// delay micros before entering dynamic mode after switch is toggled high
 
 #define NAV_DFLT_HOR_SPEED	configGetParamValue(NAV_MAX_SPEED)	    // default horizontal navigation speed
-#define NAV_DFLT_VRT_SPEED	configGetParamValue(NAV_ALT_POS_OM)	    // default vertical navigation speed
+#define NAV_DFLT_VRT_SPEED	configGetParamValue(NAV_MAX_ASCENT)	    // default vertical navigation speed, descent speed is constrained by NAV_MAX_DECENT param
 #define NAV_DFLT_TOF_SPEED	configGetParamValue(NAV_LANDING_VEL)	    // default autonomous takeoff speed
 #define NAV_DFLT_LND_SPEED	configGetParamValue(NAV_LANDING_VEL)	    // default autonomous landing speed
 

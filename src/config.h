@@ -218,6 +218,7 @@ enum configParameters {
     COMM_STREAM_TYP7,
     TELEMETRY_RATE,
     NAV_MAX_SPEED,
+    NAV_MAX_ASCENT,
     NAV_MAX_DECENT,
     NAV_CEILING,
     NAV_LANDING_VEL,
