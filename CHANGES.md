@@ -10,6 +10,11 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1897 - Apr. 13, 2016
+
+`*` Fix bug in 7.1.1895 preventing gimbal roll/pitch reversing.  
+`*` Fix altitude in local position Mavlink message & mission programming response codes.
+
 ##### 7.1.1895 - Mar. 18, 2016
 
 `+` Add ability to adjust some parameter values live using RC, e.g. attitude/nav PIDs, all Quatos settings, live gimbal tuning, default nav speed limits, control factors, etc.  
@@ -71,7 +76,7 @@ This file describes changes in the firmware, typically since the previous minor 
 
 `+` Add signaling events for waypoint reached, WP recorded, and WPs cleared.  
 
-#### 7.1.1858 – Apr. 16, 2015 - CURRENT MASTER BRANCH
+#### 7.1.1858 -�� Apr. 16, 2015 - CURRENT MASTER BRANCH
 
 **!!! Due to new control configuration scheme, the Flight Mode and Home Set/RTH switch channels will be reset to defaults. !!!**  
 Also note that these changes are NOT directly compatible with AQ QGC 1.6.3 and lower. It will still mostly work, but any changes to the new parameters in this version will need to be done directly in the Onboard Configuration window.  An updated QGC with a proper setup GUI for the new features is underway.
@@ -88,12 +93,12 @@ Also note that these changes are NOT directly compatible with AQ QGC 1.6.3 and l
 `*` Fix Mavlink nav_controller_output message values for Heading, Course, and Distance to waypoint (were off by factor of 100).  
 `~` Change version number format reported via text message.  This may also break some features of QGC 1.6.3 and lower.  
 
-##### 7.1.1853 – EXPR Apr. 9, 2015
+##### 7.1.1853 - EXPR Apr. 9, 2015
 
 `~` Change how battery voltage compensation is handled on M4 with onboard brushed motors and Quatos.  
 `*` Fix precision of parameters saved to onboard SD card and to DIMU EEPROM (issue originally introduced in r204/b1352).  
 
-##### 7.1.1852 – EXPR – Feb. 17, 2015
+##### 7.1.1852 -�� EXPR – Feb. 17, 2015
 
 `~` New version numbering format now excludes the SVN revision (“r”) number.  New format is  Major.Minor.Build – Label.  
 `+` Add ESC32 CAN telemetry over MAVLink.  Use with AQ QGC 1.6.3 and up.  
