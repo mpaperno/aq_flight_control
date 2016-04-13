@@ -168,45 +168,47 @@ void mpu6000Decode(void) {
     float divisor;
     int i;
 
-    for (i = 0; i < 3; i++) {
-	acc[i] = 0;
-	gyo[i] = 0;
-    }
-    temp = 0;
-
-    divisor = (float)MPU6000_SLOTS;
-    for (i = 0; i < MPU6000_SLOTS; i++) {
-	int j = i*MPU6000_SLOT_SIZE;
-
-	// check if we are in the middle of a transaction for this slot
-	if (i == mpu6000Data.slot && mpu6000Data.spiFlag == 0)	{
-	    divisor -= 1.0f;
+    if (mpu6000Data.enabled) {
+	for (i = 0; i < 3; i++) {
+	    acc[i] = 0;
+	    gyo[i] = 0;
 	}
-	else {
-	    acc[0] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
-	    acc[1] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
-	    acc[2] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
+	temp = 0;
 
-	    temp += (int16_t)__rev16(*(uint16_t *)&d[j+7]);
+	divisor = (float)MPU6000_SLOTS;
+	for (i = 0; i < MPU6000_SLOTS; i++) {
+	    int j = i*MPU6000_SLOT_SIZE;
 
-	    gyo[0] += (int16_t)__rev16(*(uint16_t *)&d[j+9]);
-	    gyo[1] += (int16_t)__rev16(*(uint16_t *)&d[j+11]);
-	    gyo[2] += (int16_t)__rev16(*(uint16_t *)&d[j+13]);
+	    // check if we are in the middle of a transaction for this slot
+	    if (i == mpu6000Data.slot && mpu6000Data.spiFlag == 0)	{
+		divisor -= 1.0f;
+	    }
+	    else {
+		acc[0] += (int16_t)__rev16(*(uint16_t *)&d[j+1]);
+		acc[1] += (int16_t)__rev16(*(uint16_t *)&d[j+3]);
+		acc[2] += (int16_t)__rev16(*(uint16_t *)&d[j+5]);
+
+		temp += (int16_t)__rev16(*(uint16_t *)&d[j+7]);
+
+		gyo[0] += (int16_t)__rev16(*(uint16_t *)&d[j+9]);
+		gyo[1] += (int16_t)__rev16(*(uint16_t *)&d[j+11]);
+		gyo[2] += (int16_t)__rev16(*(uint16_t *)&d[j+13]);
+	    }
 	}
+
+	divisor = 1.0f / divisor;
+
+	mpu6000Data.rawTemp = temp * divisor * (1.0f / 340.0f) + 36.53f;
+	mpu6000Data.temp = utilFilter(&mpu6000Data.tempFilter, mpu6000Data.rawTemp);
+
+	mpu6000ScaleAcc(acc, mpu6000Data.rawAcc, divisor);
+	mpu6000CalibAcc(mpu6000Data.rawAcc, mpu6000Data.acc);
+
+	mpu6000ScaleGyo(gyo, mpu6000Data.rawGyo, divisor);
+	mpu6000CalibGyo(mpu6000Data.rawGyo, mpu6000Data.gyo);
+
+	mpu6000Data.lastUpdate = timerMicros();
     }
-
-    divisor = 1.0f / divisor;
-
-    mpu6000Data.rawTemp = temp * divisor * (1.0f / 340.0f) + 36.53f;
-    mpu6000Data.temp = utilFilter(&mpu6000Data.tempFilter, mpu6000Data.rawTemp);
-
-    mpu6000ScaleAcc(acc, mpu6000Data.rawAcc, divisor);
-    mpu6000CalibAcc(mpu6000Data.rawAcc, mpu6000Data.acc);
-
-    mpu6000ScaleGyo(gyo, mpu6000Data.rawGyo, divisor);
-    mpu6000CalibGyo(mpu6000Data.rawGyo, mpu6000Data.gyo);
-
-    mpu6000Data.lastUpdate = timerMicros();
 }
 
 static uint32_t mpu6000RxBuf;

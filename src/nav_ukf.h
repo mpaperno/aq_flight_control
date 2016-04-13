@@ -96,39 +96,51 @@
 #define UKF_FOCAL_PX		(UKF_FOCAL_LENGTH / (4.0f * 6.0f) * 1000.0f)   // pixel size: 6um, binning 4 enabled
 
 typedef struct {
-    srcdkf_t *kf;
-    float v0a[3];
-    float v0m[3];
     double holdLat, holdLon;
     double r1, r2;
+
+    srcdkf_t *kf;
+    float *x;			// states
+
+    float v0a[3];
+    float v0m[3];
     float posN[UKF_HIST];
     float posE[UKF_HIST];
     float posD[UKF_HIST];
     float velN[UKF_HIST];
     float velE[UKF_HIST];
     float velD[UKF_HIST];
-    int navHistIndex;
     float yaw, pitch, roll;
     float yawCos, yawSin;
-    float *x;			// states
-    float flowSumX, flowSumY;
-    int32_t flowSumQuality;
-    float flowSumAlt;
+
+    float flowSumX, flowSumY, flowSumAlt;
     float flowVelX, flowVelY;
     float flowPosN, flowPosE;
     float flowQuality;
     float flowAlt;
     float flowRotCos, flowRotSin;
     uint32_t flowCount, flowAltCount;
-    int logPointer;
-    volatile uint8_t flowLock;
-    uint8_t flowInit;
-    uint8_t logHandle;
+    int32_t flowSumQuality;
+
+    int16_t logPointer;
+    int8_t logHandle;
+
+    int8_t navHistIndex;
+
+    bool flowInit;
+    volatile bool flowLock;
 } navUkfStruct_t;
 
 extern navUkfStruct_t navUkfData;
 
-extern void navUkfInit(void);
+extern float navUkfPresToAlt(float pressure);
+extern void navUkfSetGlobalPositionTarget(double lat, double lon);
+extern void navUkfSetHereAsPositionTarget(void);
+extern void navUkfRotateVectorByQuat(float *vr, float *v, float *q);
+extern void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q);
+extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll);
+
+extern void navUkfFinish(void);
 extern void navUkfInertialUpdate(void);
 extern void simDoPresUpdate(float pres);
 extern void simDoAccUpdate(float accX, float accY, float accZ);
@@ -137,17 +149,13 @@ extern void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float
 extern void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, float sAcc);
 extern void navUkfFlowUpdate(void);
 extern void navUkfOpticalFlow(int16_t x, int16_t y, uint8_t quality, float ground);
-extern void navUkfSetGlobalPositionTarget(double lat, double lon);
-extern void navUkfSetHereAsPositionTarget(void);
-extern void navUkfQuatExtractEuler(float *q, float *yaw, float *pitch, float *roll);
 extern void navUkfZeroRate(float zRate, int axis);
-extern void navUkfFinish(void);
-extern void navUkfRotateVectorByRevQuat(float *vr, float *v, float *q);
-extern void navUkfResetBias(void);
-extern void navUkfResetVels(void);
 extern void navUkfZeroPos(void);
+extern void navUkfResetPosition(float deltaN, float deltaE, float deltaD);
 extern void navUkfZeroVel(void);
-extern void navUkfRotateVectorByQuat(float *vr, float *v, float *q);
-extern float navUkfPresToAlt(float pressure);
-
+extern void navUkfResetVels(void);
+extern void navUkfResetBias(void);
+extern void navUkfResetQuat(void);
+extern void navUkfInitState(void);
+extern void navUkfInit(void);
 #endif

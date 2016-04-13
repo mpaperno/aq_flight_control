@@ -55,24 +55,6 @@ static void navUkfCalcGlobalDistance(double lat, double lon, float *posNorth, fl
     *posEast = (lon - navUkfData.holdLon) * navUkfData.r2;
 }
 
-static void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
-    int i;
-
-    for (i = 0; i < UKF_HIST; i++) {
-	navUkfData.posN[i] += deltaN;
-	navUkfData.posE[i] += deltaE;
-	navUkfData.posD[i] += deltaD;
-    }
-
-    UKF_POSN += deltaN;
-    UKF_POSE += deltaE;
-    UKF_POSD += deltaD;
-
-#ifndef USE_PRES_ALT
-    navResetHoldAlt(deltaD);
-#endif
-}
-
 void navUkfSetGlobalPositionTarget(double lat, double lon) {
     float oldPosN, oldPosE;
     float newPosN, newPosE;
@@ -418,18 +400,6 @@ void navUkfInertialUpdate(void) {
     navUkfData.navHistIndex = (navUkfData.navHistIndex + 1) % UKF_HIST;
 }
 
-void navUkfZeroRate(float rate, int axis) {
-    float noise[1];        // measurement variance
-    float y[1];            // measurment(s)
-    float u[1];		   // user data
-
-    noise[0] = 0.00001f;
-    y[0] = rate;
-    u[0] = (float)axis;
-
-    srcdkfMeasurementUpdate(navUkfData.kf, u, y, 1, 1, noise, navUkfRateUpdate);
-}
-
 void simDoPresUpdate(float pres) {
     float noise[2];        // measurement variance
     float y[2];            // measurment(s)
@@ -499,28 +469,6 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfMagUpdate);
 }
 
-void navUkfZeroPos(void) {
-    float y[3];
-    float noise[3];
-
-    y[0] = 0.0f;
-    y[1] = 0.0f;
-    y[2] = navUkfPresToAlt(AQ_PRESSURE);
-
-    if (supervisorData.state & STATE_FLYING) {
-	noise[0] = 1e1f;
-	noise[1] = 1e1f;
-	noise[2] = 1e1f;
-    }
-    else {
-	noise[0] = 1e-7f;
-	noise[1] = 1e-7f;
-	noise[2] = 1.0f;
-    }
-
-    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfPosUpdate);
-}
-
 void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, float hAcc, float vAcc) {
     float y[3];
     float noise[3];
@@ -588,28 +536,6 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
     }
 #endif
     }
-}
-
-void navUkfZeroVel(void) {
-    float y[3];
-    float noise[3];
-
-    y[0] = 0.0f;
-    y[1] = 0.0f;
-    y[2] = 0.0f;
-
-    if (supervisorData.state & STATE_FLYING) {
-	noise[0] = 5.0f;
-	noise[1] = 5.0f;
-	noise[2] = 2.0f;
-    }
-    else {
-	noise[0] = 1e-7f;
-	noise[1] = 1e-7f;
-	noise[2] = 1e-7f;
-    }
-
-    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
 }
 
 void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, float sAcc) {
@@ -812,6 +738,92 @@ void navUkfOpticalFlow(int16_t x, int16_t y, uint8_t quality, float ground) {
     navUkfData.flowLock = 0;
 }
 
+void navUkfZeroRate(float rate, int axis) {
+    float noise[1];        // measurement variance
+    float y[1];            // measurment(s)
+    float u[1];		   // user data
+
+    noise[0] = 0.00001f;
+    y[0] = rate;
+    u[0] = (float)axis;
+
+    srcdkfMeasurementUpdate(navUkfData.kf, u, y, 1, 1, noise, navUkfRateUpdate);
+}
+
+void navUkfZeroPos(void) {
+    float y[3];
+    float noise[3];
+
+    y[0] = 0.0f;
+    y[1] = 0.0f;
+    y[2] = navUkfPresToAlt(AQ_PRESSURE);
+
+    if (supervisorData.state & STATE_FLYING) {
+	noise[0] = 1e1f;
+	noise[1] = 1e1f;
+	noise[2] = 1e1f;
+    }
+    else {
+	noise[0] = 1e-7f;
+	noise[1] = 1e-7f;
+	noise[2] = 1.0f;
+    }
+
+    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfPosUpdate);
+}
+
+void navUkfResetPosition(float deltaN, float deltaE, float deltaD) {
+    int i;
+
+    for (i = 0; i < UKF_HIST; i++) {
+	navUkfData.posN[i] += deltaN;
+	navUkfData.posE[i] += deltaE;
+	navUkfData.posD[i] += deltaD;
+    }
+
+    UKF_POSN += deltaN;
+    UKF_POSE += deltaE;
+    UKF_POSD += deltaD;
+
+#ifndef USE_PRES_ALT
+    navResetHoldAlt(deltaD);
+#endif
+}
+
+void navUkfZeroVel(void) {
+    float y[3];
+    float noise[3];
+
+    y[0] = 0.0f;
+    y[1] = 0.0f;
+    y[2] = 0.0f;
+
+    if (supervisorData.state & STATE_FLYING) {
+	noise[0] = 5.0f;
+	noise[1] = 5.0f;
+	noise[2] = 2.0f;
+    }
+    else {
+	noise[0] = 1e-7f;
+	noise[1] = 1e-7f;
+	noise[2] = 1e-7f;
+    }
+
+    srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
+}
+
+void navUkfResetVels(void) {
+    UKF_VELN = 0.0f;
+    UKF_VELE = 0.0f;
+    UKF_VELD = 0.0f;
+
+    for (int i = 0; i < UKF_HIST; i++) {
+	navUkfData.velN[i] = UKF_VELN;
+	navUkfData.velE[i] = UKF_VELE;
+	navUkfData.velD[i] = UKF_VELD;
+    }
+}
+
 void navUkfResetBias(void) {
     // acc bias
     UKF_ACC_BIAS_X = 0.0f;
@@ -824,46 +836,24 @@ void navUkfResetBias(void) {
     UKF_GYO_BIAS_Z = 0.0f;
 }
 
-void navUkfResetVels(void) {
-    UKF_VELN = 0.0f;
-    UKF_VELE = 0.0f;
-    UKF_VELD = 0.0f;
+void navUkfResetQuat(void) {
+    UKF_Q1 =  1.0f;
+    UKF_Q2 =  0.0f;
+    UKF_Q3 =  0.0f;
+    UKF_Q4 =  0.0f;
 }
 
 void navUkfInitState(void) {
     uint32_t lastUpdate;
     float acc[3], mag[3];
     float estAcc[3], estMag[3];
+    float rotError[3];
     float m[3*3];
     int i;
 
-    // vel
-    UKF_VELN = 0.0f;
-    UKF_VELE = 0.0f;
-    UKF_VELD = 0.0f;
-
-    // pos
-    UKF_POSN = 0.0f;
-    UKF_POSE = 0.0f;
-    UKF_POSD = navUkfPresToAlt(AQ_PRESSURE);
-
-    // acc bias
-    UKF_ACC_BIAS_X = 0.0f;
-    UKF_ACC_BIAS_Y = 0.0f;
-    UKF_ACC_BIAS_Z = 0.0f;
-
-    // gyo bias
-    UKF_GYO_BIAS_X = 0.0f;
-    UKF_GYO_BIAS_Y = 0.0f;
-    UKF_GYO_BIAS_Z = 0.0f;
-
-    // quat
-    UKF_Q1 =  1.0f;
-    UKF_Q2 =  0.0f;
-    UKF_Q3 =  0.0f;
-    UKF_Q4 =  0.0f;
-
-    UKF_PRES_ALT = navUkfPresToAlt(AQ_PRESSURE);
+    navUkfResetVels();
+    navUkfResetBias();
+    navUkfResetQuat();
 
     // wait for lack of movement
     imuQuasiStatic(UKF_GYO_AVG_NUM);
@@ -871,7 +861,6 @@ void navUkfInitState(void) {
     // estimate initial orientation
     i = 0;
     do {
-	float rotError[3];
 
 	lastUpdate = IMU_LASTUPD;
 	while (lastUpdate == IMU_LASTUPD)
@@ -913,6 +902,10 @@ void navUkfInitState(void) {
 
 	i++;
     } while (i <= UKF_GYO_AVG_NUM*5);
+
+    UKF_PRES_ALT = navUkfPresToAlt(AQ_PRESSURE);
+    navUkfResetPosition(-UKF_POSN, -UKF_POSE, UKF_PRES_ALT - UKF_POSD);
+
 }
 
 void navUkfInit(void) {

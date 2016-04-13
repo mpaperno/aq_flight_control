@@ -19,6 +19,7 @@
 #ifndef _hmc5983_h
 #define _hmc5983_h
 
+#include "aq.h"
 #include "spi.h"
 
 #define HMC5983_SPI_BAUD	    SPI_BaudRatePrescaler_8	// 5.25 Mhz
@@ -35,16 +36,16 @@
 
 typedef struct {
     spiClient_t *spi;
-    volatile uint32_t spiFlag;
-    volatile uint8_t rxBuf[HMC5983_SLOT_SIZE*HMC5983_SLOTS];
-    volatile uint8_t slot;
     float rawMag[3];
     float mag[3];
     float magSign[3];
+    volatile uint32_t spiFlag;
     volatile uint32_t lastUpdate;
+    volatile uint8_t rxBuf[HMC5983_SLOT_SIZE*HMC5983_SLOTS];
+    volatile uint8_t slot;
     uint8_t readCmd;
-    uint8_t enabled;
-    uint8_t initialized;
+    bool enabled;
+    bool initialized;
 } hmc5983Struct_t;
 
 extern hmc5983Struct_t hmc5983Data;
