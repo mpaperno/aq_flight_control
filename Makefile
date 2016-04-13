@@ -79,7 +79,7 @@ INCR_BUILDNUM ?= 0
 BIN_NAME ?= aq
 
 # You may use BIN_SUFFIX to append text to generated bin file name after version string;
-BIN_SUFFIX ?= 0
+BIN_SUFFIX ?=
 
 # Build debug version? (0|1; true by default if build_type contains the word "debug")
 ifneq ($(findstring Debug, $(BUILD_TYPE)),)
@@ -89,15 +89,15 @@ else
 endif
 
 # Build with Quatos controller enabled (0=no, 1=yes)
-# NOTE: Must have pre-compiled quatos library file in $(AQLIB_PATH)/quatos (it is not distrubuted with this GPL source code)
+# NOTE: Must have pre-compiled quatos library file in lib/quatos (it is not distrubuted with this GPL source code)
 #  Quatos is a proprietary attitude controller from drone-controls.com
 QUATOS ?= 0
 
 # Build with specific default parameters file (eg. CONFIG_FILE=config_default_m4.h)
-CONFIG_FILE ?= 0
+CONFIG_FILE ?=
 
 # Build with specific board (hardware) definitions file (eg. BOARD_FILE=board_custom.h)
-BOARD_FILE ?= 0
+BOARD_FILE ?=
 
 # Add preprocessor definitions to CDEFS (eg. CC_ADD_VARS=-DCOMM_DISABLE_FLOW_CONTROL1 to disable flow control on USART 1)
 CC_ADD_VARS ?=
@@ -149,6 +149,17 @@ OBJ_PATH = $(BUILD_PATH)/$(BUILD_TYPE)/obj
 # bin file(s) output path
 BIN_PATH = $(BUILD_PATH)/$(BUILD_TYPE)
 
+# clean up legacy options
+ifeq ($(BIN_SUFFIX),0)
+	BIN_SUFFIX =
+endif
+ifeq ($(CONFIG_FILE),0)
+	CONFIG_FILE =
+endif
+ifeq ($(BOARD_FILE),0)
+	BOARD_FILE =
+endif
+
 #
 ## Determine build version and final name for binary target
 #
@@ -181,7 +192,7 @@ else
 	ifneq ($(QUATOS), 0)
 		TARGET := $(TARGET)-quatos
 	endif
-	ifneq ($(BIN_SUFFIX), 0)
+	ifneq ($(BIN_SUFFIX),)
 		TARGET := $(TARGET)-$(BIN_SUFFIX)
 	endif
 endif
@@ -245,10 +256,10 @@ CDEFS += \
 	-DBOARD_REVISION=$(BOARD_REV)		\
 	-DDIMU_VERSION=$(subst .,,$(DIMU_VER))
 
-ifneq ($(CONFIG_FILE), 0)
+ifneq ($(CONFIG_FILE),)
 	CDEFS += -DCONFIG_DEFAULTS_FILE=\"$(CONFIG_FILE)\"
 endif
-ifneq ($(BOARD_FILE), 0)
+ifneq ($(BOARD_FILE),)
 	CDEFS += -DBOARD_HEADER_FILE=\"$(BOARD_FILE)\"
 endif
 

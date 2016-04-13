@@ -87,15 +87,16 @@
 #define NAN	__float32_nan
 #endif
 
-#ifndef bool
-#define bool _Bool
+#ifdef bool
+#undef bool
+#endif
+
 #ifndef true
 #define true 1
 #define false 0
-#endif // true,false
-#endif // bool
+#endif
 
-//#define CAN_CALIB	// transmit IMU data over CAN
+typedef uint8_t bool;
 
 enum dataTypesEnum {
     AQ_TYPE_DBL = 0,

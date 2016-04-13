@@ -25,7 +25,7 @@
 
 #define	UTIL_STACK_CHECK	    CFG_MAX_USER_TASKS		// uncomment to allow system to self check for stack overflows
 
-#define UTIL_CCM_HEAP_SIZE	    (0x2800)	// 40KB
+#define UTIL_CCM_HEAP_SIZE	    (0x2800)	// words = 40KB
 
 #define UTIL_ISR_DISABLE	    __asm volatile ( "CPSID   F\n")
 #define UTIL_ISR_ENABLE		    __asm volatile ( "CPSIE   F\n")
