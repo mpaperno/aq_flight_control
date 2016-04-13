@@ -410,17 +410,12 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 		param = mavlink_msg_command_long_get_param2(msg);  // MAG
 		param2 = mavlink_msg_command_long_get_param5(msg); // ACC
 		if (param) {
-		    supervisorCalibrate();
+		    supervisorRequestCalib();
 		    ack = MAV_CMD_ACK_OK;
 		}
 		if (param2) {
-#ifdef HAS_DIGITAL_IMU
-		    supervisorTare();
+		    supervisorRequestTare();
 		    ack = MAV_CMD_ACK_OK;
-#else
-		    ack = MAV_CMD_ACK_ERR_FAIL;
-		    AQ_NOTICE("Error: Can't perform Tare, no Digital IMU.");
-#endif
 		}
 	    }
 	    else {
@@ -437,7 +432,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 
 		    // IMU calibration parameters
 		    case MAV_COMP_ID_IMU:
-#if defined(HAS_DIGITAL_IMU) && defined(DIMU_HAVE_EEPROM)
+#ifdef HAS_DIGITAL_IMU
 			if (param == 0.0f) {
 			    dIMURequestCalibRead();
 			    ack = MAV_CMD_ACK_OK;
@@ -448,7 +443,7 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
 			}
 #else
 			ack = MAV_CMD_ACK_ERR_FAIL;
-			AQ_NOTICE("Error: No Digital IMU with EEPROM is available.");
+			AQ_NOTICE("Error: No Digital IMU available.");
 #endif
 
 			break; // case MAV_COMP_ID_IMU

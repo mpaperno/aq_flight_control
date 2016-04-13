@@ -317,8 +317,17 @@ void supervisorTaskCode(void *unused) {
 		} // end stick timer check
 	    }
 	    // no stick commands detected
-	    else
+	    else {
 		supervisorData.stickCmdTimer = 0;
+
+		if (supervisorData.tareRequested) {
+		    supervisorData.tareRequested = 0;
+		    supervisorTare();
+		} else if (supervisorData.calibRequested) {
+		    supervisorData.calibRequested = 0;
+		    supervisorCalibrate();
+		}
+	    }
 
 	} // end if disarmed
 	else if (supervisorData.state & STATE_ARMED) {
@@ -551,6 +560,14 @@ void supervisorConfigRead(void) {
 #ifdef SUPERVISOR_DEBUG_PORT
     digitalHi(supervisorData.debugLed);
 #endif
+}
+
+void supervisorRequestTare(void) {
+    supervisorData.tareRequested = 1;
+}
+
+void supervisorRequestCalib(void) {
+    supervisorData.calibRequested = 1;
 }
 
 void supervisorInit(void) {

@@ -21,6 +21,7 @@
 #define _supervisor_h
 
 #include <CoOS.h>
+#include "aq.h"
 #include "digital.h"
 
 #define SUPERVISOR_STACK_SIZE	    224             // must be evenly divisible by 8
@@ -89,26 +90,32 @@ enum supervisorSystemStatusBits {
 };
 
 typedef struct {
-    OS_TID supervisorTask;
 
     digitalPin *readyLed;
     digitalPin *debugLed;
     digitalPin *gpsLed;
 
     float flightTime;		    // seconds
+    float idlePercent;
+    float vInLPF;
+    float aOutLPF;
+    float *currentSenseValPtr;
+
     uint32_t armTime;
     uint32_t stickCmdTimer;
     uint32_t lastGoodRadioMicros;
     uint32_t systemStatus;          // supervisorSystemStatusBits
-    float vInLPF;
-    float aOutLPF;
-    float *currentSenseValPtr;
+    uint32_t lastIdleCounter;
+
+    uint16_t state;
     uint8_t battRemainingPrct;
-    uint8_t state;
     uint8_t diskWait;
-    uint8_t configRead;
-    float idlePercent;
-    unsigned long lastIdleCounter;
+
+    OS_TID supervisorTask;
+
+    bool configRead;
+    bool tareRequested;
+    bool calibRequested;
 } supervisorStruct_t;
 
 extern supervisorStruct_t supervisorData;
@@ -122,7 +129,7 @@ extern void supervisorSendDataStop(void);
 extern void supervisorConfigRead(void);
 extern void supervisorArm(void);
 extern void supervisorDisarm(void);
-extern void supervisorCalibrate(void);
-extern void supervisorTare(void);
+extern void supervisorRequestTare(void);
+extern void supervisorRequestCalib(void);
 
 #endif
