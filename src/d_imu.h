@@ -59,6 +59,7 @@ typedef struct {
     int alarm1Parameter;
     uint16_t nextPeriod;
     uint8_t calibReadWriteFlag;		// 0=no request, 1=read request, 2=write request
+    bool sensorsEnabled;
 
     OS_TID task;
     OS_FlagID flag;
@@ -71,6 +72,7 @@ extern void dIMUInit(void);
 extern void dIMUTare(void);
 extern void dIMUCancelAlarm1(void);
 extern void dIMUSetAlarm1(int32_t us, dIMUCallback_t *callback, int parameter);
+extern void dIMUSetSensorsEnabled(bool enable);
 extern void dIMURequestCalibWrite(void);
 extern void dIMURequestCalibRead(void);
 
