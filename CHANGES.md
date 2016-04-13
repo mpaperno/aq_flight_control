@@ -10,6 +10,15 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1900 - Mar. 10, 2016 - `new_controls` branch
+
+`+` Add rate-of-rotation "Acro" control mode.  
+`+` Add Limited rate-of-rotation control mode.  Like acro mode but total tilt angle is limited to the same as it would be in normal angle-control flight modes.  
+`+` Heading-free mode is now available in manual angle-control and altitude-hold-only flight modes (but not rate modes).  This is disabled by default.  
+`+` Options to proportionally cut throttle if craft attitude is detected as inverted (tilted > 90 degrees on any axis).  Can be enabled in altitude hold and/or manual modes.  
+`+` Add option to disable USB Mass Storage Controller (MSC) feature on M4 (allows logging, other SD card access when using USB).  
+`!` Add distinct parameter for nav maximum vertical ascent speed (NAV_MAX_ASCENT replaces the use of NAV_ALT_POS_OM for the same purpose). 
+
 ##### 7.1.1895 - Mar. 18, 2016
 
 `+` Add ability to adjust some parameter values live using RC, e.g. attitude/nav PIDs, all Quatos settings, live gimbal tuning, default nav speed limits, control factors, etc.  
