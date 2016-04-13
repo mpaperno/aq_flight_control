@@ -53,12 +53,12 @@ static void ubloxTxChecksum(uint8_t c) {
 }
 
 static void ubloxWriteU1(unsigned char c) {
-    serialWrite(gpsData.gpsPort, c);
+    serialWrite(gpsTaskData.gpsPort, c);
     ubloxTxChecksum(c);
 }
 
 static void ubloxWriteI1(signed char c) {
-    serialWrite(gpsData.gpsPort, (unsigned char)c);
+    serialWrite(gpsTaskData.gpsPort, (unsigned char)c);
     ubloxTxChecksum(c);
 }
 
@@ -106,8 +106,8 @@ static void ubloxEnableMessage(unsigned char c, unsigned char i, unsigned char r
     ubloxWriteU1(i);                    // id
     ubloxWriteU1(rate);                 // rate
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -124,8 +124,8 @@ static void ubloxSetRate(unsigned short int ms) {
     ubloxWriteU2(0x01);                 // cycles
     ubloxWriteU2(0x01);                 // timeRef    0 == UTC, 1 == GPS time
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -149,8 +149,8 @@ static void ubloxSetMode(void) {
     for (i = 0; i < 32; i++)
         ubloxWriteU1(0x00);
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -177,8 +177,8 @@ static void ubloxSetTimepulse(void) {
     ubloxWriteI2(0x00);                 // rf group delay
     ubloxWriteI4(0x00);                 // user delay
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -200,8 +200,8 @@ static void ubloxSetSBAS(uint8_t enable) {
     ubloxWriteU1(0);
     ubloxWriteU4(UBLOX_SBAS_AUTO);      // ANY SBAS system
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -224,8 +224,8 @@ void ubloxInitGps(void) {
     ubloxWriteU2(0x00);             // flags
     ubloxWriteU2(0x00);             // reserved
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(200);
 }
 
@@ -238,8 +238,8 @@ static void ubloxPollVersion(void) {
     ubloxWriteU1(0x00);                 // length lsb
     ubloxWriteU1(0x00);                 // length msb
 
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_A);
-    serialWrite(gpsData.gpsPort, ubloxData.ubloxTxCK_B);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_A);
+    serialWrite(gpsTaskData.gpsPort, ubloxData.ubloxTxCK_B);
     yield(UBLOX_WAIT_MS);
 }
 
@@ -323,7 +323,7 @@ unsigned char ubloxPublish(void) {
     unsigned char ret = 0;
 
     // don't allow preemption
-    CoSetPriority(gpsData.gpsTask, 1);
+    CoSetPriority(gpsTaskData.gpsTask, 1);
 
     if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_POSLLH) {
         // work around uBlox's inability to give new data on each report sometimes
@@ -380,7 +380,7 @@ unsigned char ubloxPublish(void) {
     }
 
     // end of high priority section
-    CoSetPriority(gpsData.gpsTask, GPS_PRIORITY);
+    CoSetPriority(gpsTaskData.gpsTask, GPS_PRIORITY);
 
     if (ubloxData.class == UBLOX_NAV_CLASS && ubloxData.id == UBLOX_NAV_TIMEUTC && (ubloxData.payload.timeutc.valid & 0b100)) {
         // if setting the RTC succeeds, disable the TIMEUTC message

@@ -38,17 +38,6 @@
 //#define GPS_DEBUG                           // uncomment to enable extra GPS messages
 
 typedef struct {
-    OS_TID gpsTask;
-    OS_FlagID gpsVelFlag;
-    OS_FlagID gpsPosFlag;
-
-    serialPort_t *gpsPort;
-    unsigned int baudCycle[7];
-    int8_t baudSlot;
-    uint8_t logHandle;
-
-    digitalPin *gpsEnable;
-
     unsigned long iTOW;
     double lat;
     double lon;
@@ -59,30 +48,44 @@ typedef struct {
     float velE;     // east velocity (m/s)
     float velD;     // down velocity (m/s)
     float speed;    // ground speed (m/s)
-    float heading;  // deg
+    float heading;  // course over ground (deg)
     float sAcc;     // speed accuracy est (m/s)
     float cAcc;     // course accuracy est (deg)
-    float pDOP;     // position Dilution of Precision
-    float hDOP;
-    float vDOP;
-    float tDOP;
-    float nDOP;
-    float eDOP;
-    float gDOP;
+    float pDOP;     // Position Dilution of Precision
+    float hDOP;     // Horizontal DOP
+    float vDOP;     // Vertical DOP
+    float tDOP;     // Time DOP
+    float nDOP;     // Northing DOP
+    float eDOP;     // Easting DOP
+    float gDOP;     // Geometric DOP
 
     unsigned long TPtowMS;    // timepulse time of week (ms)
     unsigned long lastReceivedTPtowMS;
-
-    unsigned long lastTimepulse;
     unsigned long lastPosUpdate;
     unsigned long lastVelUpdate;
     unsigned long lastMessage;
-    signed long microsPerSecond;
 } gpsStruct_t;
 
+typedef struct {
+    serialPort_t *gpsPort;
+    //digitalPin *gpsEnable;
+    int32_t microsPerSecond;
+    uint32_t lastTimepulse;
+    uint32_t baudCycle[7];
+    int8_t baudSlot;
+    uint8_t logHandle;
+    uint8_t ubloxEnabled;
+
+    OS_TID gpsTask;
+    OS_FlagID gpsVelFlag;
+    OS_FlagID gpsPosFlag;
+} gpsTask_t;
+
 extern gpsStruct_t gpsData;
+extern gpsTask_t gpsTaskData;
 
 extern void gpsInit(void);
 extern void gpsSendPacket(unsigned char len, char *buf);
+extern void gpsSetEnabled(bool enable);
 
 #endif

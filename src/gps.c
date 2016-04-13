@@ -34,6 +34,7 @@
 #include <string.h>
 
 gpsStruct_t gpsData __attribute__((section(".ccm")));
+gpsTask_t gpsTaskData __attribute__((section(".ccm")));
 
 OS_STK *gpsTaskStack;
 
@@ -47,10 +48,10 @@ void gpsSendSetup(void) {
 
 void gpsCheckBaud(serialPort_t *s) {
     if ((IMU_LASTUPD - gpsData.lastMessage) > 10000000) {
-	if (!gpsData.baudCycle[++gpsData.baudSlot])
-	    gpsData.baudSlot = 0;
+	if (!gpsTaskData.baudCycle[++gpsTaskData.baudSlot])
+	    gpsTaskData.baudSlot = 0;
 	AQ_NOTICE("GPS: trying new baud rate\n");
-	serialChangeBaud(s, gpsData.baudCycle[gpsData.baudSlot]);
+	serialChangeBaud(s, gpsTaskData.baudCycle[gpsTaskData.baudSlot]);
 	ubloxInitGps();
 	serialChangeBaud(s, GPS_BAUD_RATE);
 	gpsSendSetup();
@@ -59,7 +60,7 @@ void gpsCheckBaud(serialPort_t *s) {
 }
 
 void gpsTaskCode(void *p) {
-    serialPort_t *s = gpsData.gpsPort;
+    serialPort_t *s = gpsTaskData.gpsPort;
     char c;
     char ledOn;
 #ifdef GPS_LOG_BUF
@@ -81,17 +82,20 @@ void gpsTaskCode(void *p) {
 
 	while (serialAvailable(s)) {
 	    c = serialRead(s);
-	    ret = ubloxCharIn(c);
+	    if (gpsTaskData.ubloxEnabled)
+		ret = ubloxCharIn(c);
+	    else
+		ret = 0;
 
 	    // position update
 	    if (ret == 1) {
 		// notify world of new data
-		CoSetFlag(gpsData.gpsPosFlag);
+		CoSetFlag(gpsTaskData.gpsPosFlag);
 	    }
 	    // velocity update
 	    else if (ret == 2) {
 		// notify world of new data
-		CoSetFlag(gpsData.gpsVelFlag);
+		CoSetFlag(gpsTaskData.gpsVelFlag);
 	    }
 	    // lost sync
 	    else if (ret == 3) {
@@ -105,8 +109,9 @@ void gpsTaskCode(void *p) {
 	}
 
 #ifdef GPS_LOG_BUF
-	filerSetHead(gpsData.logHandle, logPointer);
+	filerSetHead(gpsTaskData.logHandle, logPointer);
 #endif
+
 
 	if (!ledOn && !(supervisorData.state & STATE_CALIBRATION))
 	    digitalLo(supervisorData.gpsLed);
@@ -115,16 +120,16 @@ void gpsTaskCode(void *p) {
 
 void gpsPassThrough(commRcvrStruct_t *r) {
     while (commAvailable(r))
-	serialWrite(gpsData.gpsPort, commReadChar(r));
+	serialWrite(gpsTaskData.gpsPort, commReadChar(r));
 }
 
 void gpsTpHandler() {
     unsigned long tp = timerMicros();
-    unsigned long diff = (tp - gpsData.lastTimepulse);
+    unsigned long diff = (tp - gpsTaskData.lastTimepulse);
 
     if (diff > 950000 && diff < 1050000)
-	gpsData.microsPerSecond -= (gpsData.microsPerSecond - (signed long)((tp - gpsData.lastTimepulse)<<11))>>5;
-    gpsData.lastTimepulse = tp;
+	gpsTaskData.microsPerSecond -= (gpsTaskData.microsPerSecond - (signed long)((tp - gpsTaskData.lastTimepulse)<<11))>>5;
+    gpsTaskData.lastTimepulse = tp;
     gpsData.TPtowMS = gpsData.lastReceivedTPtowMS;
 }
 
@@ -132,33 +137,35 @@ void gpsInit(void) {
     AQ_NOTICE("GPS init\n");
 
     memset((void *)&gpsData, 0, sizeof(gpsData));
+    memset((void *)&gpsTaskData, 0, sizeof(gpsData));
 
-    gpsData.baudCycle[0] = GPS_BAUD_RATE;
-    gpsData.baudCycle[1] = 9600;
-    gpsData.baudCycle[2] = 0;
+    gpsTaskData.ubloxEnabled = true;
+    gpsTaskData.baudCycle[0] = GPS_BAUD_RATE;
+    gpsTaskData.baudCycle[1] = 9600;
+    gpsTaskData.baudCycle[2] = 0;
 
-    gpsData.baudSlot = 0;
+    gpsTaskData.baudSlot = 0;
 
-    gpsData.gpsPort = serialOpen(GPS_USART, GPS_BAUD_RATE, USART_HardwareFlowControl_None, 512, 512);
+    gpsTaskData.gpsPort = serialOpen(GPS_USART, GPS_BAUD_RATE, USART_HardwareFlowControl_None, 512, 512);
 
     // manual reset flags
-    gpsData.gpsVelFlag = CoCreateFlag(0, 0);
-    gpsData.gpsPosFlag = CoCreateFlag(0, 0);
+    gpsTaskData.gpsVelFlag = CoCreateFlag(0, 0);
+    gpsTaskData.gpsPosFlag = CoCreateFlag(0, 0);
     gpsTaskStack = aqStackInit(GPS_STACK_SIZE, "GPS");
 
-    gpsData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
+    gpsTaskData.gpsTask = CoCreateTask(gpsTaskCode, (void *)0, GPS_PRIORITY, &gpsTaskStack[GPS_STACK_SIZE-1], GPS_STACK_SIZE);
 
 #ifdef GPS_TP_PORT
     extRegisterCallback(GPS_TP_PORT, GPS_TP_PIN, EXTI_Trigger_Rising, 1, GPIO_PuPd_NOPULL, gpsTpHandler);
 #endif
 
-    gpsData.microsPerSecond = AQ_US_PER_SEC<<11;
+    gpsTaskData.microsPerSecond = AQ_US_PER_SEC<<11;
 
     gpsData.hAcc = gpsData.vAcc = gpsData.sAcc = 100.0f;
 
 #ifdef GPS_LOG_BUF
-    gpsData.logHandle = filerGetHandle(GPS_FNAME);
-    filerStream(gpsData.logHandle, gpsLog, GPS_LOG_BUF);
+    gpsTaskData.logHandle = filerGetHandle(GPS_FNAME);
+    filerStream(gpsTaskData.logHandle, gpsLog, GPS_LOG_BUF);
 #endif
 
     commRegisterRcvrFunc(COMM_STREAM_TYPE_GPS, gpsPassThrough);
@@ -168,5 +175,14 @@ void gpsSendPacket(unsigned char len, char *buf) {
     unsigned int i;
 
     for (i = 0; i < len; i++)
-	serialWrite(gpsData.gpsPort, buf[i]);
+	serialWrite(gpsTaskData.gpsPort, buf[i]);
+}
+
+void gpsSetEnabled(bool enable) {
+    gpsTaskData.ubloxEnabled = enable;
+    // TODO: Better way to disable GPS task?
+    if (enable)
+	CoSetPriority(gpsTaskData.gpsTask, GPS_PRIORITY);
+    else
+	CoSetPriority(gpsTaskData.gpsTask, CFG_LOWEST_PRIO);
 }
