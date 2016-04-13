@@ -16,34 +16,34 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#include "aq.h"
-#include "aq_init.h"
-#include "aq_timer.h"
-#include "rtc.h"
-#include "filer.h"
-#include "config.h"
-#include "serial.h"
-#include "comm.h"
-#include "motors.h"
-#include "radio.h"
-#include "imu.h"
-#include "control.h"
-#include "gps.h"
-#include "nav.h"
-#include "logger.h"
 #include "alt_ukf.h"
-#include "nav_ukf.h"
+#include "analog.h"
+#include "aq_init.h"
 #include "aq_mavlink.h"
-#include "util.h"
-#include "supervisor.h"
+#include "aq_timer.h"
+#include "aq.h"
+#include "can.h"
+#include "comm.h"
+#include "config.h"
+#include "control.h"
+#include "filer.h"
 #include "gimbal.h"
+#include "gps.h"
+#include "imu.h"
+#include "logger.h"
+#include "motors.h"
+#include "nav_ukf.h"
+#include "nav.h"
+#include "radio.h"
+#include "rtc.h"
 #include "run.h"
 #include "sdio.h"
-#include "can.h"
-#include "analog.h"
+#include "serial.h"
+#include "supervisor.h"
+#include "util.h"
 #ifdef HAS_AQ_TELEMETRY
-    #include "telemetry.h"
     #include "command.h"
+    #include "telemetry.h"
 #endif
 #ifdef CAN_CALIB
     #include "canCalib.h"
@@ -51,6 +51,10 @@
 #ifdef USE_SIGNALING
    #include "signaling.h"
 #endif
+#ifdef HAS_TELEM_SMARTPORT
+    #include "telem_sPort.h"
+#endif
+
 #include <CoOS.h>
 
 digitalPin *tp;
@@ -78,6 +82,10 @@ void aqInit(void *pdata) {
 #endif
 #ifdef HAS_AQ_TELEMETRY
     telemetryInit();
+#endif
+#ifdef HAS_TELEM_SMARTPORT
+    if (((uint32_t)p[TELEMETRY_RX_CFG] & 0xF) == 1)
+	sPortInit();
 #endif
     imuInit();
     analogInit();

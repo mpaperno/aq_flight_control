@@ -331,14 +331,14 @@ AQ_OBJ += \
 	calib.o comm.o command.o compass.o config.o control.o \
 	d_imu.o esc32.o filer.o gimbal.o gps.o imu.o logger.o \
 	main_ctl.o motors.o nav.o nav_ukf.o pid.o rc.o run.o \
-	signaling.o supervisor.o telemetry.o util.o
+	signaling.o supervisor.o \
+	telem_sPort.o telemetry.o util.o
 
 # Math lib
 AQ_OBJ += \
 	math/algebra.o \
 	math/rotations.o \
 	math/srcdkf.o 
-
 
 # RC radio handlers
 AQ_OBJ += \
