@@ -22,7 +22,7 @@
 
 #include "aq.h"
 
-#define CONFIG_CURRENT_VERSION	    132	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
+#define CONFIG_CURRENT_VERSION	    134	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -208,6 +208,7 @@ enum configParameters {
     COMM_STREAM_TYP6,
     COMM_STREAM_TYP7,
     TELEMETRY_RATE,
+    TELEMETRY_RX_CFG,
     NAV_MAX_SPEED,
     NAV_MAX_DECENT,
     NAV_CEILING,

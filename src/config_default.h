@@ -195,6 +195,17 @@
 
 #define DEFAULT_TELEMETRY_RATE	    20		// loops between reports
 
+// RC receiver telemetry config bits (up to 24b can be used).
+//    4 LSB denote telemetry type to use: 0 = none, 1 = FrSky SmartPort
+//    Remaining 20 bits can be used for settings specific to telemetry protocol.
+//    For FrSky SmartPort:
+//	b4:enable custom data;
+//      b5:send ACCX/Y/Z;
+//      b6:require 3D fix before reporting location for first time (otherwise 2D);
+//      b7:wait for GPS fix before reporting UKF altitude;
+//      b8: send text messages
+#define DEFAULT_TELEMETRY_RX_CFG    0b011000000
+
 
 #define DEFAULT_NAV_MAX_SPEED	    5.0f	// m/s
 #define DEFAULT_NAV_MAX_DECENT	    1.5f	// m/s

@@ -53,14 +53,15 @@
 #define AQ_NOTICE		commNotice
 #define AQ_PRINTF(fmt, args...)	{char *sTemp = commGetNoticeBuf(); snprintf(sTemp, COMM_NOTICE_LENGTH, fmt, args); commNotice(sTemp);}
 
+// 8 bits maximum
 enum commStreamTypes {
     COMM_STREAM_TYPE_NONE	    = 0,
-    COMM_STREAM_TYPE_MULTIPLEX	    = (1<<0),
-    COMM_STREAM_TYPE_MAVLINK	    = (1<<1),
-    COMM_STREAM_TYPE_TELEMETRY	    = (1<<2),
-    COMM_STREAM_TYPE_GPS	    = (1<<3),
-    COMM_STREAM_TYPE_FILEIO	    = (1<<4),
-    COMM_STREAM_TYPE_CLI	    = (1<<5),
+    COMM_STREAM_TYPE_MULTIPLEX	    = (1<<0),	// future use for combining stream types
+    COMM_STREAM_TYPE_MAVLINK	    = (1<<1),	// MAVLink telemetry format
+    COMM_STREAM_TYPE_TELEMETRY	    = (1<<2),	// AQ custom telemetry format
+    COMM_STREAM_TYPE_GPS	    = (1<<3),	// AQ custom format data from GPS Rx
+    COMM_STREAM_TYPE_RC_RX_TELEM    = (1<<4),	// RC receiver telemetry, eg. FrSky/SmartPort
+    COMM_STREAM_TYPE_CLI	    = (1<<5),   // rest are reserved for future use
     COMM_STREAM_TYPE_OMAP_CONSOLE   = (1<<6),
     COMM_STREAM_TYPE_OMAP_PPP	    = (1<<7)
 };
