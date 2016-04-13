@@ -16,7 +16,6 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
-#include "aq.h"
 #include "run.h"
 #include "comm.h"
 #include "nav_ukf.h"
@@ -174,23 +173,17 @@ void runTaskCode(void *unused) {
 #ifdef CAN_CALIB
 	canTxIMUData(loops);
 #endif
-        calibrate();
+	if (supervisorData.state & STATE_CALIBRATION)
+	    calibrate();
 
 	loops++;
     }
 }
 
-void runInit(void) {
+void runInitHistory(void) {
     float acc[3], mag[3];
     float pres;
     int i;
-
-    memset((void *)&runData, 0, sizeof(runData));
-
-    runData.runFlag = CoCreateFlag(1, 0);	    // auto reset
-    runTaskStack = aqStackInit(RUN_TASK_SIZE, "RUN");
-
-    runData.runTask = CoCreateTask(runTaskCode, (void *)0, RUN_PRIORITY, &runTaskStack[RUN_TASK_SIZE-1], RUN_TASK_SIZE);
 
     acc[0] = IMU_ACCX;
     acc[1] = IMU_ACCY;
@@ -203,6 +196,11 @@ void runInit(void) {
     pres = AQ_PRESSURE;
 
     // initialize sensor history
+    for (i = 0; i < 3; ++i) {
+	runData.sumAcc[i] = 0.0f;
+	runData.sumMag[i] = 0.0f;
+    }
+    runData.sumPres = 0.0f;
     for (i = 0; i < RUN_SENSOR_HIST; i++) {
         runData.accHist[0][i] = acc[0];
         runData.accHist[1][i] = acc[1];
@@ -230,6 +228,18 @@ void runInit(void) {
     runData.altPos = &ALT_POS;
     runData.altVel = &ALT_VEL;
 
+}
+
+void runInit(void) {
+    memset((void *)&runData, 0, sizeof(runData));
+
+    runData.runFlag = CoCreateFlag(1, 0);	    // auto reset
+    runTaskStack = aqStackInit(RUN_TASK_SIZE, "RUN");
+
+    runData.runTask = CoCreateTask(runTaskCode, (void *)0, RUN_PRIORITY, &runTaskStack[RUN_TASK_SIZE-1], RUN_TASK_SIZE);
+
+    runInitHistory();
+
 #ifdef USE_MAVLINK
     // configure px4flow sensor
 //    mavlinkSendParameter(81, 50, "BFLOW_V_THLD", 2500.0f);
@@ -237,4 +247,5 @@ void runInit(void) {
     mavlinkSendParameter(81, 50, "BFLOW_GYRO_COM", 0.0f);
     mavlinkSendParameter(81, 50, "USB_SEND_VIDEO", 0.0f);
 #endif
+
 }
