@@ -35,20 +35,21 @@
 #define GMBL_ROLL_SCALE		configGetParamValue(GMBL_SCAL_ROLL)
 
 typedef struct {
-    float tilt;			// last gimbal pitch output position
-    uint8_t trigger;		// boolean indicating automatic trigger is activated (can be set externally, eg. to trigger photo at wpt)
-    uint16_t triggerCount;	// total times trigger has been activated
-    uint16_t triggerLogVal;	// value to be logged == 0 when not active, == triggerCount when active
-    uint32_t triggerTimer;	// keep track of how long trigger has been active. == 0 when trigger is not active
-    uint32_t triggerLastTime;	// keep track of last trigger activation (for trigger by time interval)
-    double triggerLastLat;	// latitude of last trigger activation (for trigger by distance interval)
-    double triggerLastLon;	// longitude of last trigger activation
-
     pwmPortStruct_t *pitchPort;
     pwmPortStruct_t *rollPort;
     pwmPortStruct_t *tiltPort;
     pwmPortStruct_t *triggerPort;
     pwmPortStruct_t *passthroughPort;
+
+    double triggerLastLat;	// latitude of last trigger activation (for trigger by distance interval)
+    double triggerLastLon;	// longitude of last trigger activation
+    float tilt;			// last gimbal pitch output position
+    uint32_t triggerTimer;	// keep track of how long trigger has been active. == 0 when trigger is not active
+    uint32_t triggerLastTime;	// keep track of last trigger activation (for trigger by time interval)
+    uint16_t triggerCount;	// total times trigger has been activated
+    uint16_t triggerLogVal;	// value to be logged == 0 when not active, == triggerCount when active
+    uint8_t trigger;		// boolean indicating automatic trigger is activated (can be set externally, eg. to trigger photo at wpt)
+
 } gimbalStruct_t;
 
 extern gimbalStruct_t gimbalData;

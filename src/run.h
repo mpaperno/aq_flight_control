@@ -19,9 +19,10 @@
 #ifndef _run_h
 #define _run_h
 
+#include "aq.h"
 #include <CoOS.h>
 
-#define RUN_TASK_SIZE		250
+#define RUN_TASK_SIZE		256     // must be evenly divisible by 8
 #define RUN_PRIORITY		30
 
 #define RUN_SENSOR_HIST		10				// number of timesteps to average observation sensors' data
@@ -30,9 +31,8 @@
 #define VELOCITYD                (*runData.altVel)
 
 typedef struct {
-    OS_TID runTask;
-    OS_FlagID runFlag;
-
+    float *altPos;
+    float *altVel;
     float bestHacc;
     float accMask;
     float accHist[3][RUN_SENSOR_HIST];
@@ -42,8 +42,9 @@ typedef struct {
     float sumMag[3];
     float sumPres;
     int sensorHistIndex;
-    float *altPos;
-    float *altVel;
+
+    OS_TID runTask;
+    OS_FlagID runFlag;
 } runStruct_t;
 
 extern runStruct_t runData;

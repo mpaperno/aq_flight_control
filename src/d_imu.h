@@ -33,8 +33,8 @@
 #define DIMU_STACK_SIZE	    248     // must be evenly divisible by 8
 #define DIMU_PRIORITY	    11
 
-#define DIMU_OUTER_PERIOD   5000			    // us (200 Hz)
-#define DIMU_INNER_PERIOD   2500			    // us (400 Hz)
+#define DIMU_OUTER_PERIOD   5000    // [us] (200 Hz)
+#define DIMU_INNER_PERIOD   2500    // [us] (400 Hz)
 #define DIMU_OUTER_DT	    ((float)DIMU_OUTER_PERIOD / 1e6f)
 #define DIMU_INNER_DT	    ((float)DIMU_INNER_PERIOD / 1e6f)
 #define DIMU_TEMP_TAU	    5.0f
@@ -52,19 +52,17 @@
 typedef void dIMUCallback_t(int);
 
 typedef struct {
+    dIMUCallback_t *alarm1Callback;
+    float temp;
+    float dTemp, dTemp2, dTemp3;
+    volatile uint32_t lastUpdate;
+    int alarm1Parameter;
+    uint16_t nextPeriod;
+    uint8_t calibReadWriteFlag;		// 0=no request, 1=read request, 2=write request
+
     OS_TID task;
     OS_FlagID flag;
 
-    float temp;
-    float dTemp, dTemp2, dTemp3;
-
-    dIMUCallback_t *alarm1Callback;
-    int alarm1Parameter;
-
-    uint16_t nextPeriod;
-    volatile uint32_t lastUpdate;
-
-    uint8_t calibReadWriteFlag;		// 0=no request, 1=read request, 2=write request
 } dImuStruct_t;
 
 extern dImuStruct_t dImuData;

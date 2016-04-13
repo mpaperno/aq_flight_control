@@ -107,42 +107,45 @@ typedef void commTelemCallback_t(void);
 typedef void commRcvrCallback_t(commRcvrStruct_t *r);
 
 typedef struct {
-    OS_TID commTask;
-    OS_MutexID txBufferMutex;
-    OS_EventID notices;
-
-    uint8_t streamRcvrs[COMM_MAX_CONSUMERS]; // (40b)
     void *noticeQueue[COMM_NOTICE_DEPTH*2];
-    char noticeStrings[COMM_NOTICE_DEPTH][COMM_NOTICE_LENGTH];
+    char noticeStrings[COMM_NOTICE_DEPTH][COMM_NOTICE_LENGTH]; //(576w)
 
-    void *portHandles[COMM_NUM_PORTS];		    // serial port handles
+    void *portHandles[COMM_NUM_PORTS];			    // serial port handles
 
     commNoticeCallback_t *noticeFuncs[COMM_MAX_CONSUMERS];  // notice callbacks
     commTelemCallback_t *telemFuncs[COMM_MAX_CONSUMERS];    // telemetry callbacks
     commRcvrCallback_t *rcvrFuncs[COMM_MAX_CONSUMERS];
 
-    commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port
+    commTxStack_t txStack[COMM_NUM_PORTS][COMM_STACK_DEPTH]; // tx stack for each port (768w)
 
-    uint8_t portStreams[COMM_NUM_PORTS];		    // stream assignments for each port
-    uint8_t portTypes[COMM_NUM_PORTS];                      // type of port (serial, CAN, USB)
+    uint8_t portStreams[COMM_NUM_PORTS]; //(64b)	    // stream assignments for each port
+    uint8_t portTypes[COMM_NUM_PORTS]; //(64b)              // type of port (serial, CAN, USB)
 
-    uint8_t txStackHeads[COMM_NUM_PORTS];		    // stack heads
-    volatile uint8_t txStackTails[COMM_NUM_PORTS];	    // stack tails
+    uint8_t txStackHeads[COMM_NUM_PORTS]; //(64b) 	    // stack heads
+    volatile uint8_t txStackTails[COMM_NUM_PORTS]; //(64b)  // stack tails
 
     uint32_t txStackOverruns[COMM_NUM_PORTS];		    // overflow counter
     uint32_t txBufStarved;				    // number of times we ran out of tx packets buffers
     uint32_t txBufUpgrades[COMM_TX_NUM_SIZES];		    // number of times we needed to up size
 
-    uint16_t txPacketBufSizes[COMM_TX_NUM_SIZES];	    // list of packet sizes
+    uint16_t txPacketBufSizes[COMM_TX_NUM_SIZES]; //(96b)   // list of packet sizes
     void *txPacketBufs[COMM_TX_NUM_SIZES];		    // pointers to start of block for each buffer size
     uint32_t txPacketSizeHits[COMM_TX_NUM_SIZES];
-    uint8_t txPacketBufNum[COMM_TX_NUM_SIZES]; //(48b)	    // list of number of buffers per size
+
     int logPointer;
+
+    uint8_t txPacketBufNum[COMM_TX_NUM_SIZES]; //(48b)	    // list of number of buffers per size
+    uint8_t streamRcvrs[COMM_MAX_CONSUMERS]; // (40b)
 
     uint8_t typesUsed;					    // types configured
     uint8_t noticePointer;
     int8_t noticeQueueInit;
     uint8_t logHandle;
+
+    OS_TID commTask;
+    OS_MutexID txBufferMutex;
+    OS_EventID notices;
+
 } commStruct_t;
 
 extern commStruct_t commData;
