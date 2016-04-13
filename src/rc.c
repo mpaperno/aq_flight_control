@@ -22,13 +22,12 @@
 /* Return the current value of a radio channel. Typically you'd wan to use rcGetControlValue() or rcIsSwitchActive() instead. */
 __attribute__((always_inline))
 inline int16_t rcGetChannelValue(int chan) {
-    if (chan >= 0) {
-	if (radioData.mode == RADIO_MODE_SPLIT) {
-	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
-		return radioData.allChannels[chan];
-	}
-	else if (chan < RADIO_MAX_CHANNELS)
+    if (rcIsControlChannelValid(chan)) {
+	--chan;
+	if (radioData.mode == RADIO_MODE_DIVERSITY)
 	    return radioData.channels[chan];
+	else if (chan < RADIO_MAX_CHANNELS)
+	    return radioData.allChannels[chan];
     }
     return 0;
 }
@@ -37,12 +36,12 @@ inline int16_t rcGetChannelValue(int chan) {
  * Typically you'd wan to use rcSetControlValue() or rcSetSwitchActive() instead. */
 __attribute__((always_inline))
 inline void rcSetChannelValue(int chan, int val) {
-    if (chan >= 0) {
-	if (radioData.mode == RADIO_MODE_SPLIT) {
-	    if (chan < RADIO_MAX_CHANNELS * RADIO_NUM)
-		radioData.allChannels[chan] = val;
-	} else if (chan < RADIO_MAX_CHANNELS)
+    if (rcIsControlChannelValid(chan)) {
+	--chan;
+	if (radioData.mode == RADIO_MODE_DIVERSITY)
 	    radioData.channels[chan] = val;
+	else if (chan < RADIO_MAX_CHANNELS)
+	    radioData.allChannels[chan] = val;
     }
 }
 

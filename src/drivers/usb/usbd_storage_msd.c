@@ -152,13 +152,14 @@ USBD_STORAGE_cb_TypeDef  *USBD_STORAGE_fops = &USBD_MICRO_SDIO_fops;
   */
 
 int8_t STORAGE_Init(uint8_t lun) {
-    if (supervisorData.state == STATE_DISARMED) {
-	filerEnableMSC();
-	return (0);
-    }
-    else {
-	return (-1);
-    }
+//    if (supervisorData.state == STATE_DISARMED) {
+//	filerEnableMSC();
+//	return (0);
+//    }
+//    else {
+//	return (-1);
+//    }
+    return filerEnableMSC();
 }
 
 /**

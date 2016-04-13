@@ -40,6 +40,7 @@
 #define RADIO_RUDD		radioData.channels[(int)p[RADIO_RUDD_CH]]
 
 #define RADIO_MID_THROTTLE	700
+#define RADIO_STICK_SCALE	700  // maximum expected range of control inputs
 
 #define RADIO_ERROR_COUNT       (*radioData.errorCount)
 #define RADIO_QUALITY           (*radioData.quality)

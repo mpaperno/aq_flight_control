@@ -41,14 +41,14 @@ typedef struct {
 
 extern pidStruct_t *pidInit(int pParam, int iParam, int dParam, int fParam, int pMaxParam, int iMaxParam, int dMaxParam, int oMaxParam);
 extern float pidUpdate(pidStruct_t *pid, float setpoint, float position);
-extern float pidUpdateTest(pidStruct_t *pid, float setpoint, float position);
-extern float pidUpdate2(pidStruct_t *pid, float setpoint, float position);
+//extern float pidUpdateTest(pidStruct_t *pid, float setpoint, float position);
+//extern float pidUpdate2(pidStruct_t *pid, float setpoint, float position);
 //extern float pidUpdateB(pidStruct_t *pid, float setpoint, float position);
 //extern float pidUpdateC(pidStruct_t *pid, float setpoint, float position);
 //extern float pidUpdate3(pidStruct_t *pid, float setpoint, float position);
-extern void pidStartDump(void);
-extern void pidStopDump(void);
-extern void pidDump(pidStruct_t *pid);
+//extern void pidStartDump(void);
+//extern void pidStopDump(void);
+//extern void pidDump(pidStruct_t *pid);
 extern void pidZeroIntegral(pidStruct_t *pid, float pv, float iState);
 
 #endif

@@ -22,6 +22,7 @@
 #include "util.h"
 #include "config.h"
 #include "comm.h"
+#include "control.h"
 #include "aq_timer.h"
 #include "rcc.h"
 #include "analog.h"

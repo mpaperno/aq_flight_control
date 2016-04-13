@@ -97,7 +97,7 @@ void navSetHomeCurrent(void) {
 }
 
 void navRecallHome(void) {
-    if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
+    if (!navData.homeLeg.type)
 	return;
     navUkfSetGlobalPositionTarget(navData.homeLeg.targetLat, navData.homeLeg.targetLon);
     navSetHoldAlt(navData.homeLeg.targetAlt, navData.homeLeg.relativeAlt);
@@ -117,24 +117,20 @@ void navSetHfReference(uint8_t refType) {
         // use current heading as reference
         navData.hfReferenceCos = navUkfData.yawCos;
         navData.hfReferenceSin = navUkfData.yawSin;
-        navData.hfUseStoredReference = 1;
-    } else if (navData.navCapable) {
+        navData.hfReferenceYaw = navUkfData.yaw;
+    } else if (navData.mode > NAV_STATUS_ALTHOLD && navData.navCapable) {
         // use current bearing from home position
-        float homeBearing = navCalcBearing(navData.homeLeg.targetLat, navData.homeLeg.targetLon, gpsData.lat, gpsData.lon);
-        if (fabsf(homeBearing - navData.bearingToHome) > NAV_HF_HOME_BRG_D_MAX) {
-            navData.hfReferenceCos = cosf(homeBearing);
-            navData.hfReferenceSin = sinf(homeBearing);
-            navData.bearingToHome = homeBearing;
-        }
-        navData.hfUseStoredReference = 1;
+	navData.hfReferenceYaw = navCalcBearing(navData.homeLeg.targetLat, navData.homeLeg.targetLon, gpsData.lat, gpsData.lon);
+	navData.hfReferenceCos = cosf(navData.hfReferenceYaw);
+	navData.hfReferenceSin = sinf(navData.hfReferenceYaw);
     }
 }
 
 // set headfree mode based on radio command
 void navSetHeadFreeMode(void) {
     // HF switch to set/dynamic position
-    // when disarmed one can also set the orientation heading in this position (for 2-pos control)
-    if (rcIsSwitchActive(NAV_CTRL_HF_SET) || (!(supervisorData.state & STATE_ARMED) && navData.headFreeMode != NAV_HEADFREE_LOCKED && rcIsSwitchActive(NAV_CTRL_HF_LOCK))) {
+    // when disarmed one can also set the orientation heading using the locked/on position
+    if ((rcIsSwitchActive(NAV_CTRL_HF_SET) && controlData.controlMode <= CTRL_MODE_ANGLE) || (!(supervisorData.state & STATE_ARMED) && navData.headFreeMode != NAV_HEADFREE_LOCKED && rcIsSwitchActive(NAV_CTRL_HF_LOCK))) {
         if (navData.headFreeMode != NAV_HEADFREE_DYNAMIC) {
             if (navData.headFreeMode != NAV_HEADFREE_SETTING && navData.headFreeMode != NAV_HEADFREE_DYN_DELAY) {
                 navData.headFreeMode = NAV_HEADFREE_SETTING;
@@ -144,7 +140,7 @@ void navSetHeadFreeMode(void) {
                 signalingOnetimeEvent(SIG_EVENT_OT_HF_SET);
 #endif
             }
-            else if ((supervisorData.state & STATE_ARMED) && timerMicros() - navData.hfDynamicModeTimer > NAV_HF_DYNAMIC_DELAY) {
+            else if (navData.mode > NAV_STATUS_ALTHOLD && (supervisorData.state & STATE_ARMED) && timerMicros() - navData.hfDynamicModeTimer > NAV_HF_DYNAMIC_DELAY) {
                 navData.headFreeMode = NAV_HEADFREE_DYNAMIC;
                 AQ_NOTICE("Now in dynamic Heading-Free DVH mode\n");
             }
@@ -153,16 +149,16 @@ void navSetHeadFreeMode(void) {
         }
     }
     // HF switch to locked/on position
-    else if (rcIsSwitchActive(NAV_CTRL_HF_LOCK)) {
+    else if (rcIsSwitchActive(NAV_CTRL_HF_LOCK) && controlData.controlMode <= CTRL_MODE_ANGLE) {
         if (navData.headFreeMode != NAV_HEADFREE_LOCKED) {
-            AQ_NOTICE("Now in locked Heading-Free DVH mode\n");
+            AQ_NOTICE("Now in locked Heading-Free mode\n");
             navData.headFreeMode = NAV_HEADFREE_LOCKED;
         }
     }
-    // HF channel at off position
+    // HF channel at off position or in rate modes
     else {
         if (navData.headFreeMode > NAV_HEADFREE_DYN_DELAY)
-            AQ_NOTICE("Now in normal DVH mode\n");
+            AQ_NOTICE("Now in normal heading mode\n");
         navData.headFreeMode = NAV_HEADFREE_OFF;
     }
 }
@@ -288,16 +284,15 @@ void navDoUserCommands(unsigned char *leg, navMission_t *curLeg) {
 	navSetHeadFreeMode();
 
 	// set/maintain headfree frame reference
-	if (!navData.homeActionFlag && ( navData.headFreeMode == NAV_HEADFREE_SETTING ||
-		(navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH) )) {
+	if (navData.headFreeMode == NAV_HEADFREE_SETTING || (navData.headFreeMode == NAV_HEADFREE_DYNAMIC && navData.mode == NAV_STATUS_DVH)) {
 	    uint8_t dfRefTyp = 0;
 	    unsigned long currentTime = IMU_LASTUPD;
-	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.targetLat != (double)0.0f && navData.homeLeg.targetLon != (double)0.0f) {
+	    if ((supervisorData.state & STATE_FLYING) && navData.homeLeg.type) {
 		if (NAV_HF_HOME_DIST_D_MIN && NAV_HF_HOME_DIST_FREQ && navData.navCapable && (currentTime - navData.homeDistanceLastUpdate) > (AQ_US_PER_SEC / NAV_HF_HOME_DIST_FREQ)) {
 		    navData.distanceToHome = navCalcDistance(gpsData.lat, gpsData.lon, navData.homeLeg.targetLat, navData.homeLeg.targetLon);
 		    navData.homeDistanceLastUpdate = currentTime;
 		}
-		if (!NAV_HF_HOME_DIST_D_MIN || navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
+		if (navData.distanceToHome > NAV_HF_HOME_DIST_D_MIN)
 		    dfRefTyp = 1;
 	    }
 	    navSetHfReference(dfRefTyp);
@@ -373,14 +368,14 @@ void navNavigate(void) {
         if (navData.mode == NAV_STATUS_POSHOLD || navData.mode == NAV_STATUS_DVH) {
             curLeg = navLoadLeg(leg);
             navData.mode = NAV_STATUS_MISSION;
-            AQ_NOTICE("Mission mode active\n");
+            AQ_NOTICE("Mission mode active.");
         }
     }
     // do we want to be in position hold mode?
     else if ((supervisorData.state & STATE_ARMED) && reqFlightMode > NAV_STATUS_MANUAL) {
 
 	// check for DVH
-	if (reqFlightMode == NAV_STATUS_POSHOLD && (RADIO_PITCH > p[CTRL_DEAD_BAND] || RADIO_PITCH < -p[CTRL_DEAD_BAND] || RADIO_ROLL > p[CTRL_DEAD_BAND] || RADIO_ROLL < -p[CTRL_DEAD_BAND]))
+	if (reqFlightMode == NAV_STATUS_POSHOLD && (abs(RADIO_PITCH) > (int)p[CTRL_DEAD_BAND] || abs(RADIO_ROLL) > (int)p[CTRL_DEAD_BAND]))
 	    reqFlightMode = NAV_STATUS_DVH;
 
         // allow alt hold regardless of GPS or flow quality
@@ -397,7 +392,7 @@ void navNavigate(void) {
             navData.mode = NAV_STATUS_ALTHOLD;
 
             // notify ground
-            AQ_NOTICE("Altitude Hold engaged\n");
+            AQ_NOTICE("Altitude Hold engaged.");
         }
 
         // are we not in position hold mode now?
@@ -421,7 +416,7 @@ void navNavigate(void) {
 
             if (navData.navCapable) {
                 // set this position as home if we have none
-                if (navData.homeLeg.targetLat == (double)0.0 || navData.homeLeg.targetLon == (double)0.0)
+                if (!navData.homeLeg.type)
                     navSetHomeCurrent();
             }
 
@@ -435,7 +430,7 @@ void navNavigate(void) {
             navData.holdMaxVertSpeed = NAV_DFLT_VRT_SPEED;
 
             // notify ground
-            AQ_NOTICE("Position Hold engaged\n");
+            AQ_NOTICE("Position Hold engaged.");
         }
         // DVH
         else if ((navData.navCapable || navUkfData.flowQuality > 0.0f) && reqFlightMode == NAV_STATUS_DVH) {
@@ -445,7 +440,7 @@ void navNavigate(void) {
         else if (navData.mode == NAV_STATUS_DVH) {
             // allow speed to drop before holding position (or if RTH engaged)
             // FIXME: RTH switch may no longer be engaged but craft is still returning to home?
-            if ((UKF_VELN < +0.1f && UKF_VELN > -0.1f && UKF_VELE < +0.1f && UKF_VELE > -0.1f) || rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
+            if ((fabsf(UKF_VELN) < 0.1f && fabsf(UKF_VELE) < 0.1f) || rcIsSwitchActive(NAV_CTRL_HOM_GO)) {
                 navUkfSetHereAsPositionTarget();
 
                 navData.mode = NAV_STATUS_POSHOLD;
@@ -454,8 +449,8 @@ void navNavigate(void) {
     }
     // default to manual mode
     else {
-	if (navData.mode != NAV_STATUS_MANUAL)
-            AQ_NOTICE("Manual mode active.\n");
+	if (navData.mode == NAV_STATUS_ALTHOLD)
+	    AQ_NOTICE("Altitude Hold disengaged.");
 
         navData.mode = NAV_STATUS_MANUAL;
         // reset mission legs
@@ -464,6 +459,7 @@ void navNavigate(void) {
         navSetHoldAlt(ALTITUDE, 0);
     }
 
+    // TODO: move to supervisor
     // ceiling set ?, 0 is disable
     if (navData.ceilingAlt) {
         // ceiling reached 1st time
@@ -558,16 +554,9 @@ void navNavigate(void) {
 
         // do we want to ignore rotation of craft (headfree/carefree mode)?
         if (navData.headFreeMode > NAV_HEADFREE_OFF) {
-            if (navData.hfUseStoredReference) {
-                // rotate to stored frame
-                navData.holdSpeedN = x * navData.hfReferenceCos - y * navData.hfReferenceSin;
-                navData.holdSpeedE = y * navData.hfReferenceCos + x * navData.hfReferenceSin;
-            }
-            else {
-                // don't rotate to any frame (pitch/roll move to N/S/E/W)
-                navData.holdSpeedN = x;
-                navData.holdSpeedE = y;
-            }
+	    // rotate to stored frame
+	    navData.holdSpeedN = x * navData.hfReferenceCos - y * navData.hfReferenceSin;
+	    navData.holdSpeedE = y * navData.hfReferenceCos + x * navData.hfReferenceSin;
         }
         else {
             // rotate to earth frame
@@ -705,13 +694,16 @@ void navInit(void) {
 
     navData.speedNPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
     navData.speedEPID    = pidInit(NAV_SPEED_P,    NAV_SPEED_I,    0, 0, NAV_SPEED_PM,    NAV_SPEED_IM,    0, NAV_SPEED_OM);
-    navData.distanceNPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
-    navData.distanceEPID = pidInit(NAV_DIST_P,     NAV_DIST_I,     0, 0, NAV_DIST_PM,     NAV_DIST_IM,     0, NAV_DIST_OM);
+    navData.distanceNPID = pidInit(NAV_DIST_P,     0,              0, 0, NAV_DIST_PM,     0,               0, 0);
+    navData.distanceEPID = pidInit(NAV_DIST_P,     0,              0, 0, NAV_DIST_PM,     0,               0, 0);
     navData.altSpeedPID  = pidInit(NAV_ALT_SPED_P, NAV_ALT_SPED_I, 0, 0, NAV_ALT_SPED_PM, NAV_ALT_SPED_IM, 0, NAV_ALT_SPED_OM);
-    navData.altPosPID    = pidInit(NAV_ALT_POS_P,  NAV_ALT_POS_I,  0, 0, NAV_ALT_POS_PM,  NAV_ALT_POS_IM,  0, NAV_ALT_POS_OM);
+    navData.altPosPID    = pidInit(NAV_ALT_POS_P,  0,              0, 0, NAV_ALT_POS_PM,  0,               0, 0);
 
     navData.mode = NAV_STATUS_MANUAL;
     navData.headFreeMode = NAV_HEADFREE_OFF;
+    // default heading-free reference is due North
+    navData.hfReferenceCos = 1.0f;
+    navData.hfReferenceSin = 0.0f;
 
     navSetHoldHeading(AQ_YAW);
     navSetHoldAlt(ALTITUDE, 0);
@@ -804,10 +796,13 @@ float navCalcDistance(double lat1, double lon1, double lat2, double lon2) {
 float navCalcBearing(double lat1, double lon1, double lat2, double lon2) {
     float n = (float)((lat2 - lat1) * (double)DEG_TO_RAD * navUkfData.r1);
     float e = (float)((lon2 - lon1) * (double)DEG_TO_RAD * navUkfData.r2);
-    float ret = atan2f(e, n);
+    float ret = 0.0f;
 
-    if (!isfinite(ret))
-        ret = 0.0f;
+    if (n != 0.0f || e != 0.0f) {
+	ret = atan2f(e, n);
+	if (!isfinite(ret))
+	    ret = 0.0f;
+    }
 
     return ret;
 }

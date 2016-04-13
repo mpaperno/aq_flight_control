@@ -27,27 +27,33 @@
 
 
 /* Return the configured channel number from a control param ID. */
-#define rcGetControlChannel(Pid_p)        ((uint32_t)p[Pid_p] & 0xFF)
+#define rcGetControlChannel(Pid_p)        ( (uint32_t)p[Pid_p] & 0xFF )
+
+/* Return true if control is configured to reverse given radio channel value (bit 23 set high). */
+#define rcIsControlReversed(Pid_p)        ( (uint32_t)p[Pid_p] & (1<<23) )
 
 /* Returns true if any control channel (eg. radio channel) is configured for a given control param ID. */
 #define rcIsControlConfigured(Pid_p)      rcGetControlChannel(Pid_p)
 
+/* Returns true if a control channel number is valid, based on current radio mode type. */
+#define rcIsControlChannelValid(Chan_p)   ( Chan_p > 0 && Chan_p <= RADIO_MAX_CHANNELS * (radioData.mode == RADIO_MODE_SPLIT ? RADIO_NUM : 1) )
+
 /* Returns the raw value of a control channel (eg. radio channel). Default value is zero. */
-#define rcGetControlValue(Pid_p)          rcGetChannelValue(rcGetControlChannel(Pid_p)-1)
+#define rcGetControlValue(Pid_p)          ( rcGetChannelValue(rcGetControlChannel(Pid_p)) * (rcIsControlReversed(Pid_p) ? -1 : 1) )
 
 /* Return the configured channel value for a switch based on control param ID */
-#define rcGetSwitchTargetValue(Pid_p)     ((((uint32_t)p[Pid_p] >> 8) & 0x7FF) * (((uint32_t)p[Pid_p] & (1<<19)) ? 1 : -1))
+#define rcGetSwitchTargetValue(Pid_p)     ( (((uint32_t)p[Pid_p] >> 8) & 0x7FF) * (((uint32_t)p[Pid_p] & (1<<19)) ? 1 : -1) )
 
 /* Alias the deadband config */
 #define rcGetSwitchDeadband()             (int)p[CTRL_DBAND_SWTCH]
 
 /* Sets a controller channel to the given value.
  * This would be overwritten if an active radio is controlling the same channel. */
-#define rcSetControlValue(Pid_p, Chv_p)   rcSetChannelValue(rcGetControlChannel(Pid_p)-1, Chv_p)
+#define rcSetControlValue(Pid_p, Chv_p)   rcSetChannelValue(rcGetControlChannel(Pid_p), Chv_p)
+
 /* Sets a controller channel value to reflect the active state of a given switch-type control.
  * This would be overwritten if an active radio is controlling the same channel. */
-#define rcSetSwitchActive(Pid_p)          { if (rcIsControlConfigured(Pid_p)) rcSetControlValue(Pid_p, rcGetSwitchTargetValue(Pid_p)); }
-
+#define rcSetSwitchActive(Pid_p)          rcSetControlValue(Pid_p, rcGetSwitchTargetValue(Pid_p))
 
 enum rcErrorCodes {
     RC_ERROR_NONE = 0,

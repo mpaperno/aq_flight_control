@@ -20,6 +20,7 @@
 #include "filer.h"
 #include "diskio.h"
 #include "comm.h"
+#include "config.h"
 #include "aq_mavlink.h"
 #include "util.h"
 #include "supervisor.h"
@@ -466,4 +467,15 @@ int32_t filerStream(int8_t handle, void *buf, uint32_t length) {
 
 int8_t filerAvailable(void) {
     return filerData.initialized;
+}
+
+int8_t filerEnableMSC(void) {
+    int8_t ret = -1;
+    if (filerData.mscState >= FILER_STATE_MSC_REQUEST)
+	ret = 0;
+    else if ((supervisorData.state & STATE_DISARMED) && !configCheckFlag(CONFIG_FLAG_DISABLE_MSC) && filerData.mscState == FILER_STATE_MSC_DISABLE) {
+	filerData.mscState = FILER_STATE_MSC_REQUEST;
+	ret = 0;
+    }
+    return ret;
 }

@@ -354,7 +354,7 @@ inline float configGetParamValue(uint16_t id) {
     uint8_t flg = configData.paramFlags[id];
     if (flg) {
 	uint8_t idx = flg - 1;
-	ret += (ret * rcGetChannelValue(configData.adjustParams[idx].adjChan - 1) * configData.adjustParams[idx].adjScale);
+	ret += (ret * rcGetChannelValue(configData.adjustParams[idx].adjChan) * configData.adjustParams[idx].adjScale);
 	ret = constrainFloat(ret, configData.adjustParams[idx].minVal, configData.adjustParams[idx].maxVal);
     }
 
@@ -376,7 +376,7 @@ inline float configGetParamValueRaw(uint16_t id) {
 }
 
 float configGetParamValueForSave(uint16_t id) {
-    if (((uint32_t)p[CONFIG_FLAGS] & CONFIG_FLAG_SAVE_ADJUSTED))
+    if (configCheckFlag(CONFIG_FLAG_SAVE_ADJUSTED))
 	return configGetParamValue(id);
     else
 	return configGetParamValueRaw(id);
