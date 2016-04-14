@@ -336,7 +336,7 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.state &= ~(STATE_RADIO_LOSS1 | STATE_RADIO_LOSS2);
 	    }
 	    // loss 1
-	    else if (!(supervisorData.state & STATE_RADIO_LOSS1) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS1) {
+	    else if (!(supervisorData.state & STATE_RADIO_LOSS1) && !(supervisorData.state & STATE_RADIO_LOSS2) && (timerMicros() - supervisorData.lastGoodRadioMicros) > SUPERVISOR_RADIO_LOSS1) {
 		supervisorData.state |= STATE_RADIO_LOSS1;
 		AQ_NOTICE("Warning: Radio loss stage 1 detected\n");
 

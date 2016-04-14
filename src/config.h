@@ -22,7 +22,7 @@
 
 #include "aq.h"
 
-#define CONFIG_CURRENT_VERSION	    134	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
+#define CONFIG_CURRENT_VERSION	    135	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -365,6 +365,8 @@ enum configParameters {
     GMBL_PSTHR_PORT,
     SPVR_LOW_BAT1,
     SPVR_LOW_BAT2,
+    SPVR_FS_RAD_TO1,
+    SPVR_FS_RAD_TO2,
     SPVR_FS_RAD_ST1,
     SPVR_FS_RAD_ST2,
     SPVR_FS_ADD_ALT,

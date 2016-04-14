@@ -10,10 +10,11 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
-##### 7.1.1916 - Apr. 14, 2016 - `feature_integration` branch
+##### 7.1.1917 - Apr. 14, 2016 - `feature_integration` branch
 
 `~` Aggregate changes from `new_controls`, `sport_telemetry`, `memory_manage`, `simu` branches.  
 `*` Fix RC status LED when signal is lost with S-BUS and SUM-D radio types.  
+`+` Add parameters for radio failsafe stage 1 and 2 timeouts.  
 
 ##### 7.1.1915 - Apr. 14, 2016 - `simu` branch
 
@@ -30,7 +31,7 @@ This file describes changes in the firmware, typically since the previous minor 
 
 `+` Add native FrSky S-Port telemetry option.  
 
-##### 7.1.1900 - Mar. 10, 2016 - `new_controls` branch
+##### 7.1.1900 - Apr. 13, 2016 - `new_controls` branch
 
 `+` Add rate-of-rotation "Acro" control mode.  
 `+` Add Limited rate-of-rotation control mode.  Like acro mode but total tilt angle is limited to the same as it would be in normal angle-control flight modes.  

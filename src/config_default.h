@@ -308,6 +308,8 @@
 
 #define DEFAULT_SPVR_LOW_BAT1	    3.5f	    // cell volts
 #define DEFAULT_SPVR_LOW_BAT2	    3.3f	    // cell volts
+#define DEFAULT_SPVR_FS_RAD_TO1     1.0f        // radio failsafe stage 1 timeout (seconds)
+#define DEFAULT_SPVR_FS_RAD_TO2     15.0f       // radio failsafe stage 2 timeout (seconds)
 #define DEFAULT_SPVR_FS_RAD_ST1     0           // radio failsafe stage 1 action (0 = position hold)
 #define DEFAULT_SPVR_FS_RAD_ST2     0           // radio failsafe stage 2 action (0 = land, 1 = RTH, land, 2 = Ascend if needed, RTH, land)
 #define DEFAULT_SPVR_FS_ADD_ALT     0.0f        // meters to add to home alt. for falisafe stg.2 action == 2

@@ -30,8 +30,8 @@
 #define SUPERVISOR_RATE		    20		    // Hz
 #define SUPERVISOR_DISARM_TIME	    (1e6*2)	    // 2 seconds delay for arm/disarm stick commands
 #define SUPERVISOR_STICK_CMD_TIME   (1e6*2)	    // 2 seconds delay for other stick commands
-#define SUPERVISOR_RADIO_LOSS1	    ((int)1e6)	    // 1 second
-#define SUPERVISOR_RADIO_LOSS2	    ((int)15e6)	    // 15 seconds
+#define SUPERVISOR_RADIO_LOSS1	    ((uint32_t)(p[SPVR_FS_RAD_TO1] * 1e6f))	    // seconds to micros
+#define SUPERVISOR_RADIO_LOSS2	    ((uint32_t)(p[SPVR_FS_RAD_TO2] * 1e6f))	    // seconds to micros
 
 // Radio loss stage 2 failsafe settings:
 #define SUPERVISOR_HOME_POS_DETECT_RADIUS	2.0f 	// start descending when within this radius of home position in meters
