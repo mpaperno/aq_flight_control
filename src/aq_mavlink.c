@@ -290,7 +290,7 @@ void mavlinkDo(void) {
 		break;
 	    case AQMAV_DATASET_SUPERVISOR :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, supervisorData.state, supervisorData.flightTime, 0, 0,
-			supervisorData.vInLPF, 0, supervisorData.lastGoodRadioMicros, supervisorData.idlePercent, 0,0,0,0,0,0,0,0, commData.txBufStarved, analogData.vIn, RADIO_QUALITY, RADIO_ERROR_COUNT);
+			supervisorData.vInLPF, 0, supervisorData.lastGoodRadioMicros, supervisorData.idlePercent, 0,0,0,0,0,0,0, micros - RADIO_LAST_UPDATE, commData.txBufStarved, analogData.vIn, RADIO_QUALITY, RADIO_ERROR_COUNT);
 		break;
 	    case AQMAV_DATASET_STACKSFREE :
 		mavlink_msg_aq_telemetry_f_send(MAVLINK_COMM_0, i, utilGetStackFree("INIT"), utilGetStackFree("FILER"), utilGetStackFree("SUPERVISOR"), utilGetStackFree("ADC"),

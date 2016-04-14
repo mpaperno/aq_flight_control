@@ -65,36 +65,40 @@ static void radioProcessInstance(radioInstance_t *r) {
     case RADIO_TYPE_SBUS:
         while (serialAvailable(s))
             if ((q = futabaCharIn(r, serialRead(s)))) {
-                r->lastUpdate = timerMicros();
+        	if (q > 0)
+        	    r->lastUpdate = timerMicros();
                 radioReceptionQuality(r, q);
             }
         break;
 
     case RADIO_TYPE_PPM:
-        if (ppmDataAvailable(r))
+        if (ppmDataAvailable(r)) {
             r->lastUpdate = timerMicros();
+            radioReceptionQuality(r, ppmGetSignalQuality(r));
+        }
         break;
 
     case RADIO_TYPE_SUMD:
         while (serialAvailable(s))
             if ((q = grhottCharIn(r, serialRead(s)))) {
-                r->lastUpdate = timerMicros();
+        	if (q > 0)
+        	    r->lastUpdate = timerMicros();
                 radioReceptionQuality(r, q);
             }
         break;
 
     case RADIO_TYPE_MLINK:
         while (serialAvailable(s))
-        if ((q = mlinkrxCharIn(r, serialRead(s)))) {
+        if (mlinkrxCharIn(r, serialRead(s))) {
             r->lastUpdate = timerMicros();
-            radioReceptionQuality(r, q);
+            radioReceptionQuality(r, 1);
         }
         break;
 
     case RADIO_TYPE_CYRF6936:
-        if ((q = dsmReceive(r))) {
+        if (dsmReceive(r)) {
             r->lastUpdate = timerMicros();
-            radioReceptionQuality(r, q);
+            radioReceptionQuality(r, 1);
         }
         break;
     }
@@ -102,8 +106,6 @@ static void radioProcessInstance(radioInstance_t *r) {
     // no radio signal?
     if (timerMicros() - r->lastUpdate > RADIO_UPDATE_TIMEOUT)
         radioReceptionQuality(r, -1);                       // minimum signal quality (0%) if no updates within timeout value
-    else if (r->radioType == RADIO_TYPE_PPM)
-        radioReceptionQuality(r, ppmGetSignalQuality(r));   // signal quality based on PPM status
 }
 
 void radioTaskCode(void *unused) {

@@ -60,7 +60,7 @@ typedef struct {
     int16_t  channels[PPM_MAX_CHANNELS];    // channel values are stored here after successful capture of the whole frame
     int16_t tmp_channels[PPM_MAX_CHANNELS]; // temporary channel values while capturing the frame
 
-} ppmStruct_t;
+} ppmStruct_t __attribute__((aligned));
 
 extern void ppmInit(radioInstance_t *r);
 extern int  ppmDataAvailable(radioInstance_t *r);

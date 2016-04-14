@@ -60,7 +60,7 @@ typedef struct {
 	uint8_t rawBuf[23];
 	futabaChannelStruct_t channels;
     } u;
-} futabaStruct_t;
+} futabaStruct_t __attribute__((aligned));
 
 extern futabaStruct_t futabaData;
 

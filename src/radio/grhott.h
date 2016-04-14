@@ -41,7 +41,7 @@ typedef struct {
     uint8_t nb_channel;
     uint8_t dataCount;
     uint8_t rawBuf[32];
-} grhottStruct_t;
+} grhottStruct_t __attribute__((aligned));
 
 extern grhottStruct_t grhottData;
 
