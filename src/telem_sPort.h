@@ -157,16 +157,18 @@ typedef struct {
     uint16_t messageCount;
     uint16_t currMessageNum;
     uint16_t sentMessageNum;
+
+    uint8_t sensorsFound[SPORT_DS_ENUM_END];
+    uint8_t sensorSendState[SPORT_DS_ENUM_END];
+    char messageDataBuffer[SPORT_TEXT_NUM_BUFFERS][SPORT_TEXT_MAX_MSG_LEN];
+
     uint8_t processState;
     uint8_t datasetRequested;
     uint8_t msgPacketSeq;
     uint8_t msgCharIdx;
     uint8_t gpsFirstLock;
     uint8_t sensorSearchTimeout;
-    uint8_t sensorsFound[SPORT_DS_ENUM_END];
-    uint8_t sensorSendState[SPORT_DS_ENUM_END];
-    char messageDataBuffer[SPORT_TEXT_NUM_BUFFERS][SPORT_TEXT_MAX_MSG_LEN];
-} sPortData_t;
+} sPortData_t __attribute__((aligned));
 
 extern sPortData_t sPortData;
 
