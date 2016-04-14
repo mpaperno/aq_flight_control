@@ -22,7 +22,7 @@
 #include "aq.h"
 #include <CoOS.h>
 
-#define RUN_TASK_SIZE		256     // must be evenly divisible by 8
+#define RUN_TASK_SIZE		280     // must be evenly divisible by 8
 #define RUN_PRIORITY		30
 
 #define RUN_SENSOR_HIST		10				// number of timesteps to average observation sensors' data
@@ -45,10 +45,14 @@ typedef struct {
 
     OS_TID runTask;
     OS_FlagID runFlag;
+
+    bool ukfInitFlag;
 } runStruct_t __attribute__((aligned));
 
 extern runStruct_t runData;
 
 extern void runInit(void);
+extern void runInitHistory(void);
+extern void runInitUkf(void);
 
 #endif

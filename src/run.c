@@ -54,6 +54,14 @@ void runTaskCode(void *unused) {
 	// soft start GPS accuracy
 	runData.accMask *= 0.999f;
 
+	if (runData.ukfInitFlag) {
+	    runData.ukfInitFlag = false;
+	    if (!(supervisorData.state & STATE_FLYING)) {
+		runInitHistory();
+		navUkfInitState();
+	    }
+	}
+
 	navUkfInertialUpdate();
 
 	// record history for acc & mag & pressure readings for smoothing purposes
@@ -178,6 +186,10 @@ void runTaskCode(void *unused) {
 
 	loops++;
     }
+}
+
+void runInitUkf(void) {
+    runData.ukfInitFlag = true;
 }
 
 void runInitHistory(void) {
