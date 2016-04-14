@@ -95,6 +95,24 @@
 #define UKF_FOCAL_LENGTH	16.0f				    // 16mm
 #define UKF_FOCAL_PX		(UKF_FOCAL_LENGTH / (4.0f * 6.0f) * 1000.0f)   // pixel size: 6um, binning 4 enabled
 
+enum sensorNoiseConstants {
+    UKF_NOISE_GPS_POS_N,
+    UKF_NOISE_GPS_POS_M_N,
+    UKF_NOISE_GPS_ALT_N,
+    UKF_NOISE_GPS_ALT_M_N,
+    UKF_NOISE_GPS_VEL_N,
+    UKF_NOISE_GPS_VEL_M_N,
+    UKF_NOISE_GPS_VD_N,
+    UKF_NOISE_GPS_VD_M_N,
+    UKF_NOISE_ALT_N,
+    UKF_NOISE_ACC_N,
+    UKF_NOISE_DIST_N,
+    UKF_NOISE_MAG_N,
+    UKF_NOISE_POS_DELAY,
+    UKF_NOISE_VEL_DELAY,
+    UKF_NOISE_CONSTANTS_ENUM_END
+};
+
 typedef struct {
     double holdLat, holdLon;
     double r1, r2;
@@ -110,6 +128,7 @@ typedef struct {
     float velN[UKF_HIST];
     float velE[UKF_HIST];
     float velD[UKF_HIST];
+    float sensorNoise[UKF_NOISE_CONSTANTS_ENUM_END];
     float yaw, pitch, roll;
     float yawCos, yawSin;
 
@@ -157,5 +176,6 @@ extern void navUkfResetVels(void);
 extern void navUkfResetBias(void);
 extern void navUkfResetQuat(void);
 extern void navUkfInitState(void);
+extern void navUkfInitVariance(void);
 extern void navUkfInit(void);
 #endif

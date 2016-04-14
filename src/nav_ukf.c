@@ -37,7 +37,9 @@ char ukfLog[UKF_LOG_BUF_SIZE];
 #endif
 
 float navUkfPresToAlt(float pressure) {
-    return (1.0f -  powf(pressure / UKF_P0, 0.19f)) * (1.0f / 22.558e-6f);
+    //     (1.0 -  powf(pressure / Pb,     -((R * Lb) / (g * M))) * (1.0 / -(Lb / Tb))
+    return (1.0f - powf(pressure / UKF_P0, 0.1902632f          )) * 44330.1711145f;
+//  return (1.0f - powf(pressure / UKF_P0, 0.19f)) * (1.0f / 22.558e-6f);
 }
 
 static void navUkfCalcEarthRadius(double lat) {
@@ -404,7 +406,7 @@ void simDoPresUpdate(float pres) {
     float noise[2];        // measurement variance
     float y[2];            // measurment(s)
 
-    noise[0] = UKF_ALT_N;
+    noise[0] = navUkfData.sensorNoise[UKF_NOISE_ALT_N];
 
     noise[1] = noise[0];
 
@@ -435,7 +437,7 @@ void simDoAccUpdate(float accX, float accY, float accZ) {
     y[1] = accY / norm;
     y[2] = accZ / norm;
 
-    noise[0] = UKF_ACC_N + fabsf(GRAVITY - norm) * UKF_DIST_N;
+    noise[0] = navUkfData.sensorNoise[UKF_NOISE_ACC_N] + fabsf(GRAVITY - norm) * navUkfData.sensorNoise[UKF_NOISE_DIST_N];
     if (!(supervisorData.state & STATE_FLYING)) {
 	accX -= UKF_ACC_BIAS_X;
 	accY -= UKF_ACC_BIAS_Y;
@@ -453,7 +455,7 @@ void simDoMagUpdate(float magX, float magY, float magZ) {
     float y[3];            // measurement(s)
     float norm;
 
-    noise[0] = UKF_MAG_N;
+    noise[0] = navUkfData.sensorNoise[UKF_NOISE_MAG_N];
     if (!(supervisorData.state & STATE_FLYING))
 	noise[0] *= 0.001f;
 
@@ -487,7 +489,7 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	y[2] = alt;
 
 	// determine how far back this GPS position update came from
-	histIndex = (timerMicros() - (gpsMicros + UKF_POS_DELAY)) / (int)(1e6f * AQ_OUTER_TIMESTEP);
+	histIndex = (timerMicros() - (gpsMicros + navUkfData.sensorNoise[UKF_NOISE_POS_DELAY])) / (int)(1e6f * AQ_OUTER_TIMESTEP);
 	histIndex = navUkfData.navHistIndex - histIndex;
 	if (histIndex < 0)
 	    histIndex += UKF_HIST;
@@ -504,9 +506,9 @@ void navUkfGpsPosUpdate(uint32_t gpsMicros, double lat, double lon, float alt, f
 	UKF_POSE = navUkfData.posE[histIndex];
 	UKF_POSD = navUkfData.posD[histIndex];
 
-	noise[0] = UKF_GPS_POS_N + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * UKF_GPS_POS_M_N;
-	noise[1] = UKF_GPS_POS_N + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * UKF_GPS_POS_M_N;
-	noise[2] = UKF_GPS_ALT_N + vAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * UKF_GPS_ALT_M_N;
+	noise[0] = navUkfData.sensorNoise[UKF_NOISE_GPS_POS_N] + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_POS_M_N];
+	noise[1] = navUkfData.sensorNoise[UKF_NOISE_GPS_POS_N] + hAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_POS_M_N];
+	noise[2] = navUkfData.sensorNoise[UKF_NOISE_GPS_ALT_N] + vAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_ALT_M_N];
 
 	srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfPosUpdate);
 
@@ -549,7 +551,7 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
     y[2] = velD;
 
     // determine how far back this GPS velocity update came from
-    histIndex = (timerMicros() - (gpsMicros + UKF_VEL_DELAY)) / (int)(1e6f * AQ_OUTER_TIMESTEP);
+    histIndex = (timerMicros() - (gpsMicros + navUkfData.sensorNoise[UKF_NOISE_VEL_DELAY])) / (int)(1e6f * AQ_OUTER_TIMESTEP);
     histIndex = navUkfData.navHistIndex - histIndex;
     if (histIndex < 0)
 	histIndex += UKF_HIST;
@@ -566,9 +568,9 @@ void navUkfGpsVelUpdate(uint32_t gpsMicros, float velN, float velE, float velD, 
     UKF_VELE = navUkfData.velE[histIndex];
     UKF_VELD = navUkfData.velD[histIndex];
 
-    noise[0] = UKF_GPS_VEL_N + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * UKF_GPS_VEL_M_N;
-    noise[1] = UKF_GPS_VEL_N + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * UKF_GPS_VEL_M_N;
-    noise[2] = UKF_GPS_VD_N  + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * UKF_GPS_VD_M_N;
+    noise[0] = navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_N] + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.nDOP*gpsData.nDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_M_N];
+    noise[1] = navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_N] + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.eDOP*gpsData.eDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_M_N];
+    noise[2] = navUkfData.sensorNoise[UKF_NOISE_GPS_VD_N]  + sAcc * __sqrtf(gpsData.tDOP*gpsData.tDOP + gpsData.vDOP*gpsData.vDOP) * navUkfData.sensorNoise[UKF_NOISE_GPS_VD_M_N];
 
     srcdkfMeasurementUpdate(navUkfData.kf, 0, y, 3, 3, noise, navUkfVelUpdate);
 
@@ -669,7 +671,7 @@ void navUkfFlowUpdate(void) {
 	navUkfData.flowVelY = flowY / dt;
 
 	// TODO: properly estimate noise
-	noise[0] = (UKF_GPS_POS_N + UKF_GPS_POS_M_N) * 0.5f;
+	noise[0] = (navUkfData.sensorNoise[UKF_NOISE_GPS_POS_N] + navUkfData.sensorNoise[UKF_NOISE_GPS_POS_M_N]) * 0.5f;
 	noise[1] = noise[0];
 
 	navUkfCalcLocalDistance(navUkfData.flowPosN, navUkfData.flowPosE, &y[0], &y[1]);
@@ -908,30 +910,9 @@ void navUkfInitState(void) {
 
 }
 
-void navUkfInit(void) {
+void navUkfInitVariance(void) {
     float Q[SIM_S];		// state variance
     float V[SIM_V];		// process variance
-    float mag[3];
-
-    memset((void *)&navUkfData, 0, sizeof(navUkfData));
-
-    navUkfData.v0a[0] = 0.0f;
-    navUkfData.v0a[1] = 0.0f;
-    navUkfData.v0a[2] = -1.0f;
-
-    // calculate mag vector based on inclination
-    mag[0] = cosf(p[IMU_MAG_INCL] * DEG_TO_RAD);
-    mag[1] = 0.0f;
-    mag[2] = -sinf(p[IMU_MAG_INCL] * DEG_TO_RAD);
-
-    // rotate local mag vector to align with true north
-    navUkfData.v0m[0] = mag[0] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) - mag[1] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
-    navUkfData.v0m[1] = mag[1] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) + mag[0] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
-    navUkfData.v0m[2] = mag[2];
-
-    navUkfData.kf = srcdkfInit(SIM_S, SIM_M, SIM_V, SIM_N, navUkfTimeUpdate);
-
-    navUkfData.x = srcdkfGetState(navUkfData.kf);
 
     Q[0] = UKF_VEL_Q;
     Q[1] = UKF_VEL_Q;
@@ -966,6 +947,46 @@ void navUkfInit(void) {
 
     srcdkfSetVariance(navUkfData.kf, Q, V, 0, 0);
 
+    navUkfData.sensorNoise[UKF_NOISE_GPS_POS_N] = UKF_GPS_POS_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_POS_M_N] = UKF_GPS_POS_M_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_ALT_N] = UKF_GPS_ALT_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_ALT_M_N] = UKF_GPS_ALT_M_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_N] = UKF_GPS_VEL_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_VEL_M_N] = UKF_GPS_VEL_M_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_VD_N] = UKF_GPS_VD_N;
+    navUkfData.sensorNoise[UKF_NOISE_GPS_VD_M_N] = UKF_GPS_VD_M_N;
+    navUkfData.sensorNoise[UKF_NOISE_ALT_N] = UKF_ALT_N;
+    navUkfData.sensorNoise[UKF_NOISE_ACC_N] = UKF_ACC_N;
+    navUkfData.sensorNoise[UKF_NOISE_DIST_N] = UKF_DIST_N;
+    navUkfData.sensorNoise[UKF_NOISE_MAG_N] = UKF_MAG_N;
+    navUkfData.sensorNoise[UKF_NOISE_POS_DELAY] = UKF_POS_DELAY;
+    navUkfData.sensorNoise[UKF_NOISE_VEL_DELAY] = UKF_VEL_DELAY;
+}
+
+void navUkfInit(void) {
+    float mag[3];
+
+    memset((void *)&navUkfData, 0, sizeof(navUkfData));
+
+    navUkfData.v0a[0] = 0.0f;
+    navUkfData.v0a[1] = 0.0f;
+    navUkfData.v0a[2] = -1.0f;
+
+    // calculate mag vector based on inclination
+    mag[0] = cosf(p[IMU_MAG_INCL] * DEG_TO_RAD);
+    mag[1] = 0.0f;
+    mag[2] = -sinf(p[IMU_MAG_INCL] * DEG_TO_RAD);
+
+    // rotate local mag vector to align with true north
+    navUkfData.v0m[0] = mag[0] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) - mag[1] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
+    navUkfData.v0m[1] = mag[1] * cosf(p[IMU_MAG_DECL] * DEG_TO_RAD) + mag[0] * sinf(p[IMU_MAG_DECL]  * DEG_TO_RAD);
+    navUkfData.v0m[2] = mag[2];
+
+    navUkfData.kf = srcdkfInit(SIM_S, SIM_M, SIM_V, SIM_N, navUkfTimeUpdate);
+
+    navUkfData.x = srcdkfGetState(navUkfData.kf);
+
+    navUkfInitVariance();
     navUkfInitState();
 
     navUkfData.flowRotCos = cosf(UKF_FLOW_ROT * DEG_TO_RAD);
