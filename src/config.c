@@ -331,7 +331,9 @@ int16_t configGetParamIdByName(char *name) {
     if (i < CONFIG_NUM_PARAMS)
 	return i;
     else {
-	AQ_PRINTF("config: cannot find parmeter '%s'\n", name);
+	char buf[CONFIG_PNAME_MAX_LEN];
+	strncpy(buf, name, CONFIG_PNAME_MAX_LEN);
+	AQ_PRINTF("config: cannot find parmeter '%s'\n", buf);
 	return -1;
     }
 }
