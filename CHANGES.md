@@ -10,11 +10,16 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1915 - Apr. 14, 2016 - `simu` branch
+
+`+` Add hooks for external IMU/GPS data.  
+`+` Add optional HILS support.  
+
 ##### 7.1.1910 - Apr. 13, 2016 - `memory_manage` branch
 
-`~` Increase maximum waypoints to 50.
-`~` Internal structure updates to optimize memory.
-`~` Signaling module now controls onboard LEDs, is no longer optional.
+`~` Increase maximum waypoints to 50.  
+`~` Internal structure updates to optimize memory.  
+`~` Signaling module now controls onboard LEDs, is no longer optional.  
 
 ##### 7.1.1902 - Apr. 13, 2016 - `sport_telemetry` branch
 
