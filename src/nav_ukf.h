@@ -129,7 +129,7 @@ typedef struct {
 
     bool flowInit;
     volatile bool flowLock;
-} navUkfStruct_t;
+} navUkfStruct_t __attribute__((aligned));
 
 extern navUkfStruct_t navUkfData;
 

@@ -136,7 +136,7 @@ typedef struct {
     bool setCeilingReached;
     bool hasMissionLeg;
 
-} navStruct_t;
+} navStruct_t __attribute__((aligned));
 
 extern navStruct_t navData;
 

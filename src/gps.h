@@ -64,7 +64,7 @@ typedef struct {
     unsigned long lastPosUpdate;
     unsigned long lastVelUpdate;
     unsigned long lastMessage;
-} gpsStruct_t;
+} gpsStruct_t __attribute__((aligned));
 
 typedef struct {
     serialPort_t *gpsPort;
@@ -79,7 +79,7 @@ typedef struct {
     OS_TID gpsTask;
     OS_FlagID gpsVelFlag;
     OS_FlagID gpsPosFlag;
-} gpsTask_t;
+} gpsTask_t __attribute__((aligned));
 
 extern gpsStruct_t gpsData;
 extern gpsTask_t gpsTaskData;

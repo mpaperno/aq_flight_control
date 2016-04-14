@@ -69,7 +69,7 @@ typedef struct {
     volatile uint8_t byteValue;
     int8_t writeBytes;
     int8_t readBytes;
-} owStruct_t;
+} owStruct_t __attribute__((aligned));
 
 extern owStruct_t owData;
 

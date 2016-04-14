@@ -131,7 +131,7 @@ typedef struct {
     OS_TID supervisorTask;
 
     bool configRead;
-} supervisorStruct_t;
+} supervisorStruct_t __attribute__((aligned));
 
 extern supervisorStruct_t supervisorData;
 

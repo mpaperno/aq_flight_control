@@ -119,7 +119,7 @@ typedef struct {
     float sinRot, cosRot;
     uint32_t fullUpdates;
     uint32_t halfUpdates;
-} imuStruct_t;
+} imuStruct_t __attribute__((aligned));
 
 extern imuStruct_t imuData;
 

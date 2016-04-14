@@ -64,7 +64,7 @@ typedef struct {
     OS_TID task;
     OS_FlagID flag;
 
-} dImuStruct_t;
+} dImuStruct_t __attribute__((aligned));
 
 extern dImuStruct_t dImuData;
 

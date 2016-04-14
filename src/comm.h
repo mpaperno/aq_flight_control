@@ -146,7 +146,7 @@ typedef struct {
     OS_MutexID txBufferMutex;
     OS_EventID notices;
 
-} commStruct_t;
+} commStruct_t __attribute__((aligned));
 
 extern commStruct_t commData;
 

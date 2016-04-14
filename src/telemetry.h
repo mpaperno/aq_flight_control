@@ -29,7 +29,7 @@ typedef struct {
     unsigned char telemetryEnable;
 
     uint8_t ckA, ckB;
-} telemetryStruct_t;
+} telemetryStruct_t __attribute__((aligned));
 
 extern telemetryStruct_t telemetryData;
 

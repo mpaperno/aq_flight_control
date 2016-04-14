@@ -78,7 +78,7 @@ typedef struct {
 
     OS_TID controlTask;
 
-} controlStruct_t;
+} controlStruct_t __attribute__((aligned));
 
 extern controlStruct_t controlData;
 

@@ -50,7 +50,7 @@ typedef struct {
     uint16_t triggerLogVal;	// value to be logged == 0 when not active, == triggerCount when active
     uint8_t trigger;		// boolean indicating automatic trigger is activated (can be set externally, eg. to trigger photo at wpt)
 
-} gimbalStruct_t;
+} gimbalStruct_t __attribute__((aligned));
 
 extern gimbalStruct_t gimbalData;
 

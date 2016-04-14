@@ -87,7 +87,7 @@ typedef struct {
     uint8_t logHandle;
     uint16_t head;
 #endif
-} motorsStruct_t;
+} motorsStruct_t __attribute__((aligned));
 
 extern motorsStruct_t motorsData;
 

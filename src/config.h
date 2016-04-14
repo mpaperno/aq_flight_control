@@ -490,7 +490,7 @@ typedef struct {
     uint16_t numPossibleAdjParams;		// track total number of params flagged as adjustable in definitions
     uint8_t paramFlags[CONFIG_NUM_PARAMS];	// track index of a currently adjustable param in the adjustParams[] array
     paramAdjustSpec_t adjustParams[CONFIG_MAX_ADJUSTABLE_PARAMS];  // param adjustment data
-} configData_t;
+} configData_t __attribute__((aligned));
 
 extern float p[CONFIG_NUM_PARAMS];
 

@@ -60,7 +60,7 @@ typedef struct {
   uint8_t oneTimeEvtTyp;    // if set, a one-time event is signaled, overriding any other current events
   uint8_t oneTimeEvtStat;   // current one-time event stage: 0=not active; 1=event is done; 2=event is in progress
   uint8_t beeperType;	    // 0 = buzzer, 1 = speaker
-} sigStruct_t;
+} sigStruct_t __attribute__((aligned));
 
 extern sigStruct_t sigData;
 

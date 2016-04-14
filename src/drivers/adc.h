@@ -131,7 +131,7 @@ typedef struct {
     volatile unsigned long sampleTime;
     float dt;
     int8_t magSign;
-} adcStruct_t;
+} adcStruct_t __attribute__((aligned));
 
 extern adcStruct_t adcData;
 

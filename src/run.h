@@ -45,7 +45,7 @@ typedef struct {
 
     OS_TID runTask;
     OS_FlagID runFlag;
-} runStruct_t;
+} runStruct_t __attribute__((aligned));
 
 extern runStruct_t runData;
 
