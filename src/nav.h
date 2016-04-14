@@ -13,19 +13,23 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright Â© 2011-2015  Bill Nesbitt
+    Copyright © 2011-2015  Bill Nesbitt
+    Copyright 2013-2016 Maxim Paperno
 */
 
 #ifndef _nav_h
 #define _nav_h
 
-#include <CoOS.h>
+#include "aq.h"
 #include "pid.h"
+#include <CoOS.h>
 
 #define NAV_MIN_GPS_ACC		3.0f					    // minimum gps hAcc needed to enter auto nav modes, in meters
 #define NAV_MAX_GPS_AGE		1e6					    // maximum age of position update needed to enter auto nav modes, in microseconds
 #define NAV_MIN_FIX_ACC		4.0f					    // minimum gps hAcc still considered a valid "2D" fix, in meters
 #define NAV_MAX_FIX_AGE		10e6					    // maximum age of position update still considered a valid "2D" fix, in microseconds
+
+#define NAV_MAX_MISSION_LEGS	50					    // each leg takes 48 bytes CCM RAM, take care if increasing the limit, decrease to regain space
 
 #define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
 #define NAV_FLATTENING		(1.0 / 298.257223563)			    // WGS-84
@@ -65,8 +69,6 @@ enum headFreeActiveModes {
     NAV_HEADFREE_LOCKED,                // active with locked frame reference
     NAV_HEADFREE_DYNAMIC                // active with continually adjusting frame reference
 };
-
-#define NAV_MAX_MISSION_LEGS	25
 
 typedef struct {
     double targetLat;
