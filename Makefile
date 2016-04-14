@@ -167,6 +167,15 @@ ifeq ($(BOARD_FILE),0)
 	BOARD_FILE =
 endif
 
+# prevent HILS build with AIMU
+ifneq ($(HIL_SIM), 0)
+	ifeq ($(BOARD_VER), 6)
+		ifeq ($(DIMU_VER), 0)
+			HIL_SIM = 0
+		endif
+	endif
+endif
+
 #
 ## Determine build version and final name for binary target
 #
@@ -247,24 +256,24 @@ VPATH += $(SRC_PATH) $(STM32DRIVER_PATH)/src $(STM32DSPLIB_PATH)/Source
 #
 CDEFS ?=
 CDEFS += \
-	-D__SIZEOF_WCHAR_T=4					\
-	-D__ARM_ARCH_7EM__					\
-	-D__CROSSWORKS_ARM					\
-	-D__ARM_ARCH_FPV4_SP_D16__			\
-	-D__TARGET_PROCESSOR=STM32F407VG	\
-	-D__CROSSWORKS_MAJOR_VERSION=2	\
-	-D__CROSSWORKS_MINOR_VERSION=3	\
-	-D__CROSSWORKS_REVISION=2			\
-	-D__TARGET_PROCESSOR_STM32F407VG	\
-	-DSTM32F4XX -DSTM32F40_41xxx		\
-	-D__FPU_PRESENT=1						\
-	-DARM_MATH_CM4							\
-	-D__THUMB								\
-	-DNESTED_INTERRUPTS					\
-	-DCTL_TASKING							\
-	-DUSE_STDPERIPH_DRIVER				\
-	-DBOARD_VERSION=$(BOARD_VER)		\
-	-DBOARD_REVISION=$(BOARD_REV)		\
+	-D__SIZEOF_WCHAR_T=4              \
+	-D__ARM_ARCH_7EM__                \
+	-D__CROSSWORKS_ARM                \
+	-D__ARM_ARCH_FPV4_SP_D16__        \
+	-D__TARGET_PROCESSOR=STM32F407VG  \
+	-D__CROSSWORKS_MAJOR_VERSION=2    \
+	-D__CROSSWORKS_MINOR_VERSION=3    \
+	-D__CROSSWORKS_REVISION=2         \
+	-D__TARGET_PROCESSOR_STM32F407VG  \
+	-DSTM32F4XX -DSTM32F40_41xxx      \
+	-D__FPU_PRESENT=1                 \
+	-DARM_MATH_CM4                    \
+	-D__THUMB                         \
+	-DNESTED_INTERRUPTS               \
+	-DCTL_TASKING                     \
+	-DUSE_STDPERIPH_DRIVER            \
+	-DBOARD_VERSION=$(BOARD_VER)      \
+	-DBOARD_REVISION=$(BOARD_REV)     \
 	-DDIMU_VERSION=$(subst .,,$(DIMU_VER))
 
 ifneq ($(CONFIG_FILE),)
