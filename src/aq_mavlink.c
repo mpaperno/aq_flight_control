@@ -158,6 +158,9 @@ static void mavlinkSetSystemData(void) {
     if (supervisorData.state & STATE_ARMED)
 	mavlinkData.sys_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
 
+    if (supervisorData.state & STATE_SIM_ENABLED)
+	mavlinkData.sys_mode |= MAV_MODE_FLAG_HIL_ENABLED;
+
 }
 
 void mavlinkDo(void) {

@@ -70,6 +70,9 @@ static void supervisorSetSystemStatus(void) {
     else if (supervisorData.state & STATE_LOW_BATTERY1)
 	supervisorData.systemStatus |=  SPVR_AQ_STATUS_FUEL_LOW;
 
+    if (supervisorData.state & STATE_SIM_ENABLED)
+	supervisorData.systemStatus |= SPVR_AQ_STATUS_SIM;
+
     if (navData.ceilingAlt) {
 	supervisorData.systemStatus |= SPVR_AQ_STATUS_CEILING;
 	if (navData.setCeilingReached)
@@ -129,7 +132,7 @@ void supervisorArm(void) {
     else if (rcIsSwitchActive(NAV_CTRL_HF_SET) /*|| rcIsSwitchActive(NAV_CTRL_HF_LOCK)*/)
 	AQ_NOTICE("Error: Can't arm, heading-free mode active.\n");
     else if (motorsArm()) {
-	supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
+	supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2 | STATE_SIM_ENABLED));
 	AQ_NOTICE("Armed\n");
 	signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
     }
@@ -143,7 +146,7 @@ void supervisorDisarm(void) {
     motorsDisarm();
     calibDeinit();
     signalingLEDsOff();
-    supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
+    supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2 | STATE_SIM_ENABLED));
     AQ_NOTICE("Disarmed\n");
     signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
 }

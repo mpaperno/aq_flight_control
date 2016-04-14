@@ -142,6 +142,9 @@ static void motorsCheckCanStatus(int motorId) {
 void motorsSendValues(void) {
     int i;
 
+    if (supervisorData.state & STATE_SIM_ENABLED)
+	return;
+
     for (int j = 0; j < motorsData.numActive; ++j) {
 	i = motorsData.activeList[j];
 	// ensure motor output is constrained

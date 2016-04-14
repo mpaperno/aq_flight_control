@@ -41,15 +41,16 @@
 #define SUPERVISOR_INVALID_AMPSOUT_VALUE        -9999.0f // value of supervisorData.aOutLPF when current flow is unknown
 
 enum supervisorStates {
-    STATE_INITIALIZING	= 0x00,
-    STATE_CALIBRATION	= 0x01,
-    STATE_DISARMED	= 0x02,
-    STATE_ARMED		= 0x04,
-    STATE_FLYING	= 0x08,
-    STATE_RADIO_LOSS1	= 0x10,
-    STATE_RADIO_LOSS2	= 0x20,
-    STATE_LOW_BATTERY1	= 0x40,
-    STATE_LOW_BATTERY2	= 0x80
+    STATE_INITIALIZING	= 0x0000,
+    STATE_CALIBRATION	= 0x0001,
+    STATE_DISARMED	= 0x0002,
+    STATE_ARMED		= 0x0004,
+    STATE_FLYING	= 0x0008,
+    STATE_RADIO_LOSS1	= 0x0010,
+    STATE_RADIO_LOSS2	= 0x0020,
+    STATE_LOW_BATTERY1	= 0x0040,
+    STATE_LOW_BATTERY2	= 0x0080,
+    STATE_SIM_ENABLED	= 0x0100
 };
 
 enum supervisorFailsafeStg2Options {
@@ -79,6 +80,7 @@ enum supervisorSystemStatusBits {
     SPVR_AQ_STATUS_FUEL_LOW        = 0x00002000, // b13 Battery is low (stage 1 warning)
     SPVR_AQ_STATUS_FUEL_CRITICAL   = 0x00004000, // b14 battery is depleted (stage 2 warning)
 
+    SPVR_AQ_STATUS_SIM             = 0x00800000, // b23 HIL/SIL Simulator mode active
     SPVR_AQ_STATUS_DVH             = 0x01000000, // b24 Dynamic Velocity Hold is active (PH with proportional manual direction override)
     SPVR_AQ_STATUS_DAO             = 0x02000000, // b25 Dynamic Altitude Override is active (AH with proportional manual adjustment)
     SPVR_AQ_STATUS_CEILING_REACHED = 0x04000000, // b26 Craft is at ceiling altitude
