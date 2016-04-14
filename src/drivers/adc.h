@@ -19,6 +19,7 @@
 #ifndef _adc_h
 #define _adc_h
 
+#include "aq.h"
 #include "digital.h"
 #include <CoOS.h>
 
@@ -96,9 +97,6 @@
 #define ADC_VOLTS_TEMP3		14
 
 typedef struct {
-    OS_TID adcTask;
-    OS_FlagID adcFlag;
-
     unsigned long interrupt123Sums[ADC_SENSORS];
 
     unsigned long volatile adcSums[ADC_SENSORS];
@@ -130,7 +128,13 @@ typedef struct {
     volatile unsigned long lastSample;
     volatile unsigned long sampleTime;
     float dt;
+
     int8_t magSign;
+    bool magEnabled;
+
+    OS_TID adcTask;
+    OS_FlagID adcFlag;
+
 } adcStruct_t __attribute__((aligned));
 
 extern adcStruct_t adcData;

@@ -113,7 +113,7 @@ void adcTaskCode(void *unused) {
 //	adcData.dRateZ = c;
 
 	// notify IMU of double rate GYO readings are ready
-	imuAdcDRateReady();
+	imuSensorReady(IMU_TYPE_AIMU, IMU_UPDT_DRATE);
 
 	// mags
 	// we need to discard frames after mag bias flips
@@ -252,7 +252,7 @@ void adcTaskCode(void *unused) {
 	    adcData.dt = (float)(adcData.sampleTime * 2) * (1.0f / (float)AQ_US_PER_SEC);
 	    adcData.lastUpdate = adcData.lastSample;
 
-	    imuAdcSensorReady();
+	    imuSensorReady(IMU_TYPE_AIMU, IMU_UPDT_FULL);
 	}
 
 	// flip our mag sign and try to refine bridge bias estimate
@@ -325,6 +325,8 @@ void adcInit(void) {
     AQ_NOTICE("ADC init\n");
 
     memset((void *)&adcData, 0, sizeof(adcData));
+
+    adcData.magEnabled = 1;
 
     // energize mag's set/reset circuit
     adcData.magSetReset = digitalInit(GPIOE, GPIO_Pin_10, 1);

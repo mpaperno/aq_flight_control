@@ -337,7 +337,7 @@ static void dIMUTaskCode(void *unused) {
 	    max21100DrateDecode();
 #endif
 
-	    imuDImuDRateReady();
+	    imuSensorReady(IMU_TYPE_DIMU, IMU_UPDT_DRATE);
 
 	    // full sensor loop
 	    if (!(loops % (DIMU_OUTER_PERIOD/DIMU_INNER_PERIOD))) {
@@ -354,7 +354,7 @@ static void dIMUTaskCode(void *unused) {
 		ms5611Decode();
 #endif
 		dImuData.lastUpdate = timerMicros();
-		imuDImuSensorReady();
+		imuSensorReady(IMU_TYPE_DIMU, IMU_UPDT_FULL);
 		dIMUCalcTempDiff();
 	    }
 	}

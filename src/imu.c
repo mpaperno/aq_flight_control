@@ -18,7 +18,9 @@
 
 #include "imu.h"
 #include "arm_math.h"
+#include "aq_timer.h"
 #include "config.h"
+#include "supervisor.h"
 #include <string.h>
 
 imuStruct_t imuData __attribute__((section(".ccm")));
@@ -63,12 +65,30 @@ void imuCalcRot(void) {
     imuData.cosRot = cosf(rotAngle);
 }
 
+void imuInitData(void) {
+
+#ifdef USE_DIGITAL_IMU
+
+    imuData.magEnabled = &hmc5983Data.enabled;
+    imuData.lastUpdate = &dImuData.lastUpdate;
+
+#else  // AIMU
+
+    imuData.magEnabled = &adcData.magEnabled;
+    imuData.lastUpdate = &adcData.lastUpdate;
+
+#endif
+
+}
+
 void imuInit(void) {
     memset((void *)&imuData, 0, sizeof(imuData));
 
     imuData.dRateFlag = CoCreateFlag(1, 0);
     imuData.sensorFlag = CoCreateFlag(1, 0);
 
+    // set up data pointers
+    imuInitData();
      // calculate IMU rotation
     imuCalcRot();
 
@@ -81,30 +101,33 @@ void imuInit(void) {
 #endif	// HAS_DIGITAL_IMU
 }
 
-void imuAdcDRateReady(void) {
+void imuSensorReady(int8_t imuType, uint8_t updtType) {
+
+    switch (imuType) {
+	case IMU_TYPE_DIMU :
 #ifndef USE_DIGITAL_IMU
-    imuData.halfUpdates++;
-    CoSetFlag(imuData.dRateFlag);
+	    return;
 #endif
-}
+	    break;
 
-void imuAdcSensorReady(void) {
-#ifndef USE_DIGITAL_IMU
-    imuData.fullUpdates++;
-    CoSetFlag(imuData.sensorFlag);
+	case IMU_TYPE_AIMU :
+#if !defined(HAS_AIMU) || defined(USE_DIGITAL_IMU)
+	    return;
 #endif
-}
+	    break;
 
-void imuDImuDRateReady(void) {
-#ifdef USE_DIGITAL_IMU
-    imuData.halfUpdates++;
-    CoSetFlag(imuData.dRateFlag);
-#endif	// USE_DIGITAL_IMU
-}
+	case IMU_TYPE_SIMU :
+	    if (!(supervisorData.state & STATE_SIM_ENABLED))
+		return;
+	    break;
+    }
 
-void imuDImuSensorReady(void) {
-#ifdef USE_DIGITAL_IMU
-    imuData.fullUpdates++;
-    CoSetFlag(imuData.sensorFlag);
-#endif	// USE_DIGITAL_IMU
+    if (updtType == IMU_UPDT_FULL) {
+	imuData.fullUpdates++;
+	CoSetFlag(imuData.sensorFlag);
+    }
+    else {
+	imuData.halfUpdates++;
+	CoSetFlag(imuData.dRateFlag);
+    }
 }
