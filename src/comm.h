@@ -61,8 +61,8 @@ enum commStreamTypes {
     COMM_STREAM_TYPE_TELEMETRY	    = (1<<2),	// AQ custom telemetry format
     COMM_STREAM_TYPE_GPS	    = (1<<3),	// AQ custom format data from GPS Rx
     COMM_STREAM_TYPE_RC_RX_TELEM    = (1<<4),	// RC receiver telemetry, eg. FrSky/SmartPort
-    COMM_STREAM_TYPE_CLI	    = (1<<5),   // rest are reserved for future use
-    COMM_STREAM_TYPE_OMAP_CONSOLE   = (1<<6),
+    COMM_STREAM_TYPE_HILSIM	    = (1<<5),	// HIL simulator I/O
+    COMM_STREAM_TYPE_OMAP_CONSOLE   = (1<<6),   // rest are reserved for future use
     COMM_STREAM_TYPE_OMAP_PPP	    = (1<<7)
 };
 

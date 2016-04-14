@@ -110,6 +110,12 @@ static uint16_t usbVcpCtrl(uint32_t Cmd, uint8_t* Buf, uint32_t Len) {
 		    commSetStreamType(COMM_USB_PORT, COMM_STREAM_TYPE_GPS);
 		    break;
 
+#ifdef HAS_HIL_SIM_MP
+		case USB_STREAM_HILS:
+		    commSetStreamType(COMM_USB_PORT, COMM_STREAM_TYPE_HILSIM);
+		    break;
+#endif
+
 		default:
 		    commSetStreamType(COMM_USB_PORT, COMM_STREAM_TYPE_MAVLINK);
 		    break;

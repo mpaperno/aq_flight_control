@@ -26,6 +26,7 @@
 #define USB_STREAM_TELEMETRY	300
 #define USB_STREAM_MAVLINK	600
 #define USB_STREAM_GPS		1200
+#define USB_STREAM_HILS		2400
 
 typedef struct {
     uint32_t bitrate;
