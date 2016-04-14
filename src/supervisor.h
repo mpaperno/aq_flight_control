@@ -24,7 +24,7 @@
 #include "aq.h"
 #include "digital.h"
 
-#define SUPERVISOR_STACK_SIZE	    224             // must be evenly divisible by 8
+#define SUPERVISOR_STACK_SIZE	    240             // must be evenly divisible by 8
 #define SUPERVISOR_PRIORITY	    34
 
 #define SUPERVISOR_RATE		    20		    // Hz
@@ -89,17 +89,33 @@ enum supervisorSystemStatusBits {
     SPVR_AQ_STATUS_FAILSAFE        = 0x80000000, // b31 System is in failsafe recovery mode
 };
 
+enum supervisorActionRequests {
+    SPVR_ACT_REQ_NONE = 0,
+    SPVR_ACT_REQ_CFG_READ_FLASH,
+    SPVR_ACT_REQ_CFG_WRITE_FLASH,
+    SPVR_ACT_REQ_CFG_READ_FILE,
+    SPVR_ACT_REQ_CFG_WRITE_FILE,
+    SPVR_ACT_REQ_CFG_DEFAULTS,
+    SPVR_ACT_REQ_DISARMED_ENUM_END,
+    SPVR_ACT_REQ_DIMU_CFG_READ,
+    SPVR_ACT_REQ_DIMU_CFG_WRITE,
+    SPVR_ACT_REQ_CALIB_ACC,
+    SPVR_ACT_REQ_CALIB_MAG,
+    SPVR_ACT_REQ_SYSTEM_RESET,
+    SPVR_ACT_REQ_ENUM_END
+};
+
 typedef struct {
 
     digitalPin *readyLed;
     digitalPin *debugLed;
     digitalPin *gpsLed;
 
+    float *currentSenseValPtr;
     float flightTime;		    // seconds
     float idlePercent;
     float vInLPF;
     float aOutLPF;
-    float *currentSenseValPtr;
 
     uint32_t armTime;
     uint32_t stickCmdTimer;
@@ -110,12 +126,11 @@ typedef struct {
     uint16_t state;
     uint8_t battRemainingPrct;
     uint8_t diskWait;
+    uint8_t configActionRequest;   // one of supervisorActionRequests
 
     OS_TID supervisorTask;
 
     bool configRead;
-    bool tareRequested;
-    bool calibRequested;
 } supervisorStruct_t;
 
 extern supervisorStruct_t supervisorData;
@@ -129,7 +144,6 @@ extern void supervisorSendDataStop(void);
 extern void supervisorConfigRead(void);
 extern void supervisorArm(void);
 extern void supervisorDisarm(void);
-extern void supervisorRequestTare(void);
-extern void supervisorRequestCalib(void);
+extern bool supervisorRequestConfigAction(uint8_t act);
 
 #endif

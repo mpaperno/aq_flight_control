@@ -171,7 +171,7 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FLASH_READ:
-	    if (!(supervisorData.state & STATE_FLYING) && configLoadParamsFromFlash()) {
+	    if (!(supervisorData.state & STATE_FLYING) && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_READ_FLASH)) {
 		    commandAck(NULL, 0);
 	    }
 	    else {
@@ -180,7 +180,7 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FLASH_WRITE:
-	    if (!(supervisorData.state & STATE_FLYING) && configSaveParamsToFlash()) {
+	    if (!(supervisorData.state & STATE_FLYING) && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_WRITE_FLASH)) {
 		    commandAck(NULL, 0);
 	    }
 	    else {
@@ -189,7 +189,7 @@ static void commandExecute(commandBufStruct_t *b) {
 	    break;
 
     case COMMAND_CONFIG_FACTORY_RESET:
-	    if (!(supervisorData.state & STATE_FLYING) && configLoadParamsFromDefault()) {
+	    if (!(supervisorData.state & STATE_FLYING) && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_DEFAULTS)) {
 		    commandAck(NULL, 0);
 	    }
 	    else {

@@ -406,92 +406,61 @@ void mavlinkDoCommand(mavlink_message_t *msg) {
     switch (command) {
 
 	case MAV_CMD_PREFLIGHT_CALIBRATION:
-	    if (!(supervisorData.state & STATE_ARMED)) {
-		param = mavlink_msg_command_long_get_param2(msg);  // MAG
-		param2 = mavlink_msg_command_long_get_param5(msg); // ACC
-		if (param) {
-		    supervisorRequestCalib();
-		    ack = MAV_CMD_ACK_OK;
-		}
-		if (param2) {
-		    supervisorRequestTare();
-		    ack = MAV_CMD_ACK_OK;
-		}
-	    }
-	    else {
+	    param = mavlink_msg_command_long_get_param2(msg);  // MAG
+	    param2 = mavlink_msg_command_long_get_param5(msg); // ACC
+	    if (param && supervisorRequestConfigAction(SPVR_ACT_REQ_CALIB_MAG))
+		ack = MAV_CMD_ACK_OK;
+	    else if (param2 && supervisorRequestConfigAction(SPVR_ACT_REQ_CALIB_ACC))
+		ack = MAV_CMD_ACK_OK;
+	    else
 		ack = MAV_CMD_ACK_ERR_FAIL;
-		AQ_NOTICE("Error: Can't calibrate while armed!");
-	    }
-
 	    break;  // case MAV_CMD_PREFLIGHT_CALIBRATION
 
 	case MAV_CMD_PREFLIGHT_STORAGE:
-	    if (!(supervisorData.state & STATE_FLYING)) {
-		param = mavlink_msg_command_long_get_param1(msg);
-		switch (compId) {
-
-		    // IMU calibration parameters
-		    case MAV_COMP_ID_IMU:
-#ifdef HAS_DIGITAL_IMU
-			if (param == 0.0f) {
-			    dIMURequestCalibRead();
-			    ack = MAV_CMD_ACK_OK;
-			}
-			else if (param == 1.0f) {
-			    dIMURequestCalibWrite();
-			    ack = MAV_CMD_ACK_OK;
-			}
-#else
+	    param = mavlink_msg_command_long_get_param1(msg);
+	    switch (compId) {
+		// IMU calibration parameters
+		case MAV_COMP_ID_IMU:
+		    if (param == 0.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_DIMU_CFG_READ))
+			ack = MAV_CMD_ACK_OK;
+		    else if (param == 1.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_DIMU_CFG_WRITE))
+			ack = MAV_CMD_ACK_OK;
+		    else
 			ack = MAV_CMD_ACK_ERR_FAIL;
-			AQ_NOTICE("Error: No Digital IMU available.");
-#endif
 
-			break; // case MAV_COMP_ID_IMU
+		    break;
 
-		    // main parameters
-		    default:
-			if (param == 0.0f && configLoadParamsFromFlash())	// read flash
-			    ack = MAV_CMD_ACK_OK;
-			else if (param == 1.0f && configSaveParamsToFlash()) 	// write flash
-			    ack = MAV_CMD_ACK_OK;
-			else if (param == 2.0f && configLoadParamsFromFile())	// read file
-			    ack = MAV_CMD_ACK_OK;
-			else if (param == 3.0f && configSaveParamsToFile())     // write file
-			    ack = MAV_CMD_ACK_OK;
-			else if (param == 4.0f && configLoadParamsFromDefault()) // load all defaults
-			    ack = MAV_CMD_ACK_OK;
-			else
-			    ack = MAV_CMD_ACK_ERR_FAIL;
+		// main parameters
+		default:
+		    if (param == 0.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_READ_FLASH))
+			ack = MAV_CMD_ACK_OK;
+		    else if (param == 1.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_WRITE_FLASH))
+			ack = MAV_CMD_ACK_OK;
+		    else if (param == 2.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_READ_FILE))
+			ack = MAV_CMD_ACK_OK;
+		    else if (param == 3.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_WRITE_FILE))
+			ack = MAV_CMD_ACK_OK;
+		    else if (param == 4.0f && supervisorRequestConfigAction(SPVR_ACT_REQ_CFG_DEFAULTS))
+			ack = MAV_CMD_ACK_OK;
+		    else
+			ack = MAV_CMD_ACK_ERR_FAIL;
 
-			break; // case default (main params)
-
-		} // switch(component ID)
-	    }
-	    else {
-		ack = MAV_CMD_ACK_ERR_FAIL;
-		AQ_NOTICE("Error: Can't save or load parameters while flying!");
-	    }
+		    break;
+	    } // switch(component ID)
 
 	    break; // case MAV_CMD_PREFLIGHT_STORAGE
 
 	// remote reboot
 	case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
-	    if (!(supervisorData.state & STATE_ARMED)) {
-		param = mavlink_msg_command_long_get_param1(msg);	// flight controller actions: 0=noOp; 1=reboot; 2=shutdown
-		//param2 = mavlink_msg_command_long_get_param2(msg);	// onboard computer actions: 0=noOp; 1=reboot; 2=shutdown
-		if (param == 1.0f) {
-		    AQ_NOTICE("Flight controller restarting...");
+	    param = mavlink_msg_command_long_get_param1(msg);	// flight controller actions: 0=noOp; 1=reboot; 2=shutdown
+	    if (param == 1.0f) {
+		if (supervisorRequestConfigAction(SPVR_ACT_REQ_SYSTEM_RESET))
 		    ack = MAV_CMD_ACK_OK;
-		    yield(100);
-		    NVIC_SystemReset();
-		} else {
+		else
 		    ack = MAV_CMD_ACK_ERR_FAIL;
-		    AQ_NOTICE("Error: Shutdown and computer actions not supported.");
-		}
-	    }
-	    else {
+	    } else {
 		ack = MAV_CMD_ACK_ERR_FAIL;
-		AQ_NOTICE("Error: Can't reset while armed!");
+		AQ_NOTICE("Error: Shutdown and computer actions not supported.");
 	    }
 
 	    break;  // case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN

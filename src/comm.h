@@ -22,7 +22,7 @@
 #include "serial.h"
 #include <stdio.h>
 
-#define COMM_STACK_SIZE		336   // must be evenly divisible by 8
+#define COMM_STACK_SIZE		320   // must be evenly divisible by 8
 #define COMM_PRIORITY		40
 #define COMM_NOTICE_DEPTH	36    // must be power of 2
 #define COMM_NOTICE_LENGTH	64

@@ -171,7 +171,7 @@ void supervisorDisarm(void) {
 }
 
 void supervisorCalibrate(void) {
-    if ((supervisorData.state & STATE_ARMED))
+    if ((supervisorData.state & STATE_ARMED) || (supervisorData.state & STATE_CALIBRATION))
 	return;
     supervisorData.state |= STATE_CALIBRATION;
     AQ_NOTICE("Starting MAG calibration mode.\n");
@@ -189,6 +189,65 @@ void supervisorTare(void) {
 #else
     AQ_NOTICE("Cannot perform AIMU tare.\n");
 #endif // HAS_DIGITAL_IMU
+}
+
+void supervisorCheckPendingActionRequest() {
+    uint8_t req = supervisorData.configActionRequest;
+    supervisorData.configActionRequest = SPVR_ACT_REQ_NONE;
+    if ((supervisorData.state & STATE_FLYING) || req == SPVR_ACT_REQ_NONE || supervisorData.stickCmdTimer)
+	return;
+
+    switch (req) {
+	case SPVR_ACT_REQ_CFG_READ_FLASH:
+	    configLoadParamsFromFlash();
+	    break;
+
+	case SPVR_ACT_REQ_CFG_WRITE_FLASH:
+	    configSaveParamsToFlash();
+	    break;
+
+	case SPVR_ACT_REQ_CFG_READ_FILE:
+	    configLoadParamsFromFile();
+	    break;
+
+	case SPVR_ACT_REQ_CFG_WRITE_FILE:
+	    configSaveParamsToFile();
+	    break;
+
+	case SPVR_ACT_REQ_CFG_DEFAULTS:
+	    configLoadParamsFromDefault();
+	    break;
+
+#ifdef HAS_DIGITAL_IMU
+	case SPVR_ACT_REQ_DIMU_CFG_READ:
+	    if (!(supervisorData.state & STATE_ARMED))
+		dIMURequestCalibRead();
+	    break;
+
+	case SPVR_ACT_REQ_DIMU_CFG_WRITE:
+	    if (!(supervisorData.state & STATE_ARMED))
+		dIMURequestCalibWrite();
+	    break;
+#endif
+
+	case SPVR_ACT_REQ_CALIB_ACC:
+	    if (!(supervisorData.state & STATE_ARMED))
+		supervisorTare();
+	    break;
+
+	case SPVR_ACT_REQ_CALIB_MAG:
+	    if (!(supervisorData.state & STATE_ARMED) && !(supervisorData.state & STATE_CALIBRATION))
+		supervisorCalibrate();
+	    break;
+
+	case SPVR_ACT_REQ_SYSTEM_RESET:
+	    if (!(supervisorData.state & STATE_ARMED)) {
+		AQ_NOTICE("Flight controller restarting...");
+		yield(500);
+		NVIC_SystemReset();
+	    }
+	    break;
+    }
 }
 
 void supervisorTaskCode(void *unused) {
@@ -288,7 +347,7 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.armTime = 0;
 	    }
 
-	    // various functions
+	    // various functions while disarmed
 	    if (RADIO_VALID && RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
 		if (!supervisorData.stickCmdTimer) {
 		    supervisorData.stickCmdTimer = timerMicros();
@@ -317,17 +376,8 @@ void supervisorTaskCode(void *unused) {
 		} // end stick timer check
 	    }
 	    // no stick commands detected
-	    else {
+	    else
 		supervisorData.stickCmdTimer = 0;
-
-		if (supervisorData.tareRequested) {
-		    supervisorData.tareRequested = 0;
-		    supervisorTare();
-		} else if (supervisorData.calibRequested) {
-		    supervisorData.calibRequested = 0;
-		    supervisorCalibrate();
-		}
-	    }
 
 	} // end if disarmed
 	else if (supervisorData.state & STATE_ARMED) {
@@ -459,6 +509,10 @@ void supervisorTaskCode(void *unused) {
 	}
 	// end radio loss check
 
+	// check for configuration or calibration requests from other threads
+	// (this is done in part to centralize memory use for potentially expensive printf/scanf and I/O operations)
+	supervisorCheckPendingActionRequest();
+
 	// calculate idle time
 	supervisorData.idlePercent = (counter - lastAqCounter) * minCycles * 100.0f / ((1e6f / SUPERVISOR_RATE) * rccClocks.SYSCLK_Frequency / 1e6f);
 	lastAqCounter = counter;
@@ -562,12 +616,31 @@ void supervisorConfigRead(void) {
 #endif
 }
 
-void supervisorRequestTare(void) {
-    supervisorData.tareRequested = 1;
-}
+bool supervisorRequestConfigAction(uint8_t act) {
+    if (act >= SPVR_ACT_REQ_ENUM_END || supervisorData.configActionRequest > SPVR_ACT_REQ_NONE) {
+	AQ_NOTICE("Error: Unknown or currently pending action.");
+	return false;
+    }
 
-void supervisorRequestCalib(void) {
-    supervisorData.calibRequested = 1;
+    if ((supervisorData.state & STATE_FLYING)) {
+	AQ_NOTICE("Error: Must be landed to perform this action.");
+	return false;
+    }
+
+    if ((supervisorData.state & STATE_ARMED) && act > SPVR_ACT_REQ_DISARMED_ENUM_END) {
+	AQ_NOTICE("Error: Must be disarmed to perform this action.");
+	return false;
+    }
+
+#ifndef HAS_DIGITAL_IMU
+    if (act == SPVR_ACT_REQ_DIMU_CFG_READ || act == SPVR_ACT_REQ_DIMU_CFG_WRITE || act == SPVR_ACT_REQ_CALIB_ACC) {
+	AQ_NOTICE("Error: DIMU required to perform this action.");
+	return false;
+    }
+#endif
+
+    supervisorData.configActionRequest = act;
+    return true;
 }
 
 void supervisorInit(void) {
@@ -581,6 +654,7 @@ void supervisorInit(void) {
 
     supervisorData.state = STATE_INITIALIZING;
     supervisorData.systemStatus = SPVR_AQ_STATUS_INIT;
+    supervisorData.configActionRequest = SPVR_ACT_REQ_NONE;
     supervisorTaskStack = aqStackInit(SUPERVISOR_STACK_SIZE, "SUPERVISOR");
 
     supervisorData.supervisorTask = CoCreateTask(supervisorTaskCode, (void *)0, SUPERVISOR_PRIORITY, &supervisorTaskStack[SUPERVISOR_STACK_SIZE-1], SUPERVISOR_STACK_SIZE);
