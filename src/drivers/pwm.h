@@ -21,9 +21,9 @@
 
 #include "aq.h"
 
-#define pwmDigitalHi(p)		{ p->port->BSRRL = p->pin; }
-#define pwmDigitalLo(p)		{ p->port->BSRRH = p->pin; }
-#define pwmDigitalGet(p)	((p->port->ODR & p->pin) != 0)
+#define pwmDigitalHi(Port_id)	(Port_id->port->BSRRL = Port_id->pin)
+#define pwmDigitalLo(Port_id)	(Port_id->port->BSRRH = Port_id->pin)
+#define pwmDigitalGet(Port_id)	((Port_id->port->ODR & Port_id->pin) != 0)
 
 enum pwmDirections {
     PWM_OUTPUT = 1,

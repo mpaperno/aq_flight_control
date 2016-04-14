@@ -13,12 +13,13 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2014-2016 Maxim Paperno
 */
 
 #ifndef _signaling_h
 #define _signaling_h
 
+#include "digital.h"
 #include "pwm.h"
 
 #define SIG_SPEAKER_FREQ	2000	// frequency for piezo speaker in Hz
@@ -50,22 +51,31 @@ enum signalingEventTypes {
 };
 
 typedef struct {
-  pwmPortStruct_t *beeperPort;
-  pwmPortStruct_t *ledPort1;
-  pwmPortStruct_t *ledPort2;
-  pwmPortStruct_t *pwmPort;
-  uint8_t enabled;	// flag indicating if any signaling is used (any ports are enabled)
-  uint8_t patPos;	    // loop counter used in Led patterns
-  uint8_t patLen;	    // number of positions in pattern per output device; 10 = 1Hz. Changing it will! affect the led pattern event
-  uint8_t oneTimeEvtTyp;    // if set, a one-time event is signaled, overriding any other current events
-  uint8_t oneTimeEvtStat;   // current one-time event stage: 0=not active; 1=event is done; 2=event is in progress
-  uint8_t beeperType;	    // 0 = buzzer, 1 = speaker
+    digitalPin *readyLed;
+    digitalPin *debugLed;
+    digitalPin *gpsLed;
+
+    pwmPortStruct_t *beeperPort;
+    pwmPortStruct_t *ledPort1;
+    pwmPortStruct_t *ledPort2;
+    pwmPortStruct_t *pwmPort;
+
+    uint8_t enabled;	      // flag indicating if any signaling is used (any ports are enabled)
+    uint8_t patPos;	      // loop counter used in Led patterns
+    uint8_t patLen;	      // number of positions in pattern per output device; 10 = 1Hz. Changing it will! affect the led pattern event
+    uint8_t oneTimeEvtTyp;    // if set, a one-time event is signaled, overriding any other current events
+    uint8_t oneTimeEvtStat;   // current one-time event stage: 0=not active; 1=event is done; 2=event is in progress
+    uint8_t beeperType;	      // 0 = buzzer, 1 = speaker
 } sigStruct_t __attribute__((aligned));
 
 extern sigStruct_t sigData;
 
 extern void signalingInit(void);
-extern void signalingEvent(void);
+extern void signalingEvent(uint32_t loop);
 extern void signalingOnetimeEvent(int eventTyp);
+extern void signalingLEDsOn(void);
+extern void signalingLEDsOff(void);
+extern void signalingDataStream();
+extern void signalingGpsDataStream();
 
 #endif

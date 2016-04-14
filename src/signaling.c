@@ -13,16 +13,21 @@
     You should have received a copy of the GNU General Public License
     along with AutoQuad.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright © 2011-2014  Bill Nesbitt
+    Copyright 2014-2016 Maxim Paperno
 */
 
 #include "signaling.h"
+
 #include "analog.h"
+#include "aq_timer.h"
+#include "calib.h"
+#include "comm.h"
 #include "config.h"
 #include "nav.h"
+#include "radio.h"
 #include "supervisor.h"
 #include "util.h"
-#include "comm.h"
+
 #include <string.h>
 
 
@@ -65,45 +70,43 @@ void signalingBeep(unsigned long hz, unsigned long ms) {
 	    *sigData.beeperPort->ccr = SIG_SPEAKER_PULSE_LEN;
 	    delay(ms);
 	    *sigData.beeperPort->ccr = 0;
-		}
+	}
 	// piezo buzzer with its own oscillator, or LED
 	else {
 	    pwmDigitalHi(sigData.beeperPort);
-		delay(ms);
+	    delay(ms);
 	    pwmDigitalLo(sigData.beeperPort);
-	    }
 	}
+    }
 }
 
 void signalingWriteOutput(int eventType) {
     if (sigData.ledPort1) {
-	if (sig_pattern[eventType][sigData.patPos]) {
+	if (sig_pattern[eventType][sigData.patPos])
 	    pwmDigitalHi(sigData.ledPort1);
-	} else {
+	else
 	    pwmDigitalLo(sigData.ledPort1);
-	}
+
     }
     if (sigData.ledPort2) {
-	if (sig_pattern[eventType][sigData.patPos + sigData.patLen]) {
+	if (sig_pattern[eventType][sigData.patPos + sigData.patLen])
 	    pwmDigitalHi(sigData.ledPort2);
-	} else {
+	else
 	    pwmDigitalLo(sigData.ledPort2);
-	}
     }
     if (sigData.beeperPort) {
 	if (sigData.beeperType) {  // speaker
 	    *sigData.beeperPort->ccr = sig_pattern[eventType][sigData.patPos + sigData.patLen * 2] * SIG_SPEAKER_PULSE_LEN;
 	}
 	else {  // buzzer
-	    if (sig_pattern[eventType][sigData.patPos + sigData.patLen * 2]) {
-		pwmDigitalHi(sigData.beeperPort); }
-	    else {
-		pwmDigitalLo(sigData.beeperPort); }
+	    if (sig_pattern[eventType][sigData.patPos + sigData.patLen * 2])
+		pwmDigitalHi(sigData.beeperPort);
+	    else
+		pwmDigitalLo(sigData.beeperPort);
 	}
     }
-    if (sigData.pwmPort) {
+    if (sigData.pwmPort)
 	*sigData.pwmPort->ccr = sig_pattern[eventType][sigData.patLen * 3];
-    }
 }
 
 void signalingInit(void) {
@@ -112,6 +115,12 @@ void signalingInit(void) {
 
     sigData.patPos = 0;
     sigData.patLen = 10;  // 10 = 1Hz. Changing it will! affect the led pattern event
+
+    sigData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN, 0);
+#ifdef SUPERVISOR_DEBUG_PORT
+    sigData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN, 0);
+#endif
+    sigData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     if (p[SIG_LED_1_PRT]) {
 	sigData.ledPort1 = pwmInitDigitalOut(p[SIG_LED_1_PRT]-1);
@@ -167,6 +176,30 @@ void signalingInit(void) {
     }
 }
 
+void signalingLEDsOn(void) {
+    digitalHi(sigData.readyLed);
+    digitalHi(sigData.gpsLed);
+    if (sigData.debugLed)
+	digitalHi(sigData.debugLed);
+}
+
+void signalingLEDsOff(void) {
+    digitalLo(sigData.readyLed);
+    digitalLo(sigData.gpsLed);
+    if (sigData.debugLed)
+	digitalLo(sigData.debugLed);
+}
+
+void signalingDataStream() {
+    if (!RADIO_VALID && sigData.debugLed)
+	digitalTogg(sigData.debugLed);
+}
+
+void signalingGpsDataStream() {
+    if (navData.fixType < 3 && !(supervisorData.state & STATE_CALIBRATION))
+	digitalTogg(sigData.gpsLed);
+}
+
 // initiate a one-time event, eg. arming/disarming
 // eventTyp should be one of signalingEventTypes
 void signalingOnetimeEvent(int eventType) {
@@ -182,7 +215,81 @@ void signalingOnetimeEvent(int eventType) {
     sigData.oneTimeEvtTyp = eventType;
 }
 
-void signalingEvent() {
+void signalingEvent(uint32_t loop) {
+
+    // onboard LEDs
+
+    if (!(supervisorData.state & STATE_CALIBRATION)) {
+
+	// Ready LED
+	if ((supervisorData.state & STATE_DISARMED)) {
+	    // 1 Hz blink if disarmed, 5 Hz if writing to uSD card
+	    if (!(loop % ((supervisorData.diskWait) ? SUPERVISOR_RATE/10 : SUPERVISOR_RATE/2)))
+		digitalTogg(sigData.readyLed);
+	}
+	else  {  // armed
+	    // rapidly flash Ready LED if we are critically low on power
+	    if (supervisorData.state & STATE_LOW_BATTERY2)
+		digitalTogg(sigData.readyLed);
+	    else
+		digitalHi(sigData.readyLed);
+	}
+
+	// GPS LED
+	if (navData.fixType == 3)
+	    digitalHi(sigData.gpsLed);
+	else
+	    digitalLo(sigData.gpsLed);
+
+	// Debug/Radio LED
+	if (sigData.debugLed) {
+	    // 0.5 Hz blink debug LED if config file could be found on uSD card
+	    if (supervisorData.configRead) {
+		// only for first 15s
+		if (timerMicros() > 15000000) {
+		    supervisorData.configRead = 0;
+		    digitalLo(sigData.debugLed);
+		}
+		else if (!(loop % SUPERVISOR_RATE))
+		    digitalTogg(sigData.debugLed);
+	    }
+	    // indicate radio RX state
+	    else if (RADIO_INITIALIZED) {
+		// packet received in the last 50ms?
+		if (RADIO_VALID)
+		    digitalHi(sigData.debugLed);
+		else if (RADIO_BINDING)
+		    digitalTogg(sigData.debugLed);
+		else
+		    digitalLo(sigData.debugLed);
+	    }
+	}
+    }
+    // calibrating, try to indicate completion percentage
+    else {
+	int i = constrainInt(20*((calibData.percentComplete)/(100.0f/3.0f)), 1, 21);
+	if (i > 20)
+	    digitalHi(sigData.readyLed);
+	else if (!(loop % i))
+	    digitalTogg(sigData.readyLed);
+
+	if (sigData.debugLed) {
+	    i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f)/(100.0f/3.0f)), 1, 21);
+	    if (i > 20)
+		digitalHi(sigData.debugLed);
+	    else if (!(loop % i))
+		digitalTogg(sigData.debugLed);
+	}
+
+	i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f*2.0f)/(100.0f/3.0f)), 1, 21);
+	if (i > 20)
+	    digitalHi(sigData.gpsLed);
+	else if (!(loop % i))
+	    digitalTogg(sigData.gpsLed);
+    }
+
+    // end onboard LEDs
+
 
     if (!sigData.enabled)
 	return;

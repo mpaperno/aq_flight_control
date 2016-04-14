@@ -35,10 +35,8 @@
 #include "radio.h"
 #include "rc.h"
 #include "run.h"
-#include "util.h"
-#ifdef USE_SIGNALING
 #include "signaling.h"
-#endif
+#include "util.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,22 +44,6 @@
 supervisorStruct_t supervisorData __attribute__((section(".ccm")));
 
 OS_STK *supervisorTaskStack;
-
-void supervisorLEDsOn(void) {
-#ifdef SUPERVISOR_DEBUG_PORT
-    digitalHi(supervisorData.debugLed);
-#endif
-    digitalHi(supervisorData.readyLed);
-    digitalHi(supervisorData.gpsLed);
-}
-
-void supervisorLEDsOff(void) {
-#ifdef SUPERVISOR_DEBUG_PORT
-    digitalLo(supervisorData.debugLed);
-#endif
-    digitalLo(supervisorData.readyLed);
-    digitalLo(supervisorData.gpsLed);
-}
 
 static void supervisorSetSystemStatus(void) {
 
@@ -149,9 +131,7 @@ void supervisorArm(void) {
     else if (motorsArm()) {
 	supervisorData.state = STATE_ARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
 	AQ_NOTICE("Armed\n");
-#ifdef USE_SIGNALING
 	signalingOnetimeEvent(SIG_EVENT_OT_ARMING);
-#endif
     }
     else {
 	motorsDisarm();
@@ -162,12 +142,10 @@ void supervisorArm(void) {
 void supervisorDisarm(void) {
     motorsDisarm();
     calibDeinit();
-    supervisorLEDsOff();
+    signalingLEDsOff();
     supervisorData.state = STATE_DISARMED | (supervisorData.state & (STATE_LOW_BATTERY1 | STATE_LOW_BATTERY2));
     AQ_NOTICE("Disarmed\n");
-#ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_DISARMING);
-#endif
 }
 
 void supervisorCalibrate(void) {
@@ -182,10 +160,10 @@ void supervisorTare(void) {
     if ((supervisorData.state & STATE_ARMED))
 	return;
 #ifdef USE_DIGITAL_IMU
-    supervisorLEDsOn();
+    signalingLEDsOn();
     dIMUTare();
     AQ_NOTICE("Level calibration complete.\n");
-    supervisorLEDsOff();
+    signalingLEDsOff();
 #else
     AQ_NOTICE("Cannot perform AIMU tare.\n");
 #endif // HAS_DIGITAL_IMU
@@ -275,63 +253,8 @@ void supervisorTaskCode(void *unused) {
     while (1) {
 	yield(1000/SUPERVISOR_RATE);
 
-	if (supervisorData.state & STATE_CALIBRATION) {
-	    int i;
-
-	    // try to indicate completion percentage
-	    i = constrainInt(20*((calibData.percentComplete)/(100.0f/3.0f)), 1, 21);
-	    if (i > 20)
-		digitalHi(supervisorData.readyLed);
-	    else if (!(count % i))
-		digitalTogg(supervisorData.readyLed);
-
-#ifdef SUPERVISOR_DEBUG_PORT
-	    i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f)/(100.0f/3.0f)), 1, 21);
-	    if (i > 20)
-		digitalHi(supervisorData.debugLed);
-	    else if (!(count % i))
-		digitalTogg(supervisorData.debugLed);
-#endif //SUPERVISOR_DEBUG_PORT
-
-	    i = constrainInt(20*((calibData.percentComplete-100.0f/3.0f*2.0f)/(100.0f/3.0f)), 1, 21);
-	    if (i > 20)
-		digitalHi(supervisorData.gpsLed);
-	    else if (!(count % i))
-		digitalTogg(supervisorData.gpsLed);
-
-	    // user looking to go back to DISARMED mode?
-	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500) {
-		if (!supervisorData.armTime) {
-		    supervisorData.armTime = timerMicros();
-		}
-		else if ((timerMicros() - supervisorData.armTime) > SUPERVISOR_DISARM_TIME) {
-		    supervisorDisarm();
-		    supervisorData.armTime = 0;
-		}
-	    }
-	    else {
-		supervisorData.armTime = 0;
-	    }
-	}  // end if calibrating
-	else if (supervisorData.state & STATE_DISARMED) {
-
-#ifdef SUPERVISOR_DEBUG_PORT
-	    // 0.5 Hz blink debug LED if config file could be found on uSD card
-	    if (supervisorData.configRead && (!(count % SUPERVISOR_RATE))) {
-		// only for first 15s
-		if (timerMicros() > 15000000) {
-		    supervisorData.configRead = 0;
-		    digitalLo(supervisorData.debugLed);
-		}
-		else {
-		    digitalTogg(supervisorData.debugLed);
-		}
-	    }
-#endif // SUPERVISOR_DEBUG_PORT
-
-	    // 1 Hz blink if disarmed, 5 Hz if writing to uSD card
-	    if (!(count % ((supervisorData.diskWait) ? SUPERVISOR_RATE/10 : SUPERVISOR_RATE/2)))
-		digitalTogg(supervisorData.readyLed);
+	// check for stick commands
+	if ((supervisorData.state & STATE_DISARMED) && !(supervisorData.state & STATE_CALIBRATION)) {
 
 	    // Attempt to arm if throttle down and yaw full right for 2sec.
 	    if (RADIO_VALID && RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD > +500) {
@@ -364,12 +287,12 @@ void supervisorTaskCode(void *unused) {
 			navClearWaypoints();
 		    // config write (upper right)
 		    else if (RADIO_ROLL > +500 && RADIO_PITCH < -500) {
-			supervisorLEDsOn();
+			signalingLEDsOn();
 			configSaveParamsToFlash();
 #ifdef HAS_DIGITAL_IMU
 			dIMURequestCalibWrite();
 #endif
-			supervisorLEDsOff();
+			signalingLEDsOff();
 		    }
 
 		    supervisorData.stickCmdTimer = 0;
@@ -380,7 +303,7 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.stickCmdTimer = 0;
 
 	} // end if disarmed
-	else if (supervisorData.state & STATE_ARMED) {
+	else if ((supervisorData.state & STATE_ARMED) || (supervisorData.state & STATE_CALIBRATION)) {
 	    // Disarm only if in manual mode
 	    if (RADIO_THROT < p[CTRL_MIN_THROT] && RADIO_RUDD < -500 && navData.mode == NAV_STATUS_MANUAL) {
 		if (!supervisorData.armTime) {
@@ -395,7 +318,7 @@ void supervisorTaskCode(void *unused) {
 		supervisorData.armTime = 0;
 	    }
 	}
-	// end of calibrating/disarmed/armed mode checks
+	// end of stick command checks
 
 	// radio loss
 	if ((supervisorData.state & STATE_FLYING) && (navData.mode < NAV_STATUS_MISSION || (supervisorData.state & STATE_RADIO_LOSS2))) {
@@ -544,39 +467,13 @@ void supervisorTaskCode(void *unused) {
 
 	supervisorSetSystemStatus();
 
-	if (supervisorData.state & STATE_FLYING) {
+	if (supervisorData.state & STATE_FLYING)
 	    // count flight time in seconds
 	    supervisorData.flightTime += (1.0f / SUPERVISOR_RATE);
 
-	    // rapidly flash Ready LED if we are critically low on power
-	    if (supervisorData.state & STATE_LOW_BATTERY2)
-		digitalTogg(supervisorData.readyLed);
-	}
-	else if (supervisorData.state & STATE_ARMED) {
-	    digitalHi(supervisorData.readyLed);
-	}
-
-#ifdef SUPERVISOR_DEBUG_PORT
-	// DEBUG LED to indicate radio RX state
-	if (!supervisorData.configRead && RADIO_INITIALIZED && supervisorData.state != STATE_CALIBRATION) {
-	    // packet received in the last 50ms?
-	    if (RADIO_VALID) {
-		digitalHi(supervisorData.debugLed);
-	    }
-	    else {
-		if (RADIO_BINDING)
-		    digitalTogg(supervisorData.debugLed);
-		else
-		    digitalLo(supervisorData.debugLed);
-	    }
-	}
-#endif
-
 	count++;
 
-#ifdef USE_SIGNALING
-	signalingEvent();
-#endif
+	signalingEvent(count);
     }
 }
 
@@ -596,24 +493,15 @@ void supervisorThrottleUp(uint8_t throttle) {
 }
 
 void supervisorSendDataStart(void) {
-#ifdef SUPERVISOR_DEBUG_PORT
-    if (!RADIO_VALID)
-	digitalTogg(supervisorData.debugLed);
-#endif
+    signalingDataStream();
 }
 
 void supervisorSendDataStop(void) {
-#ifdef SUPERVISOR_DEBUG_PORT
-    if (!RADIO_VALID)
-	digitalTogg(supervisorData.debugLed);
-#endif
+    signalingDataStream();
 }
 
 void supervisorConfigRead(void) {
     supervisorData.configRead = 1;
-#ifdef SUPERVISOR_DEBUG_PORT
-    digitalHi(supervisorData.debugLed);
-#endif
 }
 
 bool supervisorRequestConfigAction(uint8_t act) {
@@ -645,12 +533,6 @@ bool supervisorRequestConfigAction(uint8_t act) {
 
 void supervisorInit(void) {
     memset((void *)&supervisorData, 0, sizeof(supervisorData));
-
-    supervisorData.readyLed = digitalInit(SUPERVISOR_READY_PORT, SUPERVISOR_READY_PIN, 0);
-#ifdef SUPERVISOR_DEBUG_PORT
-    supervisorData.debugLed = digitalInit(SUPERVISOR_DEBUG_PORT, SUPERVISOR_DEBUG_PIN, 0);
-#endif
-    supervisorData.gpsLed = digitalInit(GPS_LED_PORT, GPS_LED_PIN, 0);
 
     supervisorData.state = STATE_INITIALIZING;
     supervisorData.systemStatus = SPVR_AQ_STATUS_INIT;

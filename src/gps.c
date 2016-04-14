@@ -17,19 +17,21 @@
 */
 
 #include "gps.h"
-#include "telemetry.h"
-#include "serial.h"
-#include "digital.h"
-#include "nav.h"
-#include "comm.h"
-#include "aq_timer.h"
-#include "config.h"
-#include "util.h"
-#include "imu.h"
+
 #include "aq_mavlink.h"
-#include "filer.h"
-#include "supervisor.h"
+#include "aq_timer.h"
+#include "comm.h"
+#include "config.h"
+#include "digital.h"
 #include "ext_irq.h"
+#include "filer.h"
+#include "imu.h"
+#include "nav.h"
+#include "serial.h"
+#include "signaling.h"
+#include "telemetry.h"
+#include "util.h"
+
 #include <CoOS.h>
 #include <string.h>
 
@@ -62,7 +64,6 @@ void gpsCheckBaud(serialPort_t *s) {
 void gpsTaskCode(void *p) {
     serialPort_t *s = gpsTaskData.gpsPort;
     char c;
-    char ledOn;
 #ifdef GPS_LOG_BUF
     int logPointer = 0;
 #endif
@@ -76,9 +77,7 @@ void gpsTaskCode(void *p) {
 	yield(1);
 	gpsCheckBaud(s);
 
-	ledOn = digitalGet(supervisorData.gpsLed);
-	if (!ledOn && !(supervisorData.state & STATE_CALIBRATION))
-	    digitalHi(supervisorData.gpsLed);
+	signalingGpsDataStream();
 
 	while (serialAvailable(s)) {
 	    c = serialRead(s);
@@ -113,8 +112,7 @@ void gpsTaskCode(void *p) {
 #endif
 
 
-	if (!ledOn && !(supervisorData.state & STATE_CALIBRATION))
-	    digitalLo(supervisorData.gpsLed);
+	signalingGpsDataStream();
     }
 }
 

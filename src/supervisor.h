@@ -106,12 +106,8 @@ enum supervisorActionRequests {
 };
 
 typedef struct {
-
-    digitalPin *readyLed;
-    digitalPin *debugLed;
-    digitalPin *gpsLed;
-
     float *currentSenseValPtr;
+
     float flightTime;		    // seconds
     float idlePercent;
     float vInLPF;

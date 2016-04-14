@@ -18,28 +18,26 @@
 */
 
 #include "nav.h"
-#include "nav_ukf.h"
-#include "aq.h"
-#include "util.h"
-#include "comm.h"
+
+#include "alt_ukf.h"
+#include "aq_mavlink.h"
 #include "aq_timer.h"
-#include "control.h"
-#include "pid.h"
+#include "comm.h"
+#include "compass.h"
 #include "config.h"
+#include "control.h"
+#include "gps.h"
+#include "imu.h"
+#include "motors.h"
+#include "nav_ukf.h"
+#include "pid.h"
 #include "radio.h"
 #include "rc.h"
-#include "gps.h"
-#include "compass.h"
-#include "imu.h"
-#include "nav_ukf.h"
-#include "motors.h"
 #include "run.h"
-#include "alt_ukf.h"
+#include "signaling.h"
 #include "supervisor.h"
-#include "aq_mavlink.h"
-#ifdef USE_SIGNALING
-   #include "signaling.h"
-#endif
+#include "util.h"
+
 #include <CoOS.h>
 #include <string.h>
 #include <math.h>
@@ -136,9 +134,7 @@ void navSetHeadFreeMode(void) {
                 navData.headFreeMode = NAV_HEADFREE_SETTING;
                 navData.hfDynamicModeTimer = timerMicros();
                 AQ_NOTICE("Set new reference heading for Heading-Free mode\n");
-#ifdef USE_SIGNALING
                 signalingOnetimeEvent(SIG_EVENT_OT_HF_SET);
-#endif
             }
             else if (navData.mode > NAV_STATUS_ALTHOLD && (supervisorData.state & STATE_ARMED) && timerMicros() - navData.hfDynamicModeTimer > NAV_HF_DYNAMIC_DELAY) {
                 navData.headFreeMode = NAV_HEADFREE_DYNAMIC;
@@ -247,14 +243,6 @@ void navSetFixType(void) {
         navData.fixType = 2;
     else
         navData.fixType = 0;
-
-    if (navData.fixType == 3) {
-	if (!(supervisorData.state & STATE_CALIBRATION))
-	    digitalHi(supervisorData.gpsLed);
-    } else {
-	if (!(supervisorData.state & STATE_CALIBRATION))
-	    digitalLo(supervisorData.gpsLed);
-    }
 }
 
 void navDoUserCommands(unsigned char *leg, navMission_t *curLeg) {
@@ -518,9 +506,7 @@ void navNavigate(void) {
                     // start the loiter clock
                     navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
                     AQ_PRINTF("NAV: Reached waypoint %d.\n", leg);
-#ifdef USE_SIGNALING
                     signalingOnetimeEvent(SIG_EVENT_OT_WP_REACHED);
-#endif
 #ifdef USE_MAVLINK
                     // notify ground
                     mavlinkWpReached(leg);
@@ -731,9 +717,7 @@ unsigned char navClearWaypoints(void) {
     navData.tempMissionLoaded = 0;
 
     AQ_NOTICE("NAV: Waypoints cleared.\n");
-#ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_WP_CLEARED);
-#endif
 #ifdef USE_MAVLINK
     mavlinkWpSendCount();
 #endif
@@ -775,9 +759,7 @@ uint8_t navRecordWaypoint(void) {
     navData.missionLegs[idx].poiAltitude = 0;
 
     AQ_PRINTF("NAV: Waypoint %d recorded\n", idx);
-#ifdef USE_SIGNALING
     signalingOnetimeEvent(SIG_EVENT_OT_WP_RECORDED);
-#endif
 #ifdef USE_MAVLINK
     mavlinkWpSendCount();
 #endif

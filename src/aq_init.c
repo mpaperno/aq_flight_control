@@ -39,6 +39,7 @@
 #include "run.h"
 #include "sdio.h"
 #include "serial.h"
+#include "signaling.h"
 #include "supervisor.h"
 #include "util.h"
 #ifdef HAS_AQ_TELEMETRY
@@ -47,9 +48,6 @@
 #endif
 #ifdef CAN_CALIB
     #include "canCalib.h"
-#endif
-#ifdef USE_SIGNALING
-   #include "signaling.h"
 #endif
 #ifdef HAS_TELEM_SMARTPORT
     #include "telem_sPort.h"
@@ -74,6 +72,7 @@ void aqInit(void *pdata) {
     commNoticesInit();  // set up notice queue
     sdioLowLevelInit();
     filerInit();
+    signalingInit();
     supervisorInit();
     configInit();
     commInit();
@@ -96,9 +95,6 @@ void aqInit(void *pdata) {
     navInit();
 #ifdef HAS_AQ_TELEMETRY
     commandInit();
-#endif
-#ifdef USE_SIGNALING
-    signalingInit();
 #endif
     loggerInit();
 #ifdef CAN_CALIB
