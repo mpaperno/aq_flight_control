@@ -16,12 +16,12 @@
     Copyright © 2011-2014  Bill Nesbitt
 */
 
+#include "aq_init.h"
+
 #include "alt_ukf.h"
 #include "analog.h"
-#include "aq_init.h"
 #include "aq_mavlink.h"
 #include "aq_timer.h"
-#include "aq.h"
 #include "can.h"
 #include "comm.h"
 #include "config.h"
