@@ -22,6 +22,7 @@
 #include "aq_timer.h"
 #include "comm.h"
 #include "d_imu.h"
+#include "hilSim.h"
 #include "imu.h"
 #include "nav_ukf.h"
 #include "supervisor.h"
@@ -357,6 +358,9 @@ static void dIMUTaskCode(void *unused) {
 		imuSensorReady(IMU_TYPE_DIMU, IMU_UPDT_FULL);
 		dIMUCalcTempDiff();
 	    }
+	}
+	else if ((supervisorData.state & STATE_SIM_ENABLED)) {
+	    hilSimTick(loops);
 	}
 
 	loops++;

@@ -93,6 +93,11 @@ endif
 #  Quatos is a proprietary attitude controller from drone-controls.com
 QUATOS ?= 0
 
+# Build with HILS enabled (0=no, 1=yes)
+# NOTE: Must have pre-compiled hilSim library file in lib/hilsim
+#  hilSim is a hardware-in-the-loop simulation support library from worlddesign.com
+HIL_SIM ?= 0
+
 # Build with specific default parameters file (eg. CONFIG_FILE=config_default_m4.h)
 CONFIG_FILE ?=
 
@@ -124,6 +129,8 @@ STM32CMSIS_PATH ?= $(AQLIB_PATH)/CMSIS
 STM32DSPLIB_PATH ?= $(STM32CMSIS_PATH)/DSP_Lib
 # Proprietary Quatos attitude controller
 QUATOS_PATH ?= $(AQLIB_PATH)/quatos
+# Proprietary HILS library
+HIL_SIM_PATH ?= $(AQLIB_PATH)/hilsim
 
 # shell commands
 EXE_AWK ?= gawk 
@@ -192,6 +199,9 @@ else
 	ifneq ($(QUATOS), 0)
 		TARGET := $(TARGET)-quatos
 	endif
+	ifneq ($(HIL_SIM), 0)
+		TARGET := $(TARGET)-hils
+	endif
 	ifneq ($(BIN_SUFFIX),)
 		TARGET := $(TARGET)-$(BIN_SUFFIX)
 	endif
@@ -227,6 +237,7 @@ CC_INCLUDES += -I$(STM32CMSIS_PATH)/Include
 CC_INCLUDES += -I$(STM32CMSIS_PATH)/Device/ST/STM32F4xx/Include
 CC_INCLUDES += -I$(MAVINC_PATH)
 CC_INCLUDES += -I$(CC_INC_PATH)
+CC_INCLUDES += -I$(HIL_SIM_PATH)/include
 
 # path hints for make
 VPATH ?=
@@ -325,6 +336,13 @@ ifneq ($(QUATOS), 0)
 		LDLIBS += $(QUATOS_PATH)/quatos.a
 	endif
 	CFLAGS += -DHAS_QUATOS
+endif
+
+ifneq ($(HIL_SIM), 0)
+	ifeq ($(HIL_SIM), 1)
+		LDLIBS += $(HIL_SIM_PATH)/hilSim.a
+	endif
+	CFLAGS += -DHAS_HIL_SIM_MP
 endif
 
 # end of build tools options

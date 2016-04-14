@@ -29,6 +29,7 @@
 #include "filer.h"
 #include "gimbal.h"
 #include "gps.h"
+#include "hilSim.h"
 #include "imu.h"
 #include "logger.h"
 #include "motors.h"
@@ -102,6 +103,7 @@ void aqInit(void *pdata) {
 #else
     canInit();
 #endif
+    hilSimInit();
     motorsInit();
     controlInit();
     gimbalInit();
