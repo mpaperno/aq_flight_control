@@ -29,7 +29,7 @@
 #define NAV_MIN_FIX_ACC		4.0f					    // minimum gps hAcc still considered a valid "2D" fix, in meters
 #define NAV_MAX_FIX_AGE		10e6					    // maximum age of position update still considered a valid "2D" fix, in microseconds
 
-#define NAV_MAX_MISSION_LEGS	50					    // each leg takes 48 bytes CCM RAM, take care if increasing the limit, decrease to regain space
+#define NAV_MAX_MISSION_LEGS	100					    // each leg takes 48 bytes CCM RAM, take care if increasing the limit, decrease to regain space
 
 #define NAV_EQUATORIAL_RADIUS	(6378.137 * 1000.0)			    // meters
 #define NAV_FLATTENING		(1.0 / 298.257223563)			    // WGS-84

@@ -10,11 +10,12 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
-##### 7.1.1917 - Apr. 14, 2016 - `feature_integration` branch
+##### 7.1.1918 - Apr. 14, 2016 - `feature_integration` branch
 
 `~` Aggregate changes from `new_controls`, `sport_telemetry`, `memory_manage`, `simu` branches.  
 `*` Fix RC status LED when signal is lost with S-BUS and SUM-D radio types.  
 `+` Add parameters for radio failsafe stage 1 and 2 timeouts.  
+`~` Increase maximum waypoints to 100.  
 
 ##### 7.1.1915 - Apr. 14, 2016 - `simu` branch
 
