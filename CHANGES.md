@@ -10,6 +10,10 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1919 - Apr. 15, 2016 - `feature_integration` branch
+
+`*` Fix automatic yaw to north at takeoff with PID controller.  
+
 ##### 7.1.1918 - Apr. 14, 2016 - `feature_integration` branch
 
 `~` Aggregate changes from `new_controls`, `sport_telemetry`, `memory_manage`, `simu` branches.  
