@@ -134,16 +134,13 @@ void controlTaskCode(void *unused) {
 
 		// motors not running yet,
 		if (motorsData.throttle == 0) {
-		    // if motors are not yet running, use this heading as hold heading
-		    controlData.anglesDesired[RPY_Y] = navData.holdHeading = AQ_YAW;
-
 		    // Reset all PIDs and filters
 		    for (axis = 0; axis < 3; ++axis) {
 			overrides[axis] = 0;
 			utilFilterReset3(controlData.rateFilter[axis], 0.0f);
 			if (controlData.controllerType == CONTROLLER_TYPE_QUATOS)
 			    continue;
-			utilFilterReset3(controlData.angleFilter[axis], 0.0f);
+			utilFilterReset3(controlData.angleFilter[axis], (axis == RPY_Y ? AQ_YAW : 0.0f));
 			pidZeroIntegral(controlData.ratePID[axis], 0.0f, 0.0f);
 			pidZeroIntegral(controlData.anglePID[axis], 0.0f, 0.0f);
 			pidZeroIntegral(controlData.rateModePID[axis], 0.0f, 0.0f);
@@ -156,6 +153,9 @@ void controlTaskCode(void *unused) {
 			quatos(&UKF_Q1, &UKF_Q1, ratesActual, ratesActual, overrides);
 		    }
 #endif
+
+		    // use this heading as hold heading
+		    controlData.anglesDesired[RPY_Y] = navData.holdHeading = AQ_YAW;
 
 		    // also set this position as hold position
 		    if (navData.mode == NAV_STATUS_POSHOLD)
@@ -357,7 +357,7 @@ void controlTaskCode(void *unused) {
 #ifdef HAS_QUATOS
 		// Quatos
 		else {
-		    // rates mode or startup
+		    // rates mode
 		    if (controlData.controlMode > CTRL_MODE_ANGLE && !rateTiltLimit) {
 			// keep up with current orientation
 			quatos(&UKF_Q1, &UKF_Q1, ratesActual, controlData.ratesDesired, overrides);

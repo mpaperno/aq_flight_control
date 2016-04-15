@@ -9,6 +9,9 @@ This file describes changes in the firmware, typically since the previous minor 
 	~ : enchancement/non-breaking change
 	! : important change, possible danger, change of default behavior, etc.
 
+##### 7.1.1901 - Apr. 15, 2016 - `new_controls` branch
+
+`*` Fix automatic yaw to north at takeoff with PID controller.  
 
 ##### 7.1.1900 - Mar. 10, 2016 - `new_controls` branch
 
