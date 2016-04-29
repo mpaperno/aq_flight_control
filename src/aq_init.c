@@ -73,9 +73,9 @@ void aqInit(void *pdata) {
     commNoticesInit();  // set up notice queue
     sdioLowLevelInit();
     filerInit();
+    configInit();
     signalingInit();
     supervisorInit();
-    configInit();
     commInit();
 #ifdef USE_MAVLINK
     mavlinkInit();
