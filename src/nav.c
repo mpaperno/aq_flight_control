@@ -193,8 +193,7 @@ navMission_t *navLoadLeg(uint8_t leg) {
     else if (curLeg->type == NAV_LEG_ORBIT) {
         if (curLeg->targetLat != (double)0.0 && curLeg->targetLon != (double)0.0)
             navUkfSetGlobalPositionTarget(curLeg->targetLat, curLeg->targetLon);
-        navData.targetHeading = curLeg->poiHeading;
-        navData.holdMaxHorizSpeed = NAV_DFLT_HOR_SPEED;
+        navData.targetHeading = -0.0f;  // must point to target
     }
     else if (curLeg->type == NAV_LEG_TAKEOFF) {
         // store this position as the takeoff position
@@ -492,16 +491,16 @@ void navNavigate(void) {
                 fabsf(navData.holdAlt - ALTITUDE) < curLeg->targetRadius) ||
             // orbit test
                 (curLeg->type == NAV_LEG_ORBIT &&
-                fabsf(navData.holdDistance - curLeg->targetRadius) +
-                fabsf(navData.holdAlt - ALTITUDE) < 2.0f)  ||
+                fabsf(navData.holdDistance - curLeg->targetRadius) <= 2.0f &&
+                fabsf(navData.holdAlt - ALTITUDE) <= 1.0f) ||
             // takeoff test
                 (curLeg->type == NAV_LEG_TAKEOFF &&
                 navData.holdDistance < curLeg->targetRadius &&
                 fabsf(navData.holdAlt - ALTITUDE) < curLeg->targetRadius)
                 ) {
-                    // freeze heading unless orbiting
-                    if (curLeg->type != NAV_LEG_ORBIT)
-                        navSetHoldHeading(AQ_YAW);
+                    // freeze heading if relative, unless orbiting
+                    if (curLeg->type != NAV_LEG_ORBIT && signbit(navData.targetHeading))
+                	navData.targetHeading = AQ_YAW;
 
                     // start the loiter clock
                     navData.loiterCompleteTime = currentTime + curLeg->loiterTime;
