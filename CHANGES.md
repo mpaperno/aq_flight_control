@@ -10,6 +10,13 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1898 - Nov. 15, 2016
+
+`*` Enforce orbit waypoint relative heading to target, fixes possible fly-away condition in all firmware since v6.6.  
+`*` Fix maximum horizontal speed for orbit waypoint (it used global default instead of wpt setting in all firmware since v6.6).  
+`~` Increase tolerance for orbit waypoint arrival detection (still not very reliable at higher orbit speeds).  
+`~` On wpt arrival, only freeze heading if it was relative (prevents unnecessary yawing in some cases).  
+
 ##### 7.1.1897 - Apr. 13, 2016
 
 `*` Fix bug in 7.1.1895 preventing gimbal roll/pitch reversing.  
