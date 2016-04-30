@@ -63,10 +63,9 @@
 #define DEFAULT_CTRL_MIN_THROT	    20.0f	// minimum user throttle to activate motors
 #define DEFAULT_CTRL_MAX	    1446.0f	// maximum control applied to motors +- throttle
 #define DEFAULT_CTRL_NAV_YAW_RT	    180.0f	// maximum navigation yaw rate deg/s
-#define DEFAULT_CTRL_TLT_ANG_TAU    0.1f	// filter constant for tilt angle requests (user or nav), larger value is smoother
-#define DEFAULT_CTRL_YAW_ANG_TAU    0.15f	// filter constant for yaw angle requests (nav only), larger value is smoother
-#define DEFAULT_CTRL_TLT_RTE_TAU    0.005f	// filter constant for tilt rotation rate requests (user in rate mode only), larger value is smoother
-#define DEFAULT_CTRL_YAW_RTE_TAU    0.01f	// filter constant for yaw rotation rate requests (user only, manual yaw is always rate-based), larger value is smoother
+#define DEFAULT_CTRL_TLT_ANG_TAU    0.1f	// filter constant for tilt angle requests (user or nav), larger value is smoother, min: 0.0025
+#define DEFAULT_CTRL_TLT_RTE_TAU    0.005f	// filter constant for tilt rotation rate requests (user in rate mode only), larger value is smoother, min: 0.0025
+#define DEFAULT_CTRL_YAW_RTE_TAU    0.01f	// filter constant for yaw rotation rate requests (user only, manual yaw is always rate-based), larger value is smoother, min: 0.0025
 
 // TILT rate PID for angle-control mode
 #define DEFAULT_CTRL_TLT_RTE_P	    0.0f

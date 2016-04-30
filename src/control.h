@@ -65,7 +65,7 @@ typedef struct {
     pidStruct_t *rateModePID[3]; // for rates-only control mode
 
     // input filters
-    utilFilter_t angleFilter[3][3];
+    utilFilter_t angleFilter[2][3];  // no yaw angle filter
     utilFilter_t rateFilter[3][3];
 
     float anglesDesired[3];      // final requested RPY rotation angles, degrees

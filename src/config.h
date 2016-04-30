@@ -22,7 +22,7 @@
 
 #include "aq.h"
 
-#define CONFIG_CURRENT_VERSION	    135	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
+#define CONFIG_CURRENT_VERSION	    136	// !!! NOTE: increment +1 when adding, removing, or modifying the meaning of any param
 
 #define CONFIG_FILE_NAME	    "params.txt"
 #define CONFIG_FILE_BUF_SIZE	    512
@@ -88,7 +88,6 @@ enum configParameters {
     CTRL_MAX,
     CTRL_NAV_YAW_RT,
     CTRL_TLT_ANG_TAU,
-    CTRL_YAW_ANG_TAU,
     CTRL_TLT_RTE_TAU,
     CTRL_YAW_RTE_TAU,
     CTRL_TLT_RTE_P,

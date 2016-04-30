@@ -140,7 +140,8 @@ void controlTaskCode(void *unused) {
 			utilFilterReset3(controlData.rateFilter[axis], 0.0f);
 			if (controlData.controllerType == CONTROLLER_TYPE_QUATOS)
 			    continue;
-			utilFilterReset3(controlData.angleFilter[axis], (axis == RPY_Y ? AQ_YAW : 0.0f));
+			if (axis != RPY_Y)
+			    utilFilterReset3(controlData.angleFilter[axis], 0.0f);
 			pidZeroIntegral(controlData.ratePID[axis], 0.0f, 0.0f);
 			pidZeroIntegral(controlData.anglePID[axis], 0.0f, 0.0f);
 			pidZeroIntegral(controlData.rateModePID[axis], 0.0f, 0.0f);
@@ -300,7 +301,8 @@ void controlTaskCode(void *unused) {
 			    if (!overrides[axis] && controlData.controllerType != CONTROLLER_TYPE_QUATOS) {
 				pidZeroIntegral(controlData.anglePID[axis], 0.0f, 0.0f);
 				pidZeroIntegral(controlData.ratePID[axis], 0.0f, 0.0f);
-				utilFilterReset3(controlData.angleFilter[axis], controlData.anglesDesired[axis]);
+				if (axis != RPY_Y)
+				    utilFilterReset3(controlData.angleFilter[axis], controlData.anglesDesired[axis]);
 			    }
 			}
 		    } // control type
@@ -330,15 +332,16 @@ void controlTaskCode(void *unused) {
 			    outputs[axis] = pidUpdate(controlData.rateModePID[axis], controlData.ratesDesired[axis], ratesActual[axis]);
 
 			else {  // angle control
-			    // smooth
-			    controlData.anglesDesired[axis] = utilFilter3(controlData.angleFilter[axis], controlData.anglesDesired[axis]);
 
-			    if (axis == RPY_Y)
+			    if (axis == RPY_Y) {
 				// seek a 0 deg difference between hold heading and actual yaw
 				outputs[RPY_Y] = pidUpdate(controlData.anglePID[RPY_Y], 0.0f, compassDifference(controlData.anglesDesired[RPY_Y], *anglesActual[RPY_Y]));
-			    else
+			    } else {
+				// smooth
+				controlData.anglesDesired[axis] = utilFilter3(controlData.angleFilter[axis], controlData.anglesDesired[axis]);
 				// seek 0 diff between desired and actual angles
 				outputs[axis] = pidUpdate(controlData.anglePID[axis], controlData.anglesDesired[axis], *anglesActual[axis]);
+			    }
 
 			    if (axis == RPY_Y || controlData.controllerType == CONTROLLER_TYPE_PID_C)
 				// get rate from angle
@@ -430,8 +433,6 @@ void controlInit(void) {
     // init yaw filters and PIDs
     utilFilterInit3(controlData.rateFilter[RPY_Y], AQ_INNER_TIMESTEP, p[CTRL_YAW_RTE_TAU], 0.0f);
     if (controlData.controllerType != CONTROLLER_TYPE_QUATOS) {
-	// yaw angle filter only used in nav modes
-	utilFilterInit3(controlData.angleFilter[RPY_Y], AQ_INNER_TIMESTEP, p[CTRL_YAW_ANG_TAU], 0.0f);
 	controlData.ratePID[RPY_Y]  = pidInit(CTRL_YAW_RTE_P, CTRL_YAW_RTE_I, CTRL_YAW_RTE_D, CTRL_YAW_RTE_F, CTRL_YAW_RTE_PM, CTRL_YAW_RTE_IM, CTRL_YAW_RTE_DM, CTRL_YAW_RTE_OM);
 	controlData.anglePID[RPY_Y] = pidInit(CTRL_YAW_ANG_P, CTRL_YAW_ANG_I, CTRL_YAW_ANG_D, CTRL_YAW_ANG_F, CTRL_YAW_ANG_PM, CTRL_YAW_ANG_IM, CTRL_YAW_ANG_DM, CTRL_YAW_ANG_OM);
 	// yaw is always in rate mode, this assignment just simplifies code the taskCode processing loops
