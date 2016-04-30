@@ -83,6 +83,7 @@ typedef struct {
     uint8_t activeList[MOTORS_NUM];
     uint8_t numActive;
     uint8_t numGroups;
+    bool disableAllPorts;
 #ifdef MOTORS_CAN_LOGGING
     uint8_t logHandle;
     uint16_t head;

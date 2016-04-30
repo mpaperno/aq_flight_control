@@ -507,6 +507,14 @@ void supervisorConfigRead(void) {
     supervisorData.configRead = 1;
 }
 
+void supervisorToggleSimState(bool enable) {
+    if (enable) {
+	supervisorData.state |= STATE_SIM_ENABLED;
+	motorsData.disableAllPorts = true;  // disable all motor port output until restart
+    } else
+	supervisorData.state &= ~STATE_SIM_ENABLED;
+}
+
 bool supervisorRequestConfigAction(uint8_t act) {
     if (act >= SPVR_ACT_REQ_ENUM_END || supervisorData.configActionRequest > SPVR_ACT_REQ_NONE) {
 	AQ_NOTICE("Error: Unknown or currently pending action.");

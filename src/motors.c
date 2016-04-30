@@ -142,7 +142,7 @@ static void motorsCheckCanStatus(int motorId) {
 void motorsSendValues(void) {
     int i;
 
-    if (supervisorData.state & STATE_SIM_ENABLED)
+    if (motorsData.disableAllPorts)
 	return;
 
     for (int j = 0; j < motorsData.numActive; ++j) {
@@ -339,6 +339,9 @@ static int motorsPwmInit(int i) {
 int motorsArm(void) {
     int tries = 1;
     int i;
+
+    if (motorsData.disableAllPorts)
+	return tries;
 
     // group arm
     for (i = 0; i < motorsData.numGroups; i++)

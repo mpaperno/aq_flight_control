@@ -142,6 +142,7 @@ extern void supervisorSendDataStop(void);
 extern void supervisorConfigRead(void);
 extern void supervisorArm(void);
 extern void supervisorDisarm(void);
+extern void supervisorToggleSimState(bool enable);
 extern bool supervisorRequestConfigAction(uint8_t act);
 
 #endif
