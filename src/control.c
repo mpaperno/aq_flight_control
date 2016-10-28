@@ -238,10 +238,11 @@ void controlTaskCode(void *unused) {
 
 			controlData.ratesDesired[axis] = (float)rc[axis];
 			if (controlData.controlMode == CTRL_MODE_ANGLE) {
-			    if (rc[axis] > p[CTRL_DEAD_BAND])
-				controlData.ratesDesired[axis] -= p[CTRL_DEAD_BAND];
+			    // only here for yaw axis
+			    if (rc[axis] > p[CTRL_DBAND_YAW])
+				controlData.ratesDesired[axis] -= p[CTRL_DBAND_YAW];
 			    else
-				controlData.ratesDesired[axis] += p[CTRL_DEAD_BAND];
+				controlData.ratesDesired[axis] += p[CTRL_DBAND_YAW];
 			}
 
 			// calculate desired rate based on full stick scale

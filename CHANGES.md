@@ -10,6 +10,10 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
+##### 7.1.1924 - Oct. 28, 2016 - `feature_integration` branch
+
+`*` Fix new YAW deadband parameter not implemented correctly.  
+
 ##### 7.1.1923 - Apr. 30, 2016 - `feature_integration` branch
 
 `*` Fix configurable signaling outputs (LEDs/beeper).  
