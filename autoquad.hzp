@@ -27,7 +27,7 @@
       c_additional_options="-I."
       c_only_additional_options="-fsingle-precision-constant;-Wall;-Wdouble-promotion;-Winline;-finline-functions;--param;large-function-insns=5400"
       c_preprocessor_definitions="NESTED_INTERRUPTS;CTL_TASKING;USE_STDPERIPH_DRIVER;__FPU_PRESENT;ARM_MATH_CM4;STM32F40XX"
-      c_user_include_directories="lib/STM32F4xx_StdPeriph_Driver/inc;lib/CMSIS/Include;lib/CMSIS/Device/ST/STM32F4xx/Include;lib/mavlink/include/autoquad;src/;src/co_os;src/drivers;src/drivers/can;src/drivers/usb;src/drivers/disk;src/math;src/radio;src/targets"
+      c_user_include_directories="lib/STM32F4xx_StdPeriph_Driver/inc;lib/CMSIS/Include;lib/CMSIS/Device/ST/STM32F4xx/Include;lib/mavlink/include/autoquad;lib/hilsim/include;src/;src/co_os;src/drivers;src/drivers/can;src/drivers/usb;src/drivers/disk;src/math;src/radio;src/targets"
       double_is_float="No"
       link_include_standard_libraries="No"
       link_symbol_definitions="__vfprintf=__vfprintf_double_long_long;__vfscanf=__vfscanf_double_long_long"
@@ -168,6 +168,8 @@
       <file file_name="src/calib.h" />
       <file file_name="src/rc.c" />
       <file file_name="src/rc.h" />
+      <file file_name="src/telem_sPort.c" />
+      <file file_name="src/telem_sPort.h" />
       <folder Name="CAN" path="src/drivers/can" recurse="Yes" />
       <folder Name="digitalIMU">
         <file file_name="src/drivers/mpu6000.c" />
@@ -208,6 +210,9 @@
         <file file_name="src/drivers/cyrf6936_regs.h" />
         <file file_name="src/radio/dsm.h" />
         <file file_name="src/radio/dsm.c" />
+      </folder>
+      <folder Name="LIB">
+        <file file_name="lib/hilsim/include/hilSim.h" />
       </folder>
     </folder>
     <folder
