@@ -253,7 +253,7 @@ void controlTaskCode(void *unused) {
 			    if (controlData.controllerType != CONTROLLER_TYPE_QUATOS)
 				pidZeroIntegral(controlData.rateModePID[axis], 0.0f, 0.0f);
 
-			    utilFilterReset3(controlData.rateFilter[axis], (controlData.ratesDesired[axis] + ratesActual[axis]) * 0.5f); //ratesActual[axis]
+			    utilFilterReset3(controlData.rateFilter[axis], 0.0f); // controlData.ratesDesired[axis] // ratesActual[axis]
 			}
 
 			// smooth
@@ -291,7 +291,8 @@ void controlTaskCode(void *unused) {
 			// still overriding
 			else {
 			    --overrides[axis];
-			    controlData.ratesDesired[axis] = 0.0f;
+			    controlData.ratesDesired[axis] = utilFilter3(controlData.rateFilter[axis], 0.0f);
+
 			    // keep up with actual craft heading
 			    if (axis == RPY_Y)
 				controlData.anglesDesired[RPY_Y] = navData.holdHeading = AQ_YAW;
