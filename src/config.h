@@ -451,6 +451,7 @@ enum configFlags {
     CONFIG_FLAG_DISABLE_MSC     = (1<<3),   // disable mass storage component on USB connection
     CONFIG_FLAG_INVRT_TCUT_AUTO = (1<<4),   // sharply scale (cut) throttle when inverted and in altitude-hold
     CONFIG_FLAG_INVRT_TCUT_MAN  = (1<<5),   // cut throttle when inverted in manual modes
+    CONFIG_FLAG_MVLNK_STREAM_RC = (1<<6),   // send Mavlink RC Channels message by default
 };
 
 typedef struct {

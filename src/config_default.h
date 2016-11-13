@@ -24,6 +24,7 @@
 //    b3: 1 = disable mass storage component (MSC) on USB connection (allows logging/etc)
 //    b4: scale down (cut) throttle when inverted and in altitude-hold mode
 //    b5: scale down throttle when inverted in manual modes
+//    b6: send mavlink radio channels message by default (eg. for minimOSD)
 #define DEFAULT_CONFIG_FLAGS	    (0 | CONFIG_FLAG_INVRT_TCUT_AUTO)
 
 // Remote control adjustable parameters.  24 bits: SSSS_SSSS_CCCC_CCPP_PPPP_PPPP

@@ -10,9 +10,11 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
-##### 7.1.1924 - Oct. 28, 2016 - `feature_integration` branch
+##### 7.1.1925 - Nov. 13, 2016 - `feature_integration` branch
 
 `*` Fix new YAW deadband parameter not implemented correctly.  
+`~` Adjust yaw controls for smoother manual operation around stick deadband area.  
+`+` Add new option to send RC_CHANNELS Mavlink telemetry message by default (eg. for minimOSD).  
 
 ##### 7.1.1923 - Apr. 30, 2016 - `feature_integration` branch
 

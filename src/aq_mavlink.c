@@ -930,6 +930,9 @@ void mavlinkInit(void) {
     mavlinkData.streams[MAV_DATA_STREAM_EXTRA3].dfltInterval = AQMAVLINK_STREAM_RATE_EXTRA3;
     mavlinkData.streams[MAV_DATA_STREAM_PROPULSION].dfltInterval = AQMAVLINK_STREAM_RATE_PROPULSION;
 
+    if (configCheckFlag(CONFIG_FLAG_MVLNK_STREAM_RC) && !mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].dfltInterval)
+	mavlinkData.streams[MAV_DATA_STREAM_RC_CHANNELS].dfltInterval = 1e6L;
+
     // turn on streams & spread them out
     micros = timerMicros();
     for (i = 0; i < AQMAVLINK_TOTAL_STREAMS; i++) {
