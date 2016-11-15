@@ -10,7 +10,7 @@ This file describes changes in the firmware, typically since the previous minor 
 	! : important change, possible danger, change of default behavior, etc.
 
 
-##### 7.1.1898 - Nov. 15, 2016
+##### 7.1.1898 - Nov. 15, 2016 - CURRENT MASTER BRANCH
 
 `*` Enforce orbit waypoint relative heading to target, fixes possible fly-away condition in all firmware since v6.6.  
 `*` Fix maximum horizontal speed for orbit waypoint (it used global default instead of wpt setting in all firmware since v6.6).  
@@ -83,7 +83,7 @@ This file describes changes in the firmware, typically since the previous minor 
 
 `+` Add signaling events for waypoint reached, WP recorded, and WPs cleared.  
 
-#### 7.1.1858 -€“ Apr. 16, 2015 - CURRENT MASTER BRANCH
+#### 7.1.1858 -€“ Apr. 16, 2015
 
 **!!! Due to new control configuration scheme, the Flight Mode and Home Set/RTH switch channels will be reset to defaults. !!!**  
 Also note that these changes are NOT directly compatible with AQ QGC 1.6.3 and lower. It will still mostly work, but any changes to the new parameters in this version will need to be done directly in the Onboard Configuration window.  An updated QGC with a proper setup GUI for the new features is underway.
