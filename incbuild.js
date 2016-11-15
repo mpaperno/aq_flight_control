@@ -1,5 +1,5 @@
 function incbuild() {
-  var file = "buildnum.h";
+  var file = "src/buildnum.h";
   var buildNumText = "#define BUILDNUMBER ";
   var s = CWSys.readStringFromFile(file);
   var bs = s.split("\n", 2);

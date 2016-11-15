@@ -1,0 +1,1 @@
+Compiling with Quatos requires a propriatary attitude controller library from drone-controls.com (quatos.a).  Please contact them for further details.

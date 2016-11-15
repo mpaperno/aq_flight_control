@@ -1,0 +1,4 @@
+[submodule "lib/mavlink"]
+	path = lib/mavlink
+	url = https://github.com/AutoQuad/mavlink_headers.git
+	branch = master

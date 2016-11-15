@@ -1,0 +1,12 @@
+.project
+.settings
+.cproject
+*.launch
+*.user
+build
+__*.*
+*.bak
+*.bak.*
+/bak
+*.hzs
+*.config
